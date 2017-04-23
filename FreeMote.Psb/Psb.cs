@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-//merging from number201724's code
+//PSB format from number201724.
 
 namespace FreeMote.Psb
 {
     public enum PsbType
     {
+
         None = 0x0,
         Null = 0x1, // 0
         False = 0x2, //??
@@ -67,5 +68,10 @@ namespace FreeMote.Psb
         Boolean = 0x85,
         BTree = 0x86,
     };
+
+    public class PsbValue
+    {
+
+    }
 
 }

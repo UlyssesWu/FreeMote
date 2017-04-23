@@ -148,12 +148,17 @@ namespace FreeMote
         /// <param name="br"></param>
         /// <param name="bw"></param>
         /// <param name="cleanEncryptOffset">maybe you should not use it</param>
+        /// <param name="resetEncryptOffset">restore offsetEncrypt</param>
         /// <returns></returns>
-        private static bool WriteOriginalPartialHeader(BinaryReader br, BinaryWriter bw, PsbHeader header, bool cleanEncryptOffset = false)
+        private static bool WriteOriginalPartialHeader(BinaryReader br, BinaryWriter bw, PsbHeader header, bool cleanEncryptOffset = false, bool resetEncryptOffset = false)
         {
             uint offsetEncrypt = br.ReadUInt32();
             header.OffsetEncrypt = cleanEncryptOffset ? 0 : offsetEncrypt;
             header.OffsetNames = br.ReadUInt32();
+            if (resetEncryptOffset)
+            {
+                header.OffsetEncrypt = header.OffsetNames;
+            }
             header.OffsetStrings = br.ReadUInt32();
             header.OffsetStringsData = br.ReadUInt32();
             header.OffsetChunkOffsets = br.ReadUInt32();
@@ -393,8 +398,8 @@ namespace FreeMote
                                 }
                                 else
                                 {
-                                    WriteOriginalPartialHeader(br, bw, header);
-                                    WriteOriginalBody(br, bw);
+                                    WriteOriginalPartialHeader(br, bw, header, resetEncryptOffset: true);
+                                    WriteEncodeBody(br, bw, context, header);
                                 }
                             }
                             break;

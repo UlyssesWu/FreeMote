@@ -148,5 +148,22 @@ namespace FreeMote
                 ByteCount++;
             }
         }
+
+        /// <summary>
+        /// Skip to next round
+        /// </summary>
+        public uint NextRound()
+        {
+            var a = Key1 ^ (Key1 << 11);
+            var b = Key4;
+            var c = a ^ b ^ ((a ^ (b >> 11)) >> 8);
+            Key1 = Key2;
+            Key2 = Key3;
+            Key3 = b;
+            Key4 = c;
+            CurrentKey = c;
+            Round++;
+            return CurrentKey;
+        }
     }
 }
