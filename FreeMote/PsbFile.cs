@@ -121,7 +121,12 @@ namespace FreeMote
         private static bool TestBodyEncrypted(BinaryReader br, PsbHeader header)
         {
             long pos = br.BaseStream.Position;
-            if (header.Version >= 3) //assume header length is 44
+
+            if (header.Version == 4) //assume header length is 56
+            {
+                br.BaseStream.Seek(56, SeekOrigin.Begin);
+            }
+            else if (header.Version == 3) //assume header length is 44
             {
                 br.BaseStream.Seek(44, SeekOrigin.Begin);
             }
@@ -218,6 +223,10 @@ namespace FreeMote
             if (header.Version > 2 || header.OffsetNames >= 44)
             {
                 bw.Write(header.OffsetEmote);
+                if (header.OffsetEncrypt > 44)
+                {
+                    bw.Write(context.ReadBytes(br, header.HeaderEncrypt - 44));
+                }
             }
         }
 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-//PSB format from number201724.
+//PSB format is based on psbfile by number201724.
 
 namespace FreeMote.Psb
 {

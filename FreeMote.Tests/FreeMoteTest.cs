@@ -63,7 +63,7 @@ namespace FreeMote.Tests
         public void TestEncode()
         {
             //Debug.WriteLine(Environment.CurrentDirectory);
-            uint targetKey = 0x3C78EBB3; //give your model key
+            uint targetKey = 504890837; //give your model key
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             foreach (var file in Directory.EnumerateFiles(resPath))
             {
@@ -82,7 +82,32 @@ namespace FreeMote.Tests
                     continue;
                 }
                 PsbFile psb = new PsbFile(file);
-                psb.EncodeToFile(targetKey, file + ".pure", EncodeMode.Decrypt, EncodePosition.Auto);
+                psb.EncodeToFile(targetKey, file + ".pure", EncodeMode.Encrypt, EncodePosition.Auto);
+            }
+        }
+
+        [TestMethod]
+        public void KeyGenerator()
+        {
+            PsbStreamContext context = new PsbStreamContext(0x1E1805D5);
+            for (int i = 0; i < 50; i++)
+            {
+                Console.WriteLine($"Round:{context.Round}\t Key:{context.CurrentKey}");
+                context.NextRound();
+            }
+            Console.WriteLine();
+
+            context = new PsbStreamContext
+            {
+                Key1 = 0,
+                Key2 = 0,
+                Key3 = 0,
+                Key4 = 0
+            };
+            for (int i = 0; i < 50; i++)
+            {
+                Console.WriteLine($"Round:{context.Round}\t Key:{context.CurrentKey}");
+                context.NextRound();
             }
         }
     }

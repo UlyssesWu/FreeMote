@@ -34,6 +34,17 @@ namespace FreeMote
         }
 
         /// <summary>
+        /// Read a <see cref="byte[]"/> from <see cref="BinaryReader"/>, and then encode using <see cref="PsbStreamContext"/>.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="br"></param>
+        /// <returns></returns>
+        public static byte[] ReadBytes(this PsbStreamContext context, BinaryReader br, int count)
+        {
+            return context.Encode(br.ReadBytes(count));
+        }
+
+        /// <summary>
         /// Read a <see cref="ushort"/> from <see cref="BinaryReader"/>, and then encode using <see cref="PsbStreamContext"/>.
         /// </summary>
         /// <param name="context"></param>

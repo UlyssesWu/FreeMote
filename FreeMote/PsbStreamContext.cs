@@ -144,7 +144,7 @@ namespace FreeMote
                     CurrentKey = c;
                     Round++;
                 }
-                CurrentKey = CurrentKey >> 8;
+                CurrentKey = CurrentKey >> 1;
                 ByteCount++;
             }
         }
@@ -154,6 +154,11 @@ namespace FreeMote
         /// </summary>
         public uint NextRound()
         {
+            while (CurrentKey != 0)
+            {
+                CurrentKey = CurrentKey >> 1;
+                ByteCount++;
+            }
             var a = Key1 ^ (Key1 << 11);
             var b = Key4;
             var c = a ^ b ^ ((a ^ (b >> 11)) >> 8);
