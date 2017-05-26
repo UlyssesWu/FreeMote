@@ -85,30 +85,6 @@ namespace FreeMote.Tests
                 psb.EncodeToFile(targetKey, file + ".pure", EncodeMode.Encrypt, EncodePosition.Auto);
             }
         }
-
-        [TestMethod]
-        public void KeyGenerator()
-        {
-            PsbStreamContext context = new PsbStreamContext(0x1E1805D5);
-            for (int i = 0; i < 50; i++)
-            {
-                Console.WriteLine($"Round:{context.Round}\t Key:{context.CurrentKey}");
-                context.NextRound();
-            }
-            Console.WriteLine();
-
-            context = new PsbStreamContext
-            {
-                Key1 = 0,
-                Key2 = 0,
-                Key3 = 0,
-                Key4 = 0
-            };
-            for (int i = 0; i < 50; i++)
-            {
-                Console.WriteLine($"Round:{context.Round}\t Key:{context.CurrentKey}");
-                context.NextRound();
-            }
-        }
+        
     }
 }
