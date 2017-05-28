@@ -105,6 +105,10 @@ namespace FreeMote
                     header.OffsetUnknown3 = br.ReadUInt32();
                 }
             }
+            else
+            {
+                throw new NotSupportedException("Header seems encrypted.");
+            }
             return header;
         }
         
