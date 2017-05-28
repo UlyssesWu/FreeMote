@@ -60,12 +60,14 @@ namespace FreeMote.Tools.EmotePsbConverter
                 if (!File.Exists(args[0]))
                 {
                     PrintHelp();
+                    return;
                 }
                 AskForKey();
                 Convert(Key, args[0]);
             }
             else
             {
+                PrintHelp();
                 AskForKey();
                 AskForNewKey();
 

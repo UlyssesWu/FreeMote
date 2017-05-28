@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Adler32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsbConstants.cs" />
     <Compile Include="PsbFile.cs" />

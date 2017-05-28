@@ -253,3 +253,5 @@ paket-files/
 /FreeMote.Purify
 /FreeMote.Tests/Res
 
+/FreeMote.Tests/PurifyTest.cs
+/FreeMote.Tests/PurifyTest.cs
