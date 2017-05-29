@@ -170,7 +170,7 @@ namespace FreeMote
             header.OffsetChunkOffsets = br.ReadUInt32();
             header.OffsetChunkLengths = br.ReadUInt32();
             header.OffsetChunkData = br.ReadUInt32();
-            header.EntryCounts = br.ReadUInt32();
+            header.OffsetEntries = br.ReadUInt32();
             if (header.Version > 2)
             {
                 header.Checksum = br.ReadUInt32();
@@ -188,7 +188,7 @@ namespace FreeMote
             bw.Write(header.OffsetChunkOffsets);
             bw.Write(header.OffsetChunkLengths);
             bw.Write(header.OffsetChunkData);
-            bw.Write(header.EntryCounts);
+            bw.Write(header.OffsetEntries);
             if (header.Version > 2)
             {
                 bw.Write(header.Checksum);
@@ -217,7 +217,7 @@ namespace FreeMote
             header.OffsetChunkOffsets = context.ReadUInt32(br);
             header.OffsetChunkLengths = context.ReadUInt32(br);
             header.OffsetChunkData = context.ReadUInt32(br);
-            header.EntryCounts = context.ReadUInt32(br);
+            header.OffsetEntries = context.ReadUInt32(br);
             if (header.Version > 2)
             {
                 header.Checksum = context.ReadUInt32(br);
@@ -237,7 +237,7 @@ namespace FreeMote
             bw.Write(header.OffsetChunkOffsets);
             bw.Write(header.OffsetChunkLengths);
             bw.Write(header.OffsetChunkData);
-            bw.Write(header.EntryCounts);
+            bw.Write(header.OffsetEntries);
             //var checksumPosition = bw.BaseStream.Position;
 
             if (header.Version > 2)
@@ -288,7 +288,7 @@ namespace FreeMote
             header.OffsetChunkOffsets = br.ReadUInt32();
             header.OffsetChunkLengths = br.ReadUInt32();
             header.OffsetChunkData = br.ReadUInt32();
-            header.EntryCounts = br.ReadUInt32();
+            header.OffsetEntries = br.ReadUInt32();
             if (header.Version > 2)
             {
                 header.Checksum = br.ReadUInt32();
@@ -308,7 +308,7 @@ namespace FreeMote
             context.Write(header.OffsetChunkOffsets, bw);
             context.Write(header.OffsetChunkLengths, bw);
             context.Write(header.OffsetChunkData, bw);
-            context.Write(header.EntryCounts, bw);
+            context.Write(header.OffsetEntries, bw);
 
             if (header.Version > 2)
             {

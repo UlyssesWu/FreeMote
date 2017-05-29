@@ -47,9 +47,9 @@ namespace FreeMote
         public uint OffsetChunkData { get; set; }
 
         /// <summary>
-        /// Entry Counts (uint32)
+        /// Entry Offset
         /// </summary>
-        public uint EntryCounts { get; set; }
+        public uint OffsetEntries { get; set; }
 
         /// <summary>
         /// Adler32 Checksum for header
@@ -93,7 +93,7 @@ namespace FreeMote
                 header.OffsetChunkOffsets = br.ReadUInt32();
                 header.OffsetChunkLengths = br.ReadUInt32();
                 header.OffsetChunkData = br.ReadUInt32();
-                header.EntryCounts = br.ReadUInt32();
+                header.OffsetEntries = br.ReadUInt32();
                 if (header.Version > 2)
                 {
                     header.Checksum = br.ReadUInt32();
@@ -129,7 +129,7 @@ namespace FreeMote
             header.OffsetChunkOffsets = context.ReadUInt32(br);
             header.OffsetChunkLengths = context.ReadUInt32(br);
             header.OffsetChunkData = context.ReadUInt32(br);
-            header.EntryCounts = context.ReadUInt32(br);
+            header.OffsetEntries = context.ReadUInt32(br);
             if (header.Version > 2)
             {
                 header.Checksum = context.ReadUInt32(br);
@@ -156,7 +156,7 @@ namespace FreeMote
                         .Concat(BitConverter.GetBytes(OffsetChunkOffsets))
                         .Concat(BitConverter.GetBytes(OffsetChunkLengths))
                         .Concat(BitConverter.GetBytes(OffsetChunkData))
-                        .Concat(BitConverter.GetBytes(EntryCounts))
+                        .Concat(BitConverter.GetBytes(OffsetEntries))
                         .ToArray();
             Adler32 adler32 = new Adler32();
             adler32.Update(checkBuffer);

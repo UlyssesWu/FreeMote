@@ -42,6 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PixelCompress.cs" />
+    <Compile Include="Psb.cs" />
+    <Compile Include="PsbHelper.cs" />
     <Compile Include="PsbTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
