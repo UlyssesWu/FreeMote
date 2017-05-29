@@ -14,6 +14,8 @@ namespace FreeMote.Psb
     /// </summary>
     public class Psb
     {
+        private List<string> NamesCheck;
+
         /// <summary>
         /// Header
         /// </summary>
@@ -29,7 +31,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Strings
         /// </summary>
-        public List<PsbString> Strings;
+        public SortedDictionary<uint, PsbString> Strings;
         internal PsbArray ChunkOffsets;
         internal PsbArray ChunkLengths;
         /// <summary>
@@ -53,9 +55,14 @@ namespace FreeMote.Psb
         public Psb(Stream stream)
         {
             BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
-            
+
             //Load Header
             Header = PsbHeader.Load(br);
+
+            //Pre Load Strings
+            br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
+            StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            Strings = new SortedDictionary<uint, PsbString>();
 
             //Load Names
             br.BaseStream.Seek(Header.OffsetNames, SeekOrigin.Begin);
@@ -63,12 +70,7 @@ namespace FreeMote.Psb
             NamesData = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
             NameIndexes = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
             LoadNames();
-
-            //Pre Load Strings
-            br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
-            StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
-            Strings = new List<PsbString>(StringOffsets.Value.Count);
-
+            
             //Pre Load Resources (Chunks)
             br.BaseStream.Seek(Header.OffsetChunkOffsets, SeekOrigin.Begin);
             ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
@@ -79,42 +81,39 @@ namespace FreeMote.Psb
             //Load Entries
             br.BaseStream.Seek(Header.OffsetEntries, SeekOrigin.Begin);
             IPsbValue obj;
-            do
+
+            try
             {
-                try
+                obj = Unpack(br);
+                Debug.WriteLine($"Unpack: {obj?.ToString()}");
+                if (obj == null)
                 {
-                    obj = Unpack(br);
-                    switch (obj)
-                    {
-                        case PsbString s:
-                            Strings.Add(s);
-                            break;
-                        case PsbDictionary dic:
-                            Objects = dic;
-                            if (dic.Value.ContainsKey("expire_suffix_list"))
-                            {
-                                ExpireSuffixList = dic["expire_suffix_list"] as PsbCollection;
-                            }
-                            break;
-                        case PsbResource r:
-                            Resources.Add(r);
-                            break;
-                    }
+                    throw new Exception("Can not parse objects");
                 }
-                catch (Exception e)
+                if (!(obj is PsbDictionary))
                 {
-                    Debug.WriteLine(e);
-                    break;
+                    throw new Exception("Wrong offset when parsing objects");
                 }
-            } while (obj != null);
+                if (Objects == null)
+                {
+                    Objects = obj as PsbDictionary;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                throw;
+            }
 
             if (ExpireSuffixList != null && ExpireSuffixList.Value.Count > 0)
             {
-                Console.WriteLine();
-                //Extension = ;
+                var extStr = ExpireSuffixList.Value[0] as PsbString;
+                if (extStr != null)
+                {
+                    Extension = extStr.Value;
+                }
             }
 
-            Strings.Sort((s1, s2) => (int)s1.Index - (int)s2.Index);
             Resources.Sort((s1, s2) => (int)s1.Index - (int)s2.Index);
         }
 
@@ -124,23 +123,31 @@ namespace FreeMote.Psb
             Names = new List<string>(NameIndexes.Value.Count);
             for (int i = 0; i < NameIndexes.Value.Count; i++)
             {
-                var sb = new StringBuilder();
+                var list = new List<byte>();
                 var index = NameIndexes[i];
                 var chr = NamesData[(int)index];
-
+                char temp = (char)0;
                 while (chr != 0)
                 {
-                    var code = NamesData[(int) chr];
-                    var d = Charset[(int) code];
+                    var code = NamesData[(int)chr];
+                    var d = Charset[(int)code];
                     var realChr = chr - d;
-
+                    //Debug.Write(realChr.ToString("X2") + " ");
                     chr = code;
 
-                    sb.Append((char)realChr);
+                    list.Insert(0, (byte)realChr);
                 }
+                //Debug.WriteLine("");
+                var str = Encoding.UTF8.GetString(list.ToArray());
+                Names.Add(str);
 
-                Names.Add(sb.ToString());
+                //Seems conflict
+                //if (!Strings.ContainsKey(index))
+                //{
+                //    Strings.Add(index, new PsbString(str, index));
+                //}
             }
+            NamesCheck = new List<string>(Names);
         }
 
         private IPsbValue Unpack(BinaryReader br)
@@ -151,10 +158,11 @@ namespace FreeMote.Psb
                 return null;
                 //throw new ArgumentOutOfRangeException($"0x{type:X2} is not a known type.");
             }
-            var type = (PsbType) typeByte;
+            var type = (PsbType)typeByte;
             switch (type)
             {
                 case PsbType.None:
+                    return null;
                 case PsbType.Null:
                     return new PsbNull();
                 case PsbType.False:
@@ -186,7 +194,7 @@ namespace FreeMote.Psb
                 case PsbType.StringN2:
                 case PsbType.StringN3:
                 case PsbType.StringN4:
-                    var str = new PsbString(typeByte - (byte) PsbType.StringN1 + 1, br);
+                    var str = new PsbString(typeByte - (byte)PsbType.StringN1 + 1, br);
                     LoadString(str, br);
                     return str;
                 case PsbType.ResourceN1:
@@ -223,11 +231,18 @@ namespace FreeMote.Psb
             PsbDictionary dictionary = new PsbDictionary(names.Value.Count);
             for (int i = 0; i < names.Value.Count; i++)
             {
-                var name = Names[(int) names[i]];
+                br.BaseStream.Seek(pos, SeekOrigin.Begin);
+                var name = Names[(int)names[i]];
                 var offset = offsets[i];
                 br.BaseStream.Seek(offset, SeekOrigin.Current);
                 var obj = Unpack(br);
                 dictionary.Value.Add(name, obj);
+                //Check
+                NamesCheck.Remove(name);
+            }
+            if (dictionary.Value.ContainsKey("expire_suffix_list"))
+            {
+                ExpireSuffixList = dictionary["expire_suffix_list"] as PsbCollection;
             }
             return dictionary;
         }
@@ -254,11 +269,12 @@ namespace FreeMote.Psb
         private void LoadResource(PsbResource res, BinaryReader br)
         {
             var pos = br.BaseStream.Position;
-            var offset = ChunkOffsets[(int) res.Index];
-            var length = ChunkLengths[(int) res.Index];
+            var offset = ChunkOffsets[(int)res.Index];
+            var length = ChunkLengths[(int)res.Index];
             br.BaseStream.Seek(Header.OffsetChunkData + offset, SeekOrigin.Begin);
             res.Data = br.ReadBytes((int)length);
             br.BaseStream.Seek(pos, SeekOrigin.Begin);
+            Resources.Add(res);
         }
 
         private void LoadString(PsbString str, BinaryReader br)
@@ -271,7 +287,25 @@ namespace FreeMote.Psb
             br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)str.Index], SeekOrigin.Begin);
             str.Value = br.ReadStringZeroTrim();
             br.BaseStream.Seek(pos, SeekOrigin.Begin);
+            if (!Strings.ContainsKey(str.Index))
+            {
+                Strings.Add(str.Index, str);
+            }
+            else if(Strings[str.Index].Value == str.Value)
+            {
+                //Good
+            }
+            else
+            {
+                Debug.WriteLine($"[Conflict] Index:{str.Index} Exists:{Strings[str.Index]} New:{str}");
+            }
         }
     }
 }
+
+
+
+
+
+
 

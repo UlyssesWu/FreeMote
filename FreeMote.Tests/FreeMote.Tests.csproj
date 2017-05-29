@@ -49,10 +49,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FreeMoteTest.cs" />
+    <Compile Include="PsbTest.cs" />
     <Compile Include="PurifyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
+      <Project>{c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7}</Project>
+      <Name>FreeMote.Psb</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FreeMote.Purify\FreeMote.Purify.csproj">
       <Project>{859b3831-c3a5-4ff9-b1fe-bd5d3f6a6452}</Project>
       <Name>FreeMote.Purify</Name>
