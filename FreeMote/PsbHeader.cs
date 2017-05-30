@@ -52,23 +52,25 @@ namespace FreeMote
         public uint OffsetEntries { get; set; }
 
         /// <summary>
-        /// Adler32 Checksum for header
-        /// <para>New in PSBv3, but not always checked in v3. Sadly, it's always checked from v4, so we have to handle it.</para>
+        /// [New in v3] Adler32 Checksum for header
+        /// <para>Not always checked in v3. Sadly, it's always checked from v4, so we have to handle it.</para>
         /// </summary>
         public uint Checksum { get; set; }
 
         /// <summary>
-        /// New in v4
+        /// [New in v4] Usually an empty array (3 bytes)
+        /// <para><see cref="OffsetResourceOffsets"/> - 6</para>
         /// </summary>
         public uint OffsetUnknown1 { get; set; }
         /// <summary>
-        /// New in v4
+        /// [New in v4] Usually an empty array (3 bytes)
+        /// <para><see cref="OffsetResourceOffsets"/> - 3</para>
         /// </summary>
         public uint OffsetUnknown2 { get; set; }
         /// <summary>
-        /// New in v4
+        /// [New in v4] Usually same as <see cref="OffsetChunkOffsets"/>
         /// </summary>
-        public uint OffsetUnknown3 { get; set; }
+        public uint OffsetResourceOffsets { get; set; }
 
         public static PsbHeader Load(BinaryReader br)
         {
@@ -102,13 +104,13 @@ namespace FreeMote
                 {
                     header.OffsetUnknown1 = br.ReadUInt32();
                     header.OffsetUnknown2 = br.ReadUInt32();
-                    header.OffsetUnknown3 = br.ReadUInt32();
+                    header.OffsetResourceOffsets = br.ReadUInt32();
                 }
             }
-            else
-            {
-                throw new NotSupportedException("Header seems encrypted.");
-            }
+            //else
+            //{
+            //    throw new NotSupportedException("Header seems encrypted.");
+            //}
             return header;
         }
         
@@ -138,7 +140,7 @@ namespace FreeMote
             {
                 header.OffsetUnknown1 = context.ReadUInt32(br);
                 header.OffsetUnknown2 = context.ReadUInt32(br);
-                header.OffsetUnknown3 = context.ReadUInt32(br);
+                header.OffsetResourceOffsets = context.ReadUInt32(br);
             }
             return header;
         }
@@ -167,7 +169,7 @@ namespace FreeMote
             }
             checkBuffer = BitConverter.GetBytes(OffsetUnknown1)
                                            .Concat(BitConverter.GetBytes(OffsetUnknown2))
-                                           .Concat(BitConverter.GetBytes(OffsetUnknown3))
+                                           .Concat(BitConverter.GetBytes(OffsetResourceOffsets))
                                            .ToArray();
             adler32.Update(checkBuffer);
             Checksum = (uint)adler32.Checksum;

@@ -20,7 +20,7 @@ namespace FreeMote
         Full,
         /// <summary>
         /// Automata
-        /// <para>if encrypt v3, will only encrypt header as GoGoNippon format.</para>
+        /// <para>if encrypt v3-V4, will only encrypt header as GoGoNippon format.</para>
         /// <para>if encrypt v2, will only encrypt body like most games.</para>
         /// <para>if decrypt, clean header and body both.</para>
         /// </summary>
@@ -179,7 +179,7 @@ namespace FreeMote
             {
                 header.OffsetUnknown1 = br.ReadUInt32();
                 header.OffsetUnknown2 = br.ReadUInt32();
-                header.OffsetUnknown3 = br.ReadUInt32();
+                header.OffsetResourceOffsets = br.ReadUInt32();
             }
             bw.Write(header.OffsetEncrypt);
             bw.Write(header.OffsetNames);
@@ -197,7 +197,7 @@ namespace FreeMote
             {
                 bw.Write(header.OffsetUnknown1);
                 bw.Write(header.OffsetUnknown2);
-                bw.Write(header.OffsetUnknown3);
+                bw.Write(header.OffsetResourceOffsets);
             }
             return (offsetEncrypt != 0x2C) && (offsetEncrypt != 0x38) && (offsetEncrypt != 0);
         }
@@ -226,7 +226,7 @@ namespace FreeMote
             {
                 header.OffsetUnknown1 = context.ReadUInt32(br);
                 header.OffsetUnknown2 = context.ReadUInt32(br);
-                header.OffsetUnknown3 = context.ReadUInt32(br);
+                header.OffsetResourceOffsets = context.ReadUInt32(br);
             }
 
             //var checksumStartPosition = bw.BaseStream.Position;
@@ -257,13 +257,13 @@ namespace FreeMote
                 {
                     checkBuffer = BitConverter.GetBytes(header.OffsetUnknown1)
                         .Concat(BitConverter.GetBytes(header.OffsetUnknown2))
-                        .Concat(BitConverter.GetBytes(header.OffsetUnknown3)).ToArray();
+                        .Concat(BitConverter.GetBytes(header.OffsetResourceOffsets)).ToArray();
                     adler32.Update(checkBuffer);
                     header.Checksum = (uint)adler32.Checksum;
                     bw.Write(header.Checksum);
                     bw.Write(header.OffsetUnknown1);
                     bw.Write(header.OffsetUnknown2);
-                    bw.Write(header.OffsetUnknown3);
+                    bw.Write(header.OffsetResourceOffsets);
                 }
             }
         }
@@ -297,7 +297,7 @@ namespace FreeMote
             {
                 header.OffsetUnknown1 = br.ReadUInt32();
                 header.OffsetUnknown2 = br.ReadUInt32();
-                header.OffsetUnknown3 = br.ReadUInt32();
+                header.OffsetResourceOffsets = br.ReadUInt32();
             }
             var checksumEndPosition = br.BaseStream.Position;
 
@@ -328,13 +328,13 @@ namespace FreeMote
                 {
                     checkBuffer = BitConverter.GetBytes(header.OffsetUnknown1)
                                             .Concat(BitConverter.GetBytes(header.OffsetUnknown2))
-                                            .Concat(BitConverter.GetBytes(header.OffsetUnknown3)).ToArray();
+                                            .Concat(BitConverter.GetBytes(header.OffsetResourceOffsets)).ToArray();
                     adler32.Update(checkBuffer);
                     header.Checksum = (uint)adler32.Checksum;
                     context.Write(header.Checksum, bw);
                     context.Write(header.OffsetUnknown1, bw);
                     context.Write(header.OffsetUnknown2, bw);
-                    context.Write(header.OffsetUnknown3, bw);
+                    context.Write(header.OffsetResourceOffsets, bw);
                 }
             }
         }

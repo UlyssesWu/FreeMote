@@ -49,10 +49,22 @@ namespace FreeMote.Psb
 
         public Psb(string path)
         {
-
+            if (!File.Exists(path))
+            {
+                throw new IOException("File not exist.");
+            }
+            using (var fs = new FileStream(path, FileMode.Open))
+            {
+                LoadFromStream(fs);
+            }
         }
 
         public Psb(Stream stream)
+        {
+            LoadFromStream(stream);
+        }
+
+        private void LoadFromStream(Stream stream)
         {
             BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
 
@@ -61,21 +73,21 @@ namespace FreeMote.Psb
 
             //Pre Load Strings
             br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
-            StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            StringOffsets = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
             Strings = new SortedDictionary<uint, PsbString>();
 
             //Load Names
             br.BaseStream.Seek(Header.OffsetNames, SeekOrigin.Begin);
-            Charset = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
-            NamesData = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
-            NameIndexes = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            Charset = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
+            NamesData = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
+            NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
             LoadNames();
-            
+
             //Pre Load Resources (Chunks)
             br.BaseStream.Seek(Header.OffsetChunkOffsets, SeekOrigin.Begin);
-            ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            ChunkOffsets = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
             br.BaseStream.Seek(Header.OffsetChunkLengths, SeekOrigin.Begin);
-            ChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            ChunkLengths = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
             Resources = new List<PsbResource>(ChunkLengths.Value.Count);
 
             //Load Entries
@@ -104,6 +116,16 @@ namespace FreeMote.Psb
                 throw;
             }
 
+            //if (Header.Version == 4)
+            //{
+            //    br.BaseStream.Seek(Header.OffsetUnknown1, SeekOrigin.Begin);
+            //    var emptyArray1 = Unpack(br);
+            //    br.BaseStream.Seek(Header.OffsetUnknown2, SeekOrigin.Begin);
+            //    var emptyArray2 = Unpack(br);
+            //    br.BaseStream.Seek(Header.OffsetResourceOffsets, SeekOrigin.Begin);
+            //    var resArray = Unpack(br);
+            //}
+
             if (ExpireSuffixList != null && ExpireSuffixList.Value.Count > 0)
             {
                 var extStr = ExpireSuffixList.Value[0] as PsbString;
@@ -113,9 +135,8 @@ namespace FreeMote.Psb
                 }
             }
 
-            Resources.Sort((s1, s2) => (int)s1.Index - (int)s2.Index);
+            Resources.Sort((s1, s2) => (int) s1.Index - (int) s2.Index);
         }
-
 
         private void LoadNames()
         {
@@ -215,6 +236,7 @@ namespace FreeMote.Psb
                 case PsbType.Array:
                 case PsbType.Boolean:
                 case PsbType.BTree:
+                    //Debug.WriteLine("FreeMote won't need these for compile.");
                     break;
                 default:
                     return null;
@@ -246,6 +268,11 @@ namespace FreeMote.Psb
             return dictionary;
         }
 
+        /// <summary>
+        /// Load a collection (unpack needed)
+        /// </summary>
+        /// <param name="br"></param>
+        /// <returns></returns>
         private PsbCollection LoadCollection(BinaryReader br)
         {
             var offsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
@@ -265,6 +292,11 @@ namespace FreeMote.Psb
             return collection;
         }
 
+        /// <summary>
+        /// Load a resource based on index
+        /// </summary>
+        /// <param name="res"></param>
+        /// <param name="br"></param>
         private void LoadResource(PsbResource res, BinaryReader br)
         {
             var pos = br.BaseStream.Position;
@@ -276,6 +308,11 @@ namespace FreeMote.Psb
             Resources.Add(res);
         }
 
+        /// <summary>
+        /// Load a string based on index
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="br"></param>
         private void LoadString(PsbString str, BinaryReader br)
         {
             if (StringOffsets == null)

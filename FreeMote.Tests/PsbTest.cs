@@ -72,5 +72,16 @@ namespace FreeMote.Tests
                 PSB psb = new PSB(fs);
             }
         }
+
+        [TestMethod]
+        public void TestPsbLoadV4()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var paths = Directory.GetFiles(resPath, "*v4.psb");
+            using (FileStream fs = new FileStream(paths[0], FileMode.Open))
+            {
+                PSB psb = new PSB(fs);
+            }
+        }
     }
 }
