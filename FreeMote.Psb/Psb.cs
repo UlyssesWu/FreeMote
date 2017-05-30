@@ -85,7 +85,6 @@ namespace FreeMote.Psb
             try
             {
                 obj = Unpack(br);
-                Debug.WriteLine($"Unpack: {obj?.ToString()}");
                 if (obj == null)
                 {
                     throw new Exception("Can not parse objects");

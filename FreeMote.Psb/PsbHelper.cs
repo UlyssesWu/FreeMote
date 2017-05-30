@@ -42,7 +42,7 @@ namespace FreeMote.Psb
         public static byte[] UnzipNumberBytes(this byte[] b, int size = 8, bool unsigned = false)
         {
             byte[] r = new byte[size];
-            if (!unsigned && b.Last() == 0xFF)
+            if (!unsigned && (b.Last() >= 0b10000000)) //b.Last() == 0xFF
             {
                 for (int i = 0; i < size; i++)
                 {

@@ -294,7 +294,7 @@ namespace FreeMote.Psb
     {
         internal PsbArray(int n, BinaryReader br)
         {
-            long count = br.ReadBytes(n).UnzipNumber();
+            uint count = br.ReadBytes(n).UnzipUInt();
             if (count > int.MaxValue)
             {
                 throw new ArgumentOutOfRangeException("Long array is not supported yet");
