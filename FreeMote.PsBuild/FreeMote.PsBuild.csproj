@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FreeMote.PsBuild</RootNamespace>
     <AssemblyName>FreeMote.PsBuild</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -45,6 +49,21 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsbCompiler.cs" />
     <Compile Include="PsbDecompiler.cs" />
+    <Compile Include="PsbHelper.cs" />
+    <Compile Include="PsbTypeConverter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
+      <Project>{c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7}</Project>
+      <Name>FreeMote.Psb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FreeMote\FreeMote.csproj">
+      <Project>{d43ca425-6476-4ae3-a3d8-bbcac0f0383c}</Project>
+      <Name>FreeMote</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

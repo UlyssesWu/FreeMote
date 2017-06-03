@@ -85,6 +85,7 @@ namespace FreeMote.Psb
         string ToString();
     }
 
+    [Serializable]
     public class PsbNull : IPsbValue
     {
         public object Value => null;
@@ -97,6 +98,7 @@ namespace FreeMote.Psb
         }
     }
 
+    [Serializable]
     public class PsbBool : IPsbValue
     {
         public PsbBool(bool value = false)
@@ -121,6 +123,7 @@ namespace FreeMote.Psb
         Double
     }
 
+    [Serializable]
     public class PsbNumber : IPsbValue
     {
         internal PsbNumber(PsbType type, BinaryReader br)
@@ -159,7 +162,8 @@ namespace FreeMote.Psb
                     return;
                 case PsbType.Float0:
                     NumberType = PsbNumberType.Float;
-                    Data = br.ReadBytes(1);
+                    //Data = br.ReadBytes(1);
+                    Data = BitConverter.GetBytes(0.0f);
                     return;
                 case PsbType.Float:
                     NumberType = PsbNumberType.Float;
@@ -182,6 +186,36 @@ namespace FreeMote.Psb
         {
             Data = data;
             NumberType = type;
+        }
+
+        /// <summary>
+        /// Int Number
+        /// </summary>
+        /// <param name="val"></param>
+        public PsbNumber(int val)
+        {
+            NumberType = PsbNumberType.Int;
+            IntValue = val;
+        }
+
+        /// <summary>
+        /// Float Number
+        /// </summary>
+        /// <param name="val"></param>
+        public PsbNumber(float val)
+        {
+            NumberType = PsbNumberType.Float;
+            FloatValue = val;
+        }
+
+        /// <summary>
+        /// Double Number
+        /// </summary>
+        /// <param name="val"></param>
+        public PsbNumber(double val)
+        {
+            NumberType = PsbNumberType.Double;
+            DoubleValue = val;
         }
 
         public byte[] Data { get; set; }
@@ -290,6 +324,7 @@ namespace FreeMote.Psb
     /// <summary>
     /// uint[]
     /// </summary>
+    [Serializable]
     public class PsbArray : IPsbValue
     {
         internal PsbArray(int n, BinaryReader br)
@@ -354,48 +389,7 @@ namespace FreeMote.Psb
         }
     }
 
-    public class PsbArray<T> : IPsbValue where T : IPsbValue
-    {
-        public PsbArray()
-        {
-            Value = new List<T>();
-        }
-        public List<T> Value { get; }
-
-        public PsbType Type
-        {
-            get
-            {
-                switch (Value.Count.GetSize())
-                {
-                    case 1:
-                        return PsbType.ArrayN1;
-                    case 2:
-                        return PsbType.ArrayN2;
-                    case 3:
-                        return PsbType.ArrayN3;
-                    case 4:
-                        return PsbType.ArrayN4;
-                    case 5:
-                        return PsbType.ArrayN5;
-                    case 6:
-                        return PsbType.ArrayN6;
-                    case 7:
-                        return PsbType.ArrayN7;
-                    case 8:
-                        return PsbType.ArrayN8;
-                    default:
-                        throw new ArgumentOutOfRangeException("Not a valid array");
-                }
-            }
-        }
-
-        public override string ToString()
-        {
-            return $"Array<{typeof(T).ToString().Replace("Psb", "")}>[{Value.Count}]";
-        }
-    }
-
+    [Serializable]
     public class PsbString : IPsbValue, IPsbIndexed
     {
         internal PsbString(int n, BinaryReader br)
@@ -456,6 +450,7 @@ namespace FreeMote.Psb
     /// <summary>
     /// psb_objects_t
     /// </summary>
+    [Serializable]
     public class PsbDictionary : IPsbValue
     {
         public PsbDictionary(int capacity)
@@ -477,6 +472,7 @@ namespace FreeMote.Psb
         }
     }
 
+    [Serializable]
     public class PsbCollection : IPsbValue
     {
         public PsbCollection(int capacity)
@@ -499,6 +495,7 @@ namespace FreeMote.Psb
         }
     }
 
+    [Serializable]
     public class PsbResource : IPsbValue, IPsbIndexed
     {
         internal PsbResource(int n, BinaryReader br)

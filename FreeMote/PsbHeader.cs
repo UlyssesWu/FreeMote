@@ -11,7 +11,7 @@ namespace FreeMote
     internal class PsbHeader
     {
         public char[] Signature { get; set; } = new char[4];
-        public ushort Version { get; set; } = 2;
+        public ushort Version { get; set; } = 3;
 
         /// <summary>
         /// If 1, the header seems encrypted, which add more difficulty to us
@@ -20,14 +20,14 @@ namespace FreeMote
         public ushort HeaderEncrypt { get; set; } = 0;
 
         /// <summary>
-        /// Offset of encryption bytes
-        /// <para>Usually same as <see cref="OffsetNames"/> if encrypted, but it's still 0x2C in v4 while it should be 0x38</para>
+        /// Header Length
+        /// <para>Usually same as <see cref="OffsetNames"/></para>
         /// </summary>
-        public uint OffsetEncrypt { get; set; } = 0;
+        public uint HeaderLength { get; set; }
 
         /// <summary>
-        /// Header Length
-        /// <para>Usually the beginning of encryption</para>
+        /// Offset of Names
+        /// <para>Usually the beginning of encryption in v2</para>
         /// </summary>
         public uint OffsetNames { get; set; }
 
@@ -79,16 +79,20 @@ namespace FreeMote
                 Signature = br.ReadChars(4),
                 Version = br.ReadUInt16(),
                 HeaderEncrypt = br.ReadUInt16(),
-                OffsetEncrypt = br.ReadUInt32(),
+                HeaderLength = br.ReadUInt32(),
                 OffsetNames = br.ReadUInt32()
             };
+            if (!new string(header.Signature).ToUpperInvariant().StartsWith("PSB"))
+            {
+                throw new BadImageFormatException("Not a valid PSB file");
+            }
             //if (header.HeaderEncrypt != 0) //following header is possibly encrypted
             //{
             //    return header;
             //}
-            if (header.OffsetEncrypt < br.BaseStream.Length 
-                && header.OffsetNames < br.BaseStream.Length 
-                && (header.OffsetEncrypt == header.OffsetNames || header.OffsetEncrypt == 0))
+            if (header.HeaderLength < br.BaseStream.Length
+                && header.OffsetNames < br.BaseStream.Length
+                && (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0))
             {
                 header.OffsetStrings = br.ReadUInt32();
                 header.OffsetStringsData = br.ReadUInt32();
@@ -113,7 +117,7 @@ namespace FreeMote
             //}
             return header;
         }
-        
+
         public static PsbHeader Load(BinaryReader br, uint key)
         {
             PsbHeader header = new PsbHeader
@@ -122,9 +126,14 @@ namespace FreeMote
                 Version = br.ReadUInt16(),
                 HeaderEncrypt = br.ReadUInt16()
             };
+            if (!new string(header.Signature).ToUpperInvariant().StartsWith("PSB"))
+            {
+                throw new BadImageFormatException("Not a valid PSB file");
+            }
+
             PsbStreamContext context = new PsbStreamContext(key);
 
-            header.OffsetEncrypt = context.ReadUInt32(br);
+            header.HeaderLength = context.ReadUInt32(br);
             header.OffsetNames = context.ReadUInt32(br);
             header.OffsetStrings = context.ReadUInt32(br);
             header.OffsetStringsData = context.ReadUInt32(br);
@@ -151,7 +160,7 @@ namespace FreeMote
         /// <returns>Current Checksum</returns>
         public uint UpdateChecksum()
         {
-            var checkBuffer = BitConverter.GetBytes(OffsetEncrypt)
+            var checkBuffer = BitConverter.GetBytes(HeaderLength)
                         .Concat(BitConverter.GetBytes(OffsetNames))
                         .Concat(BitConverter.GetBytes(OffsetStrings))
                         .Concat(BitConverter.GetBytes(OffsetStringsData))
@@ -174,6 +183,46 @@ namespace FreeMote
             adler32.Update(checkBuffer);
             Checksum = (uint)adler32.Checksum;
             return Checksum;
+        }
+
+        public static uint GetHeaderLength(ushort version)
+        {
+            if (version < 3)
+            {
+                return 40u;
+            }
+            if (version > 3)
+            {
+                return 56u;
+            }
+            return 44u;
+        }
+
+        public void SwitchVersion(ushort version = 3)
+        {
+            if (version != 2 && version != 3 && version != 4)
+            {
+                throw new ArgumentOutOfRangeException("Unsupported version");
+            }
+            Version = version;
+            long headerLen = GetHeaderLength(version);
+            long offset = headerLen - HeaderLength;
+
+            if (offset != 0)
+            {
+                HeaderLength = (uint)headerLen;
+                OffsetNames = (uint)(OffsetNames + offset);
+                OffsetStrings = (uint)(OffsetStrings + offset);
+                OffsetStringsData = (uint)(OffsetStringsData + offset);
+                OffsetChunkOffsets = (uint)(OffsetChunkOffsets + offset);
+                OffsetChunkLengths = (uint)(OffsetChunkLengths + offset);
+                OffsetChunkData = (uint)(OffsetChunkData + offset);
+                OffsetEntries = (uint)(OffsetEntries + offset);
+                OffsetUnknown1 = OffsetChunkOffsets - 6;
+                OffsetUnknown2 = OffsetChunkOffsets - 3;
+                OffsetResourceOffsets = OffsetChunkOffsets;
+            }
+            UpdateChecksum();
         }
     }
 }

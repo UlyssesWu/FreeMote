@@ -36,7 +36,7 @@ namespace FreeMote
 
         public bool IsHeaderEncrypted => Header.HeaderEncrypt != 0;
 
-        public bool IsBodyEncrypted => Header.OffsetEncrypt != Header.OffsetNames;
+        public bool IsBodyEncrypted => Header.HeaderLength != Header.OffsetNames;
 
         public PsbFile(string path)
         {
@@ -84,9 +84,9 @@ namespace FreeMote
         {
             FileInfo fi = new FileInfo(Path);
 
-            if (Header.OffsetEncrypt < fi.Length
+            if (Header.HeaderLength < fi.Length
                 && Header.OffsetNames != 0
-                && (Header.OffsetEncrypt == Header.OffsetNames || Header.OffsetEncrypt == 0))
+                && (Header.HeaderLength == Header.OffsetNames || Header.HeaderLength == 0))
             {
                 return false;
             }
@@ -95,9 +95,9 @@ namespace FreeMote
 
         private static bool TestHeaderEncrypted(BinaryReader br, PsbHeader header)
         {
-            if (header.OffsetEncrypt < br.BaseStream.Length
+            if (header.HeaderLength < br.BaseStream.Length
                 && header.OffsetNames != 0
-                && (header.OffsetEncrypt == header.OffsetNames || header.OffsetEncrypt == 0))
+                && (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0))
             {
                 return false;
             }
@@ -149,22 +149,16 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="br"></param>
         /// <param name="bw"></param>
         /// <param name="cleanEncryptOffset">maybe you should not use it</param>
         /// <param name="resetEncryptOffset">restore offsetEncrypt</param>
-        /// <returns>true if seems encrypted</returns>
-        private static bool WriteOriginalPartialHeader(BinaryReader br, BinaryWriter bw, PsbHeader header, bool cleanEncryptOffset = false, bool resetEncryptOffset = false)
+        private static void WriteOriginalPartialHeader(BinaryReader br, BinaryWriter bw, PsbHeader header)
         {
-            uint offsetEncrypt = br.ReadUInt32();
-            header.OffsetEncrypt = cleanEncryptOffset ? 0 : offsetEncrypt;
+            header.HeaderLength = br.ReadUInt32();
             header.OffsetNames = br.ReadUInt32();
-            if (resetEncryptOffset)
-            {
-                header.OffsetEncrypt = header.OffsetNames;
-            }
             header.OffsetStrings = br.ReadUInt32();
             header.OffsetStringsData = br.ReadUInt32();
             header.OffsetChunkOffsets = br.ReadUInt32();
@@ -181,7 +175,7 @@ namespace FreeMote
                 header.OffsetUnknown2 = br.ReadUInt32();
                 header.OffsetResourceOffsets = br.ReadUInt32();
             }
-            bw.Write(header.OffsetEncrypt);
+            bw.Write(header.HeaderLength);
             bw.Write(header.OffsetNames);
             bw.Write(header.OffsetStrings);
             bw.Write(header.OffsetStringsData);
@@ -199,7 +193,6 @@ namespace FreeMote
                 bw.Write(header.OffsetUnknown2);
                 bw.Write(header.OffsetResourceOffsets);
             }
-            return (offsetEncrypt != 0x2C) && (offsetEncrypt != 0x38) && (offsetEncrypt != 0);
         }
 
         /// <summary>
@@ -210,7 +203,7 @@ namespace FreeMote
         /// <param name="context"></param>
         private static void WriteDecryptPartialHeader(BinaryReader br, BinaryWriter bw, PsbStreamContext context, PsbHeader header)
         {
-            header.OffsetEncrypt = context.ReadUInt32(br);
+            header.HeaderLength = context.ReadUInt32(br);
             header.OffsetNames = context.ReadUInt32(br);
             header.OffsetStrings = context.ReadUInt32(br);
             header.OffsetStringsData = context.ReadUInt32(br);
@@ -222,7 +215,7 @@ namespace FreeMote
             {
                 header.Checksum = context.ReadUInt32(br);
             }
-            if (header.Version > 3) //is M2 intend to cheat us by wrong OffsetEncrypt?
+            if (header.Version > 3)
             {
                 header.OffsetUnknown1 = context.ReadUInt32(br);
                 header.OffsetUnknown2 = context.ReadUInt32(br);
@@ -230,7 +223,7 @@ namespace FreeMote
             }
 
             //var checksumStartPosition = bw.BaseStream.Position;
-            bw.Write(header.OffsetEncrypt);
+            bw.Write(header.HeaderLength);
             bw.Write(header.OffsetNames);
             bw.Write(header.OffsetStrings);
             bw.Write(header.OffsetStringsData);
@@ -277,11 +270,11 @@ namespace FreeMote
         private static void WriteEncryptPartialHeader(BinaryReader br, BinaryWriter bw, PsbStreamContext context, PsbHeader header)
         {
             var checksumStartPosition = br.BaseStream.Position;
-            header.OffsetEncrypt = br.ReadUInt32();
+            header.HeaderLength = br.ReadUInt32();
             header.OffsetNames = br.ReadUInt32();
-            if (header.OffsetEncrypt == 0)
+            if (header.HeaderLength == 0)
             {
-                header.OffsetEncrypt = header.OffsetNames;
+                header.HeaderLength = header.OffsetNames;
             }
             header.OffsetStrings = br.ReadUInt32();
             header.OffsetStringsData = br.ReadUInt32();
@@ -301,7 +294,7 @@ namespace FreeMote
             }
             var checksumEndPosition = br.BaseStream.Position;
 
-            context.Write(header.OffsetEncrypt, bw);
+            context.Write(header.HeaderLength, bw);
             context.Write(header.OffsetNames, bw);
             context.Write(header.OffsetStrings, bw);
             context.Write(header.OffsetStringsData, bw);
@@ -430,7 +423,7 @@ namespace FreeMote
             bw.Write(header.Signature); //Signature
             bw.Write(header.Version); //Version
             header.HeaderEncrypt = br.ReadUInt16(); //headerEncrypt, sometimes we don't believe it when encoding
-            header.OffsetEncrypt = br.ReadUInt32();
+            header.HeaderLength = br.ReadUInt32();
             header.OffsetNames = br.ReadUInt32();
             br.BaseStream.Seek(-8, SeekOrigin.Current);
 
@@ -481,7 +474,7 @@ namespace FreeMote
                                 }
                                 else
                                 {
-                                    WriteOriginalPartialHeader(br, bw, header, resetEncryptOffset: true);
+                                    WriteOriginalPartialHeader(br, bw, header);
                                     WriteEncodeBody(br, bw, context, header);
                                 }
                             }

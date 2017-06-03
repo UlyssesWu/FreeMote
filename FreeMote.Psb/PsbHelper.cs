@@ -77,6 +77,11 @@ namespace FreeMote.Psb
             return sb.ToString();
         }
 
+        //public static byte[] EnsureLength(this byte[] bytes)
+        //{
+        //    return bytes;
+        //}
+
     }
 
 
