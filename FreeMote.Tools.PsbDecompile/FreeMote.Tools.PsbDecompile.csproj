@@ -4,14 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{44270712-4ACB-447D-835E-9982BD515DBB}</ProjectGuid>
+    <ProjectGuid>{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>FreeMote.Tools.EmotePsbConverter</RootNamespace>
-    <AssemblyName>EmoteConv</AssemblyName>
+    <RootNamespace>FreeMote.Tools.PsbDecompile</RootNamespace>
+    <AssemblyName>PsbDecompile</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -50,9 +49,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FreeMote\FreeMote.csproj">
-      <Project>{d43ca425-6476-4ae3-a3d8-bbcac0f0383c}</Project>
-      <Name>FreeMote</Name>
+    <ProjectReference Include="..\FreeMote.PsBuild\FreeMote.PsBuild.csproj">
+      <Project>{717a63de-e599-4134-92ab-40a17c326da3}</Project>
+      <Name>FreeMote.PsBuild</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -68,7 +68,12 @@ namespace FreeMote.Tests
             var target = paths[0];
             var json = PsbDecompiler.Decompile(target);
             File.WriteAllText(target + ".json", json);
-            Console.WriteLine(json);
+        }
+
+        [TestMethod]
+        public void TestCompile()
+        {
+
         }
     }
 }

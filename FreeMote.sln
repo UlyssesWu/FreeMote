@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Purify", "FreeMote.Purify\FreeMote.Purify.csproj", "{859B3831-C3A5-4FF9-B1FE-BD5D3F6A6452}"
 EndProject
@@ -14,6 +14,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.PsBuild", "FreeMote.PsBuild\FreeMote.PsBuild.csproj", "{717A63DE-E599-4134-92AB-40A17C326DA3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmotePsbConverter", "FreeMote.Tools.EmotePsbConverter\FreeMote.Tools.EmotePsbConverter.csproj", "{44270712-4ACB-447D-835E-9982BD515DBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.PsbDecompile", "FreeMote.Tools.PsbDecompile\FreeMote.Tools.PsbDecompile.csproj", "{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.PsBuild", "FreeMote.Tools.PsBuild\FreeMote.Tools.PsBuild.csproj", "{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +49,14 @@ Global
 		{44270712-4ACB-447D-835E-9982BD515DBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44270712-4ACB-447D-835E-9982BD515DBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44270712-4ACB-447D-835E-9982BD515DBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -73,21 +73,21 @@ namespace FreeMote.Psb
 
             //Pre Load Strings
             br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
-            StringOffsets = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
+            StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
             Strings = new SortedDictionary<uint, PsbString>();
 
             //Load Names
             br.BaseStream.Seek(Header.OffsetNames, SeekOrigin.Begin);
-            Charset = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
-            NamesData = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
-            NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
+            Charset = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            NamesData = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            NameIndexes = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
             LoadNames();
 
             //Pre Load Resources (Chunks)
             br.BaseStream.Seek(Header.OffsetChunkOffsets, SeekOrigin.Begin);
-            ChunkOffsets = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
+            ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
             br.BaseStream.Seek(Header.OffsetChunkLengths, SeekOrigin.Begin);
-            ChunkLengths = new PsbArray(br.ReadByte() - (byte) PsbType.ArrayN1 + 1, br);
+            ChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
             Resources = new List<PsbResource>(ChunkLengths.Value.Count);
 
             //Load Entries
@@ -135,7 +135,7 @@ namespace FreeMote.Psb
                 }
             }
 
-            Resources.Sort((s1, s2) => (int) s1.Index - (int) s2.Index);
+            Resources.Sort((r1, r2) => (int)r1.Index - (int)r2.Index);
         }
 
         private void LoadNames()
@@ -146,7 +146,6 @@ namespace FreeMote.Psb
                 var list = new List<byte>();
                 var index = NameIndexes[i];
                 var chr = NamesData[(int)index];
-                char temp = (char)0;
                 while (chr != 0)
                 {
                     var code = NamesData[(int)chr];
@@ -327,7 +326,7 @@ namespace FreeMote.Psb
             {
                 Strings.Add(str.Index, str);
             }
-            else if(Strings[str.Index].Value == str.Value)
+            else if (Strings[str.Index].Value == str.Value)
             {
                 //Good
             }

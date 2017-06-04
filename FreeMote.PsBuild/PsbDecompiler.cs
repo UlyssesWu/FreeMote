@@ -26,6 +26,13 @@ namespace FreeMote.PsBuild
             return Decompile(psb);
         }
 
+        public static string Decompile(string path, out List<byte[]> resources)
+        {
+            PSB psb = new PSB(path);
+            resources = new List<byte[]>(psb.Resources.Select(r => r.Data));
+            return Decompile(psb);
+        }
+
         internal static string Decompile(PSB psb)
         {
             return JsonConvert.SerializeObject(psb.Objects, Formatting.Indented, new PsbTypeConverter());
