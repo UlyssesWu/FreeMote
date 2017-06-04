@@ -13,7 +13,7 @@ namespace FreeMote.Tools.EmotePsbConverter
         private static uint? NewKey = null;
         static void Main(string[] args)
         {
-            Console.WriteLine("FreeMote E-mote PSB Converter");
+            Console.WriteLine("FreeMote PSB Converter");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
             Console.WriteLine();
             if (args.Length >= 3)

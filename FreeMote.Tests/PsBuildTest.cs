@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using FreeMote.PsBuild;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 
 namespace FreeMote.Tests
 {
@@ -74,6 +75,28 @@ namespace FreeMote.Tests
         public void TestCompile()
         {
 
+        }
+
+        [TestMethod]
+        public void TestJsonNumbers()
+        {
+            List<float> floats = new List<float> { -0.00000001f, 1/3f, -0.000027f, 19.200079f, (float)Math.PI, float.MinValue};
+            string json = JsonConvert.SerializeObject(floats);
+            Console.WriteLine(json);
+            var result = JsonConvert.DeserializeObject<List<float>>(json);
+            for (int i = 0; i < result.Count; i++)
+            {
+                Assert.AreEqual(floats[i], result[i]);
+            }
+
+            List<double> doubles  = new List<double> { double.MinValue, double.MaxValue, 123456789.0, -0.00000001, 0.03, 0.4 };
+            json = JsonConvert.SerializeObject(doubles);
+            Console.WriteLine(json);
+            var result2 = JsonConvert.DeserializeObject<List<double>>(json);
+            for (int i = 0; i < result2.Count; i++)
+            {
+                Assert.AreEqual(doubles[i], result2[i]);
+            }
         }
     }
 }

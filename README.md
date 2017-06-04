@@ -20,6 +20,10 @@ Emote <-> Live2D Conversion
 ## Tools
 ### EmoteConv (FreeMote.Tools.EmotePsbConverter)
 Convert Emote PSB files. A managed version of `emote_conv`(by number201724).
+### PsbDecompile (FreeMote.Tools.PsbDecompile)
+Decompile PSB files. A managed version of `decompiler`(by number201724).
+### PsBuild (FreeMote.Tools.PsBuild) (In Dev)
+Compile Emote description json to PSB.
 ### EmoteMeasurer (FreeMote.Tools.EmoteMeasurer) (In Dev)
 Measure specific positions of models to help Emote PSB version migration.
 
