@@ -21,7 +21,7 @@ namespace FreeMote.PsBuild
         {
             switch (value)
             {
-                case PsbNull nul:
+                case PsbNull _:
                     writer.WriteNull();
                     break;
                 case PsbBool b:
@@ -35,6 +35,7 @@ namespace FreeMote.PsBuild
                             break;
                         case PsbNumberType.Float:
                             writer.WriteValue(num.FloatValue);
+                            //writer.WriteRawValue(num.FloatValue.ToString("R"));
                             break;
                         case PsbNumberType.Double:
                             writer.WriteValue(num.DoubleValue);
@@ -97,10 +98,15 @@ namespace FreeMote.PsBuild
                     return new PsbNumber(token.Value<int>());
                 case JTokenType.Float:
                     var d = token.Value<double>();
-                    if (d < float.MaxValue && d > float.MinValue)
+                    var f = token.Value<float>();
+                    if (Math.Abs(f - d) < double.Epsilon) //float
                     {
                         return new PsbNumber(token.Value<float>());
                     }
+                    //if (d < float.MaxValue && d > float.MinValue)
+                    //{
+                    //    return new PsbNumber(token.Value<float>());
+                    //}
                     return new PsbNumber(d);
                 case JTokenType.Boolean:
                     return new PsbBool(token.Value<bool>());

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FreeMote;
-using PSB = FreeMote.Psb.Psb;
+using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

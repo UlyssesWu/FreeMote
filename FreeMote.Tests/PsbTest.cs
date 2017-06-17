@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
-using PSB = FreeMote.Psb.Psb;
 
 
 namespace FreeMote.Tests
@@ -30,19 +29,13 @@ namespace FreeMote.Tests
         ///</summary>
         public TestContext TestContext
         {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
+            get => testContextInstance;
+            set => testContextInstance = value;
         }
 
         #region 附加测试特性
         //
-        // 编写测试时，可以使用以下附加特性: 
+        // 编写测试时，可以使用以下附加特性:
         //
         // 在运行类中的第一个测试之前使用 ClassInitialize 运行代码
         // [ClassInitialize()]
@@ -82,6 +75,29 @@ namespace FreeMote.Tests
             {
                 PSB psb = new PSB(fs);
             }
+        }
+
+        [TestMethod]
+        public void TestPsbLoadKrkr()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var paths = Directory.GetFiles(resPath, "澄怜a_裸.psb-pure.psb");
+            using (FileStream fs = new FileStream(paths[0], FileMode.Open))
+            {
+                PSB psb = new PSB(fs);
+            }
+        }
+
+        [TestMethod]
+        public void TestRlUncompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "84.bin"); //輪郭00
+            RlCompress.ConvertToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
+            path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
+            RlCompress.ConvertToImageFile(File.ReadAllBytes(path), path + ".png", 395, 411);
+
         }
     }
 }

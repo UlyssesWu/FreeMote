@@ -4,50 +4,58 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+// ReSharper disable InconsistentNaming
 
 //PSB format is based on psbfile by number201724.
 
 namespace FreeMote.Psb
 {
     /// <summary>
-    /// P S Binary
+    /// Packaged Struct Binary
     /// </summary>
-    public class Psb
+    /// Photo Shop Big
+    /// Pretty SB
+    public class PSB
     {
-        private List<string> NamesCheck;
-
         /// <summary>
         /// Header
         /// </summary>
-        internal PsbHeader Header;
+        internal PsbHeader Header { get; set; }
         internal PsbArray Charset;
         internal PsbArray NamesData;
         internal PsbArray NameIndexes;
         /// <summary>
         /// Names
         /// </summary>
-        public List<string> Names;
+        public List<string> Names { get; set; }
         internal PsbArray StringOffsets;
         /// <summary>
         /// Strings
         /// </summary>
-        public SortedDictionary<uint, PsbString> Strings;
+        public SortedDictionary<uint, PsbString> Strings { get; set; }
         internal PsbArray ChunkOffsets;
         internal PsbArray ChunkLengths;
         /// <summary>
         /// Resource Chunk
         /// </summary>
-        public List<PsbResource> Resources;
+        public List<PsbResource> Resources { get; set; }
 
         /// <summary>
         /// Objects (Entries)
         /// </summary>
-        public PsbDictionary Objects;
+        public PsbDictionary Objects { get; set; }
 
         internal PsbCollection ExpireSuffixList;
         public string Extension { get; internal set; }
 
-        public Psb(string path)
+        //private List<string> NamesCheck;
+
+        public PSB(ushort version = 3)
+        {
+            Header = new PsbHeader() { Version = version };
+        }
+
+        public PSB(string path)
         {
             if (!File.Exists(path))
             {
@@ -59,7 +67,7 @@ namespace FreeMote.Psb
             }
         }
 
-        public Psb(Stream stream)
+        public PSB(Stream stream)
         {
             LoadFromStream(stream);
         }
@@ -105,10 +113,7 @@ namespace FreeMote.Psb
                 {
                     throw new Exception("Wrong offset when parsing objects");
                 }
-                if (Objects == null)
-                {
-                    Objects = obj as PsbDictionary;
-                }
+                Objects = obj as PsbDictionary;
             }
             catch (Exception e)
             {
@@ -166,9 +171,14 @@ namespace FreeMote.Psb
                 //    Strings.Add(index, new PsbString(str, index));
                 //}
             }
-            NamesCheck = new List<string>(Names);
+            //NamesCheck = new List<string>(Names);
         }
 
+        /// <summary>
+        /// Unpack PSB Value
+        /// </summary>
+        /// <param name="br"></param>
+        /// <returns></returns>
         private IPsbValue Unpack(BinaryReader br)
         {
             var typeByte = br.ReadByte();
@@ -258,7 +268,7 @@ namespace FreeMote.Psb
                 var obj = Unpack(br);
                 dictionary.Value.Add(name, obj);
                 //Check
-                NamesCheck.Remove(name);
+                //NamesCheck.Remove(name);
             }
             if (dictionary.Value.ContainsKey("expire_suffix_list"))
             {
@@ -298,6 +308,11 @@ namespace FreeMote.Psb
         /// <param name="br"></param>
         private void LoadResource(PsbResource res, BinaryReader br)
         {
+            //FIXED: Add check for re-used resources
+            if (Resources.Find(r => r.Index == res.Index) != null)
+            {
+                return; //Already loaded!
+            }
             var pos = br.BaseStream.Position;
             var offset = ChunkOffsets[(int)res.Index];
             var length = ChunkLengths[(int)res.Index];
@@ -326,14 +341,15 @@ namespace FreeMote.Psb
             {
                 Strings.Add(str.Index, str);
             }
-            else if (Strings[str.Index].Value == str.Value)
-            {
-                //Good
-            }
-            else
+            else if (Strings[str.Index].Value != str.Value)
             {
                 Debug.WriteLine($"[Conflict] Index:{str.Index} Exists:{Strings[str.Index]} New:{str}");
             }
+        }
+
+        public void Merge()
+        {
+
         }
     }
 }

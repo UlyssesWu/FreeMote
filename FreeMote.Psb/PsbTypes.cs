@@ -410,9 +410,6 @@ namespace FreeMote.Psb
 
         public string Value { get; set; }
 
-        //Maybe we shouldn't keep this info here
-        //public uint Index { get; set; } = 0;
-
         /// <summary>
         /// It's based on index...
         /// </summary>
@@ -438,7 +435,7 @@ namespace FreeMote.Psb
 
         public override string ToString()
         {
-            return "\"" + Value + "\"";
+            return "\"" + Value + "\"" + $"(#{Index})";
         }
 
         public static implicit operator string(PsbString s)
@@ -535,7 +532,7 @@ namespace FreeMote.Psb
 
         public override string ToString()
         {
-            return $"Resource[{Data.Length}]";
+            return $"Resource[{Data.Length}](#{Index})";
         }
     }
 

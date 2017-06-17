@@ -111,10 +111,6 @@ namespace FreeMote
                     header.OffsetResourceOffsets = br.ReadUInt32();
                 }
             }
-            //else
-            //{
-            //    throw new NotSupportedException("Header seems encrypted.");
-            //}
             return header;
         }
 
@@ -198,14 +194,23 @@ namespace FreeMote
             return 44u;
         }
 
-        public void SwitchVersion(ushort version = 3)
+        public void SwitchVersion(ushort version = 3, bool offsetFields = false)
         {
             if (version != 2 && version != 3 && version != 4)
             {
                 throw new ArgumentOutOfRangeException("Unsupported version");
             }
+
             Version = version;
             long headerLen = GetHeaderLength(version);
+            if (!offsetFields)
+            {
+                HeaderLength = (uint) headerLen;
+                OffsetNames = HeaderLength;
+                UpdateChecksum();
+                return;
+            }
+
             long offset = headerLen - HeaderLength;
 
             if (offset != 0)

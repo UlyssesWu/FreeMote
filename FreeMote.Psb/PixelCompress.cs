@@ -11,12 +11,11 @@ namespace FreeMote.Psb
     /// PSB Pixel Compress (for images)
     /// <para>originally by number201724</para>
     /// </summary>
-    public static class PixelCompress
+    internal static class PixelCompress
     {
         public const int LzssLookShift = 7;
         public const int LzssLookAhead = 1 << LzssLookShift;
 
-       
         /// <summary>
         /// Pixel Uncompress
         /// </summary>
@@ -30,23 +29,23 @@ namespace FreeMote.Psb
             //int currentIndex = 0;
             int totalBytes = 0;
             int count;
-            while (actualSize != totalBytes)
+            while (input.Position < input.Length)
             {
                 int current = input.ReadByte();
                 totalBytes++;
-                if ((current & LzssLookAhead) != 0)
+                if ((current & LzssLookAhead) != 0) //Redundant
                 {
                     count = (current ^ LzssLookAhead) + 3;
                     byte[] buffer = new byte[align];
+                    input.Read(buffer, 0, align);
                     for (int i = 0; i < count; i++)
                     {
-                        input.Read(buffer, 0, align);
                         output.Write(buffer, 0, align);
                     }
-                    output.Write(new byte[align], 0, align);
+                    //output.Write(new byte[align], 0, align);
                     totalBytes += align;
                 }
-                else
+                else //not redundant
                 {
                     count = (current + 1) * align;
                     byte[] buffer = new byte[count];
