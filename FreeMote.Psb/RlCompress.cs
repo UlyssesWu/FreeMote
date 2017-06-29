@@ -16,10 +16,17 @@ namespace FreeMote.Psb
             Bmp,
             Png,
         }
-
-        public static byte[] Compress()
+        private static byte[] Compress(Stream stream, int align = 4)
         {
-            return null;
+            return PixelCompress.Compress(stream, align, out _);
+        }
+
+        private static byte[] Compress(byte[] data, int align = 4)
+        {
+            using (var stream = new MemoryStream(data))
+            {
+                return Compress(stream, align);
+            }
         }
 
         public static void ConvertToImageFile(byte[] data, string path, int height, int width, int align = 4, PsbImageFormat format = PsbImageFormat.Bmp)

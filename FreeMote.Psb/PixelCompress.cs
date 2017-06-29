@@ -163,12 +163,10 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="input"></param>
         /// <param name="align"></param>
-        /// <param name="actualSize"></param>
         /// <returns></returns>
-        public static byte[] Compress(Stream input, int align, out int actualSize)
+        public static byte[] Compress(Stream input, int align)
         {
             MemoryStream output = new MemoryStream();
-            int totalSize = 0;
             int blockSize = 0;
             int count;
             byte cmdByte;
@@ -192,10 +190,8 @@ namespace FreeMote.Psb
                     output.WriteByte(cmdByte);
                     output.Write(buffer, 0, buffer.Length);
                 }
-
-                totalSize += blockSize;
+                //totalSize += blockSize;
             }
-            actualSize = totalSize;
             return output.ToArray();
         }
     }
