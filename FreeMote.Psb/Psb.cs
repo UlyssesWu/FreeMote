@@ -59,7 +59,7 @@ namespace FreeMote.Psb
         {
             if (!File.Exists(path))
             {
-                throw new IOException("File not exist.");
+                throw new IOException("File not exists.");
             }
             using (var fs = new FileStream(path, FileMode.Open))
             {
@@ -109,11 +109,7 @@ namespace FreeMote.Psb
                 {
                     throw new Exception("Can not parse objects");
                 }
-                if (!(obj is PsbDictionary))
-                {
-                    throw new Exception("Wrong offset when parsing objects");
-                }
-                Objects = obj as PsbDictionary;
+                Objects = obj as PsbDictionary ?? throw new Exception("Wrong offset when parsing objects");
             }
             catch (Exception e)
             {

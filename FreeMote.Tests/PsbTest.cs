@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
 
@@ -97,7 +98,21 @@ namespace FreeMote.Tests
             RlCompress.ConvertToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
             path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
             RlCompress.ConvertToImageFile(File.ReadAllBytes(path), path + ".png", 395, 411);
+        }
 
+        [TestMethod]
+        public void TestRlCompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "84.bin"); //輪郭00
+            var bytes = RlCompress.CompressImageFile(path + ".png");
+            File.WriteAllBytes(path + ".rl", bytes);
+
+            RlCompress.ConvertToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 570, 426);
+            //RlCompress.ConvertToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
+            //path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
+            //RlCompress.ConvertToImageFile(File.ReadAllBytes(path), path + ".png", 395, 411);
         }
     }
 }

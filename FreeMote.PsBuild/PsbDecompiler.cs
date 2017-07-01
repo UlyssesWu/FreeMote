@@ -8,13 +8,14 @@ using FreeMote;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+// ReSharper disable AssignNullToNotNullAttribute
 
 namespace FreeMote.PsBuild
 {
     /// <summary>
     /// Decompile PSB(/MMO) File
     /// </summary>
-    public class PsbDecompiler
+    public static class PsbDecompiler
     {
         /// <summary>
         /// Decompile Pure PSB as Json
@@ -53,19 +54,21 @@ namespace FreeMote.PsBuild
         public static void DecompileToFile(string inputPath)
         {
             var name = Path.GetFileNameWithoutExtension(inputPath);
+            var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
             File.WriteAllText(inputPath + ".json", Decompile(inputPath, out List<byte[]> resources));
-            if (!Directory.Exists(name))
+            if (!Directory.Exists(dirPath))
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(inputPath), name));
+                Directory.CreateDirectory(dirPath);
             }
-            List<string> resPaths = new List<string>(resources.Count);
+            var resPaths = new List<string>(resources.Count);
             for (int i = 0; i < resources.Count; i++)
             {
-                resPaths.Add(Path.Combine(name, $"{i}.bin"));
-                File.WriteAllBytes(resPaths[i], resources[i]);
+                var relativePath = $"{name}/{i}.bin";
+                resPaths.Add(relativePath);
+                File.WriteAllBytes(Path.Combine(dirPath, $"{i}.bin"), resources[i]);
             }
-            File.WriteAllText(inputPath + ".res.json", JsonConvert.SerializeObject(resPaths, Formatting.Indented));
+            //MARK: We use `.resx.json` to distinguish from psbtools' `.res.json`
+            File.WriteAllText(inputPath + ".resx.json", JsonConvert.SerializeObject(resPaths, Formatting.Indented));
         }
     }
 }

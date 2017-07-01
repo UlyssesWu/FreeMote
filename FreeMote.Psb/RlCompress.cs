@@ -9,19 +9,19 @@ using System.IO;
 
 namespace FreeMote.Psb
 {
-    public class RlCompress
+    public static class RlCompress
     {
         public enum PsbImageFormat
         {
             Bmp,
             Png,
         }
-        private static byte[] Compress(Stream stream, int align = 4)
+        public static byte[] Compress(Stream stream, int align = 4)
         {
-            return PixelCompress.Compress(stream, align, out _);
+            return PixelCompress.Compress(stream, align);
         }
 
-        private static byte[] Compress(byte[] data, int align = 4)
+        public static byte[] Compress(byte[] data, int align = 4)
         {
             using (var stream = new MemoryStream(data))
             {
@@ -29,7 +29,40 @@ namespace FreeMote.Psb
             }
         }
 
-        public static void ConvertToImageFile(byte[] data, string path, int height, int width, int align = 4, PsbImageFormat format = PsbImageFormat.Bmp)
+        public static byte[] CompressImageFile(string path)
+        {
+            return Compress(PixelBytesFromImage(new Bitmap(path)));
+        }
+
+        public static byte[] GetPixelBytesFromImageFile(string path)
+        {
+            Bitmap bmp = new Bitmap(path);
+            return PixelBytesFromImage(bmp);
+        }
+        public static byte[] GetPixelBytesFromImage(Image image)
+        {
+            Bitmap bmp = new Bitmap(image);
+            return PixelBytesFromImage(bmp);
+        }
+
+        private static byte[] PixelBytesFromImage(Bitmap bmp)
+        {
+            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+                ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+            //// 获取图像参数
+            int stride = bmpData.Stride; // 扫描线的宽度
+            int offset = stride - bmp.Width; // 显示宽度与扫描线宽度的间隙
+            IntPtr iptr = bmpData.Scan0; // 获取bmpData的内存起始位置
+            int scanBytes = stride * bmp.Height; // 用stride宽度，表示这是内存区域的大小
+
+            var result = new byte[scanBytes];
+            System.Runtime.InteropServices.Marshal.Copy(iptr, result, 0, scanBytes);
+            bmp.UnlockBits(bmpData); // 解锁内存区域
+            return result;
+        }
+
+        public static void ConvertToImageFile(byte[] data, string path, int height, int width, int align = 4, PsbImageFormat format = PsbImageFormat.Png)
         {
             byte[] bytes;
             try
@@ -70,7 +103,9 @@ namespace FreeMote.Psb
         }
 
         public static void ConvertToWinFormatFile()
-        { }
+        {
+            throw new NotImplementedException();
+        }
 
         private static byte[] Uncompress(Stream stream, int height, int width, int align = 4)
         {

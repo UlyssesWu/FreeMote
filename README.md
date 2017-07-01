@@ -30,7 +30,9 @@ Measure specific positions of models to help Emote PSB version migration.
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
-FreeMote is temporarily licensed under LGPL. Members from Project AZUSA can use it freely.
+FreeMote is temporarily licensed under **LGPL**. Members from Project AZUSA can use it freely.
+
+[Issue Report](https://github.com/UlyssesWu/FreeMote/issues)  [Pull Request](https://github.com/UlyssesWu/FreeMote/pulls)  [Wiki](https://github.com/Project-AZUSA/FreeMote/wiki)
 
 [![Support Us](https://az743702.vo.msecnd.net/cdn/kofi2.png?v=0 "Buy Me a Coffee at ko-fi.com")](https://ko-fi.com/Ulysses)
 
