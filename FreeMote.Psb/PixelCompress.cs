@@ -28,11 +28,11 @@ namespace FreeMote.Psb
             MemoryStream output = new MemoryStream(actualSize);
             //int currentIndex = 0;
             int totalBytes = 0;
-            int count;
             while (input.Position < input.Length)
             {
                 int current = input.ReadByte();
                 totalBytes++;
+                int count;
                 if ((current & LzssLookAhead) != 0) //Redundant
                 {
                     count = (current ^ LzssLookAhead) + 3;
@@ -62,18 +62,19 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="input"></param>
         /// <param name="align"></param>
-        /// <param name="result"></param>
+        /// <param name="cmdByte"></param>
+        /// <param name="buffer"></param>
         /// <returns></returns>
-        private static int CompressBound(Stream input, int align, out byte result)
+        private static int CompressBound(Stream input, int align, out byte cmdByte, out byte[] buffer)
         {
-            int count = 0;
-            byte[] buffer = new byte[align];
             var pos = input.Position;
+            buffer = new byte[align];
             input.Read(buffer, 0, align);
+            int count = 1; //repeat count, first not included
 
-            for (int i = 0; i < LzssLookAhead + 2; i++)
+            for (int i = 1; i < LzssLookAhead + 2; i++) //0 is `buffer`, 1,2,3... are redundant
             {
-                if (i * align >= input.Length)
+                if (input.Position >= input.Length)
                 {
                     break;
                 }
@@ -90,12 +91,13 @@ namespace FreeMote.Psb
             }
 
             input.Seek(pos, SeekOrigin.Begin);
+
             if (count >= 3)
             {
-                result = (byte)((count - 3) | LzssLookAhead);
+                cmdByte = (byte)((count - 3) | LzssLookAhead); //>=128
                 return count;
             }
-            result = 0;
+            cmdByte = 0;
             return 0;
         }
 
@@ -108,21 +110,22 @@ namespace FreeMote.Psb
         /// <returns></returns>
         private static int CompressBoundNp(Stream input, int align, out byte result)
         {
-            int count = 0;
-            byte[] buffer = new byte[align];
             var pos = input.Position;
+            byte[] buffer = new byte[align];
             input.Read(buffer, 0, align);
+            int count = 1; //FIXED: Start from 1
 
-            for (int i = 0; i < LzssLookAhead + 2; i++)
+            for (int i = 1; i < LzssLookAhead; i++) //<128
             {
-                if (i * align >= input.Length)
+                if (input.Position >= input.Length)
                 {
                     break;
                 }
-                byte[] buffer2 = new byte[align];
-                input.Read(buffer2, 0, align);
-                if (CompressBound(input,align, out result) == 0)
+
+                if (CompressBound(input, align, out result, out _) == 0)
                 {
+                    byte[] buffer2 = new byte[align];
+                    input.Read(buffer2, 0, align); //Skip
                     count++;
                 }
                 else
@@ -147,14 +150,7 @@ namespace FreeMote.Psb
             {
                 return BitConverter.ToUInt32(b1, 0) == BitConverter.ToUInt32(b2, 0);
             }
-            for (int i = 0; i < b1.Length; i++)
-            {
-                if (b1[i] != b2[i])
-                {
-                    return false;
-                }
-            }
-            return true;
+            return !b1.Where((t, i) => t != b2[i]).Any();
         }
 
 
@@ -167,30 +163,25 @@ namespace FreeMote.Psb
         public static byte[] Compress(Stream input, int align)
         {
             MemoryStream output = new MemoryStream();
-            int blockSize = 0;
-            int count;
-            byte cmdByte;
             while (input.Position < input.Length)
             {
-                count = CompressBound(input, align, out cmdByte);
+                byte cmdByte;
+                byte[] buffer;
+                var count = CompressBound(input, align, out cmdByte, out buffer);
                 if (count > 0)
                 {
-                    byte[] buffer = new byte[align];
-                    input.Read(buffer, 0, align);
-                    blockSize = align + sizeof(byte);
                     output.WriteByte(cmdByte);
-                    output.Write(buffer, 0, align);
+                    output.Write(buffer, 0, buffer.Length);
+                    input.Seek(align * count, SeekOrigin.Current);
                 }
                 else
                 {
                     count = CompressBoundNp(input, align, out cmdByte);
-                    byte[] buffer = new byte[count * align];
+                    buffer = new byte[count * align];
                     input.Read(buffer, 0, buffer.Length);
-                    blockSize = count * align + sizeof(byte);
                     output.WriteByte(cmdByte);
                     output.Write(buffer, 0, buffer.Length);
                 }
-                //totalSize += blockSize;
             }
             return output.ToArray();
         }

@@ -11,11 +11,11 @@ namespace FreeMote.PsBuild
 {
     class PsbTypeConverter : JsonConverter
     {
-        internal static List<Type> SupportTypes = new List<Type> {
-            typeof(PsbNull),typeof(PsbBool),typeof(PsbNumber),
-            typeof(PsbArray), typeof(PsbString),typeof(PsbResource),
-            typeof(PsbCollection),typeof(PsbDictionary),
-        };
+        //internal static List<Type> SupportTypes = new List<Type> {
+        //    typeof(PsbNull),typeof(PsbBool),typeof(PsbNumber),
+        //    typeof(PsbArray), typeof(PsbString),typeof(PsbResource),
+        //    typeof(PsbCollection),typeof(PsbDictionary),
+        //};
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
