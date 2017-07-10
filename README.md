@@ -32,7 +32,7 @@ by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
 FreeMote is temporarily licensed under **LGPL**. Members from Project AZUSA can use it freely.
 
-[Issue Report](https://github.com/UlyssesWu/FreeMote/issues)  [Pull Request](https://github.com/UlyssesWu/FreeMote/pulls)  [Wiki](https://github.com/Project-AZUSA/FreeMote/wiki)
+[Issue Report](https://github.com/UlyssesWu/FreeMote/issues) · [Pull Request](https://github.com/UlyssesWu/FreeMote/pulls) · [Wiki](https://github.com/Project-AZUSA/FreeMote/wiki)
 
 [![Support Us](https://az743702.vo.msecnd.net/cdn/kofi2.png?v=0 "Buy Me a Coffee at ko-fi.com")](https://ko-fi.com/Ulysses)
 
@@ -41,5 +41,5 @@ FreeMote is temporarily licensed under **LGPL**. Members from Project AZUSA can 
 * @9chu for reverse engineering help.
 * @number201724 for PSB format.
 * @nalsas (awatm) for Emote Editor help.
-* @WcLyic (牧濑红莉栖) for some PSB samples and Emote Edior help.
+* @WcLyic (牧濑红莉栖) for some PSB samples and Emote Editor help.
 * Singyuen Yip for `Adler32` code.
