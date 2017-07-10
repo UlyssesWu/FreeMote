@@ -7,8 +7,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace FreeMote.Psb
+namespace FreeMote
 {
+    /// <summary>
+    /// RL Compress for image
+    /// </summary>
     public static class RlCompress
     {
         public enum PsbImageFormat
@@ -100,11 +103,6 @@ namespace FreeMote.Psb
                 return;
             }
             throw new BadImageFormatException("data may not corresponding");
-        }
-
-        public static void ConvertToWinFormatFile()
-        {
-            throw new NotImplementedException();
         }
 
         private static byte[] Uncompress(Stream stream, int height, int width, int align = 4)

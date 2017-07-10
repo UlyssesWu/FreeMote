@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FreeMote.Psb
+namespace FreeMote
 {
     /// <summary>
     /// PSB Pixel Compress (for images)

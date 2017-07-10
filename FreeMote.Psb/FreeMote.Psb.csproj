@@ -32,7 +32,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -42,12 +41,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PixelCompress.cs" />
     <Compile Include="PSB.cs" />
     <Compile Include="PsbHelper.cs" />
     <Compile Include="PsbTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RlCompress.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FreeMote\FreeMote.csproj">

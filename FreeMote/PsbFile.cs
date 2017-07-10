@@ -20,8 +20,8 @@ namespace FreeMote
         Full,
         /// <summary>
         /// Automata
-        /// <para>if encrypt v3-V4, will only encrypt header as GoGoNippon format.</para>
-        /// <para>if encrypt v2, will only encrypt body like most games.</para>
+        /// <para>if encrypt v3-V4, will only encrypt header.</para>
+        /// <para>if encrypt v2, will only encrypt body(strings).</para>
         /// <para>if decrypt, clean header and body both.</para>
         /// </summary>
         Auto

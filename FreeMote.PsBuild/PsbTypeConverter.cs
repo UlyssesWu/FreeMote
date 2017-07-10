@@ -84,11 +84,12 @@ namespace FreeMote.PsBuild
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
+            uint stringCounter = 0;
             JObject obj = JObject.Load(reader);
-            return ConvertToken(obj);
+            return ConvertToken(obj, ref stringCounter);
         }
 
-        internal IPsbValue ConvertToken(JToken token)
+        internal IPsbValue ConvertToken(JToken token, ref uint stringCounter)
         {
             switch (token.Type)
             {
@@ -116,13 +117,15 @@ namespace FreeMote.PsBuild
                     {
                         return new PsbResource(uint.Parse(s.Replace(PsbHelper.ResourceIdentifier, "")));
                     }
-                    return new PsbString(s);
+                    var str = new PsbString(s, stringCounter);
+                    stringCounter++; //Update Index
+                    return str;
                 case JTokenType.Array:
                     var array = (JArray)token;
                     var collection = new PsbCollection(array.Count);
                     foreach (var val in array)
                     {
-                        collection.Value.Add(ConvertToken(val));
+                        collection.Value.Add(ConvertToken(val, ref stringCounter));
                     }
                     return collection;
                 case JTokenType.Object:
@@ -130,7 +133,7 @@ namespace FreeMote.PsBuild
                     var dictionary = new PsbDictionary(obj.Count);
                     foreach (var val in obj)
                     {
-                        dictionary.Value.Add(val.Key, ConvertToken(val.Value));
+                        dictionary.Value.Add(val.Key, ConvertToken(val.Value, ref stringCounter));
                     }
                     return dictionary;
                 default:

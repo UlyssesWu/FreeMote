@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,11 @@ namespace FreeMote.Psb
 {
     internal static class PsbHelper
     {
+        /// <summary>
+        /// Black magic to get size hehehe...
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
         public static int GetSize(this int i)
         {
             bool neg = false;
@@ -25,9 +31,18 @@ namespace FreeMote.Psb
             {
                 l++;
             }
+            if (l > 4)
+            {
+                l = 4;
+            }
             return l;
         }
 
+        /// <summary>
+        /// Black magic to get size hehehe...
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
         public static int GetSize(this uint i)
         {
             var l = i.ToString("X").Length;
@@ -36,13 +51,39 @@ namespace FreeMote.Psb
                 l++;
             }
             l = l / 2;
+            if (l > 4)
+            {
+                l = 4;
+            }
             return l;
+        }
+
+        /// <summary>
+        /// Shorten number bytes
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="size">Fix size</param>
+        /// <returns></returns>
+        public static byte[] ZipNumberBytes(this int i, int size = 0)
+        {
+            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
+        }
+
+        /// <summary>
+        /// Shorten number bytes
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="size">Fix size</param>
+        /// <returns></returns>
+        public static byte[] ZipNumberBytes(this uint i, int size = 0)
+        {
+            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
         }
 
         public static byte[] UnzipNumberBytes(this byte[] b, int size = 8, bool unsigned = false)
         {
             byte[] r = new byte[size];
-            if (!unsigned && (b.Last() >= 0b10000000)) //b.Last() == 0xFF
+            if (!unsigned && (b.Last() >= 0b10000000)) //negative
             {
                 for (int i = 0; i < size; i++)
                 {
@@ -77,12 +118,23 @@ namespace FreeMote.Psb
             return sb.ToString();
         }
 
-        //public static byte[] EnsureLength(this byte[] bytes)
-        //{
-        //    return bytes;
-        //}
+        public static void WriteStringZeroTrim(this BinaryWriter bw, string str)
+        {
+            bw.Write(str.ToCharArray());
+            bw.Write((byte)0);
+        }
 
+        public static void Pad(this BinaryWriter bw, uint length)
+        {
+            if (length <= 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < length; i++)
+            {
+                bw.Write((byte)0);
+            }
+        }
     }
-
-
 }

@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 
 namespace FreeMote.PsBuild
 {
+
     /// <summary>
     /// Compile PSB File
     /// </summary>
@@ -19,16 +20,22 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="inputPath"></param>
         /// <param name="outputPath"></param>
-        public static void CompileToFile(string inputPath, string outputPath, ushort version = 3)
+        public static void CompileToFile(string inputPath, string outputPath, ushort version = 3, uint? cryptKey = null, string platform = null)
         {
-            PSB psb = new PSB(version);
-            psb.Objects = JsonConvert.DeserializeObject<PsbDictionary>(File.ReadAllText(inputPath));
+            PSB psb = Parse(inputPath, version);
         }
 
-        internal static void Parse()
-        { }
 
-        internal void Link()
+        internal static PSB Parse(string inputPath, ushort version)
+        {
+            PSB psb = new PSB(version)
+            {
+                Objects = JsonConvert.DeserializeObject<PsbDictionary>(File.ReadAllText(inputPath), new PsbTypeConverter())
+            };
+            return psb;
+        }
+
+        internal void Link(PSB psb, string resInputPath)
         { }
     }
 }

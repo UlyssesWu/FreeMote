@@ -29,14 +29,8 @@ namespace FreeMote.Tests
         ///</summary>
         public TestContext TestContext
         {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
+            get => testContextInstance;
+            set => testContextInstance = value;
         }
 
         #region 附加测试特性
@@ -74,7 +68,9 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestCompile()
         {
-
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
+            PsbCompiler.CompileToFile(path, path+ ".psb", 3, null, "krkr");
         }
 
         [TestMethod]

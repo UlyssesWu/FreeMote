@@ -10,7 +10,7 @@ namespace FreeMote
 {
     internal class PsbHeader
     {
-        public char[] Signature { get; set; } = new char[4];
+        public char[] Signature { get; set; } = {'P','S','B', (char)0};
         public ushort Version { get; set; } = 3;
 
         /// <summary>
@@ -192,6 +192,10 @@ namespace FreeMote
                 return 56u;
             }
             return 44u;
+        }
+        public uint GetHeaderLength()
+        {
+            return GetHeaderLength(Version);
         }
 
         public void SwitchVersion(ushort version = 3, bool offsetFields = false)
