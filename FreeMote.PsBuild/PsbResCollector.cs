@@ -23,6 +23,7 @@ namespace FreeMote.PsBuild
             FindResources(resourceList, psb.Objects[SourceKey]);
 
             resourceList.ForEach(r => r.Spec = psb.Platform);
+            resourceList.Sort((md1, md2) => (int)(md1.Index - md2.Index));
 
             return resourceList;
         }
@@ -37,7 +38,10 @@ namespace FreeMote.PsBuild
                 case PsbDictionary d:
                     if (d[ResourceKey] is PsbResource r)
                     {
-                        list.Add(GenerateResourceMetadata(d, r));
+                        if (r.Index == null || list.FirstOrDefault(md => md.Index == r.Index.Value) == null)
+                        {
+                            list.Add(GenerateResourceMetadata(d, r));
+                        }
                     }
                     foreach (var o in d.Value.Values)
                     {
@@ -102,7 +106,7 @@ namespace FreeMote.PsBuild
             }
             var md = new ResourceMetadata()
             {
-                Index = r.Index ?? 0,
+                Index = r.Index ?? int.MaxValue,
                 Compress = compress,
                 Name = name,
                 Part = part,
