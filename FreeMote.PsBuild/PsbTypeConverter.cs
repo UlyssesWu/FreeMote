@@ -50,14 +50,14 @@ namespace FreeMote.PsBuild
                     break;
                 case PsbResource res:
                     //writer.WriteValue(Convert.ToBase64String(res.Data, Base64FormattingOptions.None));
-                    writer.WriteValue($"{PsbHelper.ResourceIdentifier}{res.Index}");
+                    writer.WriteValue($"{PsbResCollector.ResourceIdentifier}{res.Index}");
                     break;
                 case PsbArray array:
                     writer.WriteValue(array.Value);
                     break;
                 case PsbCollection collection:
                     writer.WriteStartArray();
-                    if (collection.Value.Count > 0 && !(collection[0] is PsbCollection) && !(collection[0] is PsbDictionary))
+                    if (collection.Value.Count > 0 && !(collection[0] is IPsbCollection))
                     {
                         writer.Formatting = Formatting.None;
                     }
@@ -84,12 +84,12 @@ namespace FreeMote.PsBuild
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            uint stringCounter = 0;
+            List<PsbString> context = new List<PsbString>();
             JObject obj = JObject.Load(reader);
-            return ConvertToken(obj, ref stringCounter);
+            return ConvertToken(obj, context);
         }
 
-        internal IPsbValue ConvertToken(JToken token, ref uint stringCounter)
+        internal IPsbValue ConvertToken(JToken token, List<PsbString> context)
         {
             switch (token.Type)
             {
@@ -113,19 +113,31 @@ namespace FreeMote.PsBuild
                     return new PsbBool(token.Value<bool>());
                 case JTokenType.String:
                     string s = token.Value<string>();
-                    if (s.StartsWith(PsbHelper.ResourceIdentifier))
+                    if (s.StartsWith(PsbResCollector.ResourceIdentifier))
                     {
-                        return new PsbResource(uint.Parse(s.Replace(PsbHelper.ResourceIdentifier, "")));
+                        return new PsbResource(uint.Parse(s.Replace(PsbResCollector.ResourceIdentifier, "")));
                     }
-                    var str = new PsbString(s, stringCounter);
-                    stringCounter++; //Update Index
+                    var str = new PsbString(s, (uint)context.Count);
+                    if (context.Contains(str))
+                    {
+                        return context.Find(psbStr => psbStr.Value == s);
+                    }
+                    else
+                    {
+                        context.Add(str);
+                    }
                     return str;
                 case JTokenType.Array:
                     var array = (JArray)token;
                     var collection = new PsbCollection(array.Count);
                     foreach (var val in array)
                     {
-                        collection.Value.Add(ConvertToken(val, ref stringCounter));
+                        var o = ConvertToken(val, context);
+                        if (o is IPsbCollection c)
+                        {
+                            c.Parent = collection;
+                        }
+                        collection.Value.Add(o);
                     }
                     return collection;
                 case JTokenType.Object:
@@ -133,7 +145,12 @@ namespace FreeMote.PsBuild
                     var dictionary = new PsbDictionary(obj.Count);
                     foreach (var val in obj)
                     {
-                        dictionary.Value.Add(val.Key, ConvertToken(val.Value, ref stringCounter));
+                        var o = ConvertToken(val.Value, context);
+                        if (o is IPsbCollection c)
+                        {
+                            c.Parent = dictionary;
+                        }
+                        dictionary.Value.Add(val.Key, o);
                     }
                     return dictionary;
                 default:

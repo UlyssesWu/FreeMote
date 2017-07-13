@@ -21,6 +21,8 @@ using System.Runtime.InteropServices;
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
 [assembly: Guid("c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7")]
+[assembly: InternalsVisibleTo("FreeMote.PsBuild")]
+[assembly: InternalsVisibleTo("FreeMote.Purify")]
 [assembly: InternalsVisibleTo("FreeMote.Tests")]
 
 // 程序集的版本信息由下列四个值组成:

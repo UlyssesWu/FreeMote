@@ -23,9 +23,9 @@ namespace FreeMote
         /// <param name="actualSize"></param>
         /// <param name="align"></param>
         /// <returns></returns>
-        public static byte[] Uncompress(Stream input, int actualSize, int align)
+        public static byte[] Uncompress(Stream input, int align = 4, int actualSize = 0)
         {
-            MemoryStream output = new MemoryStream(actualSize);
+            MemoryStream output = actualSize > 0 ? new MemoryStream(actualSize) : new MemoryStream();
             //int currentIndex = 0;
             int totalBytes = 0;
             while (input.Position < input.Length)

@@ -124,16 +124,42 @@ namespace FreeMote.Psb
             bw.Write((byte)0);
         }
 
-        public static void Pad(this BinaryWriter bw, uint length)
+        public static void Pad(this BinaryWriter bw, int length, byte paddingByte = 0x0)
         {
             if (length <= 0)
             {
                 return;
             }
 
+            if (paddingByte == 0x0)
+            {
+                bw.Write(new byte[length]);
+                return;
+            }
+
             for (int i = 0; i < length; i++)
             {
-                bw.Write((byte)0);
+                bw.Write(paddingByte);
+            }
+        }
+
+        /// <summary>
+        /// Get Corresponding PixelFormat
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static PsbPixelFormat PixelFormat(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.common:
+                    return PsbPixelFormat.CommonRGBA8;
+                case PsbSpec.krkr:
+                case PsbSpec.win:
+                    return PsbPixelFormat.WinRGBA8;
+                case PsbSpec.other:
+                default:
+                    return PsbPixelFormat.None;
             }
         }
     }

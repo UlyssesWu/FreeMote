@@ -93,8 +93,19 @@ namespace FreeMote
             return true;
         }
 
+        private static bool TestKeyValidForHeader()
+        {
+            throw new NotImplementedException();
+        }
+
+        private static bool TestKeyValidForBody()
+        {
+            throw new NotImplementedException();
+        }
+
         private static bool TestHeaderEncrypted(BinaryReader br, PsbHeader header)
         {
+            //MARK: Not always works
             if (header.HeaderLength < br.BaseStream.Length
                 && header.OffsetNames != 0
                 && (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0))
@@ -120,6 +131,7 @@ namespace FreeMote
 
         private static bool TestBodyEncrypted(BinaryReader br, PsbHeader header)
         {
+            //MARK: Not always works
             long pos = br.BaseStream.Position;
 
             switch (header.Version)
@@ -131,8 +143,11 @@ namespace FreeMote
                 case 3:
                     br.BaseStream.Seek(44, SeekOrigin.Begin);
                     break;
-                default:
+                case 4:
                     br.BaseStream.Seek(56, SeekOrigin.Begin);
+                    break;
+                default:
+                    br.BaseStream.Seek(header.OffsetNames, SeekOrigin.Begin);
                     break;
             }
             if (br.ReadByte() == 0x0E)
@@ -148,13 +163,11 @@ namespace FreeMote
             return true;
         }
 
-        /// <summary>
+        ///  <summary>
         ///
-        /// </summary>
-        /// <param name="br"></param>
-        /// <param name="bw"></param>
-        /// <param name="cleanEncryptOffset">maybe you should not use it</param>
-        /// <param name="resetEncryptOffset">restore offsetEncrypt</param>
+        ///  </summary>
+        ///  <param name="br"></param>
+        ///  <param name="bw"></param>
         private static void WriteOriginalPartialHeader(BinaryReader br, BinaryWriter bw, PsbHeader header)
         {
             header.HeaderLength = br.ReadUInt32();
@@ -439,7 +452,7 @@ namespace FreeMote
                 case EncodePosition.Auto:
                     bool headerEnc = TestHeaderEncrypted(br, header);
                     bool bodyEnc = TestBodyEncrypted(br, header);
-                    if (headerEnc && bodyEnc) //it's already encrypted.
+                    if (headerEnc && bodyEnc) //MARK: is this possible?
                     {
                         mode = EncodeMode.Decrypt;
                     }

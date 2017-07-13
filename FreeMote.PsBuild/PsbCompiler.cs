@@ -36,6 +36,8 @@ namespace FreeMote.PsBuild
         }
 
         internal void Link(PSB psb, string resInputPath)
-        { }
+        {
+            List<PsbResource> resources = new List<PsbResource>();
+        }
     }
 }

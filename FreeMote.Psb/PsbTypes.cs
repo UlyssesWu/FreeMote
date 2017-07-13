@@ -1,19 +1,32 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+// ReSharper disable InconsistentNaming
 
 namespace FreeMote.Psb
 {
+    /// <summary>
+    /// PSB Platform
+    /// </summary>
+    public enum PsbSpec : byte
+    {
+        common,
+        krkr,
+        win,
+        other
+    }
+
     public enum PsbType : byte
     {
 
         None = 0x0,
-        Null = 0x1, // 0
-        False = 0x2, //??
-        True = 0x3,  //??
+        Null = 0x1,
+        False = 0x2,
+        True = 0x3,
 
         //int
         NumberN0 = 0x4,
@@ -55,7 +68,7 @@ namespace FreeMote.Psb
 
         //objects
         Collection = 0x20, //object collection
-        Objects = 0x21,    //object
+        Objects = 0x21,    //object dictionary
 
 
         //used by compiler,it's fake
@@ -67,6 +80,25 @@ namespace FreeMote.Psb
         Boolean = 0x85,
         BTree = 0x86,
     };
+
+    /// <summary>
+    /// Collection
+    /// </summary>
+    public interface IPsbCollection
+    {
+        /// <summary>
+        /// <see cref="IPsbCollection"/> which contains this
+        /// </summary>
+        IPsbCollection Parent { get; set; }
+        IPsbValue this[int i]
+        {
+            get;
+        }
+        IPsbValue this[string s]
+        {
+            get;
+        }
+    }
 
     /// <summary>
     /// Directly write as bytes
@@ -298,13 +330,55 @@ namespace FreeMote.Psb
                    Type == PsbType.NumberN4;
         }
 
+        public static explicit operator int(PsbNumber p)
+        {
+            switch (p.NumberType)
+            {
+                case PsbNumberType.Float:
+                    return (int)p.FloatValue;
+                case PsbNumberType.Double:
+                    return (int)p.DoubleValue;
+                case PsbNumberType.Int:
+                default:
+                    return p.IntValue;
+            }
+        }
+
+        public static explicit operator float(PsbNumber p)
+        {
+            switch (p.NumberType)
+            {
+                case PsbNumberType.Int:
+                    return (float)p.IntValue;
+                case PsbNumberType.Double:
+                    return (float)p.DoubleValue;
+                case PsbNumberType.Float:
+                default:
+                    return p.FloatValue;
+            }
+        }
+
+        public static explicit operator double(PsbNumber p)
+        {
+            switch (p.NumberType)
+            {
+                case PsbNumberType.Int:
+                    return (double)p.IntValue;
+                case PsbNumberType.Float:
+                    return (double)p.FloatValue;
+                case PsbNumberType.Double:
+                default:
+                    return p.DoubleValue;
+            }
+        }
+
         public PsbType Type
         {
             get
             {
                 switch (NumberType)
                 {
-                    case PsbNumberType.Int when IntValue <= 8 && IntValue >= 0:
+                    case PsbNumberType.Int: //FIXED: What did I wrote? when IntValue <= 8 && IntValue >= 0
                         switch (IntValue.GetSize())
                         {
                             case 1:
@@ -473,6 +547,7 @@ namespace FreeMote.Psb
     }
 
     [Serializable]
+    [DebuggerDisplay("{Value}(#{Index})")]
     public class PsbString : IPsbValue, IPsbIndexed, IPsbWrite
     {
         internal PsbString(int n, BinaryReader br)
@@ -519,7 +594,7 @@ namespace FreeMote.Psb
 
         public override string ToString()
         {
-            return "\"" + Value + "\"" + $"(#{Index})";
+            return Value;
         }
 
         public static implicit operator string(PsbString s)
@@ -529,9 +604,9 @@ namespace FreeMote.Psb
 
         public static bool operator ==(PsbString s1, PsbString s2)
         {
-            if (s1 == null || s2 == null)
+            if (s1 is null)
             {
-                return s1 == null && s2 == null;
+                return s2 is null;
             }
             return s1.Equals(s2);
         }
@@ -549,6 +624,10 @@ namespace FreeMote.Psb
 
         protected bool Equals(PsbString other)
         {
+            if (other is null)
+            {
+                return false;
+            }
             return string.Equals(Value, other.Value);
         }
 
@@ -568,15 +647,20 @@ namespace FreeMote.Psb
     /// psb_objects_t
     /// </summary>
     [Serializable]
-    public class PsbDictionary : IPsbValue
+    public class PsbDictionary : IPsbValue, IPsbCollection
     {
         public PsbDictionary(int capacity)
         {
             Value = new Dictionary<string, IPsbValue>(capacity);
         }
+
+        public IPsbCollection Parent { get; set; } = null;
+
+        IPsbValue IPsbCollection.this[int i] => Value.ContainsKey(i.ToString()) ? Value[i.ToString()] : null;
+
         public IPsbValue this[string index]
         {
-            get => Value[index];
+            get => Value.TryGetValue(index, out IPsbValue val) ? val : null;
             set => Value[index] = value;
         }
 
@@ -590,7 +674,7 @@ namespace FreeMote.Psb
     }
 
     [Serializable]
-    public class PsbCollection : IPsbValue
+    public class PsbCollection : IPsbValue, IPsbCollection
     {
         public PsbCollection(int capacity)
         {
@@ -598,11 +682,16 @@ namespace FreeMote.Psb
         }
 
         public List<IPsbValue> Value { get; set; }
+
+        public IPsbCollection Parent { get; set; } = null;
+
         public IPsbValue this[int index]
         {
-            get => Value[index];
+            get => index < Value.Count ? Value[index] : null;
             set => Value[index] = value;
         }
+
+        IPsbValue IPsbCollection.this[string s] => int.TryParse(s, out int i) ? Value[i] : null;
 
         public PsbType Type { get; } = PsbType.Collection;
 
@@ -613,6 +702,7 @@ namespace FreeMote.Psb
     }
 
     [Serializable]
+    [DebuggerDisplay("Resource[{Data?.Length}](#{Index})")]
     public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite
     {
         internal PsbResource(int n, BinaryReader br)
@@ -653,7 +743,7 @@ namespace FreeMote.Psb
 
         public override string ToString()
         {
-            return $"Resource[{Data?.Length}](#{Index})";
+            return $"#resource#{Index}";
         }
 
         public void WriteTo(BinaryWriter bw)
