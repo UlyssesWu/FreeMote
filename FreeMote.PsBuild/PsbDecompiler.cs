@@ -69,7 +69,7 @@ namespace FreeMote.PsBuild
         /// <param name="inputPath">PSB file path</param>
         /// <param name="imageOption">whether to extract image to common format</param>
         /// <param name="extractFormat">if extract, what format do you want</param>
-        public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original, PsbImageFormat extractFormat = PsbImageFormat.Bmp)
+        public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original, PsbImageFormat extractFormat = PsbImageFormat.Png)
         {
             var name = Path.GetFileNameWithoutExtension(inputPath);
             var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
@@ -93,22 +93,22 @@ namespace FreeMote.PsBuild
                                 relativePath += ".png";
                                 if (resource.Compress == PsbCompressType.RL)
                                 {
-                                    RlCompress.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, PsbImageFormat.Png, pixelFormat);
+                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, PsbImageFormat.Png, pixelFormat);
                                 }
                                 else
                                 {
-                                    RlCompress.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, extractFormat, pixelFormat);
+                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, extractFormat, pixelFormat);
                                 }
                                 break;
                             default:
                                 relativePath += ".bmp";
                                 if (resource.Compress == PsbCompressType.RL)
                                 {
-                                    RlCompress.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, PsbImageFormat.Bmp, pixelFormat);
+                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, PsbImageFormat.Bmp, pixelFormat);
                                 }
                                 else
                                 {
-                                    RlCompress.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, extractFormat, pixelFormat);
+                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, extractFormat, pixelFormat);
                                 }
                                 break;
                         }
@@ -121,21 +121,21 @@ namespace FreeMote.PsBuild
                         }
                         else
                         {
-                            relativePath += ".bin";
-                            File.WriteAllBytes(Path.Combine(dirPath, $"{i}.bin"), resource.Data);
+                            relativePath += ".raw";
+                            File.WriteAllBytes(Path.Combine(dirPath, $"{i}.raw"), resource.Data);
                         }
                         break;
                     case PsbImageOption.Raw:
-                        File.WriteAllBytes(Path.Combine(dirPath, $"{i}.bin"),
+                        File.WriteAllBytes(Path.Combine(dirPath, $"{i}.raw"),
                             resources[i].Compress == PsbCompressType.RL
-                                ? RlCompress.Uncompress(resource.Data)
+                                ? RL.Uncompress(resource.Data)
                                 : resource.Data);
-                        relativePath += ".bin";
+                        relativePath += ".raw";
                         break;
                     case PsbImageOption.Compress:
                         File.WriteAllBytes(Path.Combine(dirPath, $"{i}.rl"),
                             resources[i].Compress != PsbCompressType.RL
-                                ? RlCompress.Compress(resource.Data)
+                                ? RL.Compress(resource.Data)
                                 : resource.Data);
                         relativePath += ".rl";
                         break;

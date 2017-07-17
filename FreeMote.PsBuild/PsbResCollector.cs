@@ -18,7 +18,7 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         public static List<ResourceMetadata> CollectResources(this PSB psb)
         {
-            List<ResourceMetadata> resourceList = new List<ResourceMetadata>(psb.Resources.Count);
+            List<ResourceMetadata> resourceList = psb.Resources == null ? new List<ResourceMetadata>() : new List<ResourceMetadata>(psb.Resources.Count);
 
             FindResources(resourceList, psb.Objects[SourceKey]);
 
@@ -62,10 +62,10 @@ namespace FreeMote.PsBuild
             {
                 is2D = true;
                 clip = RectangleF.FromLTRB(
-                    left: (float?)(clipDic["left"] as PsbNumber)?.Value ?? 0,
-                    top: (float?)(clipDic["top"] as PsbNumber)?.Value ?? 0,
-                    right: (float?)(clipDic["right"] as PsbNumber)?.Value ?? 1,
-                    bottom: (float?)(clipDic["bottom"] as PsbNumber)?.Value ?? 1
+                    left: clipDic["left"] == null ? 0f : (float)(PsbNumber)clipDic["left"],
+                    top: clipDic["top"] == null ? 0f : (float)(PsbNumber)clipDic["top"],
+                    right: clipDic["right"] == null ? 1f : (float)(PsbNumber)clipDic["right"],
+                    bottom: clipDic["bottom"] == null ? 1f : (float)(PsbNumber)clipDic["bottom"]
                 );
             }
             var compress = PsbCompressType.None;
@@ -104,6 +104,17 @@ namespace FreeMote.PsBuild
             {
                 type = st.Value;
             }
+            int top = 0, left = 0;
+            if (d["top"] is PsbNumber nt)
+            {
+                is2D = true;
+                top = (int)nt;
+            }
+            if (d["left"] is PsbNumber nl)
+            {
+                is2D = true;
+                left = (int)nl;
+            }
             var md = new ResourceMetadata()
             {
                 Index = r.Index ?? int.MaxValue,
@@ -114,10 +125,12 @@ namespace FreeMote.PsBuild
                 Is2D = is2D,
                 OriginX = originX,
                 OriginY = originY,
+                Top = top,
+                Left = left,
                 Width = width,
                 Height = height,
                 Type = type,
-                Data = r.Data,
+                Resource = r,
             };
             return md;
         }
@@ -127,7 +140,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        private static string GetPartName(this IPsbCollection c)
+        private static string GetPartName(this IPsbChild c)
         {
             while (c != null)
             {
@@ -145,11 +158,64 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static string GetName(this IPsbCollection c)
+        public static string GetName(this IPsbChild c)
         {
             var source = c?.Parent as PsbDictionary;
             var result = source?.Value.FirstOrDefault(pair => Equals(pair.Value, c));
             return result?.Value == null ? null : result.Value.Key;
+        }
+
+        /// <summary>
+        /// If this spec uses RL
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static PsbCompressType CompressType(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.krkr:
+                    return PsbCompressType.RL;
+                case PsbSpec.common:
+                case PsbSpec.win:
+                case PsbSpec.other:
+                default:
+                    return PsbCompressType.None;
+            }
+        }
+
+        /// <summary>
+        /// Try to switch Spec
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="targetSpec"></param>
+        public static void SwitchSpec(this PSB psb, PsbSpec targetSpec)
+        {
+            if (targetSpec == PsbSpec.other)
+            {
+                return;
+            }
+            var original = psb.Platform;
+            psb.Platform = targetSpec;
+            var resources = psb.CollectResources();
+
+            if (original == PsbSpec.krkr && (targetSpec == PsbSpec.win || targetSpec == PsbSpec.common))
+            {
+                foreach (var resMd in resources)
+                {
+                    var dic = resMd.Resource.Parent as PsbDictionary;
+                    if (dic == null)
+                    {
+                        continue;
+                    }
+                    dic.Value.Remove("compress");
+                }
+            }
+
+            if ((original == PsbSpec.win || original == PsbSpec.common) && targetSpec == PsbSpec.krkr)
+            {
+                //TODO:
+            }
         }
     }
 }

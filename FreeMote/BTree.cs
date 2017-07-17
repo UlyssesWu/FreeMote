@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace FreeMote
         /// <summary>
         /// Node for B Tree
         /// </summary>
+        [DebuggerDisplay("{" + nameof(Char) + "}")]
         internal class BNode
         {
             public int Id = -1;
@@ -64,7 +66,7 @@ namespace FreeMote
 
         internal List<string> Values = new List<string>();
 
-        public Dictionary<string, uint> Results = new Dictionary<string, uint>();
+        public Dictionary<string, uint> Results { get; } = new Dictionary<string, uint>();
 
         public BTree()
         { }
@@ -85,9 +87,9 @@ namespace FreeMote
         internal void InsertTree(string value)
         {
             BNode prev = Root;
-            foreach (var c in value)
+            foreach (var c in Encoding.UTF8.GetBytes(value)) //WTF! We have to take unicode chars apart
             {
-                prev = GetNode(prev, c);
+                prev = GetNode(prev, (char)c);
             }
             GetNode(prev, (char)0, true);
         }

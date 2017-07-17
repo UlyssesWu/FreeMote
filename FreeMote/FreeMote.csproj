@@ -51,7 +51,7 @@
     <Compile Include="PsbFile.cs" />
     <Compile Include="PsbHeader.cs" />
     <Compile Include="PsbStreamContext.cs" />
-    <Compile Include="RlCompress.cs" />
+    <Compile Include="RL.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

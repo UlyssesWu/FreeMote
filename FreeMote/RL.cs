@@ -27,7 +27,7 @@ namespace FreeMote
     /// <summary>
     /// RL Compress for Image
     /// </summary>
-    public static class RlCompress
+    public static class RL
     {
         /// <summary>
         /// Pixel Color Convert
@@ -78,9 +78,14 @@ namespace FreeMote
             }
         }
 
+        public static byte[] CompressImage(Bitmap image)
+        {
+            return Compress(PixelBytesFromImage(image));
+        }
+
         public static byte[] CompressImageFile(string path)
         {
-            return Compress(PixelBytesFromImage(new Bitmap(path)));
+            return CompressImage(new Bitmap(path));
         }
 
         public static byte[] GetPixelBytesFromImageFile(string path)

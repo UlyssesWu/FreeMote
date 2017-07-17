@@ -70,7 +70,7 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
-            PsbCompiler.CompileToFile(path, path+ ".psb", 3, null, "krkr");
+            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 3, null, PsbSpec.win);
         }
 
         [TestMethod]

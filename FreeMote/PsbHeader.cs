@@ -233,5 +233,36 @@ namespace FreeMote
             }
             UpdateChecksum();
         }
+
+        public byte[] ToBytes()
+        {
+            using (var ms = new MemoryStream())
+            {
+                BinaryWriter bw = new BinaryWriter(ms);
+                bw.Write(Signature);
+                bw.Write(Version);
+                bw.Write(HeaderEncrypt);
+                bw.Write(GetHeaderLength());
+                bw.Write(OffsetNames);
+                bw.Write(OffsetStrings);
+                bw.Write(OffsetStringsData);
+                bw.Write(OffsetChunkOffsets);
+                bw.Write(OffsetChunkLengths);
+                bw.Write(OffsetChunkData);
+                bw.Write(OffsetEntries);
+                if (Version > 2)
+                {
+                    bw.Write(UpdateChecksum());
+                }
+                if (Version > 3)
+                {
+                    bw.Write(OffsetUnknown1);
+                    bw.Write(OffsetUnknown2);
+                    bw.Write(OffsetResourceOffsets);
+                }
+                bw.Flush();
+                return ms.ToArray();
+            }
+        }
     }
 }

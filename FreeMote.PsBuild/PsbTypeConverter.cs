@@ -133,7 +133,7 @@ namespace FreeMote.PsBuild
                     foreach (var val in array)
                     {
                         var o = ConvertToken(val, context);
-                        if (o is IPsbCollection c)
+                        if (o is IPsbChild c)
                         {
                             c.Parent = collection;
                         }
@@ -146,7 +146,7 @@ namespace FreeMote.PsBuild
                     foreach (var val in obj)
                     {
                         var o = ConvertToken(val.Value, context);
-                        if (o is IPsbCollection c)
+                        if (o is IPsbChild c)
                         {
                             c.Parent = dictionary;
                         }

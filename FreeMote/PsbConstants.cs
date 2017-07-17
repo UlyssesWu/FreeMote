@@ -2,11 +2,22 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+// ReSharper disable InconsistentNaming
 
 namespace FreeMote
 {
+    /// <summary>
+    /// PSB Platform
+    /// </summary>
+    public enum PsbSpec : byte
+    {
+        common,
+        krkr,
+        win,
+        other = Byte.MaxValue,
+    }
+
     public static class PsbConstants
     {
         /// <summary>
@@ -34,10 +45,11 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Read a <see cref="byte[]"/> from <see cref="BinaryReader"/>, and then encode using <see cref="PsbStreamContext"/>.
+        /// Read bytes from <see cref="BinaryReader"/>, and then encode using <see cref="PsbStreamContext"/>.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="br"></param>
+        /// <param name="count"></param>
         /// <returns></returns>
         public static byte[] ReadBytes(this PsbStreamContext context, BinaryReader br, int count)
         {

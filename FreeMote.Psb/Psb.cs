@@ -53,7 +53,7 @@ namespace FreeMote.Psb
         public string Extension { get; internal set; }
 
         /// <summary>
-        /// PSB Target Platform
+        /// PSB Target Platform (Spec)
         /// </summary>
         public PsbSpec Platform
         {
@@ -64,11 +64,7 @@ namespace FreeMote.Psb
                 {
                     return PsbSpec.other;
                 }
-                if (Enum.TryParse(spec, out PsbSpec p))
-                {
-                    return p;
-                }
-                return PsbSpec.other;
+                return Enum.TryParse(spec, out PsbSpec p) ? p : PsbSpec.other;
             }
             set => Objects["spec"] = new PsbString(value.ToString());
         }
@@ -77,7 +73,7 @@ namespace FreeMote.Psb
 
         public PSB(ushort version = 3)
         {
-            Header = new PsbHeader() { Version = version };
+            Header = new PsbHeader { Version = version };
         }
 
         public PSB(string path)
@@ -161,7 +157,7 @@ namespace FreeMote.Psb
                 }
             }
 
-            Resources.Sort((r1, r2) => (int)((r1.Index?? int.MaxValue) - (r2.Index?? int.MaxValue)));
+            Resources.Sort((r1, r2) => (int)((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
         }
 
         /// <summary>
@@ -293,7 +289,7 @@ namespace FreeMote.Psb
                 var obj = Unpack(br);
                 if (obj != null)
                 {
-                    if (obj is IPsbCollection c)
+                    if (obj is IPsbChild c)
                     {
                         c.Parent = dictionary;
                     }
@@ -326,7 +322,7 @@ namespace FreeMote.Psb
                 var obj = Unpack(br);
                 if (obj != null)
                 {
-                    if (obj is IPsbCollection c)
+                    if (obj is IPsbChild c)
                     {
                         c.Parent = collection;
                     }
@@ -398,15 +394,19 @@ namespace FreeMote.Psb
         {
             Names = new List<string>();
             Strings = new List<PsbString>();
+            Resources = new List<PsbResource>();
             Collect(Objects);
 
             Names.Sort();
-            UpdateStringsIndex();
+            UpdateIndexes();
 
             void Collect(IPsbValue obj)
             {
                 switch (obj)
                 {
+                    case PsbResource r:
+                        Resources.Add(r);
+                        break;
                     case PsbString s:
                         Strings.Add(s);
                         break;
@@ -442,15 +442,25 @@ namespace FreeMote.Psb
             }
         }
 
-        private void UpdateStringsIndex()
+        private void UpdateIndexes()
         {
             Strings.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
             for (int i = 0; i < Strings.Count; i++)
             {
                 Strings[i].Index = (uint)i;
             }
+
+            Resources.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
+            for (int i = 0; i < Resources.Count; i++)
+            {
+                Resources[i].Index = (uint)i;
+            }
         }
 
+        /// <summary>
+        /// Build PSB
+        /// </summary>
+        /// <returns></returns>
         public byte[] Build()
         {
             /*
@@ -471,10 +481,11 @@ namespace FreeMote.Psb
             Header.HeaderLength = Header.GetHeaderLength();
 
             #region Compile Names
-            //Mark Offset Names
-            Header.OffsetNames = (uint)bw.BaseStream.Position;
+
             //Compile Names
             BTree.Build(Names, out var bNames, out var bTree, out var bOffsets);
+            //Mark Offset Names
+            Header.OffsetNames = (uint)bw.BaseStream.Position;
             var nameArray = new PsbArray(bNames);
             nameArray.WriteTo(bw);
             var offsetArray = new PsbArray(bOffsets);
@@ -484,13 +495,13 @@ namespace FreeMote.Psb
             #endregion
 
             #region Compile Entries
+
+            Header.OffsetEntries = (uint)bw.BaseStream.Position;
             Pack(bw, Objects);
 
             #endregion
 
             #region Compile Strings
-            //Mark Offset Strings
-            Header.OffsetStrings = (uint)bw.BaseStream.Position;
 
             using (var strMs = new MemoryStream())
             {
@@ -504,6 +515,8 @@ namespace FreeMote.Psb
                     strBw.WriteStringZeroTrim(psbString.Value);
                 }
                 strBw.Flush();
+                //Mark Offset Strings
+                Header.OffsetStrings = (uint)bw.BaseStream.Position;
                 StringOffsets = new PsbArray(offsets);
                 StringOffsets.WriteTo(bw);
                 Header.OffsetStringsData = (uint)bw.BaseStream.Position;
@@ -514,8 +527,47 @@ namespace FreeMote.Psb
 
             #region Compile Resources
 
-            Header.OffsetChunkOffsets = (uint)bw.BaseStream.Position;
+            using (var resMs = new MemoryStream())
+            {
+                List<uint> offsets = new List<uint>(Resources.Count);
+                List<uint> lengths = new List<uint>(Resources.Count);
 
+                BinaryWriter resBw = new BinaryWriter(resMs);
+
+                for (var i = 0; i < Resources.Count; i++)
+                {
+                    var psbResource = Resources[i];
+                    offsets.Add((uint)resBw.BaseStream.Position);
+                    lengths.Add((uint)psbResource.Data.Length);
+                    resBw.Write(psbResource.Data);
+                }
+                resBw.Flush();
+                Header.OffsetChunkOffsets = (uint)bw.BaseStream.Position;
+                Header.OffsetResourceOffsets = Header.OffsetChunkOffsets;
+                ChunkOffsets = new PsbArray(offsets);
+                ChunkOffsets.WriteTo(bw);
+                Header.OffsetChunkLengths = (uint)bw.BaseStream.Position;
+                ChunkLengths = new PsbArray(lengths);
+                ChunkLengths.WriteTo(bw);
+                Header.OffsetChunkData = (uint)bw.BaseStream.Position;
+                bw.Write(resMs.ToArray());
+            }
+
+            if (Header.Version > 3)
+            {
+                Header.OffsetUnknown1 = (uint)bw.BaseStream.Position;
+                var emptyArray = new PsbArray();
+                emptyArray.WriteTo(bw);
+                Header.OffsetUnknown2 = (uint)bw.BaseStream.Position;
+                emptyArray.WriteTo(bw);
+            }
+
+            #endregion
+
+            #region Compile Header
+
+            bw.Seek(0, SeekOrigin.Begin);
+            bw.Write(Header.ToBytes());
 
             #endregion
 
@@ -552,11 +604,10 @@ namespace FreeMote.Psb
                 case PsbDictionary pDic:
                     SaveObjects(bw, pDic);
                     return;
-               default:
+                default:
                     return;
             }
         }
-
 
         private void SaveObjects(BinaryWriter bw, PsbDictionary pDic)
         {

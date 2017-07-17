@@ -9,17 +9,6 @@ using System.Threading.Tasks;
 
 namespace FreeMote.Psb
 {
-    /// <summary>
-    /// PSB Platform
-    /// </summary>
-    public enum PsbSpec : byte
-    {
-        common,
-        krkr,
-        win,
-        other
-    }
-
     public enum PsbType : byte
     {
 
@@ -82,14 +71,21 @@ namespace FreeMote.Psb
     };
 
     /// <summary>
-    /// Collection
+    /// Contained by <see cref="IPsbCollection"/>
     /// </summary>
-    public interface IPsbCollection
+    public interface IPsbChild
     {
         /// <summary>
         /// <see cref="IPsbCollection"/> which contains this
         /// </summary>
         IPsbCollection Parent { get; set; }
+    }
+
+    /// <summary>
+    /// Collection
+    /// </summary>
+    public interface IPsbCollection : IPsbChild
+    {
         IPsbValue this[int i]
         {
             get;
@@ -525,6 +521,10 @@ namespace FreeMote.Psb
 
         private int GetEntryLength()
         {
+            if (Value == null || Value.Count <= 0)
+            {
+                return 0;
+            }
             var maxSize = Value.Max(u => u.GetSize());
             if (maxSize > 8)
             {
@@ -702,8 +702,8 @@ namespace FreeMote.Psb
     }
 
     [Serializable]
-    [DebuggerDisplay("Resource[{Data?.Length}](#{Index})")]
-    public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite
+    [DebuggerDisplay("Resource[{Data?.Length}](#{" + nameof(Index) + "})")]
+    public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite, IPsbChild
     {
         internal PsbResource(int n, BinaryReader br)
         {
@@ -751,6 +751,8 @@ namespace FreeMote.Psb
             bw.Write((byte)Type);
             new PsbNumber(Index ?? 0).WriteTo(bw);
         }
+
+        public IPsbCollection Parent { get; set; }
     }
 
 }

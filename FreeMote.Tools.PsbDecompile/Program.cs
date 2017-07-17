@@ -95,6 +95,24 @@ namespace FreeMote.Tools.PsbDecompile
         {
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");
+
+#if DEBUG
+            if (extractImage)
+            {
+                PsbDecompiler.DecompileToFile(path, PsbImageOption.Extract,
+                    usePng ? PsbImageFormat.Png : PsbImageFormat.Bmp);
+            }
+            else if (uncompress)
+            {
+                PsbDecompiler.DecompileToFile(path, PsbImageOption.Raw);
+            }
+            else
+            {
+                PsbDecompiler.DecompileToFile(path);
+            }
+            return;
+#else
+
             try
             {
                 if (extractImage)
@@ -115,6 +133,8 @@ namespace FreeMote.Tools.PsbDecompile
             {
                 Console.WriteLine(e);
             }
+
+#endif
         }
     }
 }
