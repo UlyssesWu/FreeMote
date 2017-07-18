@@ -21,13 +21,16 @@ namespace FreeMote.Psb
                 neg = true;
                 i = Math.Abs(i);
             }
-            var l = i.ToString("X").Length;
+            var hex = i.ToString("X");
+            var l = hex.Length;
+            bool firstBitOne = hex[0] >= '8'; //FIXED: Extend size if first bit is 1
+
             if (l % 2 != 0)
             {
                 l++;
             }
             l = l / 2;
-            if (neg)
+            if (neg || firstBitOne)
             {
                 l++;
             }

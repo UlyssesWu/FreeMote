@@ -120,5 +120,20 @@ namespace FreeMote.Tests
             RL.UncompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 395, 411);
             Assert.IsTrue(bytes.SequenceEqual(File.ReadAllBytes(path)));
         }
+
+        [TestMethod]
+        public void TestPsbNumbers()
+        {
+            var p1 = new PsbNumber(225);
+            using (var ms = new MemoryStream())
+            {
+                BinaryWriter bw = new BinaryWriter(ms);
+                BinaryReader br = new BinaryReader(ms);
+                p1.WriteTo(bw);
+                ms.Seek(0, SeekOrigin.Begin);
+                var p2 = new PsbNumber((PsbType)br.ReadByte(), br);
+                Assert.AreEqual(p1.IntValue, p2.IntValue);
+            }
+        }
     }
 }

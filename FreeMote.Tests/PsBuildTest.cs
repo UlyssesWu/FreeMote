@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using FreeMote.Psb;
 using FreeMote.PsBuild;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -66,11 +67,30 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
-        public void TestCompile()
+        public void TestCompileKrkr()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 3, null, PsbSpec.win);
+        }
+
+        [TestMethod]
+        public void TestCompileWin()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json");
+            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 2, null, PsbSpec.win);
+        }
+
+        [TestMethod]
+        public void TestBTree()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb");
+            PSB psb = new PSB(path);
+            var tree = BTree.Build(psb.Names, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
+            var list = BTree.Load(oNames, oTrees, oOffsets);
+            Assert.AreEqual(psb.Names.Count, list.Count);
         }
 
         [TestMethod]

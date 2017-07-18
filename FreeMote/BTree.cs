@@ -267,5 +267,33 @@ namespace FreeMote
             MakeLink();
         }
 
+        /// <summary>
+        /// Load a B Tree
+        /// </summary>
+        public static List<string> Load(List<uint> names, List<uint> trees, List<uint> offsets)
+        {
+            var results = new List<string>(names.Count);
+            for (int i = 0; i < names.Count; i++)
+            {
+                var list = new List<byte>();
+                var index = names[i];
+                var chr = trees[(int)index];
+                while (chr != 0)
+                {
+                    var code = trees[(int)chr];
+                    var d = offsets[(int)code];
+                    var realChr = chr - d;
+                    chr = code;
+                    //REF: https://stackoverflow.com/questions/18587267/does-list-insert-have-any-performance-penalty
+                    list.Add((byte)realChr);
+                }
+                //Debug.WriteLine("");
+                list.Reverse();
+                var str = Encoding.UTF8.GetString(list.ToArray()); //That's why we don't use StringBuilder here.
+                results.Add(str);
+            }
+            return results;
+        }
+
     }
 }

@@ -74,6 +74,10 @@ namespace FreeMote.Psb
         public PSB(ushort version = 3)
         {
             Header = new PsbHeader { Version = version };
+            if (Header.Version > 2)
+            {
+                Header.HeaderEncrypt = 1;
+            }
         }
 
         public PSB(string path)
@@ -123,6 +127,15 @@ namespace FreeMote.Psb
             br.BaseStream.Seek(Header.OffsetEntries, SeekOrigin.Begin);
             IPsbValue obj;
 
+#if DEBUG
+            obj = Unpack(br);
+            if (obj == null)
+            {
+                throw new Exception("Can not parse objects");
+            }
+            Objects = obj as PsbDictionary ?? throw new Exception("Wrong offset when parsing objects");
+
+#else
             try
             {
                 obj = Unpack(br);
@@ -137,6 +150,9 @@ namespace FreeMote.Psb
                 Debug.WriteLine(e);
                 throw;
             }
+#endif
+
+
 
             //if (Header.Version == 4)
             //{
@@ -405,10 +421,16 @@ namespace FreeMote.Psb
                 switch (obj)
                 {
                     case PsbResource r:
-                        Resources.Add(r);
+                        if (r.Index != null && Resources.FirstOrDefault(res => res.Index == r.Index) == null)
+                        {
+                            Resources.Add(r);
+                        }
                         break;
                     case PsbString s:
-                        Strings.Add(s);
+                        if (!Strings.Contains(s))
+                        {
+                            Strings.Add(s);
+                        }
                         break;
                     case PsbCollection c:
                         foreach (var o in c.Value)
@@ -486,12 +508,14 @@ namespace FreeMote.Psb
             BTree.Build(Names, out var bNames, out var bTree, out var bOffsets);
             //Mark Offset Names
             Header.OffsetNames = (uint)bw.BaseStream.Position;
-            var nameArray = new PsbArray(bNames);
-            nameArray.WriteTo(bw);
+
             var offsetArray = new PsbArray(bOffsets);
             offsetArray.WriteTo(bw);
             var treeArray = new PsbArray(bTree);
             treeArray.WriteTo(bw);
+            var nameArray = new PsbArray(bNames);
+            nameArray.WriteTo(bw);
+
             #endregion
 
             #region Compile Entries

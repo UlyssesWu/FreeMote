@@ -81,6 +81,7 @@ namespace FreeMote.Psb
         IPsbCollection Parent { get; set; }
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Collection
     /// </summary>
@@ -444,6 +445,29 @@ namespace FreeMote.Psb
                     break;
             }
         }
+
+        public byte[] ToBytes()
+        {
+            switch (NumberType)
+            {
+                case PsbNumberType.Int:
+                    if (Type != PsbType.NumberN0)
+                    {
+                        return IntValue.ZipNumberBytes();
+                    }
+                    return new byte[0];
+                case PsbNumberType.Float:
+                    if (Type != PsbType.Float0)
+                    {
+                        return BitConverter.GetBytes(FloatValue);
+                    }
+                    return new byte[0];
+                case PsbNumberType.Double:
+                    return BitConverter.GetBytes(DoubleValue);
+                default:
+                    return Data;
+            }
+        }
     }
 
     /// <summary>
@@ -519,7 +543,7 @@ namespace FreeMote.Psb
             return $"Array[{Value.Count}]";
         }
 
-        private int GetEntryLength()
+        private byte GetEntryLength()
         {
             if (Value == null || Value.Count <= 0)
             {
@@ -538,7 +562,7 @@ namespace FreeMote.Psb
         {
             bw.Write((byte)Type); //Type
             bw.Write(Value.Count.ZipNumberBytes()); //Count
-            bw.Write(GetEntryLength()); //EntryLength
+            bw.Write((byte)(GetEntryLength() + (byte)PsbType.NumberN8)); //FIXED: EntryLength is added by 0xC
             foreach (var u in Value)
             {
                 bw.Write(u.ZipNumberBytes(EntryLength));
@@ -639,7 +663,12 @@ namespace FreeMote.Psb
         public void WriteTo(BinaryWriter bw)
         {
             bw.Write((byte)Type);
-            new PsbNumber(Index ?? 0).WriteTo(bw);
+            if (Index == null)
+            {
+                throw new ArgumentNullException("Index", "Index can not be null when writing");
+            }
+            bw.Write(Index.Value.ZipNumberBytes()); //FIXED:
+            //new PsbNumber(Index ?? 0u).WriteTo(bw); //Wrong because it writes number type
         }
     }
 
@@ -736,7 +765,7 @@ namespace FreeMote.Psb
                     case 4:
                         return PsbType.ResourceN4;
                     default:
-                        throw new ArgumentOutOfRangeException("size", "Not a valid resource");
+                        throw new ArgumentOutOfRangeException("Index", "Not a valid resource");
                 }
             }
         }
@@ -749,7 +778,11 @@ namespace FreeMote.Psb
         public void WriteTo(BinaryWriter bw)
         {
             bw.Write((byte)Type);
-            new PsbNumber(Index ?? 0).WriteTo(bw);
+            if (Index == null)
+            {
+                throw new ArgumentNullException("Index", "Index can not be null when writing");
+            }
+            bw.Write(Index.Value.ZipNumberBytes()); //FIXED:
         }
 
         public IPsbCollection Parent { get; set; }
