@@ -18,10 +18,19 @@ namespace FreeMote.PsBuild
         /// <summary>
         /// Compile to file
         /// </summary>
-        /// <param name="inputPath"></param>
-        /// <param name="outputPath"></param>
+        /// <param name="inputPath">Json file path</param>
+        /// <param name="outputPath">Output path</param>
+        /// <param name="inputResPath">Special resource Json file path</param>
+        /// <param name="version">PSB version</param>
+        /// <param name="cryptKey">CryptKey, if you need to use it outside FreeMote</param>
+        /// <param name="platform">PSB Platform</param>
         public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort version = 3, uint? cryptKey = null, PsbSpec platform = PsbSpec.common)
         {
+            if (string.IsNullOrEmpty(inputPath))
+            {
+                throw new FileNotFoundException("Can not find input json file.");
+            }
+
             if (string.IsNullOrEmpty(inputResPath) || !File.Exists(inputResPath))
             {
                 inputResPath = Path.ChangeExtension(inputPath, ".resx.json");
@@ -29,11 +38,6 @@ namespace FreeMote.PsBuild
                 {
                     inputResPath = Path.ChangeExtension(inputPath, ".res.json");
                 }
-            }
-
-            if (string.IsNullOrEmpty(inputPath))
-            {
-                throw new FileNotFoundException("Can not find input json file.");
             }
 
             string resJson = null;
@@ -49,6 +53,16 @@ namespace FreeMote.PsBuild
             File.WriteAllBytes(outputPath, result);
         }
 
+        /// <summary>
+        /// Compile Json to PSB
+        /// </summary>
+        /// <param name="inputJson">Json text</param>
+        /// <param name="inputResJson">Resource Json text</param>
+        /// <param name="baseDir">If resource Json uses relative paths (usually it does), specify the base dir</param>
+        /// <param name="version">PSB version</param>
+        /// <param name="cryptKey">CryptKey, if you need to use it outside FreeMote</param>
+        /// <param name="spec">PSB Platform</param>
+        /// <returns></returns>
         public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null, ushort version = 3, uint? cryptKey = null,
             PsbSpec spec = PsbSpec.common)
         {
@@ -65,6 +79,48 @@ namespace FreeMote.PsBuild
             var bytes = psb.Build();
             //Convert
             return cryptKey != null ? PsbFile.EncodeToBytes(cryptKey.Value, bytes, EncodeMode.Encrypt, EncodePosition.Auto) : bytes;
+        }
+
+        /// <summary>
+        /// Load PSB From Json file
+        /// </summary>
+        /// <param name="inputPath">Json file path</param>
+        /// <param name="inputResPath">Resource Json file</param>
+        /// <param name="version">PSB version</param>
+        /// <returns></returns>
+        public static PSB LoadPsbFromJsonFile(string inputPath, string inputResPath = null, ushort version = 3)
+        {
+            if (string.IsNullOrEmpty(inputPath))
+            {
+                throw new FileNotFoundException("Can not find input json file.");
+            }
+
+            if (string.IsNullOrEmpty(inputResPath) || !File.Exists(inputResPath))
+            {
+                inputResPath = Path.ChangeExtension(inputPath, ".resx.json");
+                if (!File.Exists(inputResPath))
+                {
+                    inputResPath = Path.ChangeExtension(inputPath, ".res.json");
+                }
+            }
+
+            string resJson = null;
+            string baseDir = Path.GetDirectoryName(inputPath);
+            if (File.Exists(inputResPath))
+            {
+                resJson = File.ReadAllText(inputResPath);
+                baseDir = Path.GetDirectoryName(inputPath);
+            }
+
+            //Parse
+            PSB psb = Parse(File.ReadAllText(inputPath), version);
+            //Link
+            if (!string.IsNullOrWhiteSpace(resJson))
+            {
+                psb.Link(resJson, baseDir);
+            }
+            psb.Merge();
+            return psb;
         }
 
         internal static PSB Parse(string json, ushort version)
@@ -92,7 +148,7 @@ namespace FreeMote.PsBuild
                     Console.WriteLine($"[WARN]{resPath} is not used.");
                     continue;
                 }
-                var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/','\\'));
+                var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
                 byte[] data = null;
                 switch (Path.GetExtension(resPath)?.ToLowerInvariant())
                 {
@@ -106,7 +162,7 @@ namespace FreeMote.PsBuild
                     case ".raw":
                         data = psb.Platform.CompressType() == PsbCompressType.RL ? RL.Compress(File.ReadAllBytes(fullPath)) : File.ReadAllBytes(fullPath);
                         break;
-                    default: //For `.bin`, you have to manage by yourself
+                    default: //For `.bin`, you have to handle by yourself
                         data = File.ReadAllBytes(resPath);
                         break;
                 }

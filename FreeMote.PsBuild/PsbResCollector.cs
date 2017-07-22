@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using FreeMote.Psb;
@@ -15,8 +16,9 @@ namespace FreeMote.PsBuild
         /// Get all resources with necessary info
         /// </summary>
         /// <param name="psb"></param>
+        /// <param name="deDuplication">if true, We focus on Resource itself </param>
         /// <returns></returns>
-        public static List<ResourceMetadata> CollectResources(this PSB psb)
+        public static List<ResourceMetadata> CollectResources(this PSB psb, bool deDuplication = true)
         {
             List<ResourceMetadata> resourceList = psb.Resources == null ? new List<ResourceMetadata>() : new List<ResourceMetadata>(psb.Resources.Count);
 
@@ -28,24 +30,28 @@ namespace FreeMote.PsBuild
             return resourceList;
         }
 
-        private static void FindResources(List<ResourceMetadata> list, IPsbValue obj)
+        private static void FindResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
         {
             switch (obj)
             {
                 case PsbCollection c:
-                    c.Value.ForEach(o => FindResources(list, o));
+                    c.Value.ForEach(o => FindResources(list, o, deDuplication));
                     break;
                 case PsbDictionary d:
                     if (d[ResourceKey] is PsbResource r)
                     {
-                        if (r.Index == null || list.FirstOrDefault(md => md.Index == r.Index.Value) == null)
+                        if (!deDuplication)
+                        {
+                            list.Add(GenerateResourceMetadata(d, r));
+                        }
+                        else if (r.Index == null || list.FirstOrDefault(md => md.Index == r.Index.Value) == null)
                         {
                             list.Add(GenerateResourceMetadata(d, r));
                         }
                     }
                     foreach (var o in d.Value.Values)
                     {
-                        FindResources(list, o);
+                        FindResources(list, o, deDuplication);
                     }
                     break;
             }
@@ -166,6 +172,18 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
+        /// Get Name
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static string GetName(this IPsbSingleton c, PsbDictionary parent = null)
+        {
+            var source = parent ?? c?.Parents.FirstOrDefault(p => p is PsbDictionary) as PsbDictionary;
+            var result = source?.Value.FirstOrDefault(pair => Equals(pair.Value, c));
+            return result?.Value == null ? null : result.Value.Key;
+        }
+
+        /// <summary>
         /// If this spec uses RL
         /// </summary>
         /// <param name="spec"></param>
@@ -197,18 +215,17 @@ namespace FreeMote.PsBuild
             }
             var original = psb.Platform;
             psb.Platform = targetSpec;
-            var resources = psb.CollectResources();
+            var resources = psb.CollectResources(false);
 
             if (original == PsbSpec.krkr && (targetSpec == PsbSpec.win || targetSpec == PsbSpec.common))
             {
                 foreach (var resMd in resources)
                 {
-                    var dic = resMd.Resource.Parent as PsbDictionary;
-                    if (dic == null)
+                    foreach (var parent in resMd.Resource.Parents)
                     {
-                        continue;
+                        var dic = parent as PsbDictionary;
+                        dic?.Value.Remove("compress");
                     }
-                    dic.Value.Remove("compress");
                 }
             }
 

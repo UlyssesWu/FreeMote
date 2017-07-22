@@ -1,6 +1,6 @@
-﻿using System;
+﻿//#define DEBUG_OBJECT_WRITE //Enable if you want to check how much bytes each object costs.
+using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -49,8 +49,20 @@ namespace FreeMote.Psb
         /// </summary>
         public PsbDictionary Objects { get; set; }
 
-        internal PsbCollection ExpireSuffixList;
-        public string Extension { get; internal set; }
+        public string Extension
+        {
+            get
+            {
+                if (Objects?["expire_suffix_list"] is PsbCollection c)
+                {
+                    if (c[0] is PsbString ps)
+                    {
+                        return ps.Value;
+                    }
+                }
+                return "psb";
+            }
+        }
 
         /// <summary>
         /// PSB Target Platform (Spec)
@@ -69,8 +81,6 @@ namespace FreeMote.Psb
             set => Objects["spec"] = new PsbString(value.ToString());
         }
 
-        //private List<string> NamesCheck;
-
         public PSB(ushort version = 3)
         {
             Header = new PsbHeader { Version = version };
@@ -86,6 +96,9 @@ namespace FreeMote.Psb
             {
                 throw new IOException("File not exists.");
             }
+#if DEBUG_OBJECT_WRITE
+            _tw = new StreamWriter(path + ".debug");
+#endif
             using (var fs = new FileStream(path, FileMode.Open))
             {
                 LoadFromStream(fs);
@@ -96,6 +109,11 @@ namespace FreeMote.Psb
         {
             LoadFromStream(stream);
         }
+
+#if DEBUG_OBJECT_WRITE
+        TextWriter _tw;
+        private long _last = 0;
+#endif
 
         private void LoadFromStream(Stream stream)
         {
@@ -152,8 +170,6 @@ namespace FreeMote.Psb
             }
 #endif
 
-
-
             //if (Header.Version == 4)
             //{
             //    br.BaseStream.Seek(Header.OffsetUnknown1, SeekOrigin.Begin);
@@ -163,15 +179,6 @@ namespace FreeMote.Psb
             //    br.BaseStream.Seek(Header.OffsetResourceOffsets, SeekOrigin.Begin);
             //    var resArray = Unpack(br);
             //}
-
-            if (ExpireSuffixList != null && ExpireSuffixList.Value.Count > 0)
-            {
-                var extStr = ExpireSuffixList.Value[0] as PsbString;
-                if (extStr != null)
-                {
-                    Extension = extStr.Value;
-                }
-            }
 
             Resources.Sort((r1, r2) => (int)((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
         }
@@ -201,14 +208,7 @@ namespace FreeMote.Psb
                 list.Reverse();
                 var str = Encoding.UTF8.GetString(list.ToArray()); //That's why we don't use StringBuilder here.
                 Names.Add(str);
-
-                //Seems conflict
-                //if (!Strings.ContainsKey(index))
-                //{
-                //    Strings.Add(index, new PsbString(str, index));
-                //}
             }
-            //NamesCheck = new List<string>(Names);
         }
 
         /// <summary>
@@ -218,6 +218,12 @@ namespace FreeMote.Psb
         /// <returns></returns>
         private IPsbValue Unpack(BinaryReader br)
         {
+
+#if DEBUG_OBJECT_WRITE
+            var pos = br.BaseStream.Position;
+            _tw.WriteLine($"{(_last == 0 ? 0 : pos - _last)}");
+#endif
+
             var typeByte = br.ReadByte();
             if (!Enum.IsDefined(typeof(PsbType), typeByte))
             {
@@ -225,6 +231,13 @@ namespace FreeMote.Psb
                 //throw new ArgumentOutOfRangeException($"0x{type:X2} is not a known type.");
             }
             var type = (PsbType)typeByte;
+
+#if DEBUG_OBJECT_WRITE
+            _tw.Write($"{type}\t{pos}\t");
+            _tw.Flush();
+            _last = pos;
+#endif
+
             switch (type)
             {
                 case PsbType.None:
@@ -282,7 +295,7 @@ namespace FreeMote.Psb
                 case PsbType.Array:
                 case PsbType.Boolean:
                 case PsbType.BTree:
-                    //Debug.WriteLine("FreeMote won't need these for compile.");
+                    Debug.WriteLine("FreeMote won't need these for compile.");
                     break;
                 default:
                     return null;
@@ -309,15 +322,14 @@ namespace FreeMote.Psb
                     {
                         c.Parent = dictionary;
                     }
+                    if (obj is IPsbSingleton s)
+                    {
+                        s.Parents.Add(dictionary);
+                    }
                     dictionary.Value.Add(name, obj);
                 }
-                //Check
-                //NamesCheck.Remove(name);
             }
-            if (dictionary.Value.ContainsKey("expire_suffix_list"))
-            {
-                ExpireSuffixList = dictionary["expire_suffix_list"] as PsbCollection;
-            }
+
             return dictionary;
         }
 
@@ -341,6 +353,10 @@ namespace FreeMote.Psb
                     if (obj is IPsbChild c)
                     {
                         c.Parent = collection;
+                    }
+                    if (obj is IPsbSingleton s)
+                    {
+                        s.Parents.Add(collection);
                     }
                     collection.Value.Add(obj);
                 }
@@ -389,6 +405,7 @@ namespace FreeMote.Psb
                 return;
             }
             var pos = br.BaseStream.Position;
+            Debug.Assert(str.Index != null, "Index can not be null");
             br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)str.Index], SeekOrigin.Begin);
             var strValue = br.ReadStringZeroTrim();
             str.Value = strValue;
@@ -413,7 +430,7 @@ namespace FreeMote.Psb
             Resources = new List<PsbResource>();
             Collect(Objects);
 
-            Names.Sort();
+            Names.Sort(String.CompareOrdinal); //FIXED: Compared by bytes
             UpdateIndexes();
 
             void Collect(IPsbValue obj)
@@ -445,7 +462,7 @@ namespace FreeMote.Psb
                             {
                                 Names.Add(pair.Key);
 
-                                //Does Name appears in String Table?
+                                //Does Name appears in String Table? No.
                                 //var psbStr = new PsbString(pair.Name);
                                 //if (!Strings.ContainsValue(psbStr))
                                 //{
@@ -458,13 +475,11 @@ namespace FreeMote.Psb
                             Collect(pair.Value);
                         }
                         break;
-                    default:
-                        break;
                 }
             }
         }
 
-        private void UpdateIndexes()
+        internal void UpdateIndexes()
         {
             Strings.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
             for (int i = 0; i < Strings.Count; i++)
@@ -481,8 +496,9 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Build PSB
+        /// <para>Make sure you have called <see cref="Merge"/> or the output will be invalid</para>
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Binary</returns>
         public byte[] Build()
         {
             /*
@@ -643,7 +659,8 @@ namespace FreeMote.Psb
                 BinaryWriter mbw = new BinaryWriter(ms);
                 foreach (var pair in pDic.Value)
                 {
-                    var index = Names.BinarySearch(pair.Key);
+                    //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
+                    var index = Names.FindIndex(s => s == pair.Key);
                     if (index < 0)
                     {
                         throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");

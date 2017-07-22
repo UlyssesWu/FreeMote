@@ -23,7 +23,7 @@ namespace FreeMote.Psb
             }
             var hex = i.ToString("X");
             var l = hex.Length;
-            bool firstBitOne = hex[0] >= '8'; //FIXED: Extend size if first bit is 1
+            bool firstBitOne = hex[0] >= '8' && hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
 
             if (l % 2 != 0)
             {
@@ -48,6 +48,12 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static int GetSize(this uint i)
         {
+            //FIXED: Treat uint as int to prevent overconfidence
+            if (i <= int.MaxValue)
+            {
+                return GetSize((int)i);
+            }
+
             var l = i.ToString("X").Length;
             if (l % 2 != 0)
             {
@@ -80,6 +86,11 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static byte[] ZipNumberBytes(this uint i, int size = 0)
         {
+            //FIXED: Treat uint as int to prevent overconfidence
+            //if (i <= int.MaxValue)
+            //{
+            //    return ZipNumberBytes((int) i, size);
+            //}
             return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
         }
 
@@ -166,5 +177,35 @@ namespace FreeMote.Psb
             }
         }
 
+    }
+
+    public class ByteListComparer : IComparer<IList<byte>>
+    {
+        public int Compare(IList<byte> x, IList<byte> y)
+        {
+            int result;
+            int min = Math.Min(x.Count, y.Count);
+            for (int index = 0; index < min; index++)
+            {
+                result = x[index].CompareTo(y[index]);
+                if (result != 0) return result;
+            }
+            return x.Count.CompareTo(y.Count);
+        }
+    }
+
+    public class StringListComparer : IComparer<IList<string>>
+    {
+        public int Compare(IList<string> x, IList<string> y)
+        {
+            int result;
+            int min = Math.Min(x.Count, y.Count);
+            for (int index = 0; index < min; index++)
+            {
+                result = String.Compare(x[index], y[index], StringComparison.Ordinal);
+                if (result != 0) return result;
+            }
+            return x.Count.CompareTo(y.Count);
+        }
     }
 }

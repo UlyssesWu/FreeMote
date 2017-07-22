@@ -100,7 +100,7 @@ namespace FreeMote.PsBuild
                 case JTokenType.Float:
                     var d = token.Value<double>();
                     var f = token.Value<float>();
-                    if (Math.Abs(f - d) < double.Epsilon) //float
+                    if (Math.Abs(f - d) < 1E-05) //float //pcc: 1E-05
                     {
                         return new PsbNumber(token.Value<float>());
                     }
@@ -112,21 +112,21 @@ namespace FreeMote.PsBuild
                 case JTokenType.Boolean:
                     return new PsbBool(token.Value<bool>());
                 case JTokenType.String:
-                    string s = token.Value<string>();
-                    if (s.StartsWith(PsbResCollector.ResourceIdentifier))
+                    string str = token.Value<string>();
+                    if (str.StartsWith(PsbResCollector.ResourceIdentifier))
                     {
-                        return new PsbResource(uint.Parse(s.Replace(PsbResCollector.ResourceIdentifier, "")));
+                        return new PsbResource(uint.Parse(str.Replace(PsbResCollector.ResourceIdentifier, "")));
                     }
-                    var str = new PsbString(s, (uint)context.Count);
-                    if (context.Contains(str))
+                    var psbStr = new PsbString(str, (uint)context.Count);
+                    if (context.Contains(psbStr))
                     {
-                        return context.Find(psbStr => psbStr.Value == s);
+                        return context.Find(ps => ps.Value == str);
                     }
                     else
                     {
-                        context.Add(str);
+                        context.Add(psbStr);
                     }
-                    return str;
+                    return psbStr;
                 case JTokenType.Array:
                     var array = (JArray)token;
                     var collection = new PsbCollection(array.Count);
@@ -136,6 +136,10 @@ namespace FreeMote.PsBuild
                         if (o is IPsbChild c)
                         {
                             c.Parent = collection;
+                        }
+                        if (o is IPsbSingleton s)
+                        {
+                            s.Parents.Add(collection);
                         }
                         collection.Value.Add(o);
                     }
@@ -149,6 +153,10 @@ namespace FreeMote.PsBuild
                         if (o is IPsbChild c)
                         {
                             c.Parent = dictionary;
+                        }
+                        if (o is IPsbSingleton s)
+                        {
+                            s.Parents.Add(dictionary);
                         }
                         dictionary.Value.Add(val.Key, o);
                     }

@@ -71,14 +71,26 @@ namespace FreeMote.Psb
     };
 
     /// <summary>
-    /// Contained by <see cref="IPsbCollection"/>
+    /// Contained by a <see cref="IPsbCollection"/>
     /// </summary>
     public interface IPsbChild
     {
         /// <summary>
-        /// <see cref="IPsbCollection"/> which contains this
+        /// <see cref="IPsbCollection"/> which contain this
         /// </summary>
         IPsbCollection Parent { get; set; }
+    }
+
+
+    /// <summary>
+    /// Contained by more than one <see cref="IPsbCollection"/>
+    /// </summary>
+    public interface IPsbSingleton
+    {
+        /// <summary>
+        /// <see cref="IPsbCollection"/>s which contain this
+        /// </summary>
+        List<IPsbCollection> Parents { get; set; }
     }
 
     /// <inheritdoc />
@@ -87,6 +99,7 @@ namespace FreeMote.Psb
     /// </summary>
     public interface IPsbCollection : IPsbChild
     {
+        IPsbCollection Parent { get; }
         IPsbValue this[int i]
         {
             get;
@@ -402,6 +415,7 @@ namespace FreeMote.Psb
                                 throw new ArgumentOutOfRangeException("Not a valid Integer");
                         }
                     case PsbNumberType.Float:
+                        //TODO: Float0 or not
                         if (Math.Abs(FloatValue) < float.Epsilon) //should we just use 0?
                         {
                             return PsbType.Float0;
@@ -561,7 +575,7 @@ namespace FreeMote.Psb
         public void WriteTo(BinaryWriter bw)
         {
             bw.Write((byte)Type); //Type
-            bw.Write(Value.Count.ZipNumberBytes()); //Count
+            bw.Write(Value.Count.ZipNumberBytes(Value.Count.GetSize())); //Count
             bw.Write((byte)(GetEntryLength() + (byte)PsbType.NumberN8)); //FIXED: EntryLength is added by 0xC
             foreach (var u in Value)
             {
@@ -714,6 +728,7 @@ namespace FreeMote.Psb
 
         public IPsbCollection Parent { get; set; } = null;
 
+
         public IPsbValue this[int index]
         {
             get => index < Value.Count ? Value[index] : null;
@@ -732,7 +747,7 @@ namespace FreeMote.Psb
 
     [Serializable]
     [DebuggerDisplay("Resource[{Data?.Length}](#{" + nameof(Index) + "})")]
-    public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite, IPsbChild
+    public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite, IPsbSingleton
     {
         internal PsbResource(int n, BinaryReader br)
         {
@@ -785,7 +800,7 @@ namespace FreeMote.Psb
             bw.Write(Index.Value.ZipNumberBytes()); //FIXED:
         }
 
-        public IPsbCollection Parent { get; set; }
+        public List<IPsbCollection> Parents { get; set; } = new List<IPsbCollection>();
     }
 
 }
