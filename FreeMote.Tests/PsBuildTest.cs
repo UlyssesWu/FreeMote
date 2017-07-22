@@ -83,7 +83,15 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
-            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.krkr);
+            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
+        }
+
+        [TestMethod]
+        public void TestCompileOther()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json.psbuild.psb.json");
+            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.other);
         }
 
         [TestMethod]
@@ -155,32 +163,16 @@ namespace FreeMote.Tests
             //psbuildPsb.UpdateIndexes();
             //File.WriteAllBytes(Path.Combine(resPath, "ca01_build.psb"), psbuildPsb.Build());
 
-            Compare(pccPsb.Objects, psbuildPsb.Objects);
+            CompareValue(pccPsb.Objects, psbuildPsb.Objects);
             //Console.WriteLine("============");
-            //Compare(psbuildPsb.Objects, pccPsb.Objects);
-
-
-            void Compare(PsbDictionary d1, PsbDictionary d2)
-            {
-                foreach (var pair1 in d1.Value)
-                {
-                    if (!d2.Value.ContainsKey(pair1.Key))
-                    {
-                        Console.WriteLine($"Missing {pair1.Key}");
-                    }
-                    else
-                    {
-                        CompareValue(pair1.Value, d2[pair1.Key]);
-                    }
-                }
-            }
+            //CompareValue(psbuildPsb.Objects, pccPsb.Objects);
 
             bool CompareValue(IPsbValue p1, IPsbValue p2)
             {
-                if (p1.Type != p2.Type && !(p1 is PsbString))
-                {
-                    Console.WriteLine($"Strict Type diff: {p1}({p1.Type}) vs {p2}({p2.Type})");
-                }
+                //if (p1.Type != p2.Type && !(p1 is PsbString))
+                //{
+                //    Console.WriteLine($"Strict Type diff: {p1}({p1.Type}) vs {p2}({p2.Type})");
+                //}
                 if (p1.GetType() != p2.GetType())
                 {
                     Console.WriteLine($"Type diff: {p1} vs {p2}");
@@ -269,7 +261,17 @@ namespace FreeMote.Tests
                         return true;
                     case PsbDictionary d1:
                         var d2 = (PsbDictionary)p2;
-                        Compare(d1, d2);
+                        foreach (var pair1 in d1.Value)
+                        {
+                            if (!d2.Value.ContainsKey(pair1.Key))
+                            {
+                                Console.WriteLine($"Missing {pair1.Key}");
+                            }
+                            else
+                            {
+                                CompareValue(pair1.Value, d2[pair1.Key]);
+                            }
+                        }
                         return true;
                 }
                 return true;

@@ -71,7 +71,7 @@ namespace FreeMote.Psb
         {
             get
             {
-                var spec = Objects["spec"]?.ToString();
+                var spec = Objects?["spec"]?.ToString();
                 if (string.IsNullOrEmpty(spec))
                 {
                     return PsbSpec.other;

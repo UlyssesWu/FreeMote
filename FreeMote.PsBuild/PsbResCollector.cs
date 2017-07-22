@@ -22,7 +22,7 @@ namespace FreeMote.PsBuild
         {
             List<ResourceMetadata> resourceList = psb.Resources == null ? new List<ResourceMetadata>() : new List<ResourceMetadata>(psb.Resources.Count);
 
-            FindResources(resourceList, psb.Objects[SourceKey]);
+            FindResources(resourceList, psb.Objects[SourceKey], deDuplication);
 
             resourceList.ForEach(r => r.Spec = psb.Platform);
             resourceList.Sort((md1, md2) => (int)(md1.Index - md2.Index));

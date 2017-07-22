@@ -72,7 +72,7 @@ namespace FreeMote.PsBuild
             //Link
             if (!string.IsNullOrWhiteSpace(inputResJson))
             {
-                psb.Link(inputResJson, baseDir);
+                psb.Link(inputResJson, baseDir, spec);
             }
             //Build
             psb.Merge();
@@ -132,7 +132,7 @@ namespace FreeMote.PsBuild
             return psb;
         }
 
-        internal static void Link(this PSB psb, string resJson, string baseDir = null)
+        internal static void Link(this PSB psb, string resJson, string baseDir = null, PsbSpec? spec = null)
         {
             List<string> resPaths = JsonConvert.DeserializeObject<List<string>>(resJson);
             var resList = psb.CollectResources();
@@ -154,13 +154,13 @@ namespace FreeMote.PsBuild
                 {
                     case ".png":
                     case ".bmp":
-                        data = psb.Platform.CompressType() == PsbCompressType.RL ? RL.CompressImageFile(fullPath) : RL.GetPixelBytesFromImageFile(fullPath);
+                        data = (spec ?? psb.Platform).CompressType() == PsbCompressType.RL ? RL.CompressImageFile(fullPath) : RL.GetPixelBytesFromImageFile(fullPath);
                         break;
                     case ".rl":
-                        data = psb.Platform.CompressType() == PsbCompressType.RL ? File.ReadAllBytes(fullPath) : RL.Uncompress(File.ReadAllBytes(fullPath));
+                        data = (spec ?? psb.Platform).CompressType() == PsbCompressType.RL ? File.ReadAllBytes(fullPath) : RL.Uncompress(File.ReadAllBytes(fullPath));
                         break;
                     case ".raw":
-                        data = psb.Platform.CompressType() == PsbCompressType.RL ? RL.Compress(File.ReadAllBytes(fullPath)) : File.ReadAllBytes(fullPath);
+                        data = (spec ?? psb.Platform).CompressType() == PsbCompressType.RL ? RL.Compress(File.ReadAllBytes(fullPath)) : File.ReadAllBytes(fullPath);
                         break;
                     default: //For `.bin`, you have to handle by yourself
                         data = File.ReadAllBytes(resPath);
