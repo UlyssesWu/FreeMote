@@ -7,7 +7,7 @@ A tool lib to *infer* the key of an Emote PSB file. It doesn't need any other fi
 * Very fast because it's all from inference rather than brute force
 * Can handle both header & body(string) encryption
 
-It's almost done but unreleased since I have Emote projects myself.
+It's almost done but unreleased (in a standalone repo) since I have Emote projects myself.
 
 ---
 by Ulysses, wdwxy12345@gmail.com

@@ -86,29 +86,29 @@ namespace FreeMote.PsBuild
                 switch (imageOption)
                 {
                     case PsbImageOption.Extract:
-                        var pixelFormat = resource.Spec.PixelFormat();
+                        //var pixelFormat = resource.Spec.DefaultPixelFormat(); //MARK: PixelFormat should refer `type`
                         switch (extractFormat)
                         {
                             case PsbImageFormat.Png:
                                 relativePath += ".png";
                                 if (resource.Compress == PsbCompressType.RL)
                                 {
-                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, PsbImageFormat.Png, pixelFormat);
+                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, PsbImageFormat.Png, resource.PixelFormat);
                                 }
                                 else
                                 {
-                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, extractFormat, pixelFormat);
+                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, extractFormat, resource.PixelFormat);
                                 }
                                 break;
                             default:
                                 relativePath += ".bmp";
                                 if (resource.Compress == PsbCompressType.RL)
                                 {
-                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, PsbImageFormat.Bmp, pixelFormat);
+                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, PsbImageFormat.Bmp, resource.PixelFormat);
                                 }
                                 else
                                 {
-                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, extractFormat, pixelFormat);
+                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, extractFormat, resource.PixelFormat);
                                 }
                                 break;
                         }

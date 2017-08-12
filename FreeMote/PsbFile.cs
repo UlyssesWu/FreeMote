@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FreeMote
 {
@@ -33,10 +30,6 @@ namespace FreeMote
         internal PsbHeader Header { get; set; }
 
         public ushort Version => Header.Version;
-
-        public bool IsHeaderEncrypted => Header.HeaderEncrypt != 0;
-
-        public bool IsBodyEncrypted => Header.HeaderLength != Header.OffsetNames;
 
         public PsbFile(string path)
         {
@@ -136,24 +129,20 @@ namespace FreeMote
 
             switch (header.Version)
             {
-                case 1:
                 case 2:
-                    br.BaseStream.Seek(40, SeekOrigin.Begin);
-                    break;
                 case 3:
-                    br.BaseStream.Seek(44, SeekOrigin.Begin);
-                    break;
                 case 4:
-                    br.BaseStream.Seek(56, SeekOrigin.Begin);
+                    br.BaseStream.Seek(header.GetHeaderLength(), SeekOrigin.Begin);
                     break;
                 default:
                     br.BaseStream.Seek(header.OffsetNames, SeekOrigin.Begin);
                     break;
             }
-            if (br.ReadByte() == 0x0E)
+            if (br.ReadByte() == 0x0E) //Type == ArrayN2
             {
-                br.ReadBytes(2);
-                if (br.ReadByte() == 0x0E)
+                br.ReadBytes(2); //Array Length
+                var entryLength = br.ReadByte(); //Entry Length
+                if (entryLength == 0x0E || entryLength == 0x0D) //EntryLength == 1 || 2
                 {
                     br.BaseStream.Seek(pos, SeekOrigin.Begin);
                     return false;
@@ -370,6 +359,13 @@ namespace FreeMote
             );
         }
 
+        /// <summary>
+        /// Encrypt or decrypt PSB and write to a file
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="savePath"></param>
+        /// <param name="mode"></param>
+        /// <param name="position"></param>
         public void EncodeToFile(uint key, string savePath, EncodeMode mode = EncodeMode.Encrypt, EncodePosition position = EncodePosition.Auto)
         {
             using (var input = File.OpenRead(Path))

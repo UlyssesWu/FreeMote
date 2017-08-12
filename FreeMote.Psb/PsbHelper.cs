@@ -158,11 +158,11 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Get Corresponding PixelFormat
+        /// Get default corresponding PixelFormat
         /// </summary>
         /// <param name="spec"></param>
         /// <returns></returns>
-        public static PsbPixelFormat PixelFormat(this PsbSpec spec)
+        public static PsbPixelFormat DefaultPixelFormat(this PsbSpec spec)
         {
             switch (spec)
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
@@ -18,21 +19,6 @@ namespace FreeMote.Tests
     {
         public PsBuildTest()
         {
-            //
-            //TODO:  在此处添加构造函数逻辑
-            //
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///获取或设置测试上下文，该上下文提供
-        ///有关当前测试运行及其功能的信息。
-        ///</summary>
-        public TestContext TestContext
-        {
-            get => testContextInstance;
-            set => testContextInstance = value;
         }
 
         #region 附加测试特性
@@ -98,7 +84,7 @@ namespace FreeMote.Tests
         public void TestCompileWin()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json");
+            var path = Path.Combine(resPath, "D愛子a_春服-pure.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
         }
 
@@ -133,6 +119,26 @@ namespace FreeMote.Tests
             {
                 Assert.AreEqual(doubles[i], result2[i]);
             }
+        }
+
+
+        [TestMethod]
+        public void TestDxt5Uncompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var rawDxt = Path.Combine(resPath, "D愛子a_春服-pure", "0.raw");
+            var rawBytes = File.ReadAllBytes(rawDxt);
+            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
+        }
+
+        [TestMethod]
+        public void TestDxt5Compress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var rawPng = Path.Combine(resPath, "D愛子a_春服-pure", "0.png");
+            Bitmap bitmap = new Bitmap(rawPng);
+            var bc3Bytes = DxtUtil.Dxt5Encode(bitmap);
+            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
         }
 
         [TestMethod]

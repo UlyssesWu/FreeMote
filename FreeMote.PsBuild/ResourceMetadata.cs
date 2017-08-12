@@ -63,22 +63,30 @@ namespace FreeMote.PsBuild
         public PsbResource Resource { get; set; }
         public byte[] Data => Resource?.Data;
         public PsbSpec Spec { get; set; }
+
+        public PsbPixelFormat PixelFormat
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Type))
+                {
+                    return PsbPixelFormat.None;
+                }
+                switch (Type.ToUpperInvariant())
+                {
+                    case "DXT5":
+                        return PsbPixelFormat.DXT5;
+                    case "RGBA8":
+                        return Spec == PsbSpec.common ? PsbPixelFormat.CommonRGBA8 : PsbPixelFormat.WinRGBA8;
+                        default:
+                        return PsbPixelFormat.None;
+                }
+            }
+        }
+
         public override string ToString()
         {
             return $"{Part}_{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}";
-//            var str2d = $@"""originX"": {OriginX},
-//""originY"": {OriginY},
-//""width"": {Width},
-//""height"": {Height},
-
-//            ";
-//            return $@"{{
-//    ""name"": ""{Part}_{Name}"",
-//    ""pixel"": ""{PsbResCollector.ResourceIdentifier}{Index}"",
-//    ""width"": ""{Part}_{Name}"",
-//    {(Compress == PsbCompressType.RL ? "\"compress\": \"RL\"," : "")}
-
-//}}";
         }
     }
 }

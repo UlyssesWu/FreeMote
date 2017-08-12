@@ -1,76 +1,84 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace FreeMote
 {
+    [StructLayout(LayoutKind.Explicit)]
     internal class PsbHeader
     {
-        public char[] Signature { get; set; } = {'P','S','B', (char)0};
-        public ushort Version { get; set; } = 3;
+        /// <summary>
+        /// Max length of header AFAIK. Need to be fixed if there are longer headers exist.
+        /// </summary>
+        public const int MAX_HEADER_LENGTH = 56;
+
+        [FieldOffset(0)] public char[] Signature = { 'P', 'S', 'B', (char)0 };
+
+        [FieldOffset(4)] public ushort Version = 3;
 
         /// <summary>
         /// If 1, the header seems encrypted, which add more difficulty to us
         /// <para>But doesn't really matters since usually it's always encrypted in v3+</para>
         /// </summary>
-        public ushort HeaderEncrypt { get; set; } = 0;
+        [FieldOffset(6)] public ushort HeaderEncrypt = 0;
 
         /// <summary>
         /// Header Length
         /// <para>Usually same as <see cref="OffsetNames"/></para>
         /// </summary>
-        public uint HeaderLength { get; set; }
+        [FieldOffset(8)] public uint HeaderLength;
 
         /// <summary>
         /// Offset of Names
         /// <para>Usually the beginning of encryption in v2</para>
         /// </summary>
-        public uint OffsetNames { get; set; }
+        [FieldOffset(12)] public uint OffsetNames;
 
-        public uint OffsetStrings { get; set; }
+        [FieldOffset(16)] public uint OffsetStrings;
 
-        public uint OffsetStringsData { get; set; }
+        [FieldOffset(20)] public uint OffsetStringsData;
 
         /// <summary>
         /// ResOffTable
         /// </summary>
-        public uint OffsetChunkOffsets { get; set; }
-        public uint OffsetChunkLengths { get; set; }
+        [FieldOffset(24)] public uint OffsetChunkOffsets;
+
+        [FieldOffset(28)] public uint OffsetChunkLengths;
 
         /// <summary>
         /// Offset of Chunk Data (Image)
         /// </summary>
-        public uint OffsetChunkData { get; set; }
+        [FieldOffset(32)] public uint OffsetChunkData;
 
         /// <summary>
         /// Entry Offset
         /// </summary>
-        public uint OffsetEntries { get; set; }
+        [FieldOffset(36)] public uint OffsetEntries;
 
         /// <summary>
         /// [New in v3] Adler32 Checksum for header
         /// <para>Not always checked in v3. Sadly, it's always checked from v4, so we have to handle it.</para>
         /// </summary>
-        public uint Checksum { get; set; }
+        [FieldOffset(40)] public uint Checksum;
 
         /// <summary>
         /// [New in v4] Usually an empty array (3 bytes)
         /// <para><see cref="OffsetResourceOffsets"/> - 6</para>
         /// </summary>
-        public uint OffsetUnknown1 { get; set; }
+        [FieldOffset(44)] public uint OffsetUnknown1;
+
         /// <summary>
         /// [New in v4] Usually an empty array (3 bytes)
         /// <para><see cref="OffsetResourceOffsets"/> - 3</para>
         /// </summary>
-        public uint OffsetUnknown2 { get; set; }
+        [FieldOffset(48)] public uint OffsetUnknown2;
+
         /// <summary>
         /// [New in v4] Usually same as <see cref="OffsetChunkOffsets"/>
         /// </summary>
-        public uint OffsetResourceOffsets { get; set; }
+        [FieldOffset(52)] public uint OffsetResourceOffsets;
+
 
         public static PsbHeader Load(BinaryReader br)
         {
@@ -193,16 +201,21 @@ namespace FreeMote
             }
             return 44u;
         }
+
+        /// <summary>
+        /// Get Header Length based on Version
+        /// </summary>
+        /// <returns></returns>
         public uint GetHeaderLength()
         {
             return GetHeaderLength(Version);
         }
-
+        
         public void SwitchVersion(ushort version = 3, bool offsetFields = false)
         {
             if (version != 2 && version != 3 && version != 4)
             {
-                throw new ArgumentOutOfRangeException("Unsupported version");
+                throw new NotSupportedException("Unsupported version");
             }
 
             Version = version;
@@ -264,5 +277,10 @@ namespace FreeMote
                 return ms.ToArray();
             }
         }
+
+        /// <summary>
+        /// Similar as <see cref="PsbFile.TestHeaderEncrypted"/> but not based on file.
+        /// </summary>
+        public bool IsHeaderEncrypted => HeaderLength >= MAX_HEADER_LENGTH || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
     }
 }

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 
@@ -132,6 +130,35 @@ namespace FreeMote.PsBuild
             return psb;
         }
 
+        internal static byte[] LoadImageBytes(string path, PsbCompressType compressType, PsbPixelFormat pixelFormat)
+        {
+            byte[] data;
+            switch (Path.GetExtension(path)?.ToLowerInvariant())
+            {
+                case ".png":
+                case ".bmp":
+                    data = compressType == PsbCompressType.RL ? RL.CompressImageFile(path, pixelFormat) : RL.GetPixelBytesFromImageFile(path, pixelFormat);
+                    break;
+                case ".rl":
+                    data = compressType == PsbCompressType.RL ? File.ReadAllBytes(path) : RL.Uncompress(File.ReadAllBytes(path));
+                    break;
+                case ".raw":
+                    data = compressType == PsbCompressType.RL ? RL.Compress(File.ReadAllBytes(path)) : File.ReadAllBytes(path);
+                    break;
+                default: //For `.bin`, you have to handle by yourself
+                    data = File.ReadAllBytes(path);
+                    break;
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// Link
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="resJson"></param>
+        /// <param name="baseDir"></param>
+        /// <param name="spec"></param>
         internal static void Link(this PSB psb, string resJson, string baseDir = null, PsbSpec? spec = null)
         {
             List<string> resPaths = JsonConvert.DeserializeObject<List<string>>(resJson);
@@ -149,23 +176,7 @@ namespace FreeMote.PsBuild
                     continue;
                 }
                 var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
-                byte[] data = null;
-                switch (Path.GetExtension(resPath)?.ToLowerInvariant())
-                {
-                    case ".png":
-                    case ".bmp":
-                        data = (spec ?? psb.Platform).CompressType() == PsbCompressType.RL ? RL.CompressImageFile(fullPath) : RL.GetPixelBytesFromImageFile(fullPath);
-                        break;
-                    case ".rl":
-                        data = (spec ?? psb.Platform).CompressType() == PsbCompressType.RL ? File.ReadAllBytes(fullPath) : RL.Uncompress(File.ReadAllBytes(fullPath));
-                        break;
-                    case ".raw":
-                        data = (spec ?? psb.Platform).CompressType() == PsbCompressType.RL ? RL.Compress(File.ReadAllBytes(fullPath)) : File.ReadAllBytes(fullPath);
-                        break;
-                    default: //For `.bin`, you have to handle by yourself
-                        data = File.ReadAllBytes(resPath);
-                        break;
-                }
+                byte[] data = LoadImageBytes(fullPath, (spec ?? psb.Platform).CompressType(), resMd.PixelFormat);
                 resMd.Resource.Data = data;
             }
         }

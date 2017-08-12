@@ -1,10 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Purify", "FreeMote.Purify\FreeMote.Purify.csproj", "{859B3831-C3A5-4FF9-B1FE-BD5D3F6A6452}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Psb", "FreeMote.Psb\FreeMote.Psb.csproj", "{C0B2C2FF-D8F4-497E-8312-C2AF1BB6E7F7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote", "FreeMote\FreeMote.csproj", "{D43CA425-6476-4AE3-A3D8-BBCAC0F0383C}"
@@ -25,10 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{859B3831-C3A5-4FF9-B1FE-BD5D3F6A6452}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{859B3831-C3A5-4FF9-B1FE-BD5D3F6A6452}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{859B3831-C3A5-4FF9-B1FE-BD5D3F6A6452}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{859B3831-C3A5-4FF9-B1FE-BD5D3F6A6452}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C0B2C2FF-D8F4-497E-8312-C2AF1BB6E7F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C0B2C2FF-D8F4-497E-8312-C2AF1BB6E7F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0B2C2FF-D8F4-497E-8312-C2AF1BB6E7F7}.Release|Any CPU.ActiveCfg = Release|Any CPU

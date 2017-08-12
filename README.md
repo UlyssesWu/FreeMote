@@ -42,4 +42,6 @@ FreeMote is temporarily licensed under **LGPL**. Members from Project AZUSA can 
 * @number201724 for PSB format.
 * @nalsas (awatm) for Emote Editor help.
 * @WcLyic (牧濑红莉栖) for some PSB samples and Emote Editor help.
+* [MonoGame](https://github.com/MonoGame/MonoGame) for `DxtUtil` code. LICENSE: Ms-PL
 * Singyuen Yip for `Adler32` code.
+* @gdkchan for `DxtCodec` code.

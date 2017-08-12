@@ -22,6 +22,10 @@ namespace FreeMote
         /// Big Endian RGBA8
         /// </summary>
         CommonRGBA8,
+        /// <summary>
+        /// Big Endian DXT5
+        /// </summary>
+        DXT5,
     }
 
     /// <summary>
@@ -33,8 +37,7 @@ namespace FreeMote
         /// Pixel Color Convert
         /// </summary>
         /// <param name="bytes"></param>
-        /// <param name="littleEndian"></param>
-        public static unsafe void Rgba2Argb(ref byte[] bytes, bool littleEndian = false)
+        public static unsafe void Rgba2Argb(ref byte[] bytes)
         {
             //ARGB actually is BGRA in little-endian
             fixed (byte* ptr = bytes)
@@ -46,19 +49,10 @@ namespace FreeMote
                     uint* iPtr = (uint*)ptr + i;
                     if (*iPtr != 0)
                     {
-                        var p1 = (*iPtr & 0xFF000000) >> 24;
-                        var p2 = (*iPtr & 0x00FF0000) >> 16;
-                        var p3 = (*iPtr & 0x0000FF00) >> 8;
-                        var p4 = (*iPtr & 0x000000FF);
-
-                        if (littleEndian) //Win
-                        {
-                            *iPtr = (p1 << 24) | (p2 << 16) | (p3 << 8) | (p4);
-                        }
-                        else //Common
-                        {
-                            *iPtr = (p1 << 24) | (p4 << 16) | (p3 << 8) | (p2);
-                        }
+                        *iPtr = ((*iPtr & 0xFF000000) >> 24 << 24) |
+                            ((*iPtr & 0x000000FF) << 16) |
+                            ((*iPtr & 0x0000FF00) >> 8 << 8) |
+                            ((*iPtr & 0x00FF0000) >> 16);
                     }
                     i++;
                 }
@@ -78,28 +72,28 @@ namespace FreeMote
             }
         }
 
-        public static byte[] CompressImage(Bitmap image)
+        public static byte[] CompressImage(Bitmap image, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
-            return Compress(PixelBytesFromImage(image));
+            return Compress(PixelBytesFromImage(image, pixelFormat));
         }
 
-        public static byte[] CompressImageFile(string path)
+        public static byte[] CompressImageFile(string path, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
-            return CompressImage(new Bitmap(path));
+            return CompressImage(new Bitmap(path), pixelFormat);
         }
 
-        public static byte[] GetPixelBytesFromImageFile(string path)
+        public static byte[] GetPixelBytesFromImageFile(string path, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             Bitmap bmp = new Bitmap(path);
-            return PixelBytesFromImage(bmp);
+            return PixelBytesFromImage(bmp, pixelFormat);
         }
-        public static byte[] GetPixelBytesFromImage(Image image)
+        public static byte[] GetPixelBytesFromImage(Image image, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             Bitmap bmp = new Bitmap(image);
-            return PixelBytesFromImage(bmp);
+            return PixelBytesFromImage(bmp, pixelFormat);
         }
 
-        private static byte[] PixelBytesFromImage(Bitmap bmp)
+        private static byte[] PixelBytesFromImage(Bitmap bmp, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
                 ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
@@ -112,6 +106,17 @@ namespace FreeMote
             var result = new byte[scanBytes];
             System.Runtime.InteropServices.Marshal.Copy(iptr, result, 0, scanBytes);
             bmp.UnlockBits(bmpData); // 解锁内存区域
+
+            switch (pixelFormat)
+            {
+                case PsbPixelFormat.CommonRGBA8:
+                    Rgba2Argb(ref result);
+                    break;
+                case PsbPixelFormat.DXT5:
+                    //Rgba2Argb(ref result);
+                    result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
+                    break;
+            }
             return result;
         }
 
@@ -135,13 +140,15 @@ namespace FreeMote
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
                 ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
 
-            if (colorFormat == PsbPixelFormat.WinRGBA8)
+            switch (colorFormat)
             {
-                Rgba2Argb(ref data, true);
-            }
-            else if (colorFormat == PsbPixelFormat.CommonRGBA8)
-            {
-                Rgba2Argb(ref data, false);
+                case PsbPixelFormat.CommonRGBA8:
+                    Rgba2Argb(ref data);
+                    break;
+                case PsbPixelFormat.DXT5: //MARK: RL seems compatible to DXT5 compress?
+                    data = DxtUtil.DecompressDxt5(data, width, height);
+                    Rgba2Argb(ref data); //DXT5(for win) need conversion
+                    break;
             }
 
             int stride = bmpData.Stride; // 扫描线的宽度
