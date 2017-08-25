@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using FreeMote.Psb;
 
@@ -20,7 +21,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         Bmp,
     }
-
+    [DebuggerDisplay("{" + nameof(DebuggerString) + "}")]
     public class ResourceMetadata
     {
         /// <summary>
@@ -84,9 +85,11 @@ namespace FreeMote.PsBuild
             }
         }
 
+        private string DebuggerString => $"{Part}/{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}";
+
         public override string ToString()
         {
-            return $"{Part}_{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}";
+            return $"{Part}/{Name}";
         }
     }
 }

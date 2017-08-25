@@ -57,11 +57,11 @@ namespace FreeMote.PsBuild
                     break;
                 case PsbCollection collection:
                     writer.WriteStartArray();
-                    if (collection.Value.Count > 0 && !(collection[0] is IPsbCollection))
+                    if (collection.Count > 0 && !(collection[0] is IPsbCollection))
                     {
                         writer.Formatting = Formatting.None;
                     }
-                    foreach (var obj in collection.Value)
+                    foreach (var obj in collection)
                     {
                         WriteJson(writer, obj, serializer);
                     }
@@ -70,10 +70,10 @@ namespace FreeMote.PsBuild
                     break;
                 case PsbDictionary dictionary:
                     writer.WriteStartObject();
-                    foreach (var obj in dictionary.Value)
+                    foreach (var obj in dictionary)
                     {
                         writer.WritePropertyName(obj.Key);
-                        WriteJson(writer, obj.Value, serializer);
+                        WriteJson(writer, obj, serializer);
                     }
                     writer.WriteEndObject();
                     break;
@@ -94,7 +94,7 @@ namespace FreeMote.PsBuild
             switch (token.Type)
             {
                 case JTokenType.Null:
-                    return new PsbNull();
+                    return PsbNull.Null;
                 case JTokenType.Integer:
                     return new PsbNumber(token.Value<int>());
                 case JTokenType.Float:
@@ -141,7 +141,7 @@ namespace FreeMote.PsBuild
                         {
                             s.Parents.Add(collection);
                         }
-                        collection.Value.Add(o);
+                        collection.Add(o);
                     }
                     return collection;
                 case JTokenType.Object:
@@ -158,7 +158,7 @@ namespace FreeMote.PsBuild
                         {
                             s.Parents.Add(dictionary);
                         }
-                        dictionary.Value.Add(val.Key, o);
+                        dictionary.Add(val.Key, o);
                     }
                     return dictionary;
                 default:

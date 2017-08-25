@@ -68,7 +68,8 @@ namespace FreeMote.Tests
         public void TestCompileKrkr()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
+            //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
         }
 
@@ -84,7 +85,8 @@ namespace FreeMote.Tests
         public void TestCompileWin()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "D愛子a_春服-pure.psb.json");
+            //var path = Path.Combine(resPath, "D愛子a_春服-pure.psb.json");
+            var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
         }
 
@@ -256,9 +258,9 @@ namespace FreeMote.Tests
                         return false;
                     case PsbCollection c1:
                         var c2 = (PsbCollection)p2;
-                        for (var i = 0; i < c1.Value.Count; i++)
+                        for (var i = 0; i < c1.Count; i++)
                         {
-                            if (CompareValue(c1.Value[i], c2.Value[i]))
+                            if (CompareValue(c1[i], c2[i]))
                             {
                                 continue;
                             }
@@ -267,9 +269,9 @@ namespace FreeMote.Tests
                         return true;
                     case PsbDictionary d1:
                         var d2 = (PsbDictionary)p2;
-                        foreach (var pair1 in d1.Value)
+                        foreach (var pair1 in d1)
                         {
-                            if (!d2.Value.ContainsKey(pair1.Key))
+                            if (!d2.ContainsKey(pair1.Key))
                             {
                                 Console.WriteLine($"Missing {pair1.Key}");
                             }

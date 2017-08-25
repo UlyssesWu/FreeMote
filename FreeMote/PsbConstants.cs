@@ -130,5 +130,20 @@ namespace FreeMote
 
             list[index] = value;
         }
+
+        public static string ToStringInPsb(this PsbPixelFormat pixelFormat)
+        {
+            switch (pixelFormat)
+            {
+                case PsbPixelFormat.None:
+                case PsbPixelFormat.WinRGBA8:
+                case PsbPixelFormat.CommonRGBA8:
+                    return "RGBA8";
+                case PsbPixelFormat.DXT5:
+                    return "DXT5";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
+            }
+        }
     }
 }

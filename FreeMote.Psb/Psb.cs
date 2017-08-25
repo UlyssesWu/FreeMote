@@ -243,7 +243,7 @@ namespace FreeMote.Psb
                 case PsbType.None:
                     return null;
                 case PsbType.Null:
-                    return new PsbNull();
+                    return PsbNull.Null;
                 case PsbType.False:
                 case PsbType.True:
                     return new PsbBool(type == PsbType.True);
@@ -326,7 +326,7 @@ namespace FreeMote.Psb
                     {
                         s.Parents.Add(dictionary);
                     }
-                    dictionary.Value.Add(name, obj);
+                    dictionary.Add(name, obj);
                 }
             }
 
@@ -358,7 +358,7 @@ namespace FreeMote.Psb
                     {
                         s.Parents.Add(collection);
                     }
-                    collection.Value.Add(obj);
+                    collection.Add(obj);
                 }
                 br.BaseStream.Seek(pos, SeekOrigin.Begin);
             }
@@ -432,6 +432,7 @@ namespace FreeMote.Psb
 
             Names.Sort(String.CompareOrdinal); //FIXED: Compared by bytes
             UpdateIndexes();
+            UniqueString(Objects);
 
             void Collect(IPsbValue obj)
             {
@@ -450,13 +451,13 @@ namespace FreeMote.Psb
                         }
                         break;
                     case PsbCollection c:
-                        foreach (var o in c.Value)
+                        foreach (var o in c)
                         {
                             Collect(o);
                         }
                         break;
                     case PsbDictionary d:
-                        foreach (var pair in d.Value)
+                        foreach (var pair in d)
                         {
                             if (!Names.Contains(pair.Key))
                             {
@@ -473,6 +474,40 @@ namespace FreeMote.Psb
                             }
 
                             Collect(pair.Value);
+                        }
+                        break;
+                }
+            }
+
+            void UniqueString(IPsbValue obj)
+            {
+                switch (obj)
+                {
+                    case PsbResource r:
+                        break;
+                    case PsbString s:
+                        if (Strings.Contains(s))
+                        {
+                            if (s.Index == null)
+                            {
+                                s.Index = Strings.First(str => str.Value == s.Value).Index;
+                            }
+                        }
+                        else
+                        {
+                            //Something is wrong
+                        }
+                        break;
+                    case PsbCollection c:
+                        foreach (var o in c)
+                        {
+                            UniqueString(o);
+                        }
+                        break;
+                    case PsbDictionary d:
+                        foreach (var pair in d)
+                        {
+                            UniqueString(pair.Value);
                         }
                         break;
                 }
@@ -657,7 +692,7 @@ namespace FreeMote.Psb
             using (var ms = new MemoryStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms);
-                foreach (var pair in pDic.Value)
+                foreach (var pair in pDic)
                 {
                     //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
                     var index = Names.FindIndex(s => s == pair.Key);
@@ -685,12 +720,12 @@ namespace FreeMote.Psb
         private void SaveCollection(BinaryWriter bw, PsbCollection pCol)
         {
             bw.Write((byte)pCol.Type);
-            var indexList = new List<uint>(pCol.Value.Count);
+            var indexList = new List<uint>(pCol.Count);
             using (var ms = new MemoryStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms);
 
-                foreach (var obj in pCol.Value)
+                foreach (var obj in pCol)
                 {
                     indexList.Add((uint)mbw.BaseStream.Position);
                     Pack(mbw, obj);

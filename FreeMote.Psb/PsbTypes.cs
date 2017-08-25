@@ -1,10 +1,10 @@
 ﻿using System;
-using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+
 // ReSharper disable InconsistentNaming
 
 namespace FreeMote.Psb
@@ -97,7 +97,7 @@ namespace FreeMote.Psb
     /// <summary>
     /// Collection
     /// </summary>
-    public interface IPsbCollection : IPsbChild
+    public interface IPsbCollection : IPsbChild, IEnumerable
     {
         IPsbCollection Parent { get; }
         IPsbValue this[int i]
@@ -139,6 +139,11 @@ namespace FreeMote.Psb
     [Serializable]
     public class PsbNull : IPsbValue, IPsbWrite
     {
+        /// <summary>
+        /// Use <see cref="Null"/> to avoid duplicated null
+        /// </summary>
+        internal PsbNull() { }
+
         public object Value => null;
 
         public PsbType Type { get; } = PsbType.Null;
@@ -152,6 +157,8 @@ namespace FreeMote.Psb
         {
             bw.Write((byte)Type);
         }
+        
+        public static PsbNull Null => new PsbNull();
     }
 
     [Serializable]
@@ -380,6 +387,21 @@ namespace FreeMote.Psb
                 default:
                     return p.DoubleValue;
             }
+        }
+
+        public static implicit operator PsbNumber(int n)
+        {
+            return new PsbNumber(n);
+        }
+
+        public static implicit operator PsbNumber(float n)
+        {
+            return new PsbNumber(n);
+        }
+
+        public static implicit operator PsbNumber(double n)
+        {
+            return new PsbNumber(n);
         }
 
         public PsbType Type
@@ -640,6 +662,11 @@ namespace FreeMote.Psb
             return s.Value;
         }
 
+        public static explicit operator PsbString(string s)
+        {
+            return new PsbString(s);
+        }
+
         public static bool operator ==(PsbString s1, PsbString s2)
         {
             if (s1 is null)
@@ -690,58 +717,55 @@ namespace FreeMote.Psb
     /// psb_objects_t
     /// </summary>
     [Serializable]
-    public class PsbDictionary : IPsbValue, IPsbCollection
+    public class PsbDictionary : Dictionary<string, IPsbValue>, IPsbValue, IPsbCollection
     {
-        public PsbDictionary(int capacity)
+        public PsbDictionary(int capacity):base(capacity)
         {
-            Value = new Dictionary<string, IPsbValue>(capacity);
         }
-
+        public Dictionary<string, IPsbValue> Value => this;
+        
         public IPsbCollection Parent { get; set; } = null;
 
-        IPsbValue IPsbCollection.this[int i] => Value.ContainsKey(i.ToString()) ? Value[i.ToString()] : null;
+        IPsbValue IPsbCollection.this[int i] => ContainsKey(i.ToString()) ? base[i.ToString()] : null;
 
-        public IPsbValue this[string index]
+        public new IPsbValue this[string index]
         {
-            get => Value.TryGetValue(index, out IPsbValue val) ? val : null;
-            set => Value[index] = value;
+            get => TryGetValue(index, out IPsbValue val) ? val : null;
+            set => base[index] = value;
         }
 
-        public Dictionary<string, IPsbValue> Value { get; }
         public PsbType Type { get; } = PsbType.Objects;
 
         public override string ToString()
         {
-            return $"Dictionary[{Value.Count}]";
+            return $"Dictionary[{Count}]";
         }
     }
 
     [Serializable]
-    public class PsbCollection : IPsbValue, IPsbCollection
+    public class PsbCollection : List<IPsbValue>, IPsbValue, IPsbCollection
     {
-        public PsbCollection(int capacity)
+        public PsbCollection(int capacity) : base(capacity)
         {
-            Value = new List<IPsbValue>(capacity);
         }
 
-        public List<IPsbValue> Value { get; set; }
-
+        public List<IPsbValue> Value => this;
+        
         public IPsbCollection Parent { get; set; } = null;
-
-
-        public IPsbValue this[int index]
+        
+        public new IPsbValue this[int index]
         {
-            get => index < Value.Count ? Value[index] : null;
-            set => Value[index] = value;
+            get => index < Count ? base[index] : null;
+            set => base[index] = value;
         }
 
-        IPsbValue IPsbCollection.this[string s] => int.TryParse(s, out int i) ? Value[i] : null;
+        IPsbValue IPsbCollection.this[string s] => int.TryParse(s, out int i) ? base[i] : null;
 
         public PsbType Type { get; } = PsbType.Collection;
 
         public override string ToString()
         {
-            return $"Collection[{Value.Count}]";
+            return $"Collection[{Count}]";
         }
     }
 

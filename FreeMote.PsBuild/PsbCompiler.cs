@@ -66,7 +66,7 @@ namespace FreeMote.PsBuild
         {
             //Parse
             PSB psb = Parse(inputJson, version);
-            psb.SwitchSpec(spec);
+            psb.SwitchSpec(spec, spec.DefaultPixelFormat());
             //Link
             if (!string.IsNullOrWhiteSpace(inputResJson))
             {
