@@ -23,7 +23,7 @@ Convert Emote PSB files. A managed version of `emote_conv`(by number201724).
 ### PsbDecompile (FreeMote.Tools.PsbDecompile)
 Decompile PSB files. A managed version of `decompiler`(by number201724).
 ### PsBuild (FreeMote.Tools.PsBuild)
-Compile Emote description json to PSB.
+Compile Emote description json to PSB. A managed version of `pcc`(by number201724).
 ### [FreeMoteViewer](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer) (FreeMote.Tools.Viewer)
 Open and render Emote _pure_ PSB.
 
