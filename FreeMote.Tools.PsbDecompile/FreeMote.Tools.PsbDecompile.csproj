@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>FreeMote.Tools.PsbDecompile</RootNamespace>
     <AssemblyName>PsbDecompile</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />

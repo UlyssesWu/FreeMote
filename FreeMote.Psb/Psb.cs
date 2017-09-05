@@ -692,7 +692,7 @@ namespace FreeMote.Psb
             using (var ms = new MemoryStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms);
-                foreach (var pair in pDic)
+                foreach (var pair in pDic.OrderBy(p=>p.Key, StringComparer.Ordinal))
                 {
                     //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
                     var index = Names.FindIndex(s => s == pair.Key);

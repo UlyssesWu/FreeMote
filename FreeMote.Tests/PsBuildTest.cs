@@ -77,8 +77,8 @@ namespace FreeMote.Tests
         public void TestCompileOther()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json.psbuild.psb.json");
-            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.other);
+            var path = Path.Combine(resPath, "Trick\\e-mote38_win-pure.psb.json");
+            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 3, null, PsbSpec.win);
         }
 
         [TestMethod]
@@ -144,16 +144,34 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestGraft()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path1 = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json.psbuild.psb.json");
+            PSB psb1 = PsbCompiler.LoadPsbFromJsonFile(path1);
+
+            var path2 = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            PSB psb2 = PsbCompiler.LoadPsbFromJsonFile(path2);
+
+            psb1.Objects["metadata"] = psb2.Objects["metadata"];
+            psb1.Objects["easing"] = new PsbCollection(0);
+
+            psb1.Merge();
+            File.WriteAllBytes(path1 + ".graft.psb", psb1.Build());
+
+        }
+
+        [TestMethod]
         public void TestCompareDecompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
-            var pccPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.build.psb"));
+            var pccPsb = new PSB(Path.Combine(resPath, "e-mote38_win-pure.psb"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01.psb"));
 
             //var psbuildPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json.psbuild.psb"));
-            var psbuildPsb = new PSB(Path.Combine(resPath, "ca01_build.psb"));
+            var psbuildPsb = new PSB(Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json.psbuild.psb"));
 
             //foreach (var s in psbuildPsb.Strings)
             //{

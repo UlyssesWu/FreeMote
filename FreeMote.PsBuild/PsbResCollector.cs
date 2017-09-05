@@ -237,32 +237,35 @@ namespace FreeMote.PsBuild
                     var icon0 = new PsbDictionary(10);
                     icon0["attr"] = (PsbNumber)0;
                     icon0["height"] = (PsbNumber)resMd.Height;
-                    icon0["width"] = (PsbNumber)resMd.Width;
-                    icon0["left"] = (PsbNumber) resMd.Left;
-                    icon0["top"] = (PsbNumber) resMd.Top;
-                    icon0["originX"] = (PsbNumber) resMd.OriginX;
-                    icon0["originY"] = (PsbNumber)resMd.OriginY;
+                    icon0["left"] = (PsbNumber)resMd.Left;
                     icon0["metadata"] = PsbNull.Null;
+                    icon0["originX"] = (PsbNumber)resMd.OriginX;
+                    icon0["originY"] = (PsbNumber)resMd.OriginY;
+                    icon0["top"] = (PsbNumber)resMd.Top;
+                    icon0["width"] = (PsbNumber)resMd.Width;
 
                     var icon = new PsbDictionary(1);
                     var iconName = "0"; //We try to make one tex contains only one icon
                     icon[iconName] = icon0;
+
                     tex["icon"] = icon;
                     tex["metadata"] = PsbNull.Null;
-                    tex["type"] = (PsbNumber) 0;
+                    
                     var texture = new PsbDictionary(7);
                     texture["height"] = (PsbNumber)resMd.Height;
-                    texture["width"] = (PsbNumber)resMd.Width;
-                    texture["type"] = (PsbString)pixelFormat.ToStringInPsb();
+                    texture["pixel"] = resMd.Resource;
                     texture["truncated_height"] = (PsbNumber)resMd.Height;
                     texture["truncated_width"] = (PsbNumber)resMd.Width;
-                    texture["pixel"] = resMd.Resource;
+                    texture["type"] = (PsbString)pixelFormat.ToStringInPsb();
+                    texture["width"] = (PsbNumber)resMd.Width;
                     //No mipmap
                     //texture["mipMapLevel"] = (PsbNumber)0;
                     //texture["mipMap"] = new PsbDictionary(0);
                     //Win format don't use RL
                     //texture["compress"] = PsbNull.Null;
                     tex["texture"] = texture;
+                    tex["type"] = (PsbNumber)0;
+
                     var texName = $"{resMd.Part}#{resMd.Name}";
                     source[texName] = tex;
                     tranlations[$"src/{resMd.Part}/{resMd.Name}"] = texName;
@@ -282,25 +285,33 @@ namespace FreeMote.PsBuild
             {
                 if (obj is PsbDictionary dic)
                 {
-                    if (dic.ContainsKey("content") && dic.ContainsKey("src"))
+                    if (dic.ContainsKey("src") && dic["src"] is PsbString src && src.ToString().StartsWith("src/"))
                     {
-                        if (translations.ContainsKey(dic["src"].ToString()))
+                        if (translations.ContainsKey(src.ToString()))
                         {
-                            dic["src"] = (PsbString) translations[dic["src"].ToString()];
-                            //Add icon to content
-                            ((PsbDictionary) dic["content"])["icon"] = (PsbString) "0";
+                            dic["src"] = (PsbString)translations[src.ToString()];
                         }
                         else
                         {
                             //something may be wrong
-                            Debug.WriteLine($"Can not find translation for {dic["src"].ToString()}");
+                            Debug.WriteLine($"Can not find translation for {src}");
                         }
-                        return; //inner need no more check
+                    }
+
+                    if (dic.ContainsKey("content") && dic["content"] is PsbDictionary content &&
+                        content.ContainsKey("src") && content["src"] is PsbString src2 &&
+                        src2.ToString().StartsWith("src/") && translations.ContainsKey(src2.ToString()))
+                    {
+                        //Add icon to content
+                        content.Add("icon", (PsbString) "0");
                     }
 
                     foreach (IPsbValue psbValue in dic.Values)
                     {
-                        TranslateToWin(psbValue, translations);
+                        if (psbValue is IPsbCollection)
+                        {
+                            TranslateToWin(psbValue, translations);
+                        }
                     }
                 }
                 else if(obj is PsbCollection collection)
