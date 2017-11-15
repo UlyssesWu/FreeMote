@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using FreeMote.Psb;
+using FreeMote.PsBuild.SpecConverters;
 
 namespace FreeMote.PsBuild
 {
@@ -256,7 +257,7 @@ namespace FreeMote.PsBuild
                     texture["pixel"] = resMd.Resource;
                     texture["truncated_height"] = (PsbNumber)resMd.Height;
                     texture["truncated_width"] = (PsbNumber)resMd.Width;
-                    texture["type"] = (PsbString)pixelFormat.ToStringInPsb();
+                    texture["type"] = (PsbString)pixelFormat.ToStringForPsb();
                     texture["width"] = (PsbNumber)resMd.Width;
                     //No mipmap
                     //texture["mipMapLevel"] = (PsbNumber)0;
@@ -276,9 +277,11 @@ namespace FreeMote.PsBuild
                 TranslateToWin(psb.Objects["object"], tranlations); 
             }
 
+            //Krkr -> Win
             if ((original == PsbSpec.win || original == PsbSpec.common) && targetSpec == PsbSpec.krkr)
             {
-                //TODO:
+                Krkr2WinConverter converter = new Krkr2WinConverter() {TargetPixelFormat = pixelFormat};
+                converter.Convert(psb);
             }
 
             void TranslateToWin(IPsbValue obj, Dictionary<string, string> translations)

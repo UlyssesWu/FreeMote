@@ -122,8 +122,7 @@ namespace FreeMote.Tests
                 Assert.AreEqual(doubles[i], result2[i]);
             }
         }
-
-
+        
         [TestMethod]
         public void TestDxt5Uncompress()
         {

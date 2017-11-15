@@ -93,13 +93,11 @@ namespace FreeMote.Psb
         List<IPsbCollection> Parents { get; set; }
     }
 
-    /// <inheritdoc />
     /// <summary>
     /// Collection
     /// </summary>
     public interface IPsbCollection : IPsbChild, IEnumerable
     {
-        IPsbCollection Parent { get; }
         IPsbValue this[int i]
         {
             get;
