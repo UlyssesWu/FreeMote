@@ -23,7 +23,7 @@ namespace FreeMote.PsBuild.SpecConverters
 
         private void Remove(PSB psb)
         {
-            
+
         }
 
         private void Add(PSB psb)

@@ -204,6 +204,96 @@ namespace FreeMote.PsBuild
             }
         }
 
+        public static IEnumerable<IPsbValue> FindAllByPath(this PsbDictionary psbObj, string path)
+        {
+            if (psbObj == null)
+                yield break;
+            if (path.StartsWith("/"))
+            {
+                path = new string(path.SkipWhile(c => c == '/').ToArray());
+            }
+            if (path.Contains("/"))
+            {
+                var pos = path.IndexOf('/');
+                var current = path.Substring(0, pos);
+                if (current == "*")
+                {
+                    if (pos == path.Length - 1) //end
+                    {
+                        if (psbObj is PsbDictionary dic)
+                        {
+                            foreach (var dicValue in dic.Values)
+                            {
+                                yield return dicValue;
+                            }
+                        }
+                    }
+                    path = new string(path.SkipWhile(c => c == '*').ToArray());
+                    foreach (var val in psbObj.Values)
+                    {
+                        if (val is PsbDictionary dic)
+                        {
+                            foreach (var dicValue in dic.FindAllByPath(path))
+                            {
+                                yield return dicValue;
+                            }
+                        }
+                    }
+                }
+                if (pos == path.Length - 1 && psbObj[current] != null)
+                {
+                    yield return psbObj[current];
+                }
+                var currentObj = psbObj[current];
+                if (currentObj is PsbDictionary collection)
+                {
+                    path = path.Substring(pos);
+                    foreach (var dicValue in collection.FindAllByPath(path))
+                    {
+                        yield return dicValue;
+                    }
+                }
+            }
+            if (path == "*")
+            {
+                foreach (var value in psbObj.Values)
+                {
+                    yield return value;
+                }
+            }
+            else if (psbObj[path] != null)
+            {
+                yield return psbObj[path];
+            }
+        }
+
+        public static IPsbValue FindByPath(this PsbDictionary psbObj, string path)
+        {
+            if (psbObj == null)
+                return null;
+            if (path.StartsWith("/"))
+            {
+                path = new string(path.SkipWhile(c => c == '/').ToArray());
+            }
+
+            if (path.Contains("/"))
+            {
+                var pos = path.IndexOf('/');
+                var current = path.Substring(0, pos);
+                if (pos == path.Length - 1)
+                {
+                    return psbObj[current];
+                }
+                var currentObj = psbObj[current];
+                if (currentObj is PsbDictionary collection)
+                {
+                    path = path.Substring(pos);
+                    return collection.FindByPath(path);
+                }
+            }
+            return psbObj[path];
+        }
+
         /// <summary>
         /// Try to switch Spec
         /// </summary>
@@ -251,7 +341,7 @@ namespace FreeMote.PsBuild
 
                     tex["icon"] = icon;
                     tex["metadata"] = PsbNull.Null;
-                    
+
                     var texture = new PsbDictionary(7);
                     texture["height"] = (PsbNumber)resMd.Height;
                     texture["pixel"] = resMd.Resource;
@@ -274,13 +364,13 @@ namespace FreeMote.PsBuild
 
                 psb.Objects["source"] = source;
                 //Translation
-                TranslateToWin(psb.Objects["object"], tranlations); 
+                TranslateToWin(psb.Objects["object"], tranlations);
             }
 
             //Krkr -> Win
             if ((original == PsbSpec.win || original == PsbSpec.common) && targetSpec == PsbSpec.krkr)
             {
-                Krkr2WinConverter converter = new Krkr2WinConverter() {TargetPixelFormat = pixelFormat};
+                Krkr2WinConverter converter = new Krkr2WinConverter() { TargetPixelFormat = pixelFormat };
                 converter.Convert(psb);
             }
 
@@ -306,7 +396,7 @@ namespace FreeMote.PsBuild
                         src2.ToString().StartsWith("src/") && translations.ContainsKey(src2.ToString()))
                     {
                         //Add icon to content
-                        content.Add("icon", (PsbString) "0");
+                        content.Add("icon", (PsbString)"0");
                     }
 
                     foreach (IPsbValue psbValue in dic.Values)
@@ -317,7 +407,7 @@ namespace FreeMote.PsBuild
                         }
                     }
                 }
-                else if(obj is PsbCollection collection)
+                else if (obj is PsbCollection collection)
                 {
                     foreach (IPsbValue psbValue in collection)
                     {

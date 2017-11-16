@@ -161,6 +161,33 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestFindByPath()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+
+            var obj = psb.Objects.FindByPath("/object/all_parts/motion/タイムライン構造/bounds");
+            var type = obj.Type;
+
+            var objs = psb.Objects.FindAllByPath("/object/*/motion/*");
+
+            foreach (var psbValue in objs)
+            {
+                if (psbValue is PsbDictionary dic)
+                {
+                    var s = dic.GetName();
+                    Console.WriteLine(s);
+                }
+                else
+                {
+                    Console.WriteLine($"Not a PsbObject: {psbValue}");
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestCompareDecompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
