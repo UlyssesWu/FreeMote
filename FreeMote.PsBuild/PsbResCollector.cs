@@ -59,8 +59,18 @@ namespace FreeMote.PsBuild
             }
         }
 
-        private static ResourceMetadata GenerateResourceMetadata(PsbDictionary d, PsbResource r)
+        /// <summary>
+        /// Extract resource info
+        /// </summary>
+        /// <param name="d">PsbObject which contains "pixel"</param>
+        /// <param name="r">Resource</param>
+        /// <returns></returns>
+        internal static ResourceMetadata GenerateResourceMetadata(PsbDictionary d, PsbResource r = null)
         {
+            if (r == null)
+            {
+                r = d.Values.FirstOrDefault(v => v is PsbResource) as PsbResource;
+            }
             bool is2D = false;
             var part = d.GetPartName();
             var name = d.GetName();

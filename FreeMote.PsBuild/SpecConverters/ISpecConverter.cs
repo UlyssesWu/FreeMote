@@ -10,7 +10,7 @@ namespace FreeMote.PsBuild.SpecConverters
     /// <summary>
     /// Spec Converter
     /// </summary>
-    interface ISpecConverter
+    public interface ISpecConverter
     {
         /// <summary>
         /// Convert a PSB to target spec

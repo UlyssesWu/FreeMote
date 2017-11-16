@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
+using FreeMote.PsBuild.SpecConverters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
@@ -185,6 +189,18 @@ namespace FreeMote.Tests
                     Console.WriteLine($"Not a PsbObject: {psbValue}");
                 }
             }
+        }
+
+        [TestMethod]
+        public void TestSplitTexture()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+
+            psb.SplitTextureToFiles("texs");
         }
 
         [TestMethod]

@@ -63,7 +63,12 @@ namespace FreeMote.PsBuild
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
         public byte[] Data => Resource?.Data;
-        public PsbSpec Spec { get; set; }
+
+        /// <summary>
+        /// Platform
+        /// <para>Spec can not be get from source part, so set it before use</para>
+        /// </summary>
+        public PsbSpec Spec { get; set; } = PsbSpec.other;
 
         public PsbPixelFormat PixelFormat
         {
@@ -86,6 +91,26 @@ namespace FreeMote.PsBuild
         }
 
         private string DebuggerString => $"{Part}/{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}";
+
+        /// <summary>
+        /// Convert Resource to Image
+        /// <para>Only works if <see cref="Resource"/>.Data is not null</para>
+        /// </summary>
+        /// <returns></returns>
+        public Bitmap ToImage()
+        {
+            if (Resource.Data == null)
+            {
+                throw new Exception("Resource data is null");
+            }
+            switch (Compress)
+            {
+                case PsbCompressType.RL:
+                    return RL.UncompressToImage(Resource.Data, Height, Width, PixelFormat);
+                default:
+                    return RL.ConvertToImage(Resource.Data, Height, Width, PixelFormat);
+            }
+        }
 
         public override string ToString()
         {

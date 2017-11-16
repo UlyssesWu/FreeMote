@@ -16,7 +16,7 @@ namespace FreeMote.PsBuild.SpecConverters
             throw new NotImplementedException();
         }
 
-        private void SplitTexture()
+        private void SplitTexture(PSB psb)
         {
             
         }

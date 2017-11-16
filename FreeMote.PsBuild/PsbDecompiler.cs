@@ -23,7 +23,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         Compress,
         /// <summary>
-        /// Try to convert to common format
+        /// Try to convert to common image format
         /// </summary>
         Extract,
 

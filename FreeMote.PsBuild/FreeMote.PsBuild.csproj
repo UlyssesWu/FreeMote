@@ -55,6 +55,7 @@
     <Compile Include="ResourceMetadata.cs" />
     <Compile Include="SpecConverters\ISpecConverter.cs" />
     <Compile Include="SpecConverters\Krkr2WinConverter.cs" />
+    <Compile Include="SpecConverters\TextureSpliter.cs" />
     <Compile Include="SpecConverters\Win2KrkrConverter.cs" />
   </ItemGroup>
   <ItemGroup>

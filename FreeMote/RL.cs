@@ -87,6 +87,7 @@ namespace FreeMote
             Bitmap bmp = new Bitmap(path);
             return PixelBytesFromImage(bmp, pixelFormat);
         }
+
         public static byte[] GetPixelBytesFromImage(Image image, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             Bitmap bmp = new Bitmap(image);
@@ -134,7 +135,21 @@ namespace FreeMote
             ConvertToImageFile(bytes, path, height, width, format, colorFormat);
         }
 
-        public static void ConvertToImageFile(byte[] data, string path, int height, int width, PsbImageFormat format, PsbPixelFormat colorFormat = PsbPixelFormat.None)
+        public static Bitmap UncompressToImage(byte[] data, int height, int width, PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
+        {
+            byte[] bytes;
+            try
+            {
+                bytes = Uncompress(data, height, width, align);
+            }
+            catch (Exception e)
+            {
+                throw new BadImageFormatException("data incorrect", e);
+            }
+            return ConvertToImage(bytes, height, width, colorFormat);
+        }
+
+        public static Bitmap ConvertToImage(byte[] data, int height, int width, PsbPixelFormat colorFormat = PsbPixelFormat.None)
         {
             Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
@@ -160,19 +175,23 @@ namespace FreeMote
             {
                 System.Runtime.InteropServices.Marshal.Copy(data, 0, iptr, data.Length);
                 bmp.UnlockBits(bmpData); // 解锁内存区域
-                switch (format)
-                {
-                    case PsbImageFormat.Bmp:
-                        bmp.Save(path, ImageFormat.Bmp);
-                        break;
-                    case PsbImageFormat.Png:
-                        bmp.Save(path, ImageFormat.Png);
-                        break;
-                }
-
-                return;
+                return bmp;
             }
             throw new BadImageFormatException("data may not corresponding");
+        }
+
+        public static void ConvertToImageFile(byte[] data, string path, int height, int width, PsbImageFormat format, PsbPixelFormat colorFormat = PsbPixelFormat.None)
+        {
+            var bmp = ConvertToImage(data, height, width, colorFormat);
+            switch (format)
+            {
+                case PsbImageFormat.Bmp:
+                    bmp.Save(path, ImageFormat.Bmp);
+                    break;
+                case PsbImageFormat.Png:
+                    bmp.Save(path, ImageFormat.Png);
+                    break;
+            }
         }
 
         private static byte[] Uncompress(Stream stream, int height, int width, int align = 4)
