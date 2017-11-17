@@ -185,7 +185,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
             //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
-            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
             psb.SplitTextureToFiles("texs");
@@ -213,9 +214,9 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
             var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
-
-            Win2KrkrConverter converter = new Win2KrkrConverter();
-            converter.Convert(psb);
+            psb.SwitchSpec(PsbSpec.krkr);
+            //Common2KrkrConverter converter = new Common2KrkrConverter();
+            //converter.Convert(psb);
             psb.Merge();
             File.WriteAllBytes("emote_test_front.psb", psb.Build());
             File.WriteAllText("emote_test_front.json", PsbDecompiler.Decompile(psb));            
@@ -229,7 +230,7 @@ namespace FreeMote.Tests
             var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
-            Win2KrkrConverter converter = new Win2KrkrConverter() {TargetPixelFormat = PsbPixelFormat.CommonRGBA8};
+            Common2KrkrConverter converter = new Common2KrkrConverter();
             converter.Convert(psb);
             psb.Merge();
             File.WriteAllBytes("emote_test_front.psb", psb.Build());

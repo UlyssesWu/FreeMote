@@ -7,9 +7,9 @@ using FreeMote.Psb;
 
 namespace FreeMote.PsBuild.SpecConverters
 {
-    public static class TextureSpliter
+    public static class TextureHelper
     {
-        public static Dictionary<string, Bitmap> SplitTexture(PsbDictionary tex, PsbSpec spec, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
+        public static Dictionary<string, Bitmap> SplitTexture(PsbDictionary tex, PsbSpec spec)
         {
             var icon = (PsbDictionary)tex["icon"];
             var texture = (PsbDictionary)tex["texture"];
@@ -20,6 +20,7 @@ namespace FreeMote.PsBuild.SpecConverters
             var md = PsbResCollector.GenerateResourceMetadata(texture, (PsbResource)texture["pixel"]);
             md.Spec = spec; //Important
             Bitmap bmp = md.ToImage();
+            //bmp.Save("tex.png", ImageFormat.Png);
             foreach (var iconPair in icon)
             {
                 var info = (PsbDictionary) iconPair.Value;

@@ -32,8 +32,9 @@ namespace FreeMote.PsBuild.SpecConverters
         /// Convert a PSB to target spec
         /// </summary>
         /// <param name="psb"></param>
-        void Convert(PSB psb, SpecConvertOption option = SpecConvertOption.Default);
+        void Convert(PSB psb);
 
+        SpecConvertOption ConvertOption { get; set; }
         PsbPixelFormat TargetPixelFormat { get; set; }
         bool UseRL { get; set; }
 

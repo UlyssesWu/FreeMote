@@ -66,14 +66,18 @@ namespace FreeMote.PsBuild
         {
             //Parse
             PSB psb = Parse(inputJson, version);
-            psb.SwitchSpec(spec, spec.DefaultPixelFormat());
             //Link
             if (!string.IsNullOrWhiteSpace(inputResJson))
             {
-                psb.Link(inputResJson, baseDir, spec);
+                psb.Link(inputResJson, baseDir);
             }
             //Build
             psb.Merge();
+            if (spec != psb.Platform)
+            {
+                psb.SwitchSpec(spec, spec.DefaultPixelFormat());
+                psb.Merge();
+            }
             var bytes = psb.Build();
             //Convert
             return cryptKey != null ? PsbFile.EncodeToBytes(cryptKey.Value, bytes, EncodeMode.Encrypt, EncodePosition.Auto) : bytes;
@@ -158,8 +162,7 @@ namespace FreeMote.PsBuild
         /// <param name="psb"></param>
         /// <param name="resJson"></param>
         /// <param name="baseDir"></param>
-        /// <param name="spec"></param>
-        internal static void Link(this PSB psb, string resJson, string baseDir = null, PsbSpec? spec = null)
+        internal static void Link(this PSB psb, string resJson, string baseDir = null)
         {
             List<string> resPaths = JsonConvert.DeserializeObject<List<string>>(resJson);
             var resList = psb.CollectResources();
@@ -176,7 +179,7 @@ namespace FreeMote.PsBuild
                     continue;
                 }
                 var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, (spec ?? psb.Platform).CompressType(), resMd.PixelFormat);
+                byte[] data = LoadImageBytes(fullPath, psb.Platform.CompressType(), resMd.PixelFormat);
                 resMd.Resource.Data = data;
             }
         }

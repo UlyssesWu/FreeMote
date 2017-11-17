@@ -8,6 +8,7 @@ namespace FreeMote.Tools.PsBuild
     {
         //Not thread safe
         private static PsbSpec _platform = PsbSpec.win;
+        //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
         private static uint? _key = null;
         private static ushort _version = 3;
 
@@ -38,11 +39,18 @@ namespace FreeMote.Tools.PsBuild
                 }
                 else if (s.StartsWith("/p"))
                 {
-                    if (Enum.TryParse(s.Replace("/p",""), out PsbSpec platform))
+                    if (Enum.TryParse(s.Replace("/p", ""), true, out PsbSpec platform))
                     {
                         _platform = platform;
                     }
                 }
+                //else if (s.StartsWith("/f"))
+                //{
+                //    if (Enum.TryParse(s.Replace("/f", ""), true, out PsbPixelFormat format))
+                //    {
+                //        _pixelFormat = format;
+                //    }
+                //}
                 else if (s.StartsWith("/k"))
                 {
                     if (uint.TryParse(s.Replace("/k", ""), out var key))
@@ -80,8 +88,10 @@ namespace FreeMote.Tools.PsBuild
             Console.WriteLine(@"Param:
 /v<VerNumber> : Set compile version from [2,4] . Default: 3.
 /k<CryptKey> : Set CryptKey. Default: none(Pure PSB). Requirement: uint, dec.
+/p<Platform> : Set platform. Default: keep original platform. Support: krkr <- win/common.
+Warning: Platform ONLY works with .bmp/.png format textures.
 ");
-            Console.WriteLine("Example: PsBuild /v4 /k123456789 emote_sample.psb.json");
+            Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
         }
     }
 }

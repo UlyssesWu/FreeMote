@@ -5,28 +5,33 @@ using FreeMote.Psb;
 
 namespace FreeMote.PsBuild.SpecConverters
 {
-    class Win2KrkrConverter : ISpecConverter
+    class Common2KrkrConverter : ISpecConverter
     {
+        /// <summary>
+        /// krkr uses <see cref="PsbPixelFormat.WinRGBA8"/> on windows platform
+        /// </summary>
         public PsbPixelFormat TargetPixelFormat { get; set; } = PsbPixelFormat.WinRGBA8;
         public bool UseRL { get; set; } = true;
 
         public PsbSpec FromSpec { get; } = PsbSpec.win;
         public PsbSpec ToSpec { get; } = PsbSpec.krkr;
 
-        public void Convert(PSB psb, SpecConvertOption option = SpecConvertOption.Default)
+        public void Convert(PSB psb)
         {
-            psb.Platform = PsbSpec.krkr;
-            if (option == SpecConvertOption.Minimum)
+            if (ConvertOption == SpecConvertOption.Minimum)
             {
                 Remove(psb);
             }
             var iconInfo = TranslateResources(psb);
             Travel((PsbDictionary)psb.Objects["object"], iconInfo);
-            if (option == SpecConvertOption.Minimum)
+            if (ConvertOption == SpecConvertOption.Minimum)
             {
                 Add(psb);
             }
+            psb.Platform = PsbSpec.krkr;
         }
+
+        public SpecConvertOption ConvertOption { get; set; } = SpecConvertOption.Default;
 
         private void Remove(PSB psb)
         {
@@ -38,7 +43,7 @@ namespace FreeMote.PsBuild.SpecConverters
             var obj = (PsbDictionary)psb.Objects["object"];
             foreach (var o in obj)
             {
-                var name = o.Key;
+                //var name = o.Key;
                 foreach (var m in (PsbDictionary)((PsbDictionary)o.Value)["motion"])
                 {
                     if (m.Value is PsbDictionary mDic)
@@ -47,7 +52,6 @@ namespace FreeMote.PsBuild.SpecConverters
                         //mDic.Remove("layerIndexMap");
                     }
                 }
-
             }
         }
 
@@ -61,7 +65,7 @@ namespace FreeMote.PsBuild.SpecConverters
                 {
                     var iconList = new List<string>();
                     iconInfos.Add(tex.Key, iconList);
-                    var bmps = TextureSpliter.SplitTexture(texDic, psb.Platform, TargetPixelFormat);
+                    var bmps = TextureHelper.SplitTexture(texDic, psb.Platform);
                     var icons = (PsbDictionary)texDic["icon"];
                     foreach (var iconPair in icons)
                     {
@@ -71,7 +75,7 @@ namespace FreeMote.PsBuild.SpecConverters
                             ? RL.CompressImage(bmps[iconPair.Key], TargetPixelFormat)
                             : RL.GetPixelBytesFromImage(bmps[iconPair.Key], TargetPixelFormat);
                         icon["pixel"] =
-                            new PsbResource(null) { Data = data, Parents = new List<IPsbCollection>() { icon } };
+                            new PsbResource { Data = data, Parents = new List<IPsbCollection>() { icon } };
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
                         icon.Remove("top");

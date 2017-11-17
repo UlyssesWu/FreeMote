@@ -11,9 +11,9 @@ namespace FreeMote.Tools.PsbDecompile
     class Program
     {
         //Not thread safe
-        static bool _extractImage = false;
+        static bool _extractImage = true;
         static bool _uncompressImage = false;
-        static bool _png = false;
+        static bool _png = true;
         static void Main(string[] args)
         {
 
@@ -82,10 +82,10 @@ namespace FreeMote.Tools.PsbDecompile
         {
             Console.WriteLine("Usage: .exe [Mode] <PSB path>");
             Console.WriteLine(@"Mode:
-/raw : Default mode. Keep resource in original format.
+/raw : Keep resource in original format.
 /er : Similar to default mode but uncompress those compressed resources.
 /eb : Convert images to BMP format.
-/ep : Convert images to PNG format.
+/ep : [Default] Convert images to PNG format.
 ");
             Console.WriteLine("Example: PsbDecompile /ep Emote.pure.psb");
             Console.WriteLine("\t PsbDecompile C:\\\\EmoteFolder");

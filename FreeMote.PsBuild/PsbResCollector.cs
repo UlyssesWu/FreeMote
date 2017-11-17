@@ -285,16 +285,68 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="targetSpec"></param>
-        public static void SwitchSpec(this PSB psb, PsbSpec targetSpec, PsbPixelFormat pixelFormat)
+        /// <param name="pixelFormat"></param>
+        public static void SwitchSpec(this PSB psb, PsbSpec targetSpec, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             if (targetSpec == PsbSpec.other)
             {
                 return;
             }
             var original = psb.Platform;
-            psb.Platform = targetSpec;
-            var resources = psb.CollectResources(false);
 
+            if (targetSpec == PsbSpec.krkr) //krkr can not select pixel format
+            {
+                switch (original)
+                {
+                    case PsbSpec.win:
+                    {
+                        Common2KrkrConverter converter = new Common2KrkrConverter();
+                        converter.Convert(psb);
+                        break;
+                    }
+                    case PsbSpec.common:
+                    {
+                        Common2KrkrConverter converter = new Common2KrkrConverter();
+                        converter.Convert(psb);
+                        break;
+                    }
+                    default:
+                        psb.Platform = targetSpec;
+                        break;
+                }
+            }
+
+            if (targetSpec == PsbSpec.win)
+            {
+                switch (original)
+                {
+                    case PsbSpec.krkr:
+                        Krkr2CommonConverter converter = new Krkr2CommonConverter();
+                        converter.Convert(psb);
+                        break;
+                    default:
+                        psb.Platform = targetSpec;
+                        break;
+                }
+            }
+
+            if (targetSpec == PsbSpec.common)
+            {
+                switch (original)
+                {
+                    case PsbSpec.krkr:
+                        break;
+                    case PsbSpec.win:
+                        break;
+                    default:
+                        psb.Platform = targetSpec;
+                        break;
+                }
+            }
+
+            //var resources = psb.CollectResources(false);
+            #region Failed
+            /*
             //Krkr -> Win
             if (original == PsbSpec.krkr && (targetSpec == PsbSpec.win || targetSpec == PsbSpec.common))
             {
@@ -402,6 +454,9 @@ namespace FreeMote.PsBuild
                 }
 
             }
+            */
+            #endregion
+
         }
     }
 }

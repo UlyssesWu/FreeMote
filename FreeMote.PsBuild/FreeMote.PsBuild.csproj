@@ -53,10 +53,11 @@
     <Compile Include="PsbResCollector.cs" />
     <Compile Include="PsbTypeConverter.cs" />
     <Compile Include="ResourceMetadata.cs" />
+    <Compile Include="SpecConverters\Common2WinConverter.cs" />
     <Compile Include="SpecConverters\ISpecConverter.cs" />
-    <Compile Include="SpecConverters\Krkr2WinConverter.cs" />
-    <Compile Include="SpecConverters\TextureSpliter.cs" />
-    <Compile Include="SpecConverters\Win2KrkrConverter.cs" />
+    <Compile Include="SpecConverters\Krkr2CommonConverter.cs" />
+    <Compile Include="SpecConverters\TextureHelper.cs" />
+    <Compile Include="SpecConverters\Common2KrkrConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
