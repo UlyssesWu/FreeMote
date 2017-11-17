@@ -5,7 +5,7 @@ namespace FreeMote.PsBuild.SpecConverters
 {
     class Krkr2WinConverter : ISpecConverter
     {
-        public void Convert(PSB psb)
+        public void Convert(PSB psb, SpecConvertOption option = SpecConvertOption.Default)
         {
             throw new NotImplementedException();
         }

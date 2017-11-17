@@ -73,7 +73,7 @@ namespace FreeMote.PsBuild
                     foreach (var obj in dictionary)
                     {
                         writer.WritePropertyName(obj.Key);
-                        WriteJson(writer, obj, serializer);
+                        WriteJson(writer, obj.Value, serializer);
                     }
                     writer.WriteEndObject();
                     break;

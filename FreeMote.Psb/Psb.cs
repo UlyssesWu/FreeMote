@@ -439,7 +439,7 @@ namespace FreeMote.Psb
                 switch (obj)
                 {
                     case PsbResource r:
-                        if (r.Index != null && Resources.FirstOrDefault(res => res.Index == r.Index) == null)
+                        if (r.Index == null || Resources.FirstOrDefault(res => res.Index == r.Index) == null)
                         {
                             Resources.Add(r);
                         }

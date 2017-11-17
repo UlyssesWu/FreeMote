@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using FreeMote.PsBuild.SpecConverters;
@@ -78,14 +74,6 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
-        public void TestCompileOther()
-        {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "Trick\\e-mote38_win-pure.psb.json");
-            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 3, null, PsbSpec.win);
-        }
-
-        [TestMethod]
         public void TestCompileWin()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
@@ -126,7 +114,7 @@ namespace FreeMote.Tests
                 Assert.AreEqual(doubles[i], result2[i]);
             }
         }
-        
+
         [TestMethod]
         public void TestDxt5Uncompress()
         {
@@ -215,6 +203,37 @@ namespace FreeMote.Tests
             var obj = (PsbDictionary)psb.Objects.FindByPath(targetPath);
             var objPath = obj.Path;
             Assert.AreEqual(targetPath, objPath);
+        }
+
+        [TestMethod]
+        public void TestConvertWin2Krkr()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
+            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+
+            Win2KrkrConverter converter = new Win2KrkrConverter();
+            converter.Convert(psb);
+            psb.Merge();
+            File.WriteAllBytes("emote_test_front.psb", psb.Build());
+            File.WriteAllText("emote_test_front.json", PsbDecompiler.Decompile(psb));            
+        }
+
+        [TestMethod]
+        public void TestConvertCommon2Krkr()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
+            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+
+            Win2KrkrConverter converter = new Win2KrkrConverter() {TargetPixelFormat = PsbPixelFormat.CommonRGBA8};
+            converter.Convert(psb);
+            psb.Merge();
+            File.WriteAllBytes("emote_test_front.psb", psb.Build());
+            File.WriteAllText("emote_test_front.json", PsbDecompiler.Decompile(psb));
         }
 
         [TestMethod]

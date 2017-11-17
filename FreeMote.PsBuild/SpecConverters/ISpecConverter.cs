@@ -7,6 +7,22 @@ using FreeMote.Psb;
 
 namespace FreeMote.PsBuild.SpecConverters
 {
+    public enum SpecConvertOption
+    {
+        /// <summary>
+        /// Minimum error
+        /// </summary>
+        Default,
+        /// <summary>
+        /// Remove unnecessary info
+        /// </summary>
+        Minimum,
+        /// <summary>
+        /// Keep unnecessary info
+        /// </summary>
+        Maximum
+    }
+
     /// <summary>
     /// Spec Converter
     /// </summary>
@@ -16,7 +32,7 @@ namespace FreeMote.PsBuild.SpecConverters
         /// Convert a PSB to target spec
         /// </summary>
         /// <param name="psb"></param>
-        void Convert(PSB psb);
+        void Convert(PSB psb, SpecConvertOption option = SpecConvertOption.Default);
 
         PsbPixelFormat TargetPixelFormat { get; set; }
         bool UseRL { get; set; }

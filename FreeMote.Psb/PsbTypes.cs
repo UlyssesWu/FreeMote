@@ -781,7 +781,7 @@ namespace FreeMote.Psb
         {
             Index = br.ReadBytes(n).UnzipUInt();
         }
-        public PsbResource(uint index = 0)
+        public PsbResource(uint? index)
         {
             Index = index;
         }

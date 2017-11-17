@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -8,6 +9,35 @@ namespace FreeMote.PsBuild.SpecConverters
 {
     public static class TextureSpliter
     {
+        public static Dictionary<string, Bitmap> SplitTexture(PsbDictionary tex, PsbSpec spec, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
+        {
+            var icon = (PsbDictionary)tex["icon"];
+            var texture = (PsbDictionary)tex["texture"];
+
+            //var mipmap = (PsbDictionary)texture["mipMap"]; //TODO: Mipmap?
+            Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>(icon.Count);
+
+            var md = PsbResCollector.GenerateResourceMetadata(texture, (PsbResource)texture["pixel"]);
+            md.Spec = spec; //Important
+            Bitmap bmp = md.ToImage();
+            foreach (var iconPair in icon)
+            {
+                var info = (PsbDictionary) iconPair.Value;
+                var width = (int) (PsbNumber) info["width"];
+                var height = (int) (PsbNumber) info["height"];
+                var top = (int) (PsbNumber) info["top"];
+                var left = (int) (PsbNumber) info["left"];
+                Bitmap b = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                Graphics g = Graphics.FromImage(b);
+                g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
+                    GraphicsUnit.Pixel);
+                g.Dispose();
+                textures.Add(iconPair.Key, b);
+            }
+            bmp.Dispose();
+            return textures;
+        }
+
         /// <summary>
         /// Split textures into parts and save to files
         /// </summary>
@@ -80,6 +110,7 @@ namespace FreeMote.PsBuild.SpecConverters
                             break;
                     }
                 }
+                bmp.Dispose();
             }
         }
     }
