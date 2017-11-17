@@ -204,6 +204,20 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPathTravel()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+
+            var targetPath = "/object/all_parts/motion/タイムライン構造/bounds";
+            var obj = (PsbDictionary)psb.Objects.FindByPath(targetPath);
+            var objPath = obj.Path;
+            Assert.AreEqual(targetPath, objPath);
+        }
+
+        [TestMethod]
         public void TestCompareDecompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

@@ -79,6 +79,7 @@ namespace FreeMote.Psb
         /// <see cref="IPsbCollection"/> which contain this
         /// </summary>
         IPsbCollection Parent { get; set; }
+        string Path { get; }
     }
 
 
@@ -155,7 +156,7 @@ namespace FreeMote.Psb
         {
             bw.Write((byte)Type);
         }
-        
+
         public static PsbNull Null => new PsbNull();
     }
 
@@ -717,12 +718,15 @@ namespace FreeMote.Psb
     [Serializable]
     public class PsbDictionary : Dictionary<string, IPsbValue>, IPsbValue, IPsbCollection
     {
-        public PsbDictionary(int capacity):base(capacity)
+        public PsbDictionary(int capacity) : base(capacity)
         {
         }
         public Dictionary<string, IPsbValue> Value => this;
-        
+
         public IPsbCollection Parent { get; set; } = null;
+
+        public string Path => Parent != null ? $"{Parent.Path}{(Parent.Path.EndsWith("/") ? "" : "/")}{this.GetName() ?? "(array)"}" : "/";
+
 
         IPsbValue IPsbCollection.this[int i] => ContainsKey(i.ToString()) ? base[i.ToString()] : null;
 
@@ -748,9 +752,11 @@ namespace FreeMote.Psb
         }
 
         public List<IPsbValue> Value => this;
-        
+
         public IPsbCollection Parent { get; set; } = null;
-        
+
+        public string Path => Parent != null ? $"{Parent.Path}{(Parent.Path.EndsWith("/") ? "" : "/")}{this.GetName() ?? "(array)"}" : "/";
+
         public new IPsbValue this[int index]
         {
             get => index < Count ? base[index] : null;

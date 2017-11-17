@@ -13,7 +13,7 @@ namespace FreeMote.PsBuild.SpecConverters
 
         public void Convert(PSB psb)
         {
-            throw new NotImplementedException();
+            psb.Platform = PsbSpec.krkr;
         }
 
         private void SplitTexture(PSB psb)
@@ -23,6 +23,33 @@ namespace FreeMote.PsBuild.SpecConverters
 
         private void Remove(PSB psb)
         {
+            //Remove `easing`
+            psb.Objects.Remove("easing");
+
+            //Remove `/object/*/motion/*/bounds`
+            //Remove `/object/*/motion/*/layerIndexMap`
+            var obj = (PsbDictionary) psb.Objects["object"];
+            foreach (var o in obj)
+            {
+                var name = o.Key;
+                foreach (var m in (PsbDictionary)((PsbDictionary)o.Value)["motion"])
+                {
+                    if (m.Value is PsbDictionary mDic)
+                    {
+                        mDic.Remove("bounds");
+                        mDic.Remove("layerIndexMap");
+                    }
+                }
+                
+            }
+        }
+
+        private void Travel(IPsbCollection collection)
+        {
+            if (collection is PsbDictionary dic)
+            {
+                //dic
+            }
 
         }
 
