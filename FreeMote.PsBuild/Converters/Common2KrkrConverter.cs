@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using FreeMote.Psb;
+using FreeMote.PsBuild.Textures;
 
-namespace FreeMote.PsBuild.SpecConverters
+namespace FreeMote.PsBuild.Converters
 {
     class Common2KrkrConverter : ISpecConverter
     {
@@ -12,19 +12,23 @@ namespace FreeMote.PsBuild.SpecConverters
         /// </summary>
         public PsbPixelFormat TargetPixelFormat { get; set; } = PsbPixelFormat.WinRGBA8;
         public bool UseRL { get; set; } = true;
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec>{PsbSpec.win, PsbSpec.common};
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.krkr};
 
-        public PsbSpec FromSpec { get; } = PsbSpec.win;
-        public PsbSpec ToSpec { get; } = PsbSpec.krkr;
 
         public void Convert(PSB psb)
         {
+            if (!FromSpec.Contains(psb.Platform))
+            {
+                throw new FormatException("Can not convert Spec for this PSB");
+            }
             if (ConvertOption == SpecConvertOption.Minimum)
             {
                 Remove(psb);
             }
             var iconInfo = TranslateResources(psb);
             Travel((PsbDictionary)psb.Objects["object"], iconInfo);
-            if (ConvertOption == SpecConvertOption.Minimum)
+            if (ConvertOption == SpecConvertOption.Maximum)
             {
                 Add(psb);
             }
@@ -35,11 +39,11 @@ namespace FreeMote.PsBuild.SpecConverters
 
         private void Remove(PSB psb)
         {
-            //Remove `easing`
+            //remove `easing`
             psb.Objects.Remove("easing");
 
-            //Remove `/object/*/motion/*/bounds`
-            //Remove `/object/*/motion/*/layerIndexMap`
+            //remove `/object/*/motion/*/bounds`
+            //remove `/object/*/motion/*/layerIndexMap`
             var obj = (PsbDictionary)psb.Objects["object"];
             foreach (var o in obj)
             {
@@ -49,7 +53,7 @@ namespace FreeMote.PsBuild.SpecConverters
                     if (m.Value is PsbDictionary mDic)
                     {
                         mDic.Remove("bounds");
-                        //mDic.Remove("layerIndexMap");
+                        mDic.Remove("layerIndexMap");
                     }
                 }
             }
@@ -65,7 +69,7 @@ namespace FreeMote.PsBuild.SpecConverters
                 {
                     var iconList = new List<string>();
                     iconInfos.Add(tex.Key, iconList);
-                    var bmps = TextureHelper.SplitTexture(texDic, psb.Platform);
+                    var bmps = TextureSpliter.SplitTexture(texDic, psb.Platform);
                     var icons = (PsbDictionary)texDic["icon"];
                     foreach (var iconPair in icons)
                     {
@@ -75,7 +79,7 @@ namespace FreeMote.PsBuild.SpecConverters
                             ? RL.CompressImage(bmps[iconPair.Key], TargetPixelFormat)
                             : RL.GetPixelBytesFromImage(bmps[iconPair.Key], TargetPixelFormat);
                         icon["pixel"] =
-                            new PsbResource { Data = data, Parents = new List<IPsbCollection>() { icon } };
+                            new PsbResource { Data = data, Parents = new List<IPsbCollection> { icon } };
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
                         icon.Remove("top");
@@ -111,6 +115,7 @@ namespace FreeMote.PsBuild.SpecConverters
                             var iconName = dic["icon"].ToString();
                             dic["src"] = new PsbString($"src/{s}/{iconName}");
                         }
+                        //"ex_body_a" ("icon" : "差分A") -> "motion/ex_body_a/差分A"
                         else
                         {
                             var iconName = dic["icon"].ToString();

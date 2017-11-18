@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using FreeMote.Psb;
 
-namespace FreeMote.PsBuild.SpecConverters
+namespace FreeMote.PsBuild.Textures
 {
-    public static class TextureHelper
+    public static class TextureSpliter
     {
         public static Dictionary<string, Bitmap> SplitTexture(PsbDictionary tex, PsbSpec spec)
         {
@@ -81,6 +80,7 @@ namespace FreeMote.PsBuild.SpecConverters
                     var height = (int)(PsbNumber)info["height"];
                     var top = (int)(PsbNumber)info["top"];
                     var left = (int)(PsbNumber)info["left"];
+                    var attr = (int)(PsbNumber)info["attr"];
                     Bitmap b = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                     Graphics g = Graphics.FromImage(b);
                     g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
@@ -105,7 +105,8 @@ namespace FreeMote.PsBuild.SpecConverters
                                     break;
                                 case PsbImageFormat.Png:
                                 default:
-                                    b.Save(savePath + ".png", ImageFormat.Png);
+                                    //b.Save(savePath + ".png", ImageFormat.Png);
+                                    b.Save(savePath + $"_{attr}.png", ImageFormat.Png);
                                     break;
                             }
                             break;

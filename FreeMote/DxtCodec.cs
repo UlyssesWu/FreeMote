@@ -1,5 +1,5 @@
 ﻿//DXT Decoding/Encoding Class by gdkchan
-//REF: https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs
+//https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;

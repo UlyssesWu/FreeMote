@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 
@@ -82,7 +83,11 @@ namespace FreeMote.PsBuild
             for (int i = 0; i < resources.Count; i++)
             {
                 var resource = resources[i];
-                var relativePath = $"{name}/{i}";
+                //var spec = resource.Spec;
+                //var relativePath = spec == PsbSpec.krkr
+                //    ? $"{name}/{resource.Part}-{resource.Name}"
+                //    : $"{name}/{resource.Part}";
+                var relativePath = $"{resource.Part}-{resource.Name}";
                 switch (imageOption)
                 {
                     case PsbImageOption.Extract:
@@ -93,22 +98,26 @@ namespace FreeMote.PsBuild
                                 relativePath += ".png";
                                 if (resource.Compress == PsbCompressType.RL)
                                 {
-                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, PsbImageFormat.Png, resource.PixelFormat);
+                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
+                                        resource.Height, resource.Width, PsbImageFormat.Png, resource.PixelFormat);
                                 }
                                 else
                                 {
-                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.png"), resource.Height, resource.Width, extractFormat, resource.PixelFormat);
+                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
+                                        resource.Height, resource.Width, extractFormat, resource.PixelFormat);
                                 }
                                 break;
                             default:
                                 relativePath += ".bmp";
                                 if (resource.Compress == PsbCompressType.RL)
                                 {
-                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, PsbImageFormat.Bmp, resource.PixelFormat);
+                                    RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
+                                        resource.Height, resource.Width, PsbImageFormat.Bmp, resource.PixelFormat);
                                 }
                                 else
                                 {
-                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, $"{i}.bmp"), resource.Height, resource.Width, extractFormat, resource.PixelFormat);
+                                    RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
+                                        resource.Height, resource.Width, extractFormat, resource.PixelFormat);
                                 }
                                 break;
                         }
@@ -117,23 +126,23 @@ namespace FreeMote.PsBuild
                         if (resources[i].Compress == PsbCompressType.RL)
                         {
                             relativePath += ".rl";
-                            File.WriteAllBytes(Path.Combine(dirPath, $"{i}.rl"), resource.Data);
+                            File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
                         }
                         else
                         {
                             relativePath += ".raw";
-                            File.WriteAllBytes(Path.Combine(dirPath, $"{i}.raw"), resource.Data);
+                            File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
                         }
                         break;
                     case PsbImageOption.Raw:
-                        File.WriteAllBytes(Path.Combine(dirPath, $"{i}.raw"),
+                        File.WriteAllBytes(Path.Combine(dirPath, relativePath),
                             resources[i].Compress == PsbCompressType.RL
                                 ? RL.Uncompress(resource.Data)
                                 : resource.Data);
                         relativePath += ".raw";
                         break;
                     case PsbImageOption.Compress:
-                        File.WriteAllBytes(Path.Combine(dirPath, $"{i}.rl"),
+                        File.WriteAllBytes(Path.Combine(dirPath, relativePath),
                             resources[i].Compress != PsbCompressType.RL
                                 ? RL.Compress(resource.Data)
                                 : resource.Data);
@@ -142,7 +151,7 @@ namespace FreeMote.PsBuild
                     default:
                         throw new ArgumentOutOfRangeException(nameof(imageOption), imageOption, null);
                 }
-                resPaths.Add(relativePath);
+                resPaths.Add($"{name}/{relativePath}");
             }
             //MARK: We use `.resx.json` to distinguish from psbtools' `.res.json`
             File.WriteAllText(inputPath + ".resx.json", JsonConvert.SerializeObject(resPaths, Formatting.Indented));

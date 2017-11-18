@@ -252,6 +252,5 @@ paket-files/
 *.sln.iml
 /FreeMote.Purify
 /FreeMote.Tests/Res
+/FreeMote.Tests/PurifyTest.cs
 
-/FreeMote.Tests/PurifyTest.cs
-/FreeMote.Tests/PurifyTest.cs

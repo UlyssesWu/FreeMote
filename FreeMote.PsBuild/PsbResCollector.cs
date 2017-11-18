@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using FreeMote.Psb;
-using FreeMote.PsBuild.SpecConverters;
+using FreeMote.PsBuild.Converters;
 
 namespace FreeMote.PsBuild
 {
@@ -25,7 +25,7 @@ namespace FreeMote.PsBuild
             List<ResourceMetadata> resourceList = psb.Resources == null ? new List<ResourceMetadata>() : new List<ResourceMetadata>(psb.Resources.Count);
 
             FindResources(resourceList, psb.Objects[SourceKey], deDuplication);
-
+            //Set Spec
             resourceList.ForEach(r => r.Spec = psb.Platform);
             resourceList.Sort((md1, md2) => (int)(md1.Index - md2.Index));
 

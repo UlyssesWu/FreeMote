@@ -5,7 +5,8 @@ using System.IO;
 using System.Linq;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
-using FreeMote.PsBuild.SpecConverters;
+using FreeMote.PsBuild.Converters;
+using FreeMote.PsBuild.Textures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
@@ -185,8 +186,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
             //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
-            //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
-            var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            //var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
             psb.SplitTextureToFiles("texs");

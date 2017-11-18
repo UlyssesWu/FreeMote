@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using FreeMote.Psb;
 
-namespace FreeMote.PsBuild.SpecConverters
+namespace FreeMote.PsBuild.Converters
 {
+    /// <summary>
+    /// Control convert strategy
+    /// </summary>
     public enum SpecConvertOption
     {
         /// <summary>
-        /// Minimum error
+        /// Best sucess rate
         /// </summary>
         Default,
         /// <summary>
@@ -20,25 +19,30 @@ namespace FreeMote.PsBuild.SpecConverters
         /// <summary>
         /// Keep unnecessary info
         /// </summary>
-        Maximum
+        Maximum,
     }
 
     /// <summary>
-    /// Spec Converter
+    /// Convert among <see cref="PsbSpec"/>
     /// </summary>
     public interface ISpecConverter
     {
         /// <summary>
-        /// Convert a PSB to target spec
+        /// Convert a PSB to target <see cref="PsbSpec"/>
         /// </summary>
         /// <param name="psb"></param>
         void Convert(PSB psb);
 
         SpecConvertOption ConvertOption { get; set; }
+
         PsbPixelFormat TargetPixelFormat { get; set; }
+
+        /// <summary>
+        /// Use RL Compress
+        /// </summary>
         bool UseRL { get; set; }
 
-        PsbSpec FromSpec { get; }
-        PsbSpec ToSpec { get; }
+        IList<PsbSpec> FromSpec { get; }
+        IList<PsbSpec> ToSpec { get; }
     }
 }
