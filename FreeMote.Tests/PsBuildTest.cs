@@ -219,8 +219,8 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
-            var path = "texs";
-            var savePath = "packed";
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure");
+            var savePath = Path.Combine(path, "packed");
             Dictionary<string,Image> imgs = new Dictionary<string, Image>();
             foreach (var file in Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories))
             {
@@ -230,7 +230,7 @@ namespace FreeMote.Tests
             {
                 FitHeuristic = BestFitHeuristic.MaxOneAxis,
             };
-            packer.Process(imgs, 4096, 1, true);
+            packer.Process(imgs, 4096, 1, false);
             if (Directory.Exists(savePath))
             {
                 Directory.Delete(savePath);

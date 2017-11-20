@@ -49,6 +49,7 @@ namespace FreeMote.Psb
         /// </summary>
         public PsbDictionary Objects { get; set; }
 
+        [Obsolete]
         public string Extension
         {
             get

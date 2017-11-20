@@ -158,7 +158,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Get default corresponding PixelFormat
+        /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
         /// </summary>
         /// <param name="spec"></param>
         /// <returns></returns>
@@ -178,7 +178,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Get Name
+        /// Get it's Name in <see cref="PsbDictionary"/>
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>

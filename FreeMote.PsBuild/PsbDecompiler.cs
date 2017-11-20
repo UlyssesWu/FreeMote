@@ -9,6 +9,9 @@ using Newtonsoft.Json;
 
 namespace FreeMote.PsBuild
 {
+    /// <summary>
+    /// How to handle images
+    /// </summary>
     public enum PsbImageOption
     {
         /// <summary>

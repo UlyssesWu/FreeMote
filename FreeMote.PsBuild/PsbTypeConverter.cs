@@ -9,6 +9,9 @@ using Newtonsoft.Json.Linq;
 
 namespace FreeMote.PsBuild
 {
+    /// <summary>
+    /// <see cref="JsonConverter"/> for PSB types
+    /// </summary>
     class PsbTypeConverter : JsonConverter
     {
         //internal static List<Type> SupportTypes = new List<Type> {

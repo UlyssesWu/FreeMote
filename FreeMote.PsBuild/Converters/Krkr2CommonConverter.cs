@@ -7,6 +7,9 @@ using FreeMote.PsBuild.Textures;
 
 namespace FreeMote.PsBuild.Converters
 {
+    /// <summary>
+    /// Convert krkr to common/win
+    /// </summary>
     class Krkr2CommonConverter : ISpecConverter
     {
         private const string Delimiter = "@";
@@ -26,10 +29,10 @@ namespace FreeMote.PsBuild.Converters
         public bool ToWin { get; set; }
 
         public int? TextureSideLength { get; set; } = null;
-        public int TexturePadding { get; set; } = 1;
+        public int TexturePadding { get; set; } = 10;
         public BestFitHeuristic FitHeuristic { get; set; } = BestFitHeuristic.MaxOneAxis;
 
-        private bool UseMeaningfulName = false;
+        public bool UseMeaningfulName { get; set; } = true;
 
         public void Convert(PSB psb)
         {
@@ -60,7 +63,7 @@ namespace FreeMote.PsBuild.Converters
             psb.Objects.Add("easing", new PsbCollection(0));
 
             //add `/object/*/motion/*/bounds`
-            //add `/object/*/motion/*/layerIndexMap` ?
+            //add `/object/*/motion/*/layerIndexMap`
             var obj = (PsbDictionary)psb.Objects["object"];
             foreach (var o in obj)
             {
@@ -77,7 +80,41 @@ namespace FreeMote.PsBuild.Converters
                             {"bottom", new PsbNumber(0)}
                         };
                         mDic.Add("bounds", bounds);
-                        //mDic.Add("layerIndexMap", new PsbDictionary(0));
+
+                        if (!(mDic["layer"] is PsbCollection col))
+                        {
+                            continue;
+                        }
+                        var layerIndexList = new List<string>();
+                        LayerTravel(col, layerIndexList);
+                        var layerIndexMap = new PsbDictionary(layerIndexList.Count);
+                        for (int i = 0; i < layerIndexList.Count; i++)
+                        {
+                            if (layerIndexMap.ContainsKey(layerIndexList[i]))
+                            {
+                                continue;
+                            }
+                            layerIndexMap.Add(layerIndexList[i], new PsbNumber(i));
+                        }
+                        mDic.Add("layerIndexMap", layerIndexMap);
+                    }
+                }
+            }
+
+            void LayerTravel(PsbCollection collection, List<string> indexList)
+            {
+                foreach (var col in collection)
+                {
+                    if (col is PsbDictionary dic && dic.ContainsKey("children"))
+                    {
+                        if (dic["label"] is PsbString str)
+                        {
+                            indexList.Add(str.Value);
+                        }
+                        if (dic["children"] is PsbCollection childrenCollection)
+                        {
+                            LayerTravel(childrenCollection, indexList);
+                        }
                     }
                 }
             }

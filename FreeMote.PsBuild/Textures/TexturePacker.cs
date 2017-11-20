@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -113,7 +114,10 @@ namespace FreeMote.PsBuild.Textures
         {
             Image img = new Bitmap(Width, Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             Graphics g = Graphics.FromImage(img);
-
+            g.Clear(Color.FromArgb(0, Color.Black));
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.SmoothingMode = SmoothingMode.Default;
             if (debugMode)
             {
                 g.FillRectangle(Brushes.Green, new Rectangle(0, 0, Width, Height));

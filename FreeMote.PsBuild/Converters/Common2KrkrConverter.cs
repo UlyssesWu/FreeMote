@@ -5,6 +5,9 @@ using FreeMote.PsBuild.Textures;
 
 namespace FreeMote.PsBuild.Converters
 {
+    /// <summary>
+    /// Convert common/win to krkr
+    /// </summary>
     class Common2KrkrConverter : ISpecConverter
     {
         /// <summary>

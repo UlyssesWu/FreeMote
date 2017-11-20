@@ -4,7 +4,7 @@ using FreeMote.Psb;
 namespace FreeMote.PsBuild.Converters
 {
     /// <summary>
-    /// Control convert strategy
+    /// Spec convert strategy
     /// </summary>
     public enum SpecConvertOption
     {
@@ -35,6 +35,9 @@ namespace FreeMote.PsBuild.Converters
 
         SpecConvertOption ConvertOption { get; set; }
 
+        /// <summary>
+        /// Select <see cref="PsbPixelFormat"/> if supported
+        /// </summary>
         PsbPixelFormat TargetPixelFormat { get; set; }
 
         /// <summary>

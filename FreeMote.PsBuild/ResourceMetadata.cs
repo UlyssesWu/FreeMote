@@ -6,6 +6,9 @@ using FreeMote.Psb;
 
 namespace FreeMote.PsBuild
 {
+    /// <summary>
+    /// Compression in PSB
+    /// </summary>
     public enum PsbCompressType
     {
         /// <summary>
@@ -21,6 +24,10 @@ namespace FreeMote.PsBuild
         /// </summary>
         Bmp,
     }
+
+    /// <summary>
+    /// Information for Resources
+    /// </summary>
     [DebuggerDisplay("{" + nameof(DebuggerString) + "}")]
     public class ResourceMetadata
     {
