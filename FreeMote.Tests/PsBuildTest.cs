@@ -186,11 +186,37 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
             //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
-            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json");
+            //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
             //var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
             psb.SplitTextureToFiles("texs");
+        }
+
+        [TestMethod]
+        public void TestPackTexture()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = "texs";
+            var savePath = "packed";
+            Dictionary<string,Image> imgs = new Dictionary<string, Image>();
+            foreach (var file in Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories))
+            {
+                imgs.Add(file, Image.FromFile(file));
+            }
+            TexturePacker packer = new TexturePacker
+            {
+                FitHeuristic = BestFitHeuristic.MaxOneAxis,
+            };
+            packer.Process(imgs, 4096, 1, true);
+            if (Directory.Exists(savePath))
+            {
+                Directory.Delete(savePath);
+            }
+            Directory.CreateDirectory(savePath);
+            packer.SaveAtlasses(Path.Combine(savePath, "tex.txt"));
         }
 
         [TestMethod]
@@ -236,6 +262,22 @@ namespace FreeMote.Tests
             psb.Merge();
             File.WriteAllBytes("emote_test_front.psb", psb.Build());
             File.WriteAllText("emote_test_front.json", PsbDecompiler.Decompile(psb));
+        }
+
+        [TestMethod]
+        public void TestConvertKrkr2Win()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
+            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            psb.SwitchSpec(PsbSpec.common);
+            //Common2KrkrConverter converter = new Common2KrkrConverter();
+            //converter.Convert(psb);
+            psb.Merge();
+            File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
+            File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
         }
 
         [TestMethod]

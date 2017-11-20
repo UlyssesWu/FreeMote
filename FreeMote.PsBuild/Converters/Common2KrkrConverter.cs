@@ -94,6 +94,7 @@ namespace FreeMote.PsBuild.Converters
 
         private void Travel(IPsbCollection collection, Dictionary<string, List<string>> iconInfo)
         {
+            //TODO: recover icon names
             if (collection is PsbDictionary dic)
             {
                 //mask+=1

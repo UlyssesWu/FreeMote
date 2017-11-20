@@ -168,11 +168,17 @@ namespace FreeMote.PsBuild
             var resList = psb.CollectResources();
             foreach (var resPath in resPaths)
             {
-                if (!uint.TryParse(Path.GetFileNameWithoutExtension(resPath), out uint rid))
+                ResourceMetadata resMd;
+                var resName = Path.GetFileNameWithoutExtension(resPath);
+                if (uint.TryParse(resName, out uint rid))
                 {
+                    resMd = resList.FirstOrDefault(r => r.Index == rid);
                     throw new InvalidCastException($"Filename can not be parsed as Resource ID: {resPath}");
                 }
-                var resMd = resList.FirstOrDefault(r => r.Index == rid);
+                else
+                {
+                    resMd = resList.FirstOrDefault(r => resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
+                }
                 if (resMd == null)
                 {
                     Console.WriteLine($"[WARN]{resPath} is not used.");

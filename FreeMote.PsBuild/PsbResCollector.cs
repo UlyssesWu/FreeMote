@@ -13,6 +13,10 @@ namespace FreeMote.PsBuild
         public const string ResourceIdentifier = "#resource#";
         public const string ResourceKey = "pixel";
         public const string SourceKey = "source";
+        /// <summary>
+        /// delimiter for output texture filename
+        /// </summary>
+        internal const string ResourceNameDelimiter = "-";
 
         /// <summary>
         /// Get all resources with necessary info
@@ -280,6 +284,22 @@ namespace FreeMote.PsBuild
             return psbObj[path];
         }
 
+        internal static IPsbValue Children(this IPsbValue col, string name)
+        {
+            while (true)
+            {
+                switch (col)
+                {
+                    case PsbDictionary dictionary:
+                        return dictionary[name];
+                    case PsbCollection collection:
+                        col = collection.FirstOrDefault(c => c is PsbDictionary);
+                        continue;
+                }
+                throw new ArgumentException($"{col} doesn't have children.");
+            }
+        }
+
         /// <summary>
         /// Try to switch Spec
         /// </summary>
@@ -321,8 +341,12 @@ namespace FreeMote.PsBuild
                 switch (original)
                 {
                     case PsbSpec.krkr:
-                        Krkr2CommonConverter converter = new Krkr2CommonConverter();
-                        converter.Convert(psb);
+                        Krkr2CommonConverter krkr2Common = new Krkr2CommonConverter(true);
+                        krkr2Common.Convert(psb);
+                        break;
+                    case PsbSpec.common:
+                        CommonWinConverter commonWin = new CommonWinConverter();
+                        commonWin.Convert(psb);
                         break;
                     default:
                         psb.Platform = targetSpec;
@@ -335,128 +359,18 @@ namespace FreeMote.PsBuild
                 switch (original)
                 {
                     case PsbSpec.krkr:
+                        Krkr2CommonConverter converter = new Krkr2CommonConverter();
+                        converter.Convert(psb);
                         break;
                     case PsbSpec.win:
+                        CommonWinConverter commonWin = new CommonWinConverter(false);
+                        commonWin.Convert(psb);
                         break;
                     default:
                         psb.Platform = targetSpec;
                         break;
                 }
             }
-
-            //var resources = psb.CollectResources(false);
-            #region Failed
-            /*
-            //Krkr -> Win
-            if (original == PsbSpec.krkr && (targetSpec == PsbSpec.win || targetSpec == PsbSpec.common))
-            {
-                //krkr: source/"#custom"/
-                PsbDictionary source = new PsbDictionary(resources.Count);
-                Dictionary<string, string> tranlations = new Dictionary<string, string>();
-                foreach (var resMd in resources)
-                {
-                    //This doesn't seems to work
-                    //foreach (var parent in resMd.Resource.Parents)
-                    //{
-                    //    var dic = parent as PsbDictionary;
-                    //    dic?.Value.Remove("compress");
-                    //}
-
-                    var tex = new PsbDictionary(4);
-                    var icon0 = new PsbDictionary(10);
-                    icon0["attr"] = (PsbNumber)0;
-                    icon0["height"] = (PsbNumber)resMd.Height;
-                    icon0["left"] = (PsbNumber)resMd.Left;
-                    icon0["metadata"] = PsbNull.Null;
-                    icon0["originX"] = (PsbNumber)resMd.OriginX;
-                    icon0["originY"] = (PsbNumber)resMd.OriginY;
-                    icon0["top"] = (PsbNumber)resMd.Top;
-                    icon0["width"] = (PsbNumber)resMd.Width;
-
-                    var icon = new PsbDictionary(1);
-                    var iconName = "0"; //We try to make one tex contains only one icon
-                    icon[iconName] = icon0;
-
-                    tex["icon"] = icon;
-                    tex["metadata"] = PsbNull.Null;
-
-                    var texture = new PsbDictionary(7);
-                    texture["height"] = (PsbNumber)resMd.Height;
-                    texture["pixel"] = resMd.Resource;
-                    texture["truncated_height"] = (PsbNumber)resMd.Height;
-                    texture["truncated_width"] = (PsbNumber)resMd.Width;
-                    texture["type"] = (PsbString)pixelFormat.ToStringForPsb();
-                    texture["width"] = (PsbNumber)resMd.Width;
-                    //No mipmap
-                    //texture["mipMapLevel"] = (PsbNumber)0;
-                    //texture["mipMap"] = new PsbDictionary(0);
-                    //Win format don't use RL
-                    //texture["compress"] = PsbNull.Null;
-                    tex["texture"] = texture;
-                    tex["type"] = (PsbNumber)0;
-
-                    var texName = $"{resMd.Part}#{resMd.Name}";
-                    source[texName] = tex;
-                    tranlations[$"src/{resMd.Part}/{resMd.Name}"] = texName;
-                }
-
-                psb.Objects["source"] = source;
-                //Translation
-                TranslateToWin(psb.Objects["object"], tranlations);
-            }
-
-            //Krkr -> Win
-            if ((original == PsbSpec.win || original == PsbSpec.common) && targetSpec == PsbSpec.krkr)
-            {
-                Krkr2WinConverter converter = new Krkr2WinConverter() { TargetPixelFormat = pixelFormat };
-                converter.Convert(psb);
-            }
-
-            void TranslateToWin(IPsbValue obj, Dictionary<string, string> translations)
-            {
-                if (obj is PsbDictionary dic)
-                {
-                    if (dic.ContainsKey("src") && dic["src"] is PsbString src && src.ToString().StartsWith("src/"))
-                    {
-                        if (translations.ContainsKey(src.ToString()))
-                        {
-                            dic["src"] = (PsbString)translations[src.ToString()];
-                        }
-                        else
-                        {
-                            //something may be wrong
-                            Debug.WriteLine($"Can not find translation for {src}");
-                        }
-                    }
-
-                    if (dic.ContainsKey("content") && dic["content"] is PsbDictionary content &&
-                        content.ContainsKey("src") && content["src"] is PsbString src2 &&
-                        src2.ToString().StartsWith("src/") && translations.ContainsKey(src2.ToString()))
-                    {
-                        //Add icon to content
-                        content.Add("icon", (PsbString)"0");
-                    }
-
-                    foreach (IPsbValue psbValue in dic.Values)
-                    {
-                        if (psbValue is IPsbCollection)
-                        {
-                            TranslateToWin(psbValue, translations);
-                        }
-                    }
-                }
-                else if (obj is PsbCollection collection)
-                {
-                    foreach (IPsbValue psbValue in collection)
-                    {
-                        TranslateToWin(psbValue, translations);
-                    }
-                }
-
-            }
-            */
-            #endregion
-
         }
     }
 }

@@ -29,6 +29,11 @@ namespace FreeMote.PsBuild.Textures
         /// Height in Pixels
         /// </summary>
         public int Height;
+
+        /// <summary>
+        /// Source texture in memory
+        /// </summary>
+        public Image SourceImage;
     }
 
     /// <summary>
@@ -118,7 +123,7 @@ namespace FreeMote.PsBuild.Textures
             {
                 if (n.Texture != null)
                 {
-                    Image sourceImg = Image.FromFile(n.Texture.Source);
+                    Image sourceImg = n.Texture.SourceImage ?? Image.FromFile(n.Texture.Source);
                     g.DrawImage(sourceImg, n.Bounds);
 
                     if (debugMode)
@@ -307,23 +312,49 @@ namespace FreeMote.PsBuild.Textures
             tw.Close();
         }
 
-        public void LoadTexturesFromImages(IDictionary<string, Image> images)
+        private void LoadTexturesFromImages(IDictionary<string, Image> images)
         {
             foreach (var imgPair in images)
             {
                 var img = imgPair.Value;
                 if (img.Width <= AtlasSize && img.Height <= AtlasSize)
                 {
-                    TextureInfo ti = new TextureInfo();
+                    TextureInfo ti = new TextureInfo
+                    {
+                        Source = imgPair.Key,
+                        Width = img.Width,
+                        Height = img.Height,
+                        SourceImage = imgPair.Value
+                    };
 
-                    ti.Source = imgPair.Key;
-                    ti.Width = img.Width;
-                    ti.Height = img.Height;
                     SourceTextures.Add(ti);
                 }
                 else
                 {
                     throw new ArgumentOutOfRangeException($"Image {imgPair.Key} is too large to be hold in texture!");
+                }
+            }
+        }
+
+        internal void LoadTexturesFromImages(IList<Image> images)
+        {
+            foreach (var img in images)
+            {
+                if (img.Width <= AtlasSize && img.Height <= AtlasSize)
+                {
+                    TextureInfo ti = new TextureInfo
+                    {
+                        Source = img.Tag.ToString(),
+                        Width = img.Width,
+                        Height = img.Height,
+                        SourceImage = img
+                    };
+
+                    SourceTextures.Add(ti);
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException($"Image {img.Tag} is too large to be hold in texture!");
                 }
             }
         }

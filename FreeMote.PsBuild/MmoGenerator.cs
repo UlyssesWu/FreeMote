@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace FreeMote.PsBuild
 {
+    [Obsolete("Not Implemented")]
     class MmoGenerator
     {
     }

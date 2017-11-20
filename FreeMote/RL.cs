@@ -23,6 +23,10 @@ namespace FreeMote
         /// </summary>
         CommonRGBA8,
         /// <summary>
+        /// RGBA4444
+        /// </summary>
+        RGBA4444,
+        /// <summary>
         /// Big Endian DXT5
         /// </summary>
         DXT5,

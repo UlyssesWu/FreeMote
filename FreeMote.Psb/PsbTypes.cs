@@ -157,6 +157,9 @@ namespace FreeMote.Psb
             bw.Write((byte)Type);
         }
 
+        /// <summary>
+        /// Null
+        /// </summary>
         public static PsbNull Null => new PsbNull();
     }
 

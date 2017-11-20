@@ -29,6 +29,7 @@ namespace FreeMote.PsBuild
         Extract,
 
     }
+
     /// <summary>
     /// Decompile PSB(/MMO) File
     /// </summary>
@@ -87,7 +88,7 @@ namespace FreeMote.PsBuild
                 //var relativePath = spec == PsbSpec.krkr
                 //    ? $"{name}/{resource.Part}-{resource.Name}"
                 //    : $"{name}/{resource.Part}";
-                var relativePath = $"{resource.Part}-{resource.Name}";
+                var relativePath = $"{resource.Part}{PsbResCollector.ResourceNameDelimiter}{resource.Name}";
                 switch (imageOption)
                 {
                     case PsbImageOption.Extract:

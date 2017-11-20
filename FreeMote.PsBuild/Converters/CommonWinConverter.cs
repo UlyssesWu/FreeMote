@@ -7,11 +7,20 @@ namespace FreeMote.PsBuild.Converters
     /// <summary>
     /// Useless
     /// </summary>
-    class Common2WinConverter : ISpecConverter
+    class CommonWinConverter : ISpecConverter
     {
+        public CommonWinConverter(bool commonToWin = true)
+        {
+            CommonToWin = commonToWin;
+        }
+        /// <summary>
+        /// false: Win -> common; true: common -> win
+        /// </summary>
+        public bool CommonToWin { get; set; }
         public SpecConvertOption ConvertOption { get; set; }
-
-
+        /// <summary>
+        /// Won't be used in this conversion
+        /// </summary>
         public PsbPixelFormat TargetPixelFormat { get; set; }
         public bool UseRL { get; set; } = false;
         public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> {PsbSpec.win, PsbSpec.common};
