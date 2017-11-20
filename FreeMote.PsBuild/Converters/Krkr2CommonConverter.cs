@@ -229,15 +229,20 @@ namespace FreeMote.PsBuild.Converters
                             dic["src"] = new PsbString(
                                 new string(s.Value.SkipWhile(c => c != '/').Skip(1).TakeWhile(c => c != '/').ToArray()));
                         }
-                    }
-
-                    var num = (PsbNumber)dic["mask"];
-                    //remove src = layout || src = shape/point (0) ?
-                    if (num.IntValue == 1 || num.IntValue == 3 || num.IntValue == 19)
-                    {
-                        dic.Remove("src");
+                        //remove src = layout || src = shape/point (0) ?
+                        else if (s.Value == "layout" || s.Value.StartsWith("shape/"))
+                        {
+                            dic.Remove("src");
+                        }
+                        //wrong way↓
+                        //var num = (PsbNumber)dic["mask"];
+                        //if (num.IntValue == 1 || num.IntValue == 3 || num.IntValue == 19)
+                        //{
+                        //    dic.Remove("src");
+                        //}
                     }
                     //mask -= 1
+                    var num = (PsbNumber)dic["mask"];
                     num.IntValue = num.IntValue - 1;
                     //remove ox, oy ?
                     //if (ConvertOption == SpecConvertOption.Minimum)

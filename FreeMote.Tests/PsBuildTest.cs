@@ -139,17 +139,37 @@ namespace FreeMote.Tests
         public void TestGraft()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path1 = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json.psbuild.psb.json");
-            PSB psb1 = PsbCompiler.LoadPsbFromJsonFile(path1);
 
+            //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
             var path2 = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
             PSB psb2 = PsbCompiler.LoadPsbFromJsonFile(path2);
+            psb.SwitchSpec(PsbSpec.win);
+            //Graft
+            var obj = (PsbDictionary)psb.Objects["object"];
+            foreach (var o in obj)
+            {
+                //var partName = o.Key;
+                foreach (var m in (PsbDictionary)((PsbDictionary)o.Value)["motion"])
+                {
+                    if (m.Value is PsbDictionary mDic)
+                    {
+                        if (psb2.Objects.FindByPath(mDic.Path) is PsbDictionary m2)
+                        {
+                            mDic["layerIndexMap"] = m2["layerIndexMap"];
+                        }
+                        else
+                        {
+                            Console.WriteLine($"can not find path: {mDic.Path}");
+                        }
+                    }
+                }
+            }
 
-            psb1.Objects["metadata"] = psb2.Objects["metadata"];
-            psb1.Objects["easing"] = new PsbCollection(0);
-
-            psb1.Merge();
-            File.WriteAllBytes(path1 + ".graft.psb", psb1.Build());
+            psb.Merge();
+            File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
+            File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
 
         }
 
@@ -272,7 +292,7 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
             var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
-            psb.SwitchSpec(PsbSpec.common);
+            psb.SwitchSpec(PsbSpec.win);
             //Common2KrkrConverter converter = new Common2KrkrConverter();
             //converter.Convert(psb);
             psb.Merge();
