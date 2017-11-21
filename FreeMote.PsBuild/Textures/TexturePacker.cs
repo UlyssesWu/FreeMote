@@ -1,13 +1,19 @@
 ﻿//TexturePacker by mfascia
 //https://github.com/mfascia/TexturePacker
 
+#define USE_FASTBITMAP
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+
+#if USE_FASTBITMAP
+using FastBitmapLib;
+#endif
 
 namespace FreeMote.PsBuild.Textures
 {
@@ -112,12 +118,16 @@ namespace FreeMote.PsBuild.Textures
 
         public Image ToImage(bool debugMode = false)
         {
-            Image img = new Bitmap(Width, Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            Bitmap img = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
+
             Graphics g = Graphics.FromImage(img);
             g.Clear(Color.FromArgb(0, Color.Black));
-            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.SmoothingMode = SmoothingMode.Default;
+            g.PixelOffsetMode = PixelOffsetMode.Half;
+            g.InterpolationMode = InterpolationMode.Default;
+            g.SmoothingMode = SmoothingMode.None;
+            //ImageAttributes attributes = new ImageAttributes();
+            //attributes.SetWrapMode(WrapMode.TileFlipXY);
+
             if (debugMode)
             {
                 g.FillRectangle(Brushes.Green, new Rectangle(0, 0, Width, Height));
@@ -128,7 +138,19 @@ namespace FreeMote.PsBuild.Textures
                 if (n.Texture != null)
                 {
                     Image sourceImg = n.Texture.SourceImage ?? Image.FromFile(n.Texture.Source);
+#if USE_FASTBITMAP
+                    using (var f = img.FastLock())
+                    {
+                        if (!(sourceImg is Bitmap s))
+                        {
+                            s = new Bitmap(sourceImg);
+                        }
+                        f.CopyRegion(s, new Rectangle(0, 0, s.Width, s.Height), n.Bounds);
+                    }
+#else
                     g.DrawImage(sourceImg, n.Bounds);
+                    //g.DrawImage(sourceImg, n.Bounds, 0,0, sourceImg.Width, sourceImg.Height, GraphicsUnit.Pixel, attributes);
+#endif
 
                     if (debugMode)
                     {
@@ -236,7 +258,7 @@ namespace FreeMote.PsBuild.Textures
 
             Process();
         }
-        
+
         private void Process()
         {
             List<TextureInfo> textures = new List<TextureInfo>();

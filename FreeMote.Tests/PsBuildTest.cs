@@ -206,8 +206,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
             //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
-            var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json");
-            //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            //var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
             //var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
@@ -258,8 +258,8 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
-            //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
-            var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
             psb.SwitchSpec(PsbSpec.krkr);
             //Common2KrkrConverter converter = new Common2KrkrConverter();
@@ -289,9 +289,11 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
+            //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb");
             //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
             var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            //PSB psb = new PSB(path);
             psb.SwitchSpec(PsbSpec.win);
             //Common2KrkrConverter converter = new Common2KrkrConverter();
             //converter.Convert(psb);

@@ -1,8 +1,15 @@
-﻿using System.Collections.Generic;
+﻿#define USE_FASTBITMAP
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using FreeMote.Psb;
+
+#if USE_FASTBITMAP
+using FastBitmapLib;
+#else
+using System.Drawing.Drawing2D;
+#endif
 
 namespace FreeMote.PsBuild.Textures
 {
@@ -22,11 +29,11 @@ namespace FreeMote.PsBuild.Textures
             //bmp.Save("tex.png", ImageFormat.Png);
             foreach (var iconPair in icon)
             {
-                var info = (PsbDictionary) iconPair.Value;
-                var width = (int) (PsbNumber) info["width"];
-                var height = (int) (PsbNumber) info["height"];
-                var top = (int) (PsbNumber) info["top"];
-                var left = (int) (PsbNumber) info["left"];
+                var info = (PsbDictionary)iconPair.Value;
+                var width = (int)(PsbNumber)info["width"];
+                var height = (int)(PsbNumber)info["height"];
+                var top = (int)(PsbNumber)info["top"];
+                var left = (int)(PsbNumber)info["left"];
                 Bitmap b = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                 Graphics g = Graphics.FromImage(b);
                 g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
@@ -68,10 +75,11 @@ namespace FreeMote.PsBuild.Textures
                 var texture = (PsbDictionary)tex["texture"];
 
                 //var mipmap = (PsbDictionary)texture["mipMap"]; //TODO: Mipmap?
-            
+
                 var md = PsbResCollector.GenerateResourceMetadata(texture, (PsbResource)texture["pixel"]);
                 md.Spec = psb.Platform; //Important
                 Bitmap bmp = md.ToImage();
+
                 foreach (var iconPair in icon)
                 {
                     var savePath = Path.Combine(path, name, iconPair.Key);
@@ -82,10 +90,19 @@ namespace FreeMote.PsBuild.Textures
                     var left = (int)(PsbNumber)info["left"];
                     var attr = (int)(PsbNumber)info["attr"];
                     Bitmap b = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+#if USE_FASTBITMAP
+                    using (FastBitmap f = b.FastLock())
+                    {
+                        f.CopyRegion(bmp, new Rectangle(left, top, width, height), new Rectangle(0, 0, b.Width, b.Height));
+                    }
+#else
                     Graphics g = Graphics.FromImage(b);
+                    g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
                     g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
                         GraphicsUnit.Pixel);
                     g.Dispose();
+#endif
 
                     switch (option)
                     {

@@ -29,7 +29,7 @@ namespace FreeMote.PsBuild.Converters
         public bool ToWin { get; set; }
 
         public int? TextureSideLength { get; set; } = null;
-        public int TexturePadding { get; set; } = 10;
+        public int TexturePadding { get; set; } = 5;
         public BestFitHeuristic FitHeuristic { get; set; } = BestFitHeuristic.MaxOneAxis;
 
         public bool UseMeaningfulName { get; set; } = true;
@@ -88,13 +88,15 @@ namespace FreeMote.PsBuild.Converters
                         var layerIndexList = new List<string>();
                         LayerTravel(col, layerIndexList);
                         var layerIndexMap = new PsbDictionary(layerIndexList.Count);
-                        for (int i = 0; i < layerIndexList.Count; i++)
+                        int index = 0;
+                        foreach (var layerName in layerIndexList)
                         {
-                            if (layerIndexMap.ContainsKey(layerIndexList[i]))
+                            if (layerIndexMap.ContainsKey(layerName))
                             {
                                 continue;
                             }
-                            layerIndexMap.Add(layerIndexList[i], new PsbNumber(i));
+                            layerIndexMap.Add(layerName, new PsbNumber(index));
+                            index++;
                         }
                         mDic.Add("layerIndexMap", layerIndexMap);
                     }
@@ -145,6 +147,7 @@ namespace FreeMote.PsBuild.Converters
                         : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
                     bmp.Tag = iconName;
                     textures.Add($"{texName}{Delimiter}{icon.Key}", bmp);
+                    //estimate area and side length
                     area += width * height;
                     if (width >= maxSideLength || height >= maxSideLength)
                     {
@@ -173,7 +176,7 @@ namespace FreeMote.PsBuild.Converters
             {
                 var atlas = packer.Atlasses[i];
                 var data = UseRL
-                    ? RL.CompressImage((Bitmap) atlas.ToImage(), TargetPixelFormat)
+                    ? RL.CompressImage((Bitmap)atlas.ToImage(), TargetPixelFormat)
                     : RL.GetPixelBytesFromImage(atlas.ToImage(), TargetPixelFormat);
 
                 var texDic = new PsbDictionary(4);
@@ -190,8 +193,8 @@ namespace FreeMote.PsBuild.Converters
                     {
                         continue;
                     }
-                    var paths = node.Texture.Source.Split(new[] {Delimiter}, StringSplitOptions.RemoveEmptyEntries);
-                    var icon = (PsbDictionary) source[paths[0]].Children("icon").Children(paths[1]);
+                    var paths = node.Texture.Source.Split(new[] { Delimiter }, StringSplitOptions.RemoveEmptyEntries);
+                    var icon = (PsbDictionary)source[paths[0]].Children("icon").Children(paths[1]);
                     icon.Remove("compress");
                     icon.Remove("pixel");
                     icon["attr"] = new PsbNumber(0);
@@ -213,7 +216,7 @@ namespace FreeMote.PsBuild.Converters
                     {"truncated_width", new PsbNumber(atlas.Width)},
                     {"type", new PsbString(TargetPixelFormat.ToStringForPsb())}
                 };
-                texture.Add("pixel", new PsbResource {Data = data, Parents = new List<IPsbCollection> {texture}});
+                texture.Add("pixel", new PsbResource { Data = data, Parents = new List<IPsbCollection> { texture } });
                 texDic.Add("texture", texture);
                 //type
                 texDic.Add("type", new PsbNumber(0));
