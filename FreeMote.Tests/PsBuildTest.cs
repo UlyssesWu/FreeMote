@@ -143,33 +143,34 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
             var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
             var path2 = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
-            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
-            PSB psb2 = PsbCompiler.LoadPsbFromJsonFile(path2);
-            psb.SwitchSpec(PsbSpec.win);
-            //Graft
-            var obj = (PsbDictionary)psb.Objects["object"];
-            foreach (var o in obj)
-            {
-                //var partName = o.Key;
-                foreach (var m in (PsbDictionary)((PsbDictionary)o.Value)["motion"])
-                {
-                    if (m.Value is PsbDictionary mDic)
-                    {
-                        if (psb2.Objects.FindByPath(mDic.Path) is PsbDictionary m2)
-                        {
-                            mDic["layerIndexMap"] = m2["layerIndexMap"];
-                        }
-                        else
-                        {
-                            Console.WriteLine($"can not find path: {mDic.Path}");
-                        }
-                    }
-                }
-            }
+            PSB psbKrkr = PsbCompiler.LoadPsbFromJsonFile(path);
+            PSB psbWin = PsbCompiler.LoadPsbFromJsonFile(path2);
+            psbWin.SwitchSpec(PsbSpec.krkr);
+            //var metadata = (PsbDictionary)psbWin.Objects["metadata"];
+            //metadata["attrcomp"] = psbKrkr.Objects["metadata"].Children("attrcomp");
+            psbWin.Merge();
 
-            psb.Merge();
-            File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
-            File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
+            ////Graft
+            var resKrkr = psbKrkr.CollectResources(false);
+            var resWin = psbWin.CollectResources(false);
+            var headWin = resWin.FirstOrDefault(r => r.Height == 186 && r.Width == 122);
+            var headKrkr = resKrkr.FirstOrDefault(r => r.Height == 186 && r.Width == 122);
+            if (headWin != null && headKrkr != null)
+            {
+                headWin.Resource.Data = headKrkr.Resource.Data;
+            }
+            //foreach (var resourceMetadata in resWin)
+            //{
+            //    var sameRes = resKrkr.FirstOrDefault(r => r.Height == resourceMetadata.Height && r.Width == resourceMetadata.Width);
+            //    if (sameRes != null)
+            //    {
+            //        Console.WriteLine($"{sameRes} {sameRes.Width}x{sameRes.Height} found.");
+            //        resourceMetadata.Resource.Data = sameRes.Resource.Data;
+            //    }
+            //}
+            psbWin.Merge();
+            File.WriteAllBytes("emote_win2krkr.psb", psbWin.Build());
+            //File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb2));
 
         }
 
@@ -209,8 +210,8 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json");
             var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
             //var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
-            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
-
+            //PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            PSB psb = new PSB("emote_krkr2win.psb");
             psb.SplitTextureToFiles("texs");
         }
 
@@ -258,15 +259,20 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
-            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            //var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(resPath, "e-mote38_win-pure.psb");
             //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
-            PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            //PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            PSB psb = new PSB(path);
             psb.SwitchSpec(PsbSpec.krkr);
             //Common2KrkrConverter converter = new Common2KrkrConverter();
             //converter.Convert(psb);
             psb.Merge();
             File.WriteAllBytes("emote_test_front.psb", psb.Build());
-            File.WriteAllText("emote_test_front.json", PsbDecompiler.Decompile(psb));            
+            File.WriteAllText("emote_test_front.json", PsbDecompiler.Decompile(psb));
+            psb.SwitchSpec(PsbSpec.win);
+            psb.Merge();
+            File.WriteAllBytes("emote_2x.psb", psb.Build());
         }
 
         [TestMethod]
@@ -290,8 +296,9 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
             //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb");
-            //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
-            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
+            //var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
+            //var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
             //PSB psb = new PSB(path);
             psb.SwitchSpec(PsbSpec.win);
@@ -300,6 +307,27 @@ namespace FreeMote.Tests
             psb.Merge();
             File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
             File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
+            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096,4096, PsbImageFormat.Png, PsbPixelFormat.WinRGBA8); 
+        }
+
+        [TestMethod]
+        public void TestCompareResource()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json.psbuild.psb");
+            var path2 = Path.Combine(resPath, "e-mote38_KRKR-pure.psb");
+            //var path2 = Path.Combine(resPath, "emote_test_front.psb");
+            PSB psb = new PSB(path);
+            PSB psb2 = new PSB(path2);
+            foreach (var psbResource in psb.Resources)
+            {
+                var p2 = psb2.Resources.FirstOrDefault(r => r.Data.SequenceEqual(psbResource.Data));
+                if (p2 != null)
+                {
+                    Console.WriteLine($"{psbResource} has a same resource!");
+                }
+            }
+
         }
 
         [TestMethod]

@@ -83,18 +83,21 @@ namespace FreeMote
 
         public static byte[] CompressImageFile(string path, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
-            return CompressImage(new Bitmap(path), pixelFormat);
+            return CompressImage(new Bitmap(path, false), pixelFormat);
         }
 
         public static byte[] GetPixelBytesFromImageFile(string path, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
-            Bitmap bmp = new Bitmap(path);
+            Bitmap bmp = new Bitmap(path, false);
             return PixelBytesFromImage(bmp, pixelFormat);
         }
 
         public static byte[] GetPixelBytesFromImage(Image image, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
-            Bitmap bmp = new Bitmap(image);
+            if (!(image is Bitmap bmp))
+            {
+                bmp = new Bitmap(image);
+            }
             return PixelBytesFromImage(bmp, pixelFormat);
         }
 

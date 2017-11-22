@@ -26,7 +26,6 @@ namespace FreeMote.PsBuild.Textures
             var md = PsbResCollector.GenerateResourceMetadata(texture, (PsbResource)texture["pixel"]);
             md.Spec = spec; //Important
             Bitmap bmp = md.ToImage();
-            //bmp.Save("tex.png", ImageFormat.Png);
             foreach (var iconPair in icon)
             {
                 var info = (PsbDictionary)iconPair.Value;
@@ -35,10 +34,19 @@ namespace FreeMote.PsBuild.Textures
                 var top = (int)(PsbNumber)info["top"];
                 var left = (int)(PsbNumber)info["left"];
                 Bitmap b = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-                Graphics g = Graphics.FromImage(b);
-                g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
-                    GraphicsUnit.Pixel);
-                g.Dispose();
+#if USE_FASTBITMAP
+                using (FastBitmap f = b.FastLock())
+                {
+                    f.CopyRegion(bmp, new Rectangle(left, top, width, height), new Rectangle(0, 0, b.Width, b.Height));
+                }
+#else
+                    Graphics g = Graphics.FromImage(b);
+                    g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
+                        GraphicsUnit.Pixel);
+                    g.Dispose();
+#endif
                 textures.Add(iconPair.Key, b);
             }
             bmp.Dispose();
@@ -107,7 +115,7 @@ namespace FreeMote.PsBuild.Textures
                     switch (option)
                     {
                         case PsbImageOption.Raw:
-                            File.WriteAllBytes(savePath + "raw", RL.GetPixelBytesFromImage(b, pixelFormat));
+                            File.WriteAllBytes(savePath + ".raw", RL.GetPixelBytesFromImage(b, pixelFormat));
                             break;
                         case PsbImageOption.Compress:
                             File.WriteAllBytes(savePath + ".rl", RL.CompressImage(b, pixelFormat));
@@ -122,8 +130,8 @@ namespace FreeMote.PsBuild.Textures
                                     break;
                                 case PsbImageFormat.Png:
                                 default:
-                                    //b.Save(savePath + ".png", ImageFormat.Png);
-                                    b.Save(savePath + $"_{attr}.png", ImageFormat.Png);
+                                    b.Save(savePath + ".png", ImageFormat.Png);
+                                    //b.Save(savePath + $"_{attr}.png", ImageFormat.Png);
                                     break;
                             }
                             break;

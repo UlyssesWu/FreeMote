@@ -60,7 +60,10 @@ namespace FreeMote.PsBuild.Converters
         private void Add(PSB psb)
         {
             //add `easing`
-            psb.Objects.Add("easing", new PsbCollection(0));
+            if (!psb.Objects.ContainsKey("easing"))
+            {
+                psb.Objects.Add("easing", new PsbCollection(0));
+            }
 
             //add `/object/*/motion/*/bounds`
             //add `/object/*/motion/*/layerIndexMap`
@@ -72,33 +75,41 @@ namespace FreeMote.PsBuild.Converters
                 {
                     if (m.Value is PsbDictionary mDic)
                     {
-                        var bounds = new PsbDictionary(4)
+                        if (!mDic.ContainsKey("bounds"))
                         {
+                            var bounds = new PsbDictionary(4)
+                            {
                             {"top", new PsbNumber(0)},
                             {"left", new PsbNumber(0)},
                             {"right", new PsbNumber(0)},
                             {"bottom", new PsbNumber(0)}
-                        };
-                        mDic.Add("bounds", bounds);
+                            };
+                            mDic.Add("bounds", bounds);
+                        }
+
 
                         if (!(mDic["layer"] is PsbCollection col))
                         {
                             continue;
                         }
-                        var layerIndexList = new List<string>();
-                        LayerTravel(col, layerIndexList);
-                        var layerIndexMap = new PsbDictionary(layerIndexList.Count);
-                        int index = 0;
-                        foreach (var layerName in layerIndexList)
+
+                        if (!mDic.ContainsKey("layerIndexMap"))
                         {
-                            if (layerIndexMap.ContainsKey(layerName))
+                            var layerIndexList = new List<string>();
+                            LayerTravel(col, layerIndexList);
+                            var layerIndexMap = new PsbDictionary(layerIndexList.Count);
+                            int index = 0;
+                            foreach (var layerName in layerIndexList)
                             {
-                                continue;
+                                if (layerIndexMap.ContainsKey(layerName))
+                                {
+                                    continue;
+                                }
+                                layerIndexMap.Add(layerName, new PsbNumber(index));
+                                index++;
                             }
-                            layerIndexMap.Add(layerName, new PsbNumber(index));
-                            index++;
+                            mDic.Add("layerIndexMap", layerIndexMap);
                         }
-                        mDic.Add("layerIndexMap", layerIndexMap);
                     }
                 }
             }

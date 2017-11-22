@@ -489,10 +489,11 @@ namespace FreeMote.Psb
                     case PsbString s:
                         if (Strings.Contains(s))
                         {
-                            if (s.Index == null)
-                            {
-                                s.Index = Strings.First(str => str.Value == s.Value).Index;
-                            }
+                            //if (s.Index == null)
+                            //{
+                            //    s.Index = Strings.First(str => str.Value == s.Value).Index;
+                            //}
+                            s.Index = (uint) Strings.IndexOf(s);
                         }
                         else
                         {

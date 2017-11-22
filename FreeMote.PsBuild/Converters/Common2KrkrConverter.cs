@@ -86,6 +86,7 @@ namespace FreeMote.PsBuild.Converters
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
                         icon.Remove("top");
+                        icon.Remove("attr");
                     }
 
                     texDic.Remove("texture");

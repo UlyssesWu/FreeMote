@@ -458,7 +458,7 @@ namespace FreeMote
 
         private static Bitmap GetBitmapFromArray(byte[] array, int width, int height)
         {
-            Bitmap img = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            Bitmap img = new Bitmap(width, height, PixelFormat.Format32bppArgb);
             BitmapData imgData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
             Marshal.Copy(array, 0, imgData.Scan0, array.Length);
             img.UnlockBits(imgData);

@@ -119,6 +119,29 @@ namespace FreeMote.PsBuild.Textures
         public Image ToImage(bool debugMode = false)
         {
             Bitmap img = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
+            //avoid using Graphics
+#if USE_FASTBITMAP
+            if (!debugMode)
+            {
+                using (var f = img.FastLock())
+                {
+                    foreach (Node n in Nodes)
+                    {
+                        if (n.Texture != null)
+                        {
+                            Image sourceImg = n.Texture.SourceImage ?? Image.FromFile(n.Texture.Source);
+                            if (!(sourceImg is Bitmap s))
+                            {
+                                s = new Bitmap(sourceImg);
+                            }
+                            f.CopyRegion(s, new Rectangle(0, 0, s.Width, s.Height), n.Bounds);
+                        }
+                    }
+                }
+                //img.Save("tex.png", ImageFormat.Png);
+                return img;
+            }
+#endif
 
             Graphics g = Graphics.FromImage(img);
             g.Clear(Color.FromArgb(0, Color.Black));
@@ -404,12 +427,13 @@ namespace FreeMote.PsBuild.Textures
                 }
                 if (img.Width <= AtlasSize && img.Height <= AtlasSize)
                 {
-                    TextureInfo ti = new TextureInfo();
-
-                    ti.Source = fi.FullName;
-                    ti.Width = img.Width;
-                    ti.Height = img.Height;
-
+                    TextureInfo ti = new TextureInfo
+                    {
+                        Source = fi.FullName,
+                        Width = img.Width,
+                        Height = img.Height
+                    };
+                    
                     SourceTextures.Add(ti);
 
                     Log.WriteLine("Added " + fi.FullName);
