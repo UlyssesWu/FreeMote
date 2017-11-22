@@ -67,6 +67,7 @@ namespace FreeMote.PsBuild
         public float OriginX { get; set; }
         public float OriginY { get; set; }
         public string Type { get; set; }
+        public PsbString TypeString { get; set; }
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
         public byte[] Data => Resource?.Data;

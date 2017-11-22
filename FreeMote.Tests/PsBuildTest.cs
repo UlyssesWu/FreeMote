@@ -302,8 +302,6 @@ namespace FreeMote.Tests
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
             //PSB psb = new PSB(path);
             psb.SwitchSpec(PsbSpec.win);
-            //Common2KrkrConverter converter = new Common2KrkrConverter();
-            //converter.Convert(psb);
             psb.Merge();
             File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
             File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
@@ -311,24 +309,18 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
-        public void TestCompareResource()
+        public void TestConvertCommon2Win()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json.psbuild.psb");
-            var path2 = Path.Combine(resPath, "e-mote38_KRKR-pure.psb");
-            //var path2 = Path.Combine(resPath, "emote_test_front.psb");
-            PSB psb = new PSB(path);
-            PSB psb2 = new PSB(path2);
-            foreach (var psbResource in psb.Resources)
-            {
-                var p2 = psb2.Resources.FirstOrDefault(r => r.Data.SequenceEqual(psbResource.Data));
-                if (p2 != null)
-                {
-                    Console.WriteLine($"{psbResource} has a same resource!");
-                }
-            }
 
+            var path = Path.Combine(resPath, "akira_guide-pure.psb");
+            //PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            PSB psb = new PSB(path);
+            psb.SwitchSpec(PsbSpec.win);
+            psb.Merge();
+            File.WriteAllBytes("emote_common2win.psb", psb.Build());
         }
+
 
         [TestMethod]
         public void TestCompareDecompile()

@@ -122,9 +122,11 @@ namespace FreeMote.PsBuild
                 originY = (float)ny;
             }
             string type = null;
-            if (d["type"] is PsbString st)
+            PsbString typeString = null;
+            if (d["type"] is PsbString typeStr)
             {
-                type = st.Value;
+                type = typeStr.Value;
+                typeString = typeStr;
             }
             int top = 0, left = 0;
             if (d["top"] is PsbNumber nt)
@@ -152,6 +154,7 @@ namespace FreeMote.PsBuild
                 Width = width,
                 Height = height,
                 Type = type,
+                TypeString = typeString,
                 Resource = r,
             };
             return md;
@@ -363,7 +366,7 @@ namespace FreeMote.PsBuild
                         converter.Convert(psb);
                         break;
                     case PsbSpec.win:
-                        CommonWinConverter commonWin = new CommonWinConverter(false);
+                        CommonWinConverter commonWin = new CommonWinConverter();
                         commonWin.Convert(psb);
                         break;
                     default:
