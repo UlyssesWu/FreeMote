@@ -91,7 +91,15 @@ namespace FreeMote.PsBuild
                 //var relativePath = spec == PsbSpec.krkr
                 //    ? $"{name}/{resource.Part}-{resource.Name}"
                 //    : $"{name}/{resource.Part}";
-                var relativePath = $"{resource.Part}{PsbResCollector.ResourceNameDelimiter}{resource.Name}";
+                string relativePath;
+                if (string.IsNullOrWhiteSpace(resource.Name) || string.IsNullOrWhiteSpace(resource.Part))
+                {
+                    relativePath = resource.Index.ToString();
+                }
+                else
+                {
+                    relativePath = $"{resource.Part}{PsbResCollector.ResourceNameDelimiter}{resource.Name}";
+                }
                 switch (imageOption)
                 {
                     case PsbImageOption.Extract:
