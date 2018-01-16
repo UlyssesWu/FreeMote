@@ -1,4 +1,6 @@
 # FreeMote
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/UlyssesWu/FreeMote?branch=master&svg=true)](https://ci.appveyor.com/project/UlyssesWu/freemote/build/artifacts)
+
 Managed Emote tool libs.
 
 ## Components
