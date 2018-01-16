@@ -15,9 +15,6 @@ namespace FreeMote.Tests
     {
         public FreeMoteTest()
         {
-            //
-            //TODO:  在此处添加构造函数逻辑
-            //
         }
 
         private TestContext testContextInstance;

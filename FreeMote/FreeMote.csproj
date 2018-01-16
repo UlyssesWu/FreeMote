@@ -51,6 +51,7 @@
     <Compile Include="PixelCompress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsbConstants.cs" />
+    <Compile Include="PsbEnums.cs" />
     <Compile Include="PsbFile.cs" />
     <Compile Include="PsbHeader.cs" />
     <Compile Include="PsbStreamContext.cs" />

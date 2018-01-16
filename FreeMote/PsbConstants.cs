@@ -7,17 +7,6 @@ using System.Linq;
 
 namespace FreeMote
 {
-    /// <summary>
-    /// PSB Platform
-    /// </summary>
-    public enum PsbSpec : byte
-    {
-        common,
-        krkr,
-        win,
-        other = Byte.MaxValue,
-    }
-
     public static class PsbConstants
     {
         /// <summary>

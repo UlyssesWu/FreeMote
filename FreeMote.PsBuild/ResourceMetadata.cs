@@ -16,7 +16,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         None,
         /// <summary>
-        /// RL
+        /// RLE
         /// </summary>
         RL,
         /// <summary>

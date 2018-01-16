@@ -23,22 +23,22 @@ namespace FreeMote.Psb
         /// </summary>
         internal PsbHeader Header { get; set; }
 
-        internal PsbArray Charset;
-        internal PsbArray NamesData;
-        internal PsbArray NameIndexes;
+        private PsbArray Charset;
+        private PsbArray NamesData;
+        private PsbArray NameIndexes;
         /// <summary>
         /// Names
         /// </summary>
         public List<string> Names { get; set; }
 
-        internal PsbArray StringOffsets;
+        private PsbArray StringOffsets;
         /// <summary>
         /// Strings
         /// </summary>
         public List<PsbString> Strings { get; set; }
 
-        internal PsbArray ChunkOffsets;
-        internal PsbArray ChunkLengths;
+        private PsbArray ChunkOffsets;
+        private PsbArray ChunkLengths;
         /// <summary>
         /// Resource Chunk
         /// </summary>

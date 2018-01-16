@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace FreeMote
 {
-    [StructLayout(LayoutKind.Explicit)]
+    //[StructLayout(LayoutKind.Explicit)]
     internal class PsbHeader
     {
         /// <summary>
@@ -13,71 +13,86 @@ namespace FreeMote
         /// </summary>
         public const int MAX_HEADER_LENGTH = 56;
 
-        [FieldOffset(0)] public char[] Signature = { 'P', 'S', 'B', (char)0 };
+        //[FieldOffset(0)] //This will cause error on x64 CLR since the next FieldOffset after char[] have to be 8n.
+        public char[] Signature = {'P', 'S', 'B', '\0'};
 
-        [FieldOffset(4)] public ushort Version = 3;
+        //[FieldOffset(4)]
+        public ushort Version = 3;
 
         /// <summary>
         /// If 1, the header seems encrypted, which add more difficulty to us
         /// <para>But doesn't really matters since usually it's always encrypted in v3+</para>
         /// </summary>
-        [FieldOffset(6)] public ushort HeaderEncrypt = 0;
+        //[FieldOffset(6)]
+        public ushort HeaderEncrypt = 0;
 
         /// <summary>
         /// Header Length
         /// <para>Usually same as <see cref="OffsetNames"/></para>
         /// </summary>
-        [FieldOffset(8)] public uint HeaderLength;
+        //[FieldOffset(8)]
+        public uint HeaderLength;
 
         /// <summary>
         /// Offset of Names
         /// <para>Usually the beginning of encryption in v2</para>
         /// </summary>
-        [FieldOffset(12)] public uint OffsetNames;
+        //[FieldOffset(12)]
+        public uint OffsetNames;
 
-        [FieldOffset(16)] public uint OffsetStrings;
+        //[FieldOffset(16)]
+        public uint OffsetStrings;
 
-        [FieldOffset(20)] public uint OffsetStringsData;
+        //[FieldOffset(20)]
+        public uint OffsetStringsData;
 
         /// <summary>
         /// ResOffTable
         /// </summary>
-        [FieldOffset(24)] public uint OffsetChunkOffsets;
+        //[FieldOffset(24)]
+        public uint OffsetChunkOffsets;
 
-        [FieldOffset(28)] public uint OffsetChunkLengths;
+        //[FieldOffset(28)]
+        public uint OffsetChunkLengths;
 
         /// <summary>
         /// Offset of Chunk Data (Image)
         /// </summary>
-        [FieldOffset(32)] public uint OffsetChunkData;
+        //[FieldOffset(32)]
+        public uint OffsetChunkData;
 
         /// <summary>
         /// Entry Offset
         /// </summary>
-        [FieldOffset(36)] public uint OffsetEntries;
+        //[FieldOffset(36)]
+        public uint OffsetEntries;
 
         /// <summary>
         /// [New in v3] Adler32 Checksum for header
         /// <para>Not always checked in v3. Sadly, it's always checked from v4, so we have to handle it.</para>
         /// </summary>
-        [FieldOffset(40)] public uint Checksum;
+        //[FieldOffset(40)]
+        public uint Checksum;
 
         /// <summary>
         /// [New in v4] Usually an empty array (3 bytes)
         /// <para><see cref="OffsetResourceOffsets"/> - 6</para>
         /// </summary>
-        [FieldOffset(44)] public uint OffsetUnknown1;
+        //[FieldOffset(44)]
+        public uint OffsetUnknown1;
 
         /// <summary>
         /// [New in v4] Usually an empty array (3 bytes)
         /// <para><see cref="OffsetResourceOffsets"/> - 3</para>
         /// </summary>
-        [FieldOffset(48)] public uint OffsetUnknown2;
+        //[FieldOffset(48)]
+        public uint OffsetUnknown2;
 
         /// <summary>
         /// [New in v4] Usually same as <see cref="OffsetChunkOffsets"/>
         /// </summary>
-        [FieldOffset(52)] public uint OffsetResourceOffsets;
+        //[FieldOffset(52)]
+        public uint OffsetResourceOffsets;
 
 
         public static PsbHeader Load(BinaryReader br)

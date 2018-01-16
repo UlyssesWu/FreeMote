@@ -179,7 +179,7 @@ namespace FreeMote.PsBuild
                     continue;
                 }
                 var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, psb.Platform.CompressType(), resMd.PixelFormat);
+                byte[] data = LoadImageBytes(fullPath, resMd.Compress/*psb.Platform.CompressType()*/, resMd.PixelFormat);
                 resMd.Resource.Data = data;
             }
         }

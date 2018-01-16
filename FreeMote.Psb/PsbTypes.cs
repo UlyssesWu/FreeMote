@@ -141,7 +141,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Use <see cref="Null"/> to avoid duplicated null
         /// </summary>
-        internal PsbNull() { }
+        private PsbNull() { }
 
         public object Value => null;
 

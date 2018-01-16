@@ -58,9 +58,9 @@ namespace FreeMote.Tests
         public void TestDirectCompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb");
+            var path = Path.Combine(resPath, "emote_test2-pure.psb");
             PSB psb = new PSB(path);
-            psb.Header.Version = 2;
+            psb.Header.Version = 3;
             psb.UpdateIndexes();
             File.WriteAllBytes(path + ".build.psb", psb.Build());
         }
@@ -81,6 +81,19 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "D愛子a_春服-pure.psb.json");
             var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
+        }
+
+        [TestMethod]
+        public void TestCompileEms()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
+            var path = Path.Combine(resPath, "emote_test2-pure.psb.json");
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            psb.Platform = PsbSpec.ems;
+            psb.Merge();
+            File.WriteAllBytes(path + ".build.psb", psb.Build()); 
+            //PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 3, null, PsbSpec.ems);
         }
 
         [TestMethod]
@@ -321,6 +334,31 @@ namespace FreeMote.Tests
             File.WriteAllBytes("emote_common2win.psb", psb.Build());
         }
 
+        [TestMethod]
+        public void TestConvertWin2Common()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb");
+            //PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            PSB psb = new PSB(path);
+            psb.SwitchSpec(PsbSpec.common);
+            psb.Merge();
+            File.WriteAllBytes("emote_win2common.psb", psb.Build());
+        }
+
+        [TestMethod]
+        public void TestConvertWin2Ems()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "ca01_s_body_2.psz.psb-pure.psb");
+            //PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            PSB psb = new PSB(path);
+            psb.SwitchSpec(PsbSpec.ems);
+            psb.Merge();
+            File.WriteAllBytes("emote_win2ems.psb", psb.Build());
+        }
 
         [TestMethod]
         public void TestCompareDecompile()

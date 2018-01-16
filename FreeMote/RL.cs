@@ -5,33 +5,6 @@ using System.IO;
 
 namespace FreeMote
 {
-    public enum PsbImageFormat
-    {
-        Bmp,
-        Png,
-    }
-
-    public enum PsbPixelFormat
-    {
-        None,
-        /// <summary>
-        /// Little Endian RGBA8
-        /// </summary>
-        WinRGBA8,
-        /// <summary>
-        /// Big Endian RGBA8
-        /// </summary>
-        CommonRGBA8,
-        /// <summary>
-        /// RGBA4444
-        /// </summary>
-        RGBA4444,
-        /// <summary>
-        /// Big Endian DXT5
-        /// </summary>
-        DXT5,
-    }
-
     /// <summary>
     /// RL Compress for Image
     /// </summary>

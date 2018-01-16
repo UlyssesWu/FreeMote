@@ -147,7 +147,7 @@ namespace FreeMote
             {
                 return BitConverter.ToUInt32(b1, 0) == BitConverter.ToUInt32(b2, 0);
             }
-            return !b1.Where((t, i) => t != b2[i]).Any();
+            return b1.SequenceEqual(b2);
         }
 
 

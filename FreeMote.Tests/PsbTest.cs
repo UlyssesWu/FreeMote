@@ -17,9 +17,6 @@ namespace FreeMote.Tests
     {
         public PsbTest()
         {
-            //
-            //TODO:  在此处添加构造函数逻辑
-            //
         }
 
         private TestContext testContextInstance;
@@ -119,6 +116,15 @@ namespace FreeMote.Tests
             File.WriteAllBytes(path + ".rl", bytes);
             RL.UncompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 395, 411);
             Assert.IsTrue(bytes.SequenceEqual(File.ReadAllBytes(path)));
+        }
+
+        [TestMethod]
+        public void TestRlDirectCompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "emote_test2-pure", "tex-texture.png");
+            var bytes = RL.CompressImageFile(path, PsbPixelFormat.CommonRGBA8);
+            File.WriteAllBytes(path + ".rl", bytes);
         }
 
         [TestMethod]

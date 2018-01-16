@@ -167,6 +167,7 @@ namespace FreeMote.Psb
             switch (spec)
             {
                 case PsbSpec.common:
+                case PsbSpec.ems:
                     return PsbPixelFormat.CommonRGBA8;
                 case PsbSpec.krkr:
                 case PsbSpec.win:
