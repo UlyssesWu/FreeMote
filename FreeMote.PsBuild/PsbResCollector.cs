@@ -389,14 +389,14 @@ namespace FreeMote.PsBuild
                 {
                     case PsbSpec.win:
                         {
-                            Common2KrkrConverter converter = new Common2KrkrConverter();
-                            converter.Convert(psb);
+                            Common2KrkrConverter winKrkr = new Common2KrkrConverter();
+                            winKrkr.Convert(psb);
                             break;
                         }
                     case PsbSpec.common:
                         {
-                            Common2KrkrConverter converter = new Common2KrkrConverter();
-                            converter.Convert(psb);
+                            Common2KrkrConverter commonKrkr = new Common2KrkrConverter();
+                            commonKrkr.Convert(psb);
                             break;
                         }
                     default:
@@ -410,12 +410,12 @@ namespace FreeMote.PsBuild
                 switch (original)
                 {
                     case PsbSpec.krkr:
-                        Krkr2CommonConverter krkr2Common = new Krkr2CommonConverter(true);
-                        krkr2Common.Convert(psb);
+                        Krkr2CommonConverter krkr2Win = new Krkr2CommonConverter(true);
+                        krkr2Win.Convert(psb);
                         break;
                     case PsbSpec.common:
-                        CommonWinConverter commonWin = new CommonWinConverter();
-                        commonWin.Convert(psb);
+                        CommonWinConverter winCommon = new CommonWinConverter();
+                        winCommon.Convert(psb);
                         break;
                     default:
                         psb.Platform = targetSpec;
@@ -428,8 +428,8 @@ namespace FreeMote.PsBuild
                 switch (original)
                 {
                     case PsbSpec.krkr:
-                        Krkr2CommonConverter converter = new Krkr2CommonConverter();
-                        converter.Convert(psb);
+                        Krkr2CommonConverter krkr2Common = new Krkr2CommonConverter();
+                        krkr2Common.Convert(psb);
                         break;
                     case PsbSpec.win:
                         CommonWinConverter commonWin = new CommonWinConverter();

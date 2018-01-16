@@ -24,8 +24,8 @@ namespace FreeMote.PsBuild.Converters
 
         public PsbPixelFormat TargetPixelFormat { get; set; }
         public bool UseRL { get; set; } = false;
-        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> { PsbSpec.win, PsbSpec.krkr };
-        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> { PsbSpec.krkr };
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> { PsbSpec.krkr };
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> { PsbSpec.win, PsbSpec.common };
         public bool ToWin { get; set; }
 
         public int? TextureSideLength { get; set; } = null;

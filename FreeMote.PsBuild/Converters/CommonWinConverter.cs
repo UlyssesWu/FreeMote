@@ -22,8 +22,8 @@ namespace FreeMote.PsBuild.Converters
         /// If true, it is an EmsWinConverter
         /// </summary>
         public bool EmsAsCommon { get; set; } = false;
-        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> {PsbSpec.win, PsbSpec.common};
-        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.krkr, PsbSpec.win};
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> {PsbSpec.win, PsbSpec.common, PsbSpec.ems};
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.common, PsbSpec.win, PsbSpec.ems};
         public void Convert(PSB psb)
         {
             if (!FromSpec.Contains(psb.Platform))
