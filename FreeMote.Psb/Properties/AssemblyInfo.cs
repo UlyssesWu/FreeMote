@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("FreeMote.Psb")]
-[assembly: AssemblyDescription("Emote PSB Parser")]
+[assembly: AssemblyDescription("PSB Parser")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("FreeMote")]
-[assembly: AssemblyCopyright("Copyright © number201724 & Ulysses  2017")]
+[assembly: AssemblyCopyright("Copyright © number201724 & Ulysses 2017-2018")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]
 [assembly: AssemblyCulture("")]
 

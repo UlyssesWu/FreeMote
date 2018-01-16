@@ -29,7 +29,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Names
         /// </summary>
-        public List<string> Names { get; set; }
+        public List<string> Names { get; internal set; }
 
         private PsbArray StringOffsets;
         /// <summary>
@@ -42,7 +42,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Resource Chunk
         /// </summary>
-        public List<PsbResource> Resources { get; set; }
+        public List<PsbResource> Resources { get; internal set; }
 
         /// <summary>
         /// Objects (Entries)
@@ -107,6 +107,11 @@ namespace FreeMote.Psb
         public PsbType InferType()
         {
             if (Objects.Any(k=> k.Key.Contains(".tlg")))
+            {
+                return PsbType.Pimg;
+            }
+
+            if (Objects.ContainsKey("layers") && Objects.ContainsKey("height") && Objects.ContainsKey("width"))
             {
                 return PsbType.Pimg;
             }
