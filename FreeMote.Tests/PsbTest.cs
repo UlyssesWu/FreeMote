@@ -137,7 +137,7 @@ namespace FreeMote.Tests
                 BinaryReader br = new BinaryReader(ms);
                 p1.WriteTo(bw);
                 ms.Seek(0, SeekOrigin.Begin);
-                var p2 = new PsbNumber((PsbType)br.ReadByte(), br);
+                var p2 = new PsbNumber((PsbObjType)br.ReadByte(), br);
                 Assert.AreEqual(p1.IntValue, p2.IntValue);
             }
         }

@@ -179,6 +179,25 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
+        /// Get <see cref="PsbType"/>'s default extension
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static string DefaultExtension(this PsbType type)
+        {
+            switch (type)
+            {
+                case PsbType.Pimg:
+                    return "pimg";
+                case PsbType.Scn:
+                    return "scn";
+                case PsbType.Motion:
+                default:
+                    return "psb";
+            }
+        }
+
+        /// <summary>
         /// Get it's Name in <see cref="PsbDictionary"/>
         /// </summary>
         /// <param name="c"></param>

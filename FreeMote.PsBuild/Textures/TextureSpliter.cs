@@ -23,7 +23,7 @@ namespace FreeMote.PsBuild.Textures
             //var mipmap = (PsbDictionary)texture["mipMap"]; //TODO: Mipmap?
             Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>(icon.Count);
 
-            var md = PsbResCollector.GenerateResourceMetadata(texture, (PsbResource)texture["pixel"]);
+            var md = PsbResCollector.GenerateMotionResMetadata(texture, (PsbResource)texture["pixel"]);
             md.Spec = spec; //Important
             Bitmap bmp = md.ToImage();
             foreach (var iconPair in icon)
@@ -84,7 +84,7 @@ namespace FreeMote.PsBuild.Textures
 
                 //var mipmap = (PsbDictionary)texture["mipMap"]; //TODO: Mipmap?
 
-                var md = PsbResCollector.GenerateResourceMetadata(texture, (PsbResource)texture["pixel"]);
+                var md = PsbResCollector.GenerateMotionResMetadata(texture, (PsbResource)texture["pixel"]);
                 md.Spec = psb.Platform; //Important
                 Bitmap bmp = md.ToImage();
 

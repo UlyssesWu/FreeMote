@@ -22,7 +22,7 @@ namespace FreeMote.PsBuild
         /// <param name="version">PSB version</param>
         /// <param name="cryptKey">CryptKey, if you need to use it outside FreeMote</param>
         /// <param name="platform">PSB Platform</param>
-        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort version = 3, uint? cryptKey = null, PsbSpec platform = PsbSpec.common)
+        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort version = 3, uint? cryptKey = null, PsbSpec? platform = null)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -62,7 +62,7 @@ namespace FreeMote.PsBuild
         /// <param name="spec">PSB Platform</param>
         /// <returns></returns>
         public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null, ushort version = 3, uint? cryptKey = null,
-            PsbSpec spec = PsbSpec.common)
+            PsbSpec? spec = null)
         {
             //Parse
             PSB psb = Parse(inputJson, version);
@@ -73,9 +73,9 @@ namespace FreeMote.PsBuild
             }
             //Build
             psb.Merge();
-            if (spec != psb.Platform)
+            if (spec != null && spec != psb.Platform)
             {
-                psb.SwitchSpec(spec, spec.DefaultPixelFormat());
+                psb.SwitchSpec(spec.Value, spec.Value.DefaultPixelFormat());
                 psb.Merge();
             }
             var bytes = psb.Build();
@@ -131,6 +131,7 @@ namespace FreeMote.PsBuild
             {
                 Objects = JsonConvert.DeserializeObject<PsbDictionary>(json, new PsbTypeConverter())
             };
+            psb.Type = psb.InferType();
             return psb;
         }
 
@@ -141,7 +142,17 @@ namespace FreeMote.PsBuild
             {
                 case ".png":
                 case ".bmp":
-                    data = compressType == PsbCompressType.RL ? RL.CompressImageFile(path, pixelFormat) : RL.GetPixelBytesFromImageFile(path, pixelFormat);
+                    switch (compressType)
+                    {
+                        case PsbCompressType.RL:
+                            data = RL.CompressImageFile(path, pixelFormat);
+                            break;
+                        case PsbCompressType.Tlg:
+                            //TODO: TLG encode
+                        default:
+                            data = RL.GetPixelBytesFromImageFile(path, pixelFormat);
+                            break;
+                    }
                     break;
                 case ".rl":
                     data = compressType == PsbCompressType.RL ? File.ReadAllBytes(path) : RL.Uncompress(File.ReadAllBytes(path));
@@ -149,6 +160,7 @@ namespace FreeMote.PsBuild
                 case ".raw":
                     data = compressType == PsbCompressType.RL ? RL.Compress(File.ReadAllBytes(path)) : File.ReadAllBytes(path);
                     break;
+                case ".tlg": //TODO: tlg encode
                 default: //For `.bin`, you have to handle by yourself
                     data = File.ReadAllBytes(path);
                     break;

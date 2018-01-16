@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace FreeMote.Psb
 {
-    public enum PsbType : byte
+    public enum PsbObjType : byte
     {
 
         None = 0x0,
@@ -123,7 +123,7 @@ namespace FreeMote.Psb
     public interface IPsbIndexed
     {
         uint? Index { get; set; }
-        PsbType Type { get; }
+        PsbObjType Type { get; }
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ namespace FreeMote.Psb
     /// </summary>
     public interface IPsbValue
     {
-        PsbType Type { get; }
+        PsbObjType Type { get; }
         string ToString();
     }
 
@@ -145,7 +145,7 @@ namespace FreeMote.Psb
 
         public object Value => null;
 
-        public PsbType Type { get; } = PsbType.Null;
+        public PsbObjType Type { get; } = PsbObjType.Null;
 
         public override string ToString()
         {
@@ -173,7 +173,7 @@ namespace FreeMote.Psb
 
         public bool Value { get; set; } = false;
 
-        public PsbType Type => Value ? PsbType.True : PsbType.False;
+        public PsbObjType Type => Value ? PsbObjType.True : PsbObjType.False;
 
         public override string ToString()
         {
@@ -196,50 +196,50 @@ namespace FreeMote.Psb
     [Serializable]
     public class PsbNumber : IPsbValue, IPsbWrite
     {
-        internal PsbNumber(PsbType type, BinaryReader br)
+        internal PsbNumber(PsbObjType objType, BinaryReader br)
         {
             Data = new byte[8];
             NumberType = PsbNumberType.Int;
 
-            switch (type)
+            switch (objType)
             {
-                case PsbType.NumberN0:
+                case PsbObjType.NumberN0:
                     IntValue = 0;
                     return;
-                case PsbType.NumberN1:
+                case PsbObjType.NumberN1:
                     Data = br.ReadBytes(1).UnzipNumberBytes();
                     return;
-                case PsbType.NumberN2:
+                case PsbObjType.NumberN2:
                     Data = br.ReadBytes(2).UnzipNumberBytes();
                     return;
-                case PsbType.NumberN3:
+                case PsbObjType.NumberN3:
                     Data = br.ReadBytes(3).UnzipNumberBytes();
                     return;
-                case PsbType.NumberN4:
+                case PsbObjType.NumberN4:
                     Data = br.ReadBytes(4).UnzipNumberBytes();
                     return;
-                case PsbType.NumberN5:
+                case PsbObjType.NumberN5:
                     Data = br.ReadBytes(5).UnzipNumberBytes();
                     return;
-                case PsbType.NumberN6:
+                case PsbObjType.NumberN6:
                     Data = br.ReadBytes(6).UnzipNumberBytes();
                     return;
-                case PsbType.NumberN7:
+                case PsbObjType.NumberN7:
                     Data = br.ReadBytes(7).UnzipNumberBytes();
                     return;
-                case PsbType.NumberN8:
+                case PsbObjType.NumberN8:
                     Data = br.ReadBytes(8).UnzipNumberBytes();
                     return;
-                case PsbType.Float0:
+                case PsbObjType.Float0:
                     NumberType = PsbNumberType.Float;
                     //Data = br.ReadBytes(1);
                     Data = BitConverter.GetBytes(0.0f);
                     return;
-                case PsbType.Float:
+                case PsbObjType.Float:
                     NumberType = PsbNumberType.Float;
                     Data = br.ReadBytes(4);
                     return;
-                case PsbType.Double:
+                case PsbObjType.Double:
                     NumberType = PsbNumberType.Double;
                     Data = br.ReadBytes(8);
                     return;
@@ -344,9 +344,9 @@ namespace FreeMote.Psb
 
         public bool IsNumber32()
         {
-            return Type == PsbType.NumberN0 || Type == PsbType.NumberN1 ||
-                   Type == PsbType.NumberN2 || Type == PsbType.NumberN3 ||
-                   Type == PsbType.NumberN4;
+            return Type == PsbObjType.NumberN0 || Type == PsbObjType.NumberN1 ||
+                   Type == PsbObjType.NumberN2 || Type == PsbObjType.NumberN3 ||
+                   Type == PsbObjType.NumberN4;
         }
 
         public static explicit operator int(PsbNumber p)
@@ -406,7 +406,7 @@ namespace FreeMote.Psb
             return new PsbNumber(n);
         }
 
-        public PsbType Type
+        public PsbObjType Type
         {
             get
             {
@@ -418,23 +418,23 @@ namespace FreeMote.Psb
                             case 1:
                                 if (IntValue == 0)
                                 {
-                                    return PsbType.NumberN0;
+                                    return PsbObjType.NumberN0;
                                 }
-                                return PsbType.NumberN1;
+                                return PsbObjType.NumberN1;
                             case 2:
-                                return PsbType.NumberN2;
+                                return PsbObjType.NumberN2;
                             case 3:
-                                return PsbType.NumberN3;
+                                return PsbObjType.NumberN3;
                             case 4:
-                                return PsbType.NumberN4;
+                                return PsbObjType.NumberN4;
                             case 5:
-                                return PsbType.NumberN5;
+                                return PsbObjType.NumberN5;
                             case 6:
-                                return PsbType.NumberN6;
+                                return PsbObjType.NumberN6;
                             case 7:
-                                return PsbType.NumberN7;
+                                return PsbObjType.NumberN7;
                             case 8:
-                                return PsbType.NumberN8;
+                                return PsbObjType.NumberN8;
                             default:
                                 throw new ArgumentOutOfRangeException("Not a valid Integer");
                         }
@@ -442,11 +442,11 @@ namespace FreeMote.Psb
                         //TODO: Float0 or not
                         if (Math.Abs(FloatValue) < float.Epsilon) //should we just use 0?
                         {
-                            return PsbType.Float0;
+                            return PsbObjType.Float0;
                         }
-                        return PsbType.Float;
+                        return PsbObjType.Float;
                     case PsbNumberType.Double:
-                        return PsbType.Double;
+                        return PsbObjType.Double;
                     default:
                         throw new ArgumentOutOfRangeException("Unknown number type");
                 }
@@ -464,13 +464,13 @@ namespace FreeMote.Psb
             switch (NumberType)
             {
                 case PsbNumberType.Int:
-                    if (Type != PsbType.NumberN0)
+                    if (Type != PsbObjType.NumberN0)
                     {
                         bw.Write(IntValue.ZipNumberBytes());
                     }
                     break;
                 case PsbNumberType.Float:
-                    if (Type != PsbType.Float0)
+                    if (Type != PsbObjType.Float0)
                     {
                         bw.Write(FloatValue);
                     }
@@ -489,13 +489,13 @@ namespace FreeMote.Psb
             switch (NumberType)
             {
                 case PsbNumberType.Int:
-                    if (Type != PsbType.NumberN0)
+                    if (Type != PsbObjType.NumberN0)
                     {
                         return IntValue.ZipNumberBytes();
                     }
                     return new byte[0];
                 case PsbNumberType.Float:
-                    if (Type != PsbType.Float0)
+                    if (Type != PsbObjType.Float0)
                     {
                         return BitConverter.GetBytes(FloatValue);
                     }
@@ -521,7 +521,7 @@ namespace FreeMote.Psb
             {
                 throw new ArgumentOutOfRangeException("Long array is not supported yet");
             }
-            EntryLength = (byte)(br.ReadByte() - PsbType.NumberN8);
+            EntryLength = (byte)(br.ReadByte() - PsbObjType.NumberN8);
             Value = new List<uint>((int)count);
             for (int i = 0; i < count; i++)
             {
@@ -548,28 +548,28 @@ namespace FreeMote.Psb
         public byte EntryLength { get; private set; } = 4;
         public List<uint> Value { get; }
 
-        public PsbType Type
+        public PsbObjType Type
         {
             get
             {
                 switch (Value.Count.GetSize())
                 {
                     case 1:
-                        return PsbType.ArrayN1;
+                        return PsbObjType.ArrayN1;
                     case 2:
-                        return PsbType.ArrayN2;
+                        return PsbObjType.ArrayN2;
                     case 3:
-                        return PsbType.ArrayN3;
+                        return PsbObjType.ArrayN3;
                     case 4:
-                        return PsbType.ArrayN4;
+                        return PsbObjType.ArrayN4;
                     case 5:
-                        return PsbType.ArrayN5;
+                        return PsbObjType.ArrayN5;
                     case 6:
-                        return PsbType.ArrayN6;
+                        return PsbObjType.ArrayN6;
                     case 7:
-                        return PsbType.ArrayN7;
+                        return PsbObjType.ArrayN7;
                     case 8:
-                        return PsbType.ArrayN8;
+                        return PsbObjType.ArrayN8;
                     default:
                         throw new ArgumentOutOfRangeException("Not a valid array");
                 }
@@ -600,7 +600,7 @@ namespace FreeMote.Psb
         {
             bw.Write((byte)Type); //Type
             bw.Write(Value.Count.ZipNumberBytes(Value.Count.GetSize())); //Count
-            bw.Write((byte)(GetEntryLength() + (byte)PsbType.NumberN8)); //FIXED: EntryLength is added by 0xC
+            bw.Write((byte)(GetEntryLength() + (byte)PsbObjType.NumberN8)); //FIXED: EntryLength is added by 0xC
             foreach (var u in Value)
             {
                 bw.Write(u.ZipNumberBytes(EntryLength));
@@ -633,7 +633,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// It's based on index...
         /// </summary>
-        public PsbType Type
+        public PsbObjType Type
         {
             get
             {
@@ -641,13 +641,13 @@ namespace FreeMote.Psb
                 switch (size)
                 {
                     case 1:
-                        return PsbType.StringN1;
+                        return PsbObjType.StringN1;
                     case 2:
-                        return PsbType.StringN2;
+                        return PsbObjType.StringN2;
                     case 3:
-                        return PsbType.StringN3;
+                        return PsbObjType.StringN3;
                     case 4:
-                        return PsbType.StringN4;
+                        return PsbObjType.StringN4;
                     default:
                         throw new ArgumentOutOfRangeException("size", "Not a valid string");
                 }
@@ -739,7 +739,7 @@ namespace FreeMote.Psb
             set => base[index] = value;
         }
 
-        public PsbType Type { get; } = PsbType.Objects;
+        public PsbObjType Type { get; } = PsbObjType.Objects;
 
         public override string ToString()
         {
@@ -768,7 +768,7 @@ namespace FreeMote.Psb
 
         IPsbValue IPsbCollection.this[string s] => int.TryParse(s, out int i) ? base[i] : null;
 
-        public PsbType Type { get; } = PsbType.Collection;
+        public PsbObjType Type { get; } = PsbObjType.Collection;
 
         public override string ToString()
         {
@@ -796,7 +796,7 @@ namespace FreeMote.Psb
         public uint? Index { get; set; }
         public byte[] Data { get; set; } = new byte[0];
 
-        public PsbType Type
+        public PsbObjType Type
         {
             get
             {
@@ -804,13 +804,13 @@ namespace FreeMote.Psb
                 switch (size)
                 {
                     case 1:
-                        return PsbType.ResourceN1;
+                        return PsbObjType.ResourceN1;
                     case 2:
-                        return PsbType.ResourceN2;
+                        return PsbObjType.ResourceN2;
                     case 3:
-                        return PsbType.ResourceN3;
+                        return PsbObjType.ResourceN3;
                     case 4:
-                        return PsbType.ResourceN4;
+                        return PsbObjType.ResourceN4;
                     default:
                         throw new ArgumentOutOfRangeException("Index", "Not a valid resource");
                 }

@@ -23,6 +23,14 @@ namespace FreeMote.PsBuild
         /// Raw Bitmap
         /// </summary>
         Bmp,
+        /// <summary>
+        /// KRKR TLG
+        /// </summary>
+        Tlg,
+        /// <summary>
+        /// By extension
+        /// </summary>
+        ByName,
     }
 
     /// <summary>
@@ -98,7 +106,8 @@ namespace FreeMote.PsBuild
             }
         }
 
-        private string DebuggerString => $"{Part}/{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}";
+        private string DebuggerString =>
+            $"{(string.IsNullOrWhiteSpace(Part) ? "" : Part + "/")}{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}";
 
         /// <summary>
         /// Convert Resource to Image

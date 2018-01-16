@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 
@@ -113,6 +112,12 @@ namespace FreeMote.PsBuild
                                     RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
                                         resource.Height, resource.Width, PsbImageFormat.Png, resource.PixelFormat);
                                 }
+                                else if (resource.Compress == PsbCompressType.Tlg)
+                                {
+                                    //TODO: TLG decode
+                                    relativePath = Path.ChangeExtension(relativePath, ".tlg");
+                                    File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
+                                }
                                 else
                                 {
                                     RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
@@ -126,6 +131,12 @@ namespace FreeMote.PsBuild
                                     RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
                                         resource.Height, resource.Width, PsbImageFormat.Bmp, resource.PixelFormat);
                                 }
+                                else if (resource.Compress == PsbCompressType.Tlg)
+                                {
+                                    //TODO: TLG decode
+                                    relativePath = Path.ChangeExtension(relativePath, ".tlg");
+                                    File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
+                                }
                                 else
                                 {
                                     RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
@@ -138,6 +149,11 @@ namespace FreeMote.PsBuild
                         if (resources[i].Compress == PsbCompressType.RL)
                         {
                             relativePath += ".rl";
+                            File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
+                        }
+                        else if (resource.Compress == PsbCompressType.Tlg)
+                        {
+                            relativePath += ".tlg";
                             File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
                         }
                         else

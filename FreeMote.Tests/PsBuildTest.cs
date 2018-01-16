@@ -361,6 +361,27 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestDecompileMenuPsb()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "title.pimg");
+            var json = PsbDecompiler.Decompile(path, out var resources);
+            foreach (var resourceMetadata in resources)
+            {
+                var res = resourceMetadata;
+            }
+        }
+
+        [TestMethod]
+        public void TestCompileMenuPsb()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "title.psb.json");
+            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 2);
+        }
+
+        [TestMethod]
         public void TestCompareDecompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

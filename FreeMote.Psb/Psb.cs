@@ -49,21 +49,10 @@ namespace FreeMote.Psb
         /// </summary>
         public PsbDictionary Objects { get; set; }
 
-        [Obsolete]
-        public string Extension
-        {
-            get
-            {
-                if (Objects?["expire_suffix_list"] is PsbCollection c)
-                {
-                    if (c[0] is PsbString ps)
-                    {
-                        return ps.Value;
-                    }
-                }
-                return "psb";
-            }
-        }
+        /// <summary>
+        /// Type
+        /// </summary>
+        public PsbType Type { get; set; } = PsbType.Motion;
 
         /// <summary>
         /// PSB Target Platform (Spec)
@@ -111,6 +100,25 @@ namespace FreeMote.Psb
             LoadFromStream(stream);
         }
 
+        /// <summary>
+        /// Infer PSB Type
+        /// </summary>
+        /// <returns></returns>
+        public PsbType InferType()
+        {
+            if (Objects.Any(k=> k.Key.Contains(".tlg")))
+            {
+                return PsbType.Pimg;
+            }
+
+            if (Objects.ContainsKey("scenes") && Objects.ContainsKey("name"))
+            {
+                return PsbType.Scn;
+            }
+
+            return PsbType.Motion;
+        }
+
 #if DEBUG_OBJECT_WRITE
         TextWriter _tw;
         private long _last = 0;
@@ -125,21 +133,21 @@ namespace FreeMote.Psb
 
             //Pre Load Strings
             br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
-            StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             Strings = new List<PsbString>();
 
             //Load Names
             br.BaseStream.Seek(Header.OffsetNames, SeekOrigin.Begin);
-            Charset = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
-            NamesData = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
-            NameIndexes = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            Charset = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
+            NamesData = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
+            NameIndexes = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             LoadNames();
 
             //Pre Load Resources (Chunks)
             br.BaseStream.Seek(Header.OffsetChunkOffsets, SeekOrigin.Begin);
-            ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             br.BaseStream.Seek(Header.OffsetChunkLengths, SeekOrigin.Begin);
-            ChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            ChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             Resources = new List<PsbResource>(ChunkLengths.Value.Count);
 
             //Load Entries
@@ -182,6 +190,7 @@ namespace FreeMote.Psb
             //}
 
             Resources.Sort((r1, r2) => (int)((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
+            Type = InferType();
         }
 
         /// <summary>
@@ -226,12 +235,12 @@ namespace FreeMote.Psb
 #endif
 
             var typeByte = br.ReadByte();
-            if (!Enum.IsDefined(typeof(PsbType), typeByte))
+            if (!Enum.IsDefined(typeof(PsbObjType), typeByte))
             {
                 return null;
                 //throw new ArgumentOutOfRangeException($"0x{type:X2} is not a known type.");
             }
-            var type = (PsbType)typeByte;
+            var type = (PsbObjType)typeByte;
 
 #if DEBUG_OBJECT_WRITE
             _tw.Write($"{type}\t{pos}\t");
@@ -241,61 +250,61 @@ namespace FreeMote.Psb
 
             switch (type)
             {
-                case PsbType.None:
+                case PsbObjType.None:
                     return null;
-                case PsbType.Null:
+                case PsbObjType.Null:
                     return PsbNull.Null;
-                case PsbType.False:
-                case PsbType.True:
-                    return new PsbBool(type == PsbType.True);
-                case PsbType.NumberN0:
-                case PsbType.NumberN1:
-                case PsbType.NumberN2:
-                case PsbType.NumberN3:
-                case PsbType.NumberN4:
-                case PsbType.NumberN5:
-                case PsbType.NumberN6:
-                case PsbType.NumberN7:
-                case PsbType.NumberN8:
-                case PsbType.Float0:
-                case PsbType.Float:
-                case PsbType.Double:
+                case PsbObjType.False:
+                case PsbObjType.True:
+                    return new PsbBool(type == PsbObjType.True);
+                case PsbObjType.NumberN0:
+                case PsbObjType.NumberN1:
+                case PsbObjType.NumberN2:
+                case PsbObjType.NumberN3:
+                case PsbObjType.NumberN4:
+                case PsbObjType.NumberN5:
+                case PsbObjType.NumberN6:
+                case PsbObjType.NumberN7:
+                case PsbObjType.NumberN8:
+                case PsbObjType.Float0:
+                case PsbObjType.Float:
+                case PsbObjType.Double:
                     return new PsbNumber(type, br);
-                case PsbType.ArrayN1:
-                case PsbType.ArrayN2:
-                case PsbType.ArrayN3:
-                case PsbType.ArrayN4:
-                case PsbType.ArrayN5:
-                case PsbType.ArrayN6:
-                case PsbType.ArrayN7:
-                case PsbType.ArrayN8:
-                    return new PsbArray(typeByte - (byte)PsbType.ArrayN1 + 1, br);
-                case PsbType.StringN1:
-                case PsbType.StringN2:
-                case PsbType.StringN3:
-                case PsbType.StringN4:
-                    var str = new PsbString(typeByte - (byte)PsbType.StringN1 + 1, br);
+                case PsbObjType.ArrayN1:
+                case PsbObjType.ArrayN2:
+                case PsbObjType.ArrayN3:
+                case PsbObjType.ArrayN4:
+                case PsbObjType.ArrayN5:
+                case PsbObjType.ArrayN6:
+                case PsbObjType.ArrayN7:
+                case PsbObjType.ArrayN8:
+                    return new PsbArray(typeByte - (byte)PsbObjType.ArrayN1 + 1, br);
+                case PsbObjType.StringN1:
+                case PsbObjType.StringN2:
+                case PsbObjType.StringN3:
+                case PsbObjType.StringN4:
+                    var str = new PsbString(typeByte - (byte)PsbObjType.StringN1 + 1, br);
                     LoadString(ref str, br);
                     return str;
-                case PsbType.ResourceN1:
-                case PsbType.ResourceN2:
-                case PsbType.ResourceN3:
-                case PsbType.ResourceN4:
-                    var res = new PsbResource(typeByte - (byte)PsbType.ResourceN1 + 1, br);
+                case PsbObjType.ResourceN1:
+                case PsbObjType.ResourceN2:
+                case PsbObjType.ResourceN3:
+                case PsbObjType.ResourceN4:
+                    var res = new PsbResource(typeByte - (byte)PsbObjType.ResourceN1 + 1, br);
                     LoadResource(ref res, br);
                     return res;
-                case PsbType.Collection:
+                case PsbObjType.Collection:
                     return LoadCollection(br);
-                case PsbType.Objects:
+                case PsbObjType.Objects:
                     return LoadObjects(br);
                 //Compiler used
-                case PsbType.Integer:
-                case PsbType.String:
-                case PsbType.Resource:
-                case PsbType.Decimal:
-                case PsbType.Array:
-                case PsbType.Boolean:
-                case PsbType.BTree:
+                case PsbObjType.Integer:
+                case PsbObjType.String:
+                case PsbObjType.Resource:
+                case PsbObjType.Decimal:
+                case PsbObjType.Array:
+                case PsbObjType.Boolean:
+                case PsbObjType.BTree:
                     Debug.WriteLine("FreeMote won't need these for compile.");
                     break;
                 default:
@@ -306,8 +315,8 @@ namespace FreeMote.Psb
 
         private PsbDictionary LoadObjects(BinaryReader br)
         {
-            var names = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
-            var offsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            var names = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
+            var offsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             var pos = br.BaseStream.Position;
             PsbDictionary dictionary = new PsbDictionary(names.Value.Count);
             for (int i = 0; i < names.Value.Count; i++)
@@ -341,7 +350,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         private PsbCollection LoadCollection(BinaryReader br)
         {
-            var offsets = new PsbArray(br.ReadByte() - (byte)PsbType.ArrayN1 + 1, br);
+            var offsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             var pos = br.BaseStream.Position;
             PsbCollection collection = new PsbCollection(offsets.Value.Count);
             for (int i = 0; i < offsets.Value.Count; i++)
@@ -735,6 +744,20 @@ namespace FreeMote.Psb
                 mbw.Flush();
                 new PsbArray(indexList).WriteTo(bw);
                 bw.Write(ms.ToArray());
+            }
+        }
+
+        /// <summary>
+        /// Export all resources
+        /// </summary>
+        /// <param name="path"></param>
+        public void SaveRawResources(string path)
+        {
+            for (int i = 0; i < Resources.Count; i++)
+            {
+                File.WriteAllBytes(
+                    Path.Combine(path, Resources[i].Index == null ? $"{i}.bin" : $"{Resources[i].Index}.bin"),
+                    Resources[i].Data);
             }
         }
     }

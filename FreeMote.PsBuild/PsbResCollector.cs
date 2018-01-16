@@ -12,7 +12,8 @@ namespace FreeMote.PsBuild
     {
         public const string ResourceIdentifier = "#resource#";
         public const string ResourceKey = "pixel";
-        public const string SourceKey = "source";
+        public const string MotionSourceKey = "source";
+        public const string PimgSourceKey = "layers";
         /// <summary>
         /// delimiter for output texture filename
         /// </summary>
@@ -28,36 +29,84 @@ namespace FreeMote.PsBuild
         {
             List<ResourceMetadata> resourceList = psb.Resources == null ? new List<ResourceMetadata>() : new List<ResourceMetadata>(psb.Resources.Count);
 
-            FindResources(resourceList, psb.Objects[SourceKey], deDuplication);
-            //Set Spec
-            resourceList.ForEach(r => r.Spec = psb.Platform);
+            switch (psb.Type)
+            {
+                case PsbType.Pimg:
+                case PsbType.Scn:
+                    resourceList.AddRange(psb.Objects.Where(k => k.Value is PsbResource).Select(k =>
+                        new ResourceMetadata()
+                        {
+                            Name = k.Key,
+                            Resource = k.Value as PsbResource,
+                            Compress = k.Key.EndsWith(".tlg", true, null) ? PsbCompressType.Tlg : PsbCompressType.ByName
+                        }));
+                    FindPimgResources(resourceList, psb.Objects[PimgSourceKey], deDuplication);
+                    break;
+                case PsbType.Motion:
+                default:
+                    FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
+                    //Set Spec
+                    resourceList.ForEach(r => r.Spec = psb.Platform);
+                    break;
+            }
             resourceList.Sort((md1, md2) => (int)(md1.Index - md2.Index));
 
             return resourceList;
         }
 
-        private static void FindResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
+        private static void FindPimgResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
+        {
+            if (obj is PsbCollection c)
+            {
+                foreach (var o in c)
+                {
+                    if (!(o is PsbDictionary dic)) continue;
+                    if (dic["layer_id"] is PsbString layerId)
+                    {
+                        var res = list.FirstOrDefault(k => k.Name.StartsWith(layerId.Value, true, null));
+                        if (res == null)
+                        {
+                            continue;
+                        }
+                        if (uint.TryParse(layerId.Value, out var id))
+                        {
+                            res.Index = id;
+                        }
+                        if (dic["width"] is PsbNumber nw)
+                        {
+                            res.Width = deDuplication ? Math.Max((int)nw, res.Width) : (int)nw;
+                        }
+                        if (dic["height"] is PsbNumber nh)
+                        {
+                            res.Height = deDuplication ? Math.Max((int)nh, res.Height) : (int)nh;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
         {
             switch (obj)
             {
                 case PsbCollection c:
-                    c.ForEach(o => FindResources(list, o, deDuplication));
+                    c.ForEach(o => FindMotionResources(list, o, deDuplication));
                     break;
                 case PsbDictionary d:
                     if (d[ResourceKey] is PsbResource r)
                     {
                         if (!deDuplication)
                         {
-                            list.Add(GenerateResourceMetadata(d, r));
+                            list.Add(GenerateMotionResMetadata(d, r));
                         }
                         else if (r.Index == null || list.FirstOrDefault(md => md.Index == r.Index.Value) == null)
                         {
-                            list.Add(GenerateResourceMetadata(d, r));
+                            list.Add(GenerateMotionResMetadata(d, r));
                         }
                     }
                     foreach (var o in d.Values)
                     {
-                        FindResources(list, o, deDuplication);
+                        FindMotionResources(list, o, deDuplication);
                     }
                     break;
             }
@@ -69,7 +118,7 @@ namespace FreeMote.PsBuild
         /// <param name="d">PsbObject which contains "pixel"</param>
         /// <param name="r">Resource</param>
         /// <returns></returns>
-        internal static ResourceMetadata GenerateResourceMetadata(PsbDictionary d, PsbResource r = null)
+        internal static ResourceMetadata GenerateMotionResMetadata(PsbDictionary d, PsbResource r = null)
         {
             if (r == null)
             {
@@ -339,17 +388,17 @@ namespace FreeMote.PsBuild
                 switch (original)
                 {
                     case PsbSpec.win:
-                    {
-                        Common2KrkrConverter converter = new Common2KrkrConverter();
-                        converter.Convert(psb);
-                        break;
-                    }
+                        {
+                            Common2KrkrConverter converter = new Common2KrkrConverter();
+                            converter.Convert(psb);
+                            break;
+                        }
                     case PsbSpec.common:
-                    {
-                        Common2KrkrConverter converter = new Common2KrkrConverter();
-                        converter.Convert(psb);
-                        break;
-                    }
+                        {
+                            Common2KrkrConverter converter = new Common2KrkrConverter();
+                            converter.Convert(psb);
+                            break;
+                        }
                     default:
                         psb.Platform = targetSpec;
                         break;

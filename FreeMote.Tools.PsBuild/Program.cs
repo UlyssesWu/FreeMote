@@ -7,7 +7,7 @@ namespace FreeMote.Tools.PsBuild
     class Program
     {
         //Not thread safe
-        private static PsbSpec _platform = PsbSpec.win;
+        private static PsbSpec? _platform = null;
         //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
         private static uint? _key = null;
         private static ushort _version = 3;
@@ -32,7 +32,7 @@ namespace FreeMote.Tools.PsBuild
                 }
                 else if (s.StartsWith("/v"))
                 {
-                    if (ushort.TryParse(s.Replace("/v",""), out var ver))
+                    if (ushort.TryParse(s.Replace("/v", ""), out var ver))
                     {
                         _version = ver;
                     }
@@ -70,14 +70,15 @@ namespace FreeMote.Tools.PsBuild
         private static void Compile(string s)
         {
             var name = Path.GetFileNameWithoutExtension(s);
+            var ext = Path.GetExtension(s);
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                PsbCompiler.CompileToFile(s, s + (_key == null? "-pure.psb" : ".psb"), null, _version, _key, _platform);
+                PsbCompiler.CompileToFile(s, s + (_key == null ? "-pure.psb" : ".psb"), null, _version, _key, _platform);
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Compile {name} failed.");
+                Console.WriteLine($"Compile {name} failed.\r\n{e}");
             }
             Console.WriteLine($"Compile {name} succeed.");
         }
@@ -88,7 +89,7 @@ namespace FreeMote.Tools.PsBuild
             Console.WriteLine(@"Param:
 /v<VerNumber> : Set compile version from [2,4] . Default: 3.
 /k<CryptKey> : Set CryptKey. Default: none(Pure PSB). Requirement: uint, dec.
-/p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common.
+/p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common/ems.
 Warning: Platform ONLY works with .bmp/.png format textures.
 ");
             Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
