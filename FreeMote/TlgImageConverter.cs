@@ -207,9 +207,9 @@ namespace FreeMote
             if (string.IsNullOrEmpty (baseName))
                 return null;
 
-            throw new NotImplementedException("Blend Images are not supported yet.");
             Console.WriteLine($"[Missing] {meta.FileName}/{baseName}");
-            return null;
+            throw new NotImplementedException("Blend Images are not supported yet.");
+            //return null;
 
             /*
             baseName = VFS.CombinePath (VFS.GetDirectoryName (meta.FileName), baseName);
@@ -697,10 +697,10 @@ namespace FreeMote
                 switch (filtertypes[filtertypesIndex+i])
                 {
                 case 0:
-                    decoder = (a, b, c, v) => tvp_med (a, b, c, v);
+                    decoder = tvp_med;
                     break;
                 case 1:
-                    decoder = (a, b, c, v) => tvp_avg (a, b, c, v);
+                    decoder = tvp_avg;
                     break;
                 case 2:
                     decoder = (a, b, c, v) => tvp_med (a, b, c, (uint)

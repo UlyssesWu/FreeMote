@@ -100,6 +100,8 @@ namespace FreeMote.PsBuild
                         return PsbPixelFormat.DXT5;
                     case "RGBA8":
                         return Spec == PsbSpec.common ? PsbPixelFormat.CommonRGBA8 : PsbPixelFormat.WinRGBA8;
+                    case "RGBA4444":
+                        return PsbPixelFormat.RGBA4444;
                         default:
                         return PsbPixelFormat.None;
                 }

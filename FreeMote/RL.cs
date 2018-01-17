@@ -11,7 +11,7 @@ namespace FreeMote
     public static class RL
     {
         /// <summary>
-        /// Pixel Color Convert
+        /// RGBA & ARGB conversion
         /// </summary>
         /// <param name="bytes"></param>
         public static unsafe void Rgba2Argb(ref byte[] bytes)
@@ -36,9 +36,46 @@ namespace FreeMote
             }
         }
 
+        /// <summary>
+        /// RGBA4444 & RGBA8 conversion
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="extend">true: 4 to 8; false: 8 to 4</param>
+        /// Shibuya Scramble!
+        public static byte[] Rgba428(byte[] bytes, bool extend = true)
+        {
+            if (extend)
+            {
+                var result = new byte[bytes.Length * 2];
+                var dst = 0;
+                for (int i = 0; i < bytes.Length; i += 2)
+                {
+                    var p = BitConverter.ToUInt16(bytes, i);
+                    result[dst++] = (byte)((p & 0x000Fu) * 0xFFu / 0x000Fu);
+                    result[dst++] = (byte)((p & 0x00F0u) * 0xFFu / 0x00F0u);
+                    result[dst++] = (byte)((p & 0x0F00u) * 0xFFu / 0x0F00u);
+                    result[dst++] = (byte)((p & 0xF000u) * 0xFFu / 0xF000u);
+                }
+                return result;
+            }
+            else
+            {
+                var result = new byte[bytes.Length / 2];
+                for (int i = 0; i < result.Length; i += 2)
+                {
+                    ushort p = (ushort) ((bytes[i * 2] / 16) | 
+                                         (bytes[i * 2 + 1] / 16) << 4 |
+                                         (bytes[i * 2 + 2] / 16) << 8 |
+                                         (bytes[i * 2 + 3] / 16) << 12);
+                    BitConverter.GetBytes(p).CopyTo(result, i);
+                }
+                return result;
+            }
+        }
+
         public static byte[] Compress(Stream stream, int align = 4)
         {
-            return PixelCompress.Compress(stream, align);
+            return RleCompress.Compress(stream, align);
         }
 
         public static byte[] Compress(byte[] data, int align = 4)
@@ -90,6 +127,9 @@ namespace FreeMote
 
             switch (pixelFormat)
             {
+                case PsbPixelFormat.RGBA4444:
+                    result = Rgba428(result, false);
+                    break;
                 case PsbPixelFormat.CommonRGBA8:
                     Rgba2Argb(ref result);
                     break;
@@ -131,12 +171,18 @@ namespace FreeMote
 
         public static Bitmap ConvertToImage(byte[] data, int height, int width, PsbPixelFormat colorFormat = PsbPixelFormat.None)
         {
-            Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
-                ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
+            Bitmap bmp;
+            BitmapData bmpData;
+            {
+                bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
+                ImageLockMode.WriteOnly, bmp.PixelFormat);
+            }
             switch (colorFormat)
             {
+                case PsbPixelFormat.RGBA4444:
+                    data = Rgba428(data);
+                    break;
                 case PsbPixelFormat.CommonRGBA8:
                     Rgba2Argb(ref data);
                     break;
@@ -177,7 +223,7 @@ namespace FreeMote
         private static byte[] Uncompress(Stream stream, int height, int width, int align = 4)
         {
             var realLength = height * width * align;
-            return PixelCompress.Uncompress(stream, align, realLength);
+            return RleCompress.Uncompress(stream, align, realLength);
         }
 
         public static byte[] Uncompress(byte[] data, int height, int width, int align = 4)
@@ -192,7 +238,7 @@ namespace FreeMote
         {
             using (var stream = new MemoryStream(data))
             {
-                return PixelCompress.Uncompress(stream, align);
+                return RleCompress.Uncompress(stream, align);
             }
         }
     }

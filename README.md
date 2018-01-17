@@ -32,7 +32,7 @@ Open and render Emote _pure_ PSB.
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
-FreeMote is temporarily licensed under **LGPL**. Members from Project AZUSA can use it freely.
+FreeMote is licensed under **LGPL**.
 
 [Issue Report](https://github.com/UlyssesWu/FreeMote/issues) · [Pull Request](https://github.com/UlyssesWu/FreeMote/pulls) · [Wiki](https://github.com/Project-AZUSA/FreeMote/wiki)
 
@@ -48,5 +48,5 @@ FreeMote is temporarily licensed under **LGPL**. Members from Project AZUSA can 
 * Singyuen Yip for `Adler32` code.
 * @gdkchan for [DxtCodec](https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs) code.
 * @mfascia for [TexturePacker](https://github.com/mfascia/TexturePacker) code.
-* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs) code.
+* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs) code. LICENSE: MIT
 * All nuget references used in this project.

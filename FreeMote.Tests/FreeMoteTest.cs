@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -182,6 +180,21 @@ namespace FreeMote.Tests
                     img.Save($"{tlg}.png", ImageFormat.Png);
                 }
             }
+        }
+
+        [TestMethod]
+        public void TestRGBA4444()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw");
+            var path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.png");
+            var bts = RL.GetPixelBytesFromImageFile(path, PsbPixelFormat.RGBA4444);
+            Assert.IsTrue(
+                bts.SequenceEqual(
+                    File.ReadAllBytes(
+                        Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw"))));
+                
+            RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.RGBA4444);
         }
     }
 }

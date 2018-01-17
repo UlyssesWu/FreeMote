@@ -70,5 +70,13 @@ namespace FreeMote
         /// Big Endian DXT5
         /// </summary>
         DXT5,
+        /// <summary>
+        /// Unsupport
+        /// </summary>
+        A8L8,
+        /// <summary>
+        /// Unsupport
+        /// </summary>
+        L8,
     }
 }

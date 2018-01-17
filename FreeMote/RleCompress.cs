@@ -5,16 +5,16 @@ using System.Linq;
 namespace FreeMote
 {
     /// <summary>
-    /// PSB Pixel Compress (for images)
+    /// RLE Compress
     /// <para>originally by number201724</para>
     /// </summary>
-    internal static class PixelCompress
+    internal static class RleCompress
     {
         public const int LzssLookShift = 7;
         public const int LzssLookAhead = 1 << LzssLookShift;
 
         /// <summary>
-        /// Pixel Uncompress
+        /// RLE Uncompress
         /// </summary>
         /// <param name="input"></param>
         /// <param name="actualSize"></param>
@@ -152,7 +152,7 @@ namespace FreeMote
 
 
         /// <summary>
-        /// Pixel Compress
+        /// RLE Compress
         /// </summary>
         /// <param name="input"></param>
         /// <param name="align"></param>
