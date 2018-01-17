@@ -130,25 +130,6 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
-        public void TestDxt5Uncompress()
-        {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var rawDxt = Path.Combine(resPath, "D愛子a_春服-pure", "0.raw");
-            var rawBytes = File.ReadAllBytes(rawDxt);
-            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
-        }
-
-        [TestMethod]
-        public void TestDxt5Compress()
-        {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var rawPng = Path.Combine(resPath, "D愛子a_春服-pure", "0.png");
-            Bitmap bitmap = new Bitmap(rawPng);
-            var bc3Bytes = DxtUtil.Dxt5Encode(bitmap);
-            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
-        }
-
-        [TestMethod]
         public void TestGraft()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

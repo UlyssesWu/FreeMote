@@ -512,6 +512,8 @@ namespace FreeMote.Psb
                         else
                         {
                             //Something is wrong
+                            Strings.Add(s);
+                            s.Index = (uint) Strings.IndexOf(s);
                         }
                         break;
                     case PsbCollection c:

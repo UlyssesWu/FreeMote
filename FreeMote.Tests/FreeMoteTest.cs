@@ -2,14 +2,14 @@
 using System.Text;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FreeMote.Tests
 {
-    /// <summary>
-    /// FreeMoteTest 的摘要说明
-    /// </summary>
     [TestClass]
     public class FreeMoteTest
     {
@@ -19,10 +19,6 @@ namespace FreeMote.Tests
 
         private TestContext testContextInstance;
 
-        /// <summary>
-        ///获取或设置测试上下文，该上下文提供
-        ///有关当前测试运行及其功能的信息。
-        ///</summary>
         public TestContext TestContext
         {
             get
@@ -110,5 +106,82 @@ namespace FreeMote.Tests
             Debug.WriteLine(adler32.Checksum.ToString("X8"));
         }
 
+        [TestMethod]
+        public void TestDxt5Uncompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var rawDxt = Path.Combine(resPath, "D愛子a_春服-pure", "0.raw");
+            var rawBytes = File.ReadAllBytes(rawDxt);
+            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
+        }
+
+        [TestMethod]
+        public void TestDxt5Compress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var rawPng = Path.Combine(resPath, "D愛子a_春服-pure", "0.png");
+            Bitmap bitmap = new Bitmap(rawPng);
+            var bc3Bytes = DxtUtil.Dxt5Encode(bitmap);
+            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
+        }
+
+        [TestMethod]
+        public void TestRlUncompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+
+            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "84.bin"); //輪郭00
+            RL.UncompressToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
+            path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
+            RL.UncompressToImageFile(File.ReadAllBytes(path), path + ".png", 395, 411);
+        }
+
+        [TestMethod]
+        public void TestRlCompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            string path;
+            byte[] bytes;
+            path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "84.bin"); //輪郭00
+            RL.UncompressToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
+            bytes = RL.CompressImageFile(path + ".png");
+            File.WriteAllBytes(path + ".rl", bytes);
+            RL.UncompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 570, 426);
+            Assert.IsTrue(bytes.SequenceEqual(File.ReadAllBytes(path)));
+
+            path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
+            RL.UncompressToImageFile(File.ReadAllBytes(path), path + ".png", 395, 411);
+            bytes = RL.CompressImageFile(path + ".png");
+            File.WriteAllBytes(path + ".rl", bytes);
+            RL.UncompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 395, 411);
+            Assert.IsTrue(bytes.SequenceEqual(File.ReadAllBytes(path)));
+        }
+
+        [TestMethod]
+        public void TestRlDirectCompress()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "emote_test2-pure", "tex-texture.png");
+            var bytes = RL.CompressImageFile(path, PsbPixelFormat.CommonRGBA8);
+            File.WriteAllBytes(path + ".rl", bytes);
+        }
+
+        [TestMethod]
+        public void TestTlgDecode()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var path = Path.Combine(resPath, "title-pimg");
+            var path = Path.Combine(resPath, "conf");
+            TlgImageConverter image = new TlgImageConverter();
+            foreach (var tlg in Directory.EnumerateFiles(path, "*.tlg"))
+            {
+                using (var stream = File.OpenRead(tlg))
+                {
+                    var br = new BinaryReader(stream);
+                    var img = image.Read(br);
+                    img.Save($"{tlg}.png", ImageFormat.Png);
+                }
+            }
+        }
     }
 }

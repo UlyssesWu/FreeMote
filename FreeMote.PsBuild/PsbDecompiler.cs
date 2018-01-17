@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using FreeMote.Psb;
 using Newtonsoft.Json;
@@ -114,7 +115,13 @@ namespace FreeMote.PsBuild
                                 }
                                 else if (resource.Compress == PsbCompressType.Tlg)
                                 {
-                                    //TODO: TLG decode
+                                    TlgImageConverter converter = new TlgImageConverter();
+                                    using (var ms = new MemoryStream(resource.Data))
+                                    {
+                                        BinaryReader br = new BinaryReader(ms);
+                                        converter.Read(br).Save(Path.Combine(dirPath, relativePath), ImageFormat.Png);
+                                    }
+                                    //WARN: tlg is kept and recorded in resource json for compile 
                                     relativePath = Path.ChangeExtension(relativePath, ".tlg");
                                     File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
                                 }
@@ -133,7 +140,13 @@ namespace FreeMote.PsBuild
                                 }
                                 else if (resource.Compress == PsbCompressType.Tlg)
                                 {
-                                    //TODO: TLG decode
+                                    TlgImageConverter converter = new TlgImageConverter();
+                                    using (var ms = new MemoryStream(resource.Data))
+                                    {
+                                        BinaryReader br = new BinaryReader(ms);
+                                        converter.Read(br).Save(Path.Combine(dirPath, relativePath), ImageFormat.Bmp);
+                                    }
+                                    //WARN: tlg is kept and recorded in resource json for compile 
                                     relativePath = Path.ChangeExtension(relativePath, ".tlg");
                                     File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
                                 }
