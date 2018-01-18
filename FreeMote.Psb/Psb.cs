@@ -763,7 +763,7 @@ namespace FreeMote.Psb
             for (int i = 0; i < Resources.Count; i++)
             {
                 File.WriteAllBytes(
-                    Path.Combine(path, Resources[i].Index == null ? $"{i}.bin" : $"{Resources[i].Index}.bin"),
+                    Path.Combine(path, Resources[i].Index == null ? $"#{i}.bin" : $"{Resources[i].Index}.bin"),
                     Resources[i].Data);
             }
         }

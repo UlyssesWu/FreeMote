@@ -10,7 +10,7 @@ namespace FreeMote.Tools.PsBuild
         private static PsbSpec? _platform = null;
         //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
         private static uint? _key = null;
-        private static ushort _version = 3;
+        private static ushort? _version = null;
 
         static void Main(string[] args)
         {

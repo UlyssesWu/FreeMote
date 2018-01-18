@@ -57,6 +57,7 @@
     <Compile Include="PsbCompiler.cs" />
     <Compile Include="PsbDecompiler.cs" />
     <Compile Include="PsbResCollector.cs" />
+    <Compile Include="PsbResourceJson.cs" />
     <Compile Include="PsbTypeConverter.cs" />
     <Compile Include="ResourceMetadata.cs" />
     <Compile Include="Converters\CommonWinConverter.cs" />

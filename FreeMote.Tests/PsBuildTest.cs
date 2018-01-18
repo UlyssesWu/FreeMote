@@ -346,11 +346,7 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "title.pimg");
-            var json = PsbDecompiler.Decompile(path, out var resources);
-            foreach (var resourceMetadata in resources)
-            {
-                var res = resourceMetadata;
-            }
+            var json = PsbDecompiler.Decompile(path, out var psb);
         }
 
         [TestMethod]
