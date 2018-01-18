@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using FreeMote.Psb;
@@ -237,8 +236,8 @@ namespace FreeMote.PsBuild
             switch (spec)
             {
                 case PsbSpec.krkr:
-                case PsbSpec.ems:
                     return PsbCompressType.RL;
+                case PsbSpec.ems:
                 case PsbSpec.common:
                 case PsbSpec.win:
                 case PsbSpec.other:

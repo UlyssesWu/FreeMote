@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using FreeMote.Psb;
 
 
@@ -126,6 +127,11 @@ namespace FreeMote.PsBuild
             {
                 case PsbCompressType.RL:
                     return RL.UncompressToImage(Resource.Data, Height, Width, PixelFormat);
+                case PsbCompressType.Tlg:
+                    using (var ms = new MemoryStream(Resource.Data))
+                    {
+                        return new TlgImageConverter().Read(new BinaryReader(ms));
+                    }
                 default:
                     return RL.ConvertToImage(Resource.Data, Height, Width, PixelFormat);
             }

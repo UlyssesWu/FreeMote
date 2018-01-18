@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using FreeMote.Psb;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace FreeMote.PsBuild
 {

@@ -73,6 +73,7 @@ namespace FreeMote.PsBuild
         /// <param name="inputPath">PSB file path</param>
         /// <param name="imageOption">whether to extract image to common format</param>
         /// <param name="extractFormat">if extract, what format do you want</param>
+        /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original, PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true)
         {
             var name = Path.GetFileNameWithoutExtension(inputPath);
