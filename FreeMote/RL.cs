@@ -6,7 +6,7 @@ using System.IO;
 namespace FreeMote
 {
     /// <summary>
-    /// RL Compress for Image
+    /// Resource Loader
     /// </summary>
     public static class RL
     {

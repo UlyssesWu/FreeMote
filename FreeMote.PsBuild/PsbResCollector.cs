@@ -12,6 +12,7 @@ namespace FreeMote.PsBuild
         public const string ResourceIdentifier = "#resource#";
         public const string ResourceKey = "pixel";
         public const string MotionSourceKey = "source";
+        public const string MmoSourceKey = "sourceChildren";
         public const string PimgSourceKey = "layers";
         /// <summary>
         /// delimiter for output texture filename
@@ -44,6 +45,10 @@ namespace FreeMote.PsBuild
                 case PsbType.Motion:
                 default:
                     FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
+                    if (psb.Objects.ContainsKey(MmoSourceKey))
+                    {
+                        FindMotionResources(resourceList, psb.Objects[MmoSourceKey], deDuplication);
+                    }
                     //Set Spec
                     resourceList.ForEach(r => r.Spec = psb.Platform);
                     break;

@@ -88,7 +88,7 @@ namespace FreeMote.PsBuild
                 ExternalTextures = psb.Type == PsbType.Motion && psb.Resources.Count <= 0
             };
             psb = null;
-            if (!Directory.Exists(dirPath))
+            if (!Directory.Exists(dirPath)) //ensure no file with same name!
             {
                 Directory.CreateDirectory(dirPath);
             }

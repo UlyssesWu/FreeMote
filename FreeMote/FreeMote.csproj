@@ -57,6 +57,7 @@
     <Compile Include="PsbStreamContext.cs" />
     <Compile Include="RL.cs" />
     <Compile Include="TlgImageConverter.cs" />
+    <Compile Include="ZlibCompress.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
