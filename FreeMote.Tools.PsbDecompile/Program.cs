@@ -104,7 +104,7 @@ namespace FreeMote.Tools.PsbDecompile
             }
             else if (uncompress)
             {
-                PsbDecompiler.DecompileToFile(path, PsbImageOption.Raw);
+                PsbDecompiler.DecompileToFile(path, PsbImageOption.Uncompress);
             }
             else
             {
@@ -122,7 +122,7 @@ namespace FreeMote.Tools.PsbDecompile
                 }
                 else if (uncompress)
                 {
-                    PsbDecompiler.DecompileToFile(path, PsbImageOption.Raw);
+                    PsbDecompiler.DecompileToFile(path, PsbImageOption.Uncompress);
                 }
                 else
                 {

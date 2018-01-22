@@ -7,15 +7,15 @@ namespace FreeMote
     public enum PsbType
     {
         /// <summary>
-        /// Motion
+        /// Motion (psb)
         /// </summary>
         Motion = 0,
         /// <summary>
-        /// Images
+        /// Images (pimg, dapk)
         /// </summary>
         Pimg = 1,
         /// <summary>
-        /// Script
+        /// Script (scn)
         /// </summary>
         /// TODO: KS decompiler?
         Scn = 2,

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 // ReSharper disable InconsistentNaming
@@ -107,7 +106,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public PsbType InferType()
         {
-            if (Objects.Any(k=> k.Key.Contains(".tlg")))
+            if (Objects.Any(k=> k.Key.Contains(".") && k.Value is PsbResource))
             {
                 return PsbType.Pimg;
             }
