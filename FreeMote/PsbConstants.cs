@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 // ReSharper disable InconsistentNaming
 
@@ -93,6 +94,51 @@ namespace FreeMote
         public static void Write(this PsbStreamContext context, ushort value, BinaryWriter bw)
         {
             bw.Write(context.Encode(BitConverter.GetBytes(value)));
+        }
+
+        public static string ReadStringZeroTrim(this BinaryReader br)
+        {
+            StringBuilder sb = new StringBuilder();
+            while (br.PeekChar() != 0)
+            {
+                sb.Append(br.ReadChar());
+            }
+            return sb.ToString();
+        }
+
+        public static void WriteStringZeroTrim(this BinaryWriter bw, string str)
+        {
+            bw.Write(str.ToCharArray());
+            bw.Write((byte)0);
+        }
+
+        /// <summary>
+        /// Big-Endian Write
+        /// </summary>
+        /// <param name="bw"></param>
+        /// <param name="num"></param>
+        public static void WriteBE(this BinaryWriter bw, uint num)
+        {
+            bw.Write(BitConverter.GetBytes(num).Reverse().ToArray());
+        }
+
+        public static void Pad(this BinaryWriter bw, int length, byte paddingByte = 0x0)
+        {
+            if (length <= 0)
+            {
+                return;
+            }
+
+            if (paddingByte == 0x0)
+            {
+                bw.Write(new byte[length]);
+                return;
+            }
+
+            for (int i = 0; i < length; i++)
+            {
+                bw.Write(paddingByte);
+            }
         }
     }
 

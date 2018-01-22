@@ -5,8 +5,12 @@ using System.Runtime.InteropServices;
 
 namespace FreeMote
 {
+    /// <summary>
+    /// PSB Header
+    /// <para>Usually you shouldn't use it</para>
+    /// </summary>
     //[StructLayout(LayoutKind.Explicit)]
-    internal class PsbHeader
+    public class PsbHeader
     {
         /// <summary>
         /// Max length of header AFAIK. Need to be fixed if there are longer headers exist.
@@ -296,6 +300,6 @@ namespace FreeMote
         /// <summary>
         /// Similar as <see cref="PsbFile.TestHeaderEncrypted"/> but not based on file.
         /// </summary>
-        public bool IsHeaderEncrypted => HeaderLength >= MAX_HEADER_LENGTH || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
+        public bool IsHeaderEncrypted => HeaderLength > MAX_HEADER_LENGTH || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
     }
 }

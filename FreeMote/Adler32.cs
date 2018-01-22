@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Text;
 
 namespace FreeMote
 {
@@ -7,8 +9,8 @@ namespace FreeMote
     /// stream. An Adler-32 checksum is almost as reliable as a CRC-32 but
     /// can be computed much faster.
     /// <create>1.00 12/25/2009</create>
-    /// <version>1.01 12/31/2009</version>
-    /// <author>Singyuen Yip</author>
+    /// <version>1.02 01/22/2018</version>
+    /// <author>Singyuen Yip / Ulysses</author>
     /// </summary>
     /// http://blog.163.com/light_warm/blog/static/3168104201001195634824/
     public class Adler32
@@ -25,6 +27,20 @@ namespace FreeMote
         public long Checksum
         {
             get { return adler; }
+        }
+
+        /// <summary>
+        /// Update checksum with stream.
+        /// </summary>
+        /// <param name="stream"></param>
+        public void Update(Stream stream)
+        {
+            byte[] bytes;
+            using (BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true))
+            {
+                bytes = br.ReadBytes((int) (stream.Length - stream.Position));
+            }
+            adler = UpdateBytes(adler, bytes, 0, bytes.Length);
         }
 
         /// <summary>

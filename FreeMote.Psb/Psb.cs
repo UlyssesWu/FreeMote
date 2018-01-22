@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 // ReSharper disable InconsistentNaming
@@ -131,6 +132,17 @@ namespace FreeMote.Psb
 
         private void LoadFromStream(Stream stream)
         {
+            var sig = new byte[4];
+            stream.Read(sig, 0, 4);
+            if (Encoding.ASCII.GetString(sig).ToUpperInvariant().StartsWith("MDF"))
+            {
+                stream.Seek(6, SeekOrigin.Current); //Original Length (4 bytes) | Compression Header (78 9C||DA)
+                stream = ZlibCompress.UncompressToStream(stream);
+            }
+            else
+            {
+                stream.Seek(-4, SeekOrigin.Current);
+            }
             BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
 
             //Load Header
@@ -498,7 +510,7 @@ namespace FreeMote.Psb
             {
                 switch (obj)
                 {
-                    case PsbResource r:
+                    case PsbResource _:
                         break;
                     case PsbString s:
                         if (Strings.Contains(s))

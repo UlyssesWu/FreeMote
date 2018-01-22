@@ -79,4 +79,24 @@ namespace FreeMote
         /// </summary>
         L8,
     }
+
+    public enum EncodeMode
+    {
+        Encrypt,
+        Decrypt,
+    }
+
+    public enum EncodePosition
+    {
+        Body,
+        Header,
+        Full,
+        /// <summary>
+        /// Automata
+        /// <para>if encrypt v3-V4, will only encrypt header.</para>
+        /// <para>if encrypt v2, will only encrypt body(strings).</para>
+        /// <para>if decrypt, clean header and body both.</para>
+        /// </summary>
+        Auto
+    }
 }

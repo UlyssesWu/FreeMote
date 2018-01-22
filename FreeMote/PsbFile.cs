@@ -4,26 +4,6 @@ using System.Linq;
 
 namespace FreeMote
 {
-    public enum EncodeMode
-    {
-        Encrypt,
-        Decrypt,
-    }
-
-    public enum EncodePosition
-    {
-        Body,
-        Header,
-        Full,
-        /// <summary>
-        /// Automata
-        /// <para>if encrypt v3-V4, will only encrypt header.</para>
-        /// <para>if encrypt v2, will only encrypt body(strings).</para>
-        /// <para>if decrypt, clean header and body both.</para>
-        /// </summary>
-        Auto
-    }
-
     public class PsbFile
     {
         public string Path { get; private set; }
@@ -152,11 +132,6 @@ namespace FreeMote
             return true;
         }
 
-        ///  <summary>
-        ///
-        ///  </summary>
-        ///  <param name="br"></param>
-        ///  <param name="bw"></param>
         private static void WriteOriginalPartialHeader(BinaryReader br, BinaryWriter bw, PsbHeader header)
         {
             header.HeaderLength = br.ReadUInt32();
@@ -419,7 +394,17 @@ namespace FreeMote
                 }
             }
         }
-        private static PsbHeader Encode(uint key, EncodeMode mode, EncodePosition position, Stream input, Stream output)
+
+        /// <summary>
+        /// Encode (Encrypt/Decrypt) PSB file
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="mode"></param>
+        /// <param name="position"></param>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <returns>Unencrypted Header for reference. Usually you shouldn't use it.</returns>
+        public static PsbHeader Encode(uint key, EncodeMode mode, EncodePosition position, Stream input, Stream output)
         {
             input.Seek(0, SeekOrigin.Begin);
             output.Seek(0, SeekOrigin.Begin);
@@ -568,6 +553,7 @@ namespace FreeMote
                     break;
             }
             bw.Flush();
+            output.Seek(0, SeekOrigin.Begin);
             return header;
         }
 

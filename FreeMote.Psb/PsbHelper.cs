@@ -121,42 +121,7 @@ namespace FreeMote.Psb
         {
             return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
         }
-
-        public static string ReadStringZeroTrim(this BinaryReader br)
-        {
-            StringBuilder sb = new StringBuilder();
-            while (br.PeekChar() != 0)
-            {
-                sb.Append(br.ReadChar());
-            }
-            return sb.ToString();
-        }
-
-        public static void WriteStringZeroTrim(this BinaryWriter bw, string str)
-        {
-            bw.Write(str.ToCharArray());
-            bw.Write((byte)0);
-        }
-
-        public static void Pad(this BinaryWriter bw, int length, byte paddingByte = 0x0)
-        {
-            if (length <= 0)
-            {
-                return;
-            }
-
-            if (paddingByte == 0x0)
-            {
-                bw.Write(new byte[length]);
-                return;
-            }
-
-            for (int i = 0; i < length; i++)
-            {
-                bw.Write(paddingByte);
-            }
-        }
-
+        
         /// <summary>
         /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
         /// </summary>

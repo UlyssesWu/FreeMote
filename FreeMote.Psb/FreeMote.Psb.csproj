@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PSB.cs" />
+    <Compile Include="PsbFileExtension.cs" />
     <Compile Include="PsbHelper.cs" />
     <Compile Include="PsbTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
