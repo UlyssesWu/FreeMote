@@ -11,7 +11,7 @@ namespace FreeMote
         /// </summary>
         Motion = 0,
         /// <summary>
-        /// Images (pimg, dapk)
+        /// Images (pimg, dpak)
         /// </summary>
         Pimg = 1,
         /// <summary>
