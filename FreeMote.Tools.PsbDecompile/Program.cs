@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FreeMote.PsBuild;
 
 namespace FreeMote.Tools.PsbDecompile
@@ -64,11 +61,12 @@ namespace FreeMote.Tools.PsbDecompile
                 }
                 else if (Directory.Exists(s))
                 {
-                    foreach (var file in Directory.EnumerateFiles(s, "*.psb"))
-                    {
-                        Decompile(file, _extractImage, _uncompressImage, _png);
-                    }
-                    foreach (var file in Directory.EnumerateFiles(s, "*.mmo"))
+                    foreach (var file in Directory.EnumerateFiles(s, "*.psb")
+                        .Union(Directory.EnumerateFiles(s, "*.mmo"))
+                        .Union(Directory.EnumerateFiles(s, "*.pimg"))
+                        .Union(Directory.EnumerateFiles(s, "*.scn"))
+                        .Union(Directory.EnumerateFiles(s, "*.dpak"))
+                    )
                     {
                         Decompile(file, _extractImage, _uncompressImage, _png);
                     }

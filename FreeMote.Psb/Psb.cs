@@ -74,10 +74,6 @@ namespace FreeMote.Psb
         public PSB(ushort version = 3)
         {
             Header = new PsbHeader { Version = version };
-            if (Header.Version > 2)
-            {
-                Header.HeaderEncrypt = 1;
-            }
         }
 
         public PSB(string path)
