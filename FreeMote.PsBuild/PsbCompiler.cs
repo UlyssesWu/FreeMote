@@ -194,7 +194,7 @@ namespace FreeMote.PsBuild
         {
             PSB psb = new PSB(version)
             {
-                Objects = JsonConvert.DeserializeObject<PsbDictionary>(json, new PsbTypeConverter())
+                Objects = JsonConvert.DeserializeObject<PsbDictionary>(json, new PsbJsonConverter())
             };
             psb.Type = psb.InferType();
             return psb;

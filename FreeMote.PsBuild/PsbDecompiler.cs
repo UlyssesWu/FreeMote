@@ -64,7 +64,7 @@ namespace FreeMote.PsBuild
 
         internal static string Decompile(PSB psb)
         {
-            return JsonConvert.SerializeObject(psb.Objects, Formatting.Indented, new PsbTypeConverter());
+            return JsonConvert.SerializeObject(psb.Objects, Formatting.Indented, new PsbJsonConverter());
         }
 
         /// <summary>

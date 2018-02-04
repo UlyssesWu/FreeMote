@@ -56,10 +56,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsbCompiler.cs" />
     <Compile Include="PsbDecompiler.cs" />
-    <Compile Include="PsbResCollector.cs" />
     <Compile Include="PsbResourceJson.cs" />
-    <Compile Include="PsbTypeConverter.cs" />
-    <Compile Include="ResourceMetadata.cs" />
+    <Compile Include="PsbJsonConverter.cs" />
+    <Compile Include="PsbSpecConverter.cs" />
     <Compile Include="Converters\CommonWinConverter.cs" />
     <Compile Include="Converters\ISpecConverter.cs" />
     <Compile Include="Converters\Krkr2CommonConverter.cs" />
