@@ -33,7 +33,7 @@ namespace FreeMote
                     return "RGBA8";
                 case PsbPixelFormat.DXT5:
                     return "DXT5";
-                case PsbPixelFormat.RGBA4444:
+                case PsbPixelFormat.WinRGBA4444:
                     return "RGBA4444";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);

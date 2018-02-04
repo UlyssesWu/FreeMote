@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using FreeMote.PsBuild;
 
 namespace FreeMote.Psb
 {
@@ -340,7 +339,7 @@ namespace FreeMote.Psb
             return psbObj[path];
         }
 
-        internal static IPsbValue Children(this IPsbValue col, string name)
+        public static IPsbValue Children(this IPsbValue col, string name)
         {
             while (true)
             {

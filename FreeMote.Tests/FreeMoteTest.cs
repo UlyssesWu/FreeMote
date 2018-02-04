@@ -188,13 +188,13 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw");
             var path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.png");
-            var bts = RL.GetPixelBytesFromImageFile(path, PsbPixelFormat.RGBA4444);
+            var bts = RL.GetPixelBytesFromImageFile(path, PsbPixelFormat.WinRGBA4444);
             Assert.IsTrue(
                 bts.SequenceEqual(
                     File.ReadAllBytes(
                         Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw"))));
                 
-            RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.RGBA4444);
+            RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.WinRGBA4444);
         }
     }
 }

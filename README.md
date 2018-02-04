@@ -12,10 +12,10 @@ Special API libs for Emote engine, which take _pure_ (unencrypted) PSB files as 
 Parse PSB format.
 ### FreeMote.PsBuild
 Compile and decompile PSB files. Convert PSB among different platforms.
+### FreeMote.PsDraw (In Dev)
+Draw the Emote model (statically) without Emote engine.
 ### FreeMote.Purify (Unreleased)
 Infer and calculate the key used by Emote PSB file just from the PSB file (rather than get from engine).
-### FreeMote.Render (Unrealistic)
-Draw the Emote model (statically) without Emote engine.
 ### FreeMote.FreeLive (Unrealistic)
 Emote <-> Live2D Conversion
 

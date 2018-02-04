@@ -2,10 +2,8 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using FreeMote.Psb;
 
-
-namespace FreeMote.PsBuild
+namespace FreeMote.Psb
 {
     /// <summary>
     /// Compression in PSB
@@ -80,6 +78,17 @@ namespace FreeMote.PsBuild
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
         public byte[] Data => Resource?.Data;
+        /// <summary>
+        /// Additional z-index info
+        /// </summary>
+        public float ZIndex { get; set; }
+        /// <summary>
+        /// Additional Name
+        /// </summary>
+        public string Description { get; set; }
+
+        public int Opacity { get; set; } = 10;
+        public bool Visible { get; set; } = true;
 
         /// <summary>
         /// Platform
@@ -105,7 +114,7 @@ namespace FreeMote.PsBuild
                         else
                             return PsbPixelFormat.WinRGBA8;
                     case "RGBA4444":
-                        return PsbPixelFormat.RGBA4444;
+                        return PsbPixelFormat.WinRGBA4444;
                         default:
                         return PsbPixelFormat.None;
                 }

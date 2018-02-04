@@ -82,7 +82,7 @@ namespace FreeMote.PsBuild
                     }
                     if (resx.Platform != null && spec == null)
                     {
-                        psb.SwitchSpec(resx.Platform.Value, resx.Platform.Value.DefaultPixelFormat());
+                        spec = resx.Platform;
                     }
                     if (resx.CryptKey != null & cryptKey == null)
                     {
@@ -163,10 +163,7 @@ namespace FreeMote.PsBuild
                     {
                         psb.Header.Version = resx.PsbVersion.Value;
                     }
-                    if (resx.Platform != null)
-                    {
-                        psb.SwitchSpec(resx.Platform.Value, resx.Platform.Value.DefaultPixelFormat());
-                    }
+
                     if (resx.ExternalTextures)
                     {
                         Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
@@ -174,6 +171,11 @@ namespace FreeMote.PsBuild
                     else
                     {
                         psb.Link(resx, baseDir);
+                    }
+
+                    if (resx.Platform != null)
+                    {
+                        psb.SwitchSpec(resx.Platform.Value, resx.Platform.Value.DefaultPixelFormat());
                     }
                 }
                 else
