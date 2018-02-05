@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using FreeMote.Psb;
 
 #if USE_FASTBITMAP
 using FastBitmapLib;
@@ -11,7 +10,7 @@ using FastBitmapLib;
 using System.Drawing.Drawing2D;
 #endif
 
-namespace FreeMote.PsBuild.Textures
+namespace FreeMote.Psb.Textures
 {
     public static class TextureSpliter
     {
@@ -41,8 +40,8 @@ namespace FreeMote.PsBuild.Textures
                 }
 #else
                     Graphics g = Graphics.FromImage(b);
-                    g.InterpolationMode = InterpolationMode.NearestNeighbor;
-                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    //g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                    //g.PixelOffsetMode = PixelOffsetMode.Half;
                     g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
                         GraphicsUnit.Pixel);
                     g.Dispose();
@@ -105,8 +104,8 @@ namespace FreeMote.PsBuild.Textures
                     }
 #else
                     Graphics g = Graphics.FromImage(b);
-                    g.InterpolationMode = InterpolationMode.NearestNeighbor;
-                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    //g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                    //g.PixelOffsetMode = PixelOffsetMode.Half;
                     g.DrawImage(bmp, new Rectangle(0, 0, b.Width, b.Height), new Rectangle(left, top, width, height),
                         GraphicsUnit.Pixel);
                     g.Dispose();

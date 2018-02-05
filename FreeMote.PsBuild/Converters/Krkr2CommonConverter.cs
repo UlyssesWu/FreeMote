@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using FreeMote.Psb;
-using FreeMote.PsBuild.Textures;
+using FreeMote.Psb.Textures;
 
 namespace FreeMote.PsBuild.Converters
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FreeMote.Psb;
-using FreeMote.PsBuild.Textures;
+using FreeMote.Psb.Textures;
 
 namespace FreeMote.PsBuild.Converters
 {

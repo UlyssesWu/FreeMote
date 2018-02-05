@@ -80,23 +80,17 @@ namespace FreeMote.PsDraw
         /// </summary>
         private void CollectResource()
         {
-            var resources = Source.CollectResources();
+            var resources = Source.CollectResources(); //TODO: Collect resource in Win
 
-            foreach (var obj in ((PsbDictionary)Source.Objects["object"]))
+            foreach (var motion in (PsbDictionary)Source.Objects["object"].Children("all_parts").Children("motion"))
             {
-                if (obj.Key == "all_parts" && obj.Value is PsbDictionary dic && dic.ContainsKey("metadata") && dic.ContainsKey("motion") && dic.ContainsKey("type"))
+                //Console.WriteLine($"Motion: {motion.Key}");
+                var layerCol = motion.Value.Children("layer") as PsbCollection;
+                foreach (var layer in layerCol)
                 {
-                    foreach (var motion in ((PsbDictionary)dic["motion"]))
+                    if (layer is PsbDictionary o)
                     {
-                        //Console.WriteLine($"Motion: {motion.Key}");
-                        var layerCol = motion.Value.Children("layer") as PsbCollection;
-                        foreach (var layer in layerCol)
-                        {
-                            if (layer is PsbDictionary o)
-                            {
-                                Travel(o, null);
-                            }
-                        }
+                        Travel(o, null);
                     }
                 }
             }
@@ -145,6 +139,7 @@ namespace FreeMote.PsDraw
                             {
                                 var s = obj["src"] as PsbString;
                                 var opa = obj.ContainsKey("opa") ? (int)(PsbNumber)obj["opa"] : 10;
+                                var icon = obj.ContainsKey("icon") ? obj["icon"].ToString() : null;
                                 if (s == null || string.IsNullOrEmpty(s.Value))
                                 {
                                     continue;
@@ -182,7 +177,35 @@ namespace FreeMote.PsDraw
                                                 .Children(ps[1]).Children("layer"), nLocation);
                                     }
                                 }
-                                //
+                                //win
+                                else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary)Source.Objects["source"]).ContainsKey(s.Value))
+                                {
+                                    //src
+                                    var res = resources.FirstOrDefault(resMd =>
+                                        resMd.Part == s.Value && resMd.Name == icon);
+                                    if (nLocation != null && res != null && !Resources.Contains(res))
+                                    {
+                                        var location = nLocation.Value;
+                                        //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
+                                        res.OriginX = location.x;
+                                        res.OriginY = location.y;
+                                        res.ZIndex = location.z;
+                                        res.Opacity = opa;
+                                        res.Visible = visible;
+                                        Resources.Add(res);
+                                        visible = false;
+                                    }
+                                }
+                                else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary)Source.Objects["object"]).ContainsKey(s.Value))
+                                {
+                                    //motion
+                                    if (nLocation != null)
+                                    {
+                                        Travel(
+                                            (IPsbCollection)Source.Objects["object"].Children(s.Value).Children("motion")
+                                                .Children(icon).Children("layer"), nLocation);
+                                    }
+                                }
                             }
                         }
 

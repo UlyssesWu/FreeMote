@@ -4,9 +4,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
+using FreeMote.Psb.Textures;
 using FreeMote.PsBuild;
 using FreeMote.PsBuild.Converters;
-using FreeMote.PsBuild.Textures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
@@ -225,10 +225,10 @@ namespace FreeMote.Tests
             {
                 FitHeuristic = BestFitHeuristic.MaxOneAxis,
             };
-            packer.Process(imgs, 4096, 1, false);
+            packer.Process(imgs, 4096, 5, false);
             if (Directory.Exists(savePath))
             {
-                Directory.Delete(savePath);
+                Directory.Delete(savePath, true);
             }
             Directory.CreateDirectory(savePath);
             packer.SaveAtlasses(Path.Combine(savePath, "tex.txt"));

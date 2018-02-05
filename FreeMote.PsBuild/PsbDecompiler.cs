@@ -11,30 +11,6 @@ using Newtonsoft.Json;
 namespace FreeMote.PsBuild
 {
     /// <summary>
-    /// How to handle images
-    /// </summary>
-    public enum PsbImageOption
-    {
-        /// <summary>
-        /// Keep original
-        /// </summary>
-        Original,
-        /// <summary>
-        /// Uncompress if needed
-        /// </summary>
-        Uncompress,
-        /// <summary>
-        /// Compress if needed
-        /// </summary>
-        Compress,
-        /// <summary>
-        /// Try to convert to common image format
-        /// </summary>
-        Extract,
-
-    }
-
-    /// <summary>
     /// Decompile PSB(/MMO) File
     /// </summary>
     public static class PsbDecompiler

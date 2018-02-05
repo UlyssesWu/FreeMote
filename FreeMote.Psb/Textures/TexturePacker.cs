@@ -2,10 +2,10 @@
 //https://github.com/mfascia/TexturePacker
 
 #define USE_FASTBITMAP
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
@@ -15,7 +15,7 @@ using System.Linq;
 using FastBitmapLib;
 #endif
 
-namespace FreeMote.PsBuild.Textures
+namespace FreeMote.Psb.Textures
 {
     /// <summary>
     /// Represents a Texture in an atlas
@@ -145,9 +145,10 @@ namespace FreeMote.PsBuild.Textures
 
             Graphics g = Graphics.FromImage(img);
             g.Clear(Color.FromArgb(0, Color.Black));
-            g.PixelOffsetMode = PixelOffsetMode.Half;
-            g.InterpolationMode = InterpolationMode.Default;
-            g.SmoothingMode = SmoothingMode.None;
+            //g.PixelOffsetMode = PixelOffsetMode.Half;
+            //g.InterpolationMode = InterpolationMode.Default;
+            //g.SmoothingMode = SmoothingMode.None;
+
             //ImageAttributes attributes = new ImageAttributes();
             //attributes.SetWrapMode(WrapMode.TileFlipXY);
 

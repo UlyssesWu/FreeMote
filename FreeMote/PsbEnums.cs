@@ -51,6 +51,30 @@ namespace FreeMote
         Png,
     }
 
+    /// <summary>
+    /// How to handle images when decompiling
+    /// </summary>
+    public enum PsbImageOption
+    {
+        /// <summary>
+        /// Keep original
+        /// </summary>
+        Original,
+        /// <summary>
+        /// Uncompress if needed
+        /// </summary>
+        Uncompress,
+        /// <summary>
+        /// Compress if needed
+        /// </summary>
+        Compress,
+        /// <summary>
+        /// Try to convert to common image format
+        /// </summary>
+        Extract,
+
+    }
+
     public enum PsbPixelFormat
     {
         None,
