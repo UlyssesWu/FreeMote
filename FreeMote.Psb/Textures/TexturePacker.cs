@@ -129,7 +129,7 @@ namespace FreeMote.Psb.Textures
                     {
                         if (n.Texture != null)
                         {
-                            Image sourceImg = n.Texture.SourceImage ?? Image.FromFile(n.Texture.Source);
+                            Image sourceImg = n.Texture.SourceImage ?? new Bitmap(n.Texture.Source);
                             if (!(sourceImg is Bitmap s))
                             {
                                 s = new Bitmap(sourceImg);
@@ -161,7 +161,7 @@ namespace FreeMote.Psb.Textures
             {
                 if (n.Texture != null)
                 {
-                    Image sourceImg = n.Texture.SourceImage ?? Image.FromFile(n.Texture.Source);
+                    Image sourceImg = n.Texture.SourceImage ?? new Bitmap(n.Texture.Source);
 #if USE_FASTBITMAP
                     using (var f = img.FastLock())
                     {

@@ -81,7 +81,7 @@ namespace FreeMote.Tools.PsbDecompile
             Console.WriteLine("Usage: .exe [Mode] <PSB path>");
             Console.WriteLine(@"Mode:
 /raw : Keep resource in original format.
-/er : Similar to default mode but uncompress those compressed resources.
+/er : Similar to raw mode but uncompress those compressed resources.
 /eb : Convert images to BMP format.
 /ep : [Default] Convert images to PNG format.
 ");

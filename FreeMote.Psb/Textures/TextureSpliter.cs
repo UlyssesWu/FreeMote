@@ -14,6 +14,41 @@ namespace FreeMote.Psb.Textures
 {
     public static class TextureSpliter
     {
+        /// <summary>
+        /// <see cref="PsbResCollector.CollectResources"/> for packed-texture specs, like <see cref="PsbSpec.win"/>
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
+        public static List<ResourceMetadata> CollectSpiltedResources(this PSB psb)
+        {
+            List<ResourceMetadata> resList = new List<ResourceMetadata>();
+            var source = (PsbDictionary)psb.Objects["source"];
+            foreach (var tex in source)
+            {
+                if (tex.Value is PsbDictionary texDic)
+                {
+                    var typeStr = (PsbString) texDic["texture"].Children("type");
+                    var bmps = SplitTexture(texDic, psb.Platform);
+                    var icons = (PsbDictionary)texDic["icon"];
+                    foreach (var iconPair in icons)
+                    {
+                        var res = new PsbResource()
+                        {
+                            Data = 
+                                RL.GetPixelBytesFromImage(bmps[iconPair.Key], typeStr.Value.ToPsbPixelFormat(psb.Platform))
+                        };
+                        var icon = (PsbDictionary)iconPair.Value;
+                        var md = PsbResCollector.GenerateMotionResMetadata(icon, res);
+                        md.Spec = psb.Platform;
+                        md.TypeString = typeStr;
+                        resList.Add(md);
+                    }
+                }
+            }
+
+            return resList;
+        }
+
         public static Dictionary<string, Bitmap> SplitTexture(PsbDictionary tex, PsbSpec spec)
         {
             var icon = (PsbDictionary)tex["icon"];

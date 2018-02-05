@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using FreeMote.Psb;
+using FreeMote.Psb.Textures;
 
 namespace FreeMote.PsDraw
 {
@@ -80,7 +81,7 @@ namespace FreeMote.PsDraw
         /// </summary>
         private void CollectResource()
         {
-            var resources = Source.CollectResources(); //TODO: Collect resource in Win
+            var resources = Source.Platform == PsbSpec.krkr ? Source.CollectResources() : Source.CollectSpiltedResources();
 
             foreach (var motion in (PsbDictionary)Source.Objects["object"].Children("all_parts").Children("motion"))
             {
@@ -98,7 +99,7 @@ namespace FreeMote.PsDraw
             Resources.Sort((md1, md2) => (int) ((md1.ZIndex - md2.ZIndex) * 100));
 
             //Travel
-            void Travel(IPsbCollection collection, (float x, float y, float z)? nLocation)
+            void Travel(IPsbCollection collection, (float x, float y, float z)? nLocation, bool nVisible = true)
             {
                 if (collection is PsbDictionary dic)
                 {
@@ -131,15 +132,18 @@ namespace FreeMote.PsDraw
                         var srcObj = col
                             .Where(o => o is PsbDictionary d && d.ContainsKey("content") &&
                                                  d["content"] is PsbDictionary d2 && d2.ContainsKey("src"))
-                            .Select(s => s.Children("content") as PsbDictionary);
+                            .Select(s => s as PsbDictionary);
                         if (srcObj.Any())
                         {
-                            bool visible = true;
+                            bool visible = nVisible;
                             foreach (var obj in srcObj)
                             {
-                                var s = obj["src"] as PsbString;
-                                var opa = obj.ContainsKey("opa") ? (int)(PsbNumber)obj["opa"] : 10;
-                                var icon = obj.ContainsKey("icon") ? obj["icon"].ToString() : null;
+                                var content = (PsbDictionary)obj["content"];
+                                var s = content["src"] as PsbString;
+                                var opa = content.ContainsKey("opa") ? (int)(PsbNumber)content["opa"] : 10;
+                                var icon = content.ContainsKey("icon") ? content["icon"].ToString() : null;
+                                int time = obj["time"] is PsbNumber n ? n.IntValue : 0;
+                                bool suggestVisible = nVisible && time <= 0 && opa > 0;
                                 if (s == null || string.IsNullOrEmpty(s.Value))
                                 {
                                     continue;
@@ -161,9 +165,8 @@ namespace FreeMote.PsDraw
                                         res.OriginY = location.y;
                                         res.ZIndex = location.z;
                                         res.Opacity = opa;
-                                        res.Visible = visible;
+                                        res.Visible = time <= 0 && visible;
                                         Resources.Add(res);
-                                        visible = false;
                                     }
                                 }
                                 else if (s.Value.StartsWith("motion/"))
@@ -174,7 +177,7 @@ namespace FreeMote.PsDraw
                                             .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                                         Travel(
                                             (IPsbCollection)Source.Objects["object"].Children(ps[0]).Children("motion")
-                                                .Children(ps[1]).Children("layer"), nLocation);
+                                                .Children(ps[1]).Children("layer"), nLocation, suggestVisible);
                                     }
                                 }
                                 //win
@@ -191,9 +194,8 @@ namespace FreeMote.PsDraw
                                         res.OriginY = location.y;
                                         res.ZIndex = location.z;
                                         res.Opacity = opa;
-                                        res.Visible = visible;
+                                        res.Visible = time <= 0 && visible;
                                         Resources.Add(res);
-                                        visible = false;
                                     }
                                 }
                                 else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary)Source.Objects["object"]).ContainsKey(s.Value))
@@ -203,7 +205,7 @@ namespace FreeMote.PsDraw
                                     {
                                         Travel(
                                             (IPsbCollection)Source.Objects["object"].Children(s.Value).Children("motion")
-                                                .Children(icon).Children("layer"), nLocation);
+                                                .Children(icon).Children("layer"), nLocation, suggestVisible);
                                     }
                                 }
                             }
@@ -213,11 +215,11 @@ namespace FreeMote.PsDraw
 
                     if (dic.ContainsKey("children") && dic["children"] is PsbCollection ccol)
                     {
-                        Travel(ccol, nLocation);
+                        Travel(ccol, nLocation, nVisible);
                     }
                     if (dic.ContainsKey("layer") && dic["layer"] is PsbCollection ccoll)
                     {
-                        Travel(ccoll, nLocation);
+                        Travel(ccoll, nLocation, nVisible);
                     }
                 }
                 else if (collection is PsbCollection ccol)
@@ -226,7 +228,7 @@ namespace FreeMote.PsDraw
                     {
                         if (cc is IPsbCollection ccc)
                         {
-                            Travel(ccc, nLocation);
+                            Travel(ccc, nLocation, nVisible);
                         }
                     }
                 }

@@ -172,11 +172,10 @@ namespace FreeMote.Psb
                 is2D = true;
                 originY = (float)ny;
             }
-            string type = null;
+
             PsbString typeString = null;
             if (d["type"] is PsbString typeStr)
             {
-                type = typeStr.Value;
                 typeString = typeStr;
             }
             int top = 0, left = 0;
@@ -204,7 +203,6 @@ namespace FreeMote.Psb
                 Left = left,
                 Width = width,
                 Height = height,
-                Type = type,
                 TypeString = typeString,
                 Resource = r,
             };

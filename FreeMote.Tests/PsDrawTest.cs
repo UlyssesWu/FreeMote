@@ -46,11 +46,23 @@ namespace FreeMote.Tests
         public void TestDrawWin()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "miku_v4_win-pure.psb");
+            //var path = Path.Combine(resPath, "miku_v4_win-pure.psb");
+            var path = Path.Combine(resPath, "vanilla-pure.psb");
             var psb = new PSB(path);
             var painter = new PsbPainter(psb);
             var bmp = painter.Draw(4096, 4096);
             bmp.Save("RenderWin.png", ImageFormat.Png);
+        }
+
+        [TestMethod]
+        public void TestDrawCommon()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "akira_guide-pure.psb");
+            var psb = new PSB(path);
+            var painter = new PsbPainter(psb);
+            var bmp = painter.Draw(2048, 2048);
+            bmp.Save("RenderCommon.png", ImageFormat.Png);
         }
     }
 }
