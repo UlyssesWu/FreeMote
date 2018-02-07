@@ -4,10 +4,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-using FreeMote.Psb;
 using FreeMote.Psb.Textures;
 
-namespace FreeMote.PsDraw
+namespace FreeMote.Psb
 {
     /// <summary>
     /// Emote PSB Painter
@@ -99,7 +98,7 @@ namespace FreeMote.PsDraw
             Resources.Sort((md1, md2) => (int) ((md1.ZIndex - md2.ZIndex) * 100));
 
             //Travel
-            void Travel(IPsbCollection collection, (float x, float y, float z)? nLocation, bool nVisible = true)
+            void Travel(IPsbCollection collection, (float x, float y, float z)? baseLocation, bool baseVisible = true)
             {
                 if (collection is PsbDictionary dic)
                 {
@@ -115,16 +114,16 @@ namespace FreeMote.PsDraw
                             var coord = coordObj.First() as PsbCollection;
                             var coordTuple = (x: (float)(PsbNumber)coord[0], y: (float)(PsbNumber)coord[1], z: (float)(PsbNumber)coord[2]);
 
-                            if (nLocation == null)
+                            if (baseLocation == null)
                             {
                                 //Console.WriteLine($"Set coord: {coordTuple.x},{coordTuple.y},{coordTuple.z}");
-                                nLocation = coordTuple;
+                                baseLocation = coordTuple;
                             }
                             else
                             {
-                                var loc = nLocation.Value;
-                                nLocation = (loc.x + coordTuple.x, loc.y + coordTuple.y, loc.z + coordTuple.z);
-                                //Console.WriteLine($"Update coord: {loc.x},{loc.y},{loc.z} -> {nLocation?.x},{nLocation?.y},{nLocation?.z}");
+                                var loc = baseLocation.Value;
+                                baseLocation = (loc.x + coordTuple.x, loc.y + coordTuple.y, loc.z + coordTuple.z);
+                                //Console.WriteLine($"Update coord: {loc.x},{loc.y},{loc.z} -> {baseLocation?.x},{baseLocation?.y},{baseLocation?.z}");
                             }
                         }
 
@@ -135,7 +134,7 @@ namespace FreeMote.PsDraw
                             .Select(s => s as PsbDictionary);
                         if (srcObj.Any())
                         {
-                            bool visible = nVisible;
+                            bool visible = baseVisible;
                             foreach (var obj in srcObj)
                             {
                                 var content = (PsbDictionary)obj["content"];
@@ -143,7 +142,7 @@ namespace FreeMote.PsDraw
                                 var opa = content.ContainsKey("opa") ? (int)(PsbNumber)content["opa"] : 10;
                                 var icon = content.ContainsKey("icon") ? content["icon"].ToString() : null;
                                 int time = obj["time"] is PsbNumber n ? n.IntValue : 0;
-                                bool suggestVisible = nVisible && time <= 0 && opa > 0;
+                                bool suggestVisible = baseVisible && time <= 0 && opa > 0;
                                 if (s == null || string.IsNullOrEmpty(s.Value))
                                 {
                                     continue;
@@ -157,9 +156,9 @@ namespace FreeMote.PsDraw
                                         .ToArray());
                                     var res = resources.FirstOrDefault(resMd =>
                                         resMd.Part == partName && resMd.Name == iconName);
-                                    if (nLocation != null && res != null && !Resources.Contains(res))
+                                    if (baseLocation != null && res != null && !Resources.Contains(res))
                                     {
-                                        var location = nLocation.Value;
+                                        var location = baseLocation.Value;
                                         //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
                                         res.OriginX = location.x;
                                         res.OriginY = location.y;
@@ -171,13 +170,13 @@ namespace FreeMote.PsDraw
                                 }
                                 else if (s.Value.StartsWith("motion/"))
                                 {
-                                    if (nLocation != null)
+                                    if (baseLocation != null)
                                     {
                                         var ps = s.Value.Substring("motion/".Length)
                                             .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                                         Travel(
                                             (IPsbCollection)Source.Objects["object"].Children(ps[0]).Children("motion")
-                                                .Children(ps[1]).Children("layer"), nLocation, suggestVisible);
+                                                .Children(ps[1]).Children("layer"), baseLocation, suggestVisible);
                                     }
                                 }
                                 //win
@@ -186,9 +185,9 @@ namespace FreeMote.PsDraw
                                     //src
                                     var res = resources.FirstOrDefault(resMd =>
                                         resMd.Part == s.Value && resMd.Name == icon);
-                                    if (nLocation != null && res != null && !Resources.Contains(res))
+                                    if (baseLocation != null && res != null && !Resources.Contains(res))
                                     {
-                                        var location = nLocation.Value;
+                                        var location = baseLocation.Value;
                                         //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
                                         res.OriginX = location.x;
                                         res.OriginY = location.y;
@@ -201,11 +200,11 @@ namespace FreeMote.PsDraw
                                 else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary)Source.Objects["object"]).ContainsKey(s.Value))
                                 {
                                     //motion
-                                    if (nLocation != null)
+                                    if (baseLocation != null)
                                     {
                                         Travel(
                                             (IPsbCollection)Source.Objects["object"].Children(s.Value).Children("motion")
-                                                .Children(icon).Children("layer"), nLocation, suggestVisible);
+                                                .Children(icon).Children("layer"), baseLocation, suggestVisible);
                                     }
                                 }
                             }
@@ -215,11 +214,11 @@ namespace FreeMote.PsDraw
 
                     if (dic.ContainsKey("children") && dic["children"] is PsbCollection ccol)
                     {
-                        Travel(ccol, nLocation, nVisible);
+                        Travel(ccol, baseLocation, baseVisible);
                     }
                     if (dic.ContainsKey("layer") && dic["layer"] is PsbCollection ccoll)
                     {
-                        Travel(ccoll, nLocation, nVisible);
+                        Travel(ccoll, baseLocation, baseVisible);
                     }
                 }
                 else if (collection is PsbCollection ccol)
@@ -228,7 +227,7 @@ namespace FreeMote.PsDraw
                     {
                         if (cc is IPsbCollection ccc)
                         {
-                            Travel(ccc, nLocation, nVisible);
+                            Travel(ccc, baseLocation, baseVisible);
                         }
                     }
                 }

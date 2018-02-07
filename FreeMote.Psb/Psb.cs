@@ -1,4 +1,5 @@
-﻿//#define DEBUG_OBJECT_WRITE //Enable if you want to check how much bytes each object costs.
+﻿//PSB format is based on psbfile by number201724.
+//#define DEBUG_OBJECT_WRITE //Enable if you want to check how much bytes each object costs.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,8 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 // ReSharper disable InconsistentNaming
-
-//PSB format is based on psbfile by number201724.
 
 namespace FreeMote.Psb
 {

@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.PsbDecompile
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.PsBuild", "FreeMote.Tools.PsBuild\FreeMote.Tools.PsBuild.csproj", "{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.PsDraw", "FreeMote.PsDraw\FreeMote.PsDraw.csproj", "{461B49C7-9CF9-4448-B1DD-A3622BF99222}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,10 +51,6 @@ Global
 		{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{461B49C7-9CF9-4448-B1DD-A3622BF99222}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{461B49C7-9CF9-4448-B1DD-A3622BF99222}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{461B49C7-9CF9-4448-B1DD-A3622BF99222}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{461B49C7-9CF9-4448-B1DD-A3622BF99222}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
