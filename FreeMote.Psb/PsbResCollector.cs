@@ -29,8 +29,8 @@ namespace FreeMote.Psb
 
             switch (psb.Type)
             {
-                case PsbType.Pimg:
-                case PsbType.Scn:
+                case PsbType.Images:
+                case PsbType.Script:
                     resourceList.AddRange(psb.Objects.Where(k => k.Value is PsbResource).Select(k =>
                         new ResourceMetadata()
                         {

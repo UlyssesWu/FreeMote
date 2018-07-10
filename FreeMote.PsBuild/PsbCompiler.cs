@@ -265,7 +265,7 @@ namespace FreeMote.PsBuild
                 {
                     resMd = resList.FirstOrDefault(r => r.Index == rid);
                 }
-                if (resMd == null && psb.Type == PsbType.Pimg)
+                if (resMd == null && psb.Type == PsbType.Images)
                 {
                     resMd = resList.FirstOrDefault(r => resName == Path.GetFileNameWithoutExtension(r.Name));
                 }
@@ -294,7 +294,7 @@ namespace FreeMote.PsBuild
                 //Scan for Resource
                 var resMd = resList.FirstOrDefault(r =>
                     resxResource.Key == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
-                if (resMd == null && psb.Type == PsbType.Pimg)
+                if (resMd == null && psb.Type == PsbType.Images)
                 {
                     resMd = resList.FirstOrDefault(r => resxResource.Key == Path.GetFileNameWithoutExtension(r.Name));
                 }

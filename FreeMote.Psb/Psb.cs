@@ -103,17 +103,17 @@ namespace FreeMote.Psb
         {
             if (Objects.Any(k=> k.Key.Contains(".") && k.Value is PsbResource))
             {
-                return PsbType.Pimg;
+                return PsbType.Images;
             }
 
             if (Objects.ContainsKey("layers") && Objects.ContainsKey("height") && Objects.ContainsKey("width"))
             {
-                return PsbType.Pimg;
+                return PsbType.Images;
             }
 
             if (Objects.ContainsKey("scenes") && Objects.ContainsKey("name"))
             {
-                return PsbType.Scn;
+                return PsbType.Script;
             }
 
             return PsbType.Motion;

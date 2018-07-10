@@ -13,12 +13,12 @@ namespace FreeMote
         /// <summary>
         /// Images (pimg, dpak)
         /// </summary>
-        Pimg = 1,
+        Images = 1,
         /// <summary>
         /// Script (scn)
         /// </summary>
         /// TODO: KS decompiler?
-        Scn = 2,
+        Script = 2,
     }
 
     /// <summary>

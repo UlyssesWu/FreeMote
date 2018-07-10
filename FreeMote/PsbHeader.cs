@@ -109,7 +109,12 @@ namespace FreeMote
                 HeaderLength = br.ReadUInt32(),
                 OffsetNames = br.ReadUInt32()
             };
-            if (!new string(header.Signature).ToUpperInvariant().StartsWith("PSB"))
+            var sig = new string(header.Signature).ToUpperInvariant();
+            if (sig.StartsWith("MDF"))
+            {
+                throw new BadImageFormatException("Maybe a MDF file");
+            }
+            if (!sig.StartsWith("PSB"))
             {
                 throw new BadImageFormatException("Not a valid PSB file");
             }

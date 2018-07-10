@@ -10,6 +10,7 @@ namespace FreeMote
         internal PsbHeader Header { get; set; }
 
         public ushort Version => Header.Version;
+        public bool IsMdf { get; private set; } = false;
 
         public PsbFile(string path)
         {
@@ -29,6 +30,15 @@ namespace FreeMote
             using (var fs = File.OpenRead(Path))
             {
                 BinaryReader br = new BinaryReader(fs);
+                var sig = new string(br.ReadChars(4)).ToUpperInvariant();
+                if (sig.StartsWith("MDF"))
+                {
+                    IsMdf = true;
+                    Header = new PsbHeader();
+                    return;
+                }
+
+                br.BaseStream.Seek(0, SeekOrigin.Begin);
                 Header = PsbHeader.Load(br);
             }
         }

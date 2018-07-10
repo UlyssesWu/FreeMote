@@ -26,6 +26,8 @@ Decompile PSB files. A managed version of `decompiler`(by number201724).
 Compile PSB description json to PSB. A managed version of `pcc`(by number201724).
 ### [FreeMoteViewer](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer) (FreeMote.Tools.Viewer)
 Open and render Emote _pure_ PSB.
+### [FreeMote Editor](https://github.com/UlyssesWu/FreeMote.Editor) (FreeMote.Editor) (In Dev)
+FreeMote GUI tool.
 
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
