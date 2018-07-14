@@ -186,6 +186,10 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestTlgNative()
         {
+            if (!TlgPlugin.IsReady)
+            {
+                return;
+            }
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "title-pimg");
             var path = Path.Combine(resPath, "title-pimg", "566.tlg");
