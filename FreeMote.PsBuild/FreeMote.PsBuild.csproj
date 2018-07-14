@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TlgConverter.cs" />
     <Compile Include="MmoCompiler.cs" />
     <Compile Include="MmoGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -52,6 +53,10 @@
     <Compile Include="Converters\Common2KrkrConverter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FreeMote.Plugins\FreeMote.Plugins.csproj">
+      <Project>{F37472B9-6501-440E-8898-7774304F7FEC}</Project>
+      <Name>FreeMote.Plugins</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
       <Project>{c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7}</Project>
       <Name>FreeMote.Psb</Name>
@@ -63,10 +68,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>10.0.3</Version>
+      <Version>11.0.2</Version>
     </PackageReference>
     <PackageReference Include="System.ValueTuple">
-      <Version>4.4.0</Version>
+      <Version>4.5.0</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

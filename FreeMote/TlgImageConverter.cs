@@ -132,33 +132,39 @@ namespace FreeMote
             };
         }
 
-        public Bitmap Read (BinaryReader file)
+        internal Bitmap ReadAndGetMetaData(BinaryReader file, out TlgMetaData md)
         {
             TlgMetaData meta = ReadMetaData(file);
-            var image = ReadTlg (file, meta);
+            md = meta;
+            var image = ReadTlg(file, meta);
 
-            int tailSize = (int)Math.Min (file.BaseStream.Length - file.BaseStream.Position, 512);
+            int tailSize = (int)Math.Min(file.BaseStream.Length - file.BaseStream.Position, 512);
             if (tailSize > 8)
             {
-                var tail = file.ReadBytes (tailSize);
+                var tail = file.ReadBytes(tailSize);
                 try
                 {
-                    var blendedImage = ApplyTags (image, meta, tail);
+                    var blendedImage = ApplyTags(image, meta, tail);
                     if (null != blendedImage)
                         return blendedImage;
                 }
                 catch (FileNotFoundException x)
                 {
-                    Trace.WriteLine (string.Format ("{0}: {1}", x.Message, x.FileName), "[TlgFormat.Read]");
+                    Trace.WriteLine(string.Format("{0}: {1}", x.Message, x.FileName), "[TlgFormat.Read]");
                 }
                 catch (Exception x)
                 {
-                    Trace.WriteLine (x.Message, "[TlgFormat.Read]");
+                    Trace.WriteLine(x.Message, "[TlgFormat.Read]");
                 }
             }
             //PixelFormat format = 32 == meta.BPP ? PixelFormats.Bgra32 : PixelFormats.Bgr32;
             PixelFormat format = 32 == meta.Bpp ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb;
-            return CreateImage (meta, format, image, (int)meta.Width * 4);
+            return CreateImage(meta, format, image, (int)meta.Width * 4);
+        }
+
+        public Bitmap Read (BinaryReader file)
+        {
+            return ReadAndGetMetaData(file, out _);
         }
 
         private unsafe Bitmap CreateImage(TlgMetaData meta, PixelFormat format, byte[] image, int stride)

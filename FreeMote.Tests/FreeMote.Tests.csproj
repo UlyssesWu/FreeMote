@@ -60,6 +60,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FreeMote.Plugins\FreeMote.Plugins.csproj">
+      <Project>{F37472B9-6501-440E-8898-7774304F7FEC}</Project>
+      <Name>FreeMote.Plugins</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FreeMote.PsBuild\FreeMote.PsBuild.csproj">
       <Project>{717a63de-e599-4134-92ab-40a17c326da3}</Project>
       <Name>FreeMote.PsBuild</Name>

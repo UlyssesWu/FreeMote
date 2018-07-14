@@ -40,6 +40,12 @@ namespace FreeMote.PsBuild
         public bool ExternalTextures { get; set; } = false;
 
         /// <summary>
+        /// TLG Image Preferred Version
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? TlgVersion { get; set; } = 5;
+
+        /// <summary>
         /// Resources
         /// </summary>
         public Dictionary<string, string> Resources { get; set; }
