@@ -270,8 +270,17 @@ namespace FreeMote.PsBuild
                     }
                     else
                     {
-                        Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
-                        data = File.ReadAllBytes(path);
+                        var tlgPath = Path.ChangeExtension(path, ".tlg");
+                        if (File.Exists(tlgPath))
+                        {
+                            Console.WriteLine($"[WARN] Can not encode TLG, using {tlgPath}");
+                            data = File.ReadAllBytes(tlgPath);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
+                            data = File.ReadAllBytes(path);
+                        }
                     }
                     break;
                 case PsbCompressType.None:
