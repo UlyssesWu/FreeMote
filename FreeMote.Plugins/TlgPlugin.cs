@@ -10,7 +10,7 @@ namespace FreeMote.Plugins
     /// FreeMote.Tlg
     /// <para>Native TLG Plugin</para>
     /// </summary>
-    public class TlgPlugin
+    public static class TlgPlugin
     {
         private static bool _isEnabled = true;
 
@@ -39,6 +39,12 @@ namespace FreeMote.Plugins
         static TlgPlugin()
         {
             IsReady = false;
+
+            if (Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                return;
+            }
+
             var path = Path.GetFullPath(PluginPath);
             if (!File.Exists(path))
             {
