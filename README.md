@@ -13,7 +13,7 @@ Parse PSB format. Draw the Emote model (statically) without Emote engine.
 ### FreeMote.PsBuild
 Compile and decompile PSB files. Convert PSB among different platforms.
 ### FreeMote.Plugins
-External/Experimental features.
+External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMote/wiki) for usages.
 #### [FreeMote.Tlg](https://github.com/Project-AZUSA/TlgLib)
 TLG encoding/decoding support.
 ### FreeMote.Purify (Unreleased)
