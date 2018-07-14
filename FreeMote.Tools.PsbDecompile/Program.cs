@@ -16,6 +16,10 @@ namespace FreeMote.Tools.PsbDecompile
 
             Console.WriteLine("FreeMote PSB Decompiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+            if (TlgConverter.CanSaveTlg)
+            {
+                Console.WriteLine("[INFO] TLG Plugin Enabled.");
+            }
             Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")

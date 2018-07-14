@@ -16,6 +16,10 @@ namespace FreeMote.Tools.PsBuild
         {
             Console.WriteLine("FreeMote PSB Compiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+            if (TlgConverter.CanSaveTlg)
+            {
+                Console.WriteLine("[INFO] TLG Plugin Enabled.");
+            }
             Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
@@ -43,6 +47,14 @@ namespace FreeMote.Tools.PsBuild
                     {
                         _platform = platform;
                     }
+                }
+                else if (s == "/no-tlg")
+                {
+                    TlgConverter.PreferManaged = true;
+                }
+                else if (s == "/tlg")
+                {
+                    TlgConverter.PreferManaged = false;
                 }
                 //else if (s.StartsWith("/f"))
                 //{
@@ -90,7 +102,8 @@ namespace FreeMote.Tools.PsBuild
 /v<VerNumber> : Set compile version from [2,4] . Default: 3.
 /k<CryptKey> : Set CryptKey. Default: none(Pure PSB). Requirement: uint, dec.
 /p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common/ems.
-Warning: Platform ONLY works with .bmp/.png format textures.
+    Warning: Platform ONLY works with .bmp/.png format textures.
+/no-tlg: Always use managed TLG decoder (instead of TLG native plugin). Default: Use TLG native plugin when possible.
 ");
             Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
         }

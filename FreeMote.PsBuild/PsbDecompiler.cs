@@ -4,6 +4,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
+using FreeMote.Plugins;
+using FreeMote.PsBuild.Converters;
 using Newtonsoft.Json;
 
 // ReSharper disable AssignNullToNotNullAttribute
@@ -104,72 +106,52 @@ namespace FreeMote.PsBuild
                     switch (imageOption)
                     {
                         case PsbImageOption.Extract:
-                            //var pixelFormat = resource.Spec.DefaultPixelFormat(); //MARK: PixelFormat should refer `type`
+                            ImageFormat pixelFormat;
                             switch (extractFormat)
                             {
                                 case PsbImageFormat.Png:
                                     relativePath += ".png";
-                                    if (resource.Compress == PsbCompressType.RL)
-                                    {
-                                        RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                            resource.Height, resource.Width, PsbImageFormat.Png, resource.PixelFormat);
-                                    }
-                                    else if (resource.Compress == PsbCompressType.Tlg
-                                             || resource.Compress == PsbCompressType.ByName && resource.Name.EndsWith(".tlg", true, null))
-                                    {
-                                        TlgImageConverter converter = new TlgImageConverter();
-                                        using (var ms = new MemoryStream(resource.Data))
-                                        {
-                                            BinaryReader br = new BinaryReader(ms);
-                                            converter.Read(br).Save(Path.Combine(dirPath, relativePath), ImageFormat.Png);
-                                        }
-                                        //WARN: tlg is kept and recorded in resource json for compile 
-                                        relativePath = Path.ChangeExtension(relativePath, ".tlg");
-                                        File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                                    }
-                                    else if (resource.Compress == PsbCompressType.ByName)
-                                    {
-                                        relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
-                                        File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                                    }
-                                    else
-                                    {
-                                        RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                            resource.Height, resource.Width, extractFormat, resource.PixelFormat);
-                                    }
+                                    pixelFormat = ImageFormat.Png;
                                     break;
                                 default:
                                     relativePath += ".bmp";
-                                    if (resource.Compress == PsbCompressType.RL)
-                                    {
-                                        RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                            resource.Height, resource.Width, PsbImageFormat.Bmp, resource.PixelFormat);
-                                    }
-                                    else if (resource.Compress == PsbCompressType.Tlg
-                                             || resource.Compress == PsbCompressType.ByName && resource.Name.EndsWith(".tlg", true, null))
-                                    {
-                                        TlgImageConverter converter = new TlgImageConverter();
-                                        using (var ms = new MemoryStream(resource.Data))
-                                        {
-                                            BinaryReader br = new BinaryReader(ms);
-                                            converter.Read(br).Save(Path.Combine(dirPath, relativePath), ImageFormat.Bmp);
-                                        }
-                                        //WARN: tlg is kept and recorded in resource json for compile 
-                                        relativePath = Path.ChangeExtension(relativePath, ".tlg");
-                                        File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                                    }
-                                    else if (resource.Compress == PsbCompressType.ByName)
-                                    {
-                                        relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
-                                        File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                                    }
-                                    else
-                                    {
-                                        RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                            resource.Height, resource.Width, extractFormat, resource.PixelFormat);
-                                    }
+                                    pixelFormat = ImageFormat.Bmp;
                                     break;
                             }
+
+                            if (resource.Compress == PsbCompressType.RL)
+                            {
+                                RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
+                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat);
+                            }
+                            else if (resource.Compress == PsbCompressType.Tlg
+                                     || resource.Compress == PsbCompressType.ByName && resource.Name.EndsWith(".tlg", true, null))
+                            {
+                                var bmp = TlgConverter.LoadTlg(resource.Data, out var ver);
+                                bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
+                                if (ver >= 6)
+                                {
+                                    resx.TlgVersion = 6;
+                                }
+                                bmp.Dispose();
+                                if (!TlgConverter.CanSaveTlg)
+                                {
+                                    //WARN: tlg is kept and recorded in resource json for compile 
+                                    relativePath = Path.ChangeExtension(relativePath, ".tlg");
+                                    File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
+                                }
+                            }
+                            else if (resource.Compress == PsbCompressType.ByName)
+                            {
+                                relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
+                                File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
+                            }
+                            else
+                            {
+                                RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
+                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat);
+                            }
+
                             break;
                         case PsbImageOption.Original:
                             if (resources[i].Compress == PsbCompressType.RL)

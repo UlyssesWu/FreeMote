@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
@@ -13,6 +14,8 @@ namespace FreeMote.PsBuild
     /// </summary>
     public static class PsbCompiler
     {
+        private static readonly List<string> SupportedImageExt = new List<string> { ".png", ".bmp", ".jpg", ".jpeg" };
+
         /// <summary>
         /// Compile to file
         /// </summary>
@@ -202,42 +205,90 @@ namespace FreeMote.PsBuild
             return psb;
         }
 
-        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata)
+        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata, bool tlg6 = false)
         {
             byte[] data;
+            Bitmap image = null;
             var ext = Path.GetExtension(path)?.ToLowerInvariant();
+
+            if (metadata.Compress == PsbCompressType.ByName && ext != null && metadata.Name != null && metadata.Name.EndsWith(ext, true, null))
+            {
+                return File.ReadAllBytes(path);
+            }
+
             switch (ext)
             {
-                case ".png":
-                case ".bmp":
-                case ".jpg":
-                case ".jpeg":
-                    switch (metadata.Compress)
+                //tlg
+                case ".tlg" when metadata.Compress == PsbCompressType.Tlg:
+                    return File.ReadAllBytes(path);
+                case ".tlg":
+                    image = TlgConverter.LoadTlg(File.ReadAllBytes(path), out _);
+                    break;
+                //rl
+                case ".rl" when metadata.Compress == PsbCompressType.RL:
+                    return File.ReadAllBytes(path);
+                case ".rl" when metadata.Compress == PsbCompressType.None:
+                    return RL.Uncompress(File.ReadAllBytes(path));
+                case ".rl":
+                    image = RL.UncompressToImage(File.ReadAllBytes(path), metadata.Height, metadata.Width,
+                        metadata.PixelFormat);
+                    break;
+                //raw
+                case ".raw" when metadata.Compress == PsbCompressType.None:
+                    return File.ReadAllBytes(path);
+                case ".raw" when metadata.Compress == PsbCompressType.RL:
+                    return RL.Compress(File.ReadAllBytes(path));
+                case ".raw":
+                    image = RL.ConvertToImage(File.ReadAllBytes(path), metadata.Height, metadata.Width,
+                        metadata.PixelFormat);
+                    break;
+                //bin
+                case ".bin":
+                    return File.ReadAllBytes(path);
+                //image
+                default:
+                    if (SupportedImageExt.Contains(ext))
                     {
-                        case PsbCompressType.RL:
-                            data = RL.CompressImageFile(path, metadata.PixelFormat);
-                            break;
-                        case PsbCompressType.ByName when metadata.Name != null && metadata.Name.EndsWith(ext, true, null):
-                            data = File.ReadAllBytes(path);
-                            break;
-                        case PsbCompressType.Tlg:
-                        //TODO: TLG encode
-                        default:
-                            data = RL.GetPixelBytesFromImageFile(path, metadata.PixelFormat);
-                            break;
+                        image = new Bitmap(path);
+                    }
+                    else
+                    {
+                        return File.ReadAllBytes(path);
                     }
                     break;
-                case ".rl":
-                    data = metadata.Compress == PsbCompressType.RL ? File.ReadAllBytes(path) : RL.Uncompress(File.ReadAllBytes(path));
+            }
+
+            switch (metadata.Compress)
+            {
+                case PsbCompressType.RL:
+                    data = RL.CompressImage(image, metadata.PixelFormat);
                     break;
-                case ".raw":
-                    data = metadata.Compress == PsbCompressType.RL ? RL.Compress(File.ReadAllBytes(path)) : File.ReadAllBytes(path);
+                case PsbCompressType.Tlg:
+                    if (TlgConverter.CanSaveTlg)
+                    {
+                        data = image.SaveTlg(tlg6);
+                    }
+                    else
+                    {
+                        var tlgPath = Path.ChangeExtension(path, ".tlg");
+                        if (File.Exists(tlgPath))
+                        {
+                            Console.WriteLine($"[WARN] Can not encode TLG, using {tlgPath}");
+                            data = File.ReadAllBytes(tlgPath);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
+                            data = File.ReadAllBytes(path);
+                        }
+                    }
                     break;
-                case ".tlg": //TODO: tlg encode
-                default: //For `.bin`, you have to handle by yourself
-                    data = File.ReadAllBytes(path);
+                case PsbCompressType.None:
+                default:
+                    data = RL.GetPixelBytesFromImage(image, metadata.PixelFormat);
                     break;
             }
+
             return data;
         }
 
@@ -257,7 +308,7 @@ namespace FreeMote.PsBuild
                 //    ? resList.FirstOrDefault(r => r.Index == rid)
                 //    : resList.FirstOrDefault(r =>
                 //        resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
-                
+
                 //Scan for Resource
                 var resMd = resList.FirstOrDefault(r =>
                     resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
@@ -312,7 +363,7 @@ namespace FreeMote.PsBuild
                 var fullPath = Path.IsPathRooted(resxResource.Value)
                     ? resxResource.Value
                     : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd);
+                byte[] data = LoadImageBytes(fullPath, resMd, resx.TlgVersion >= 6);
                 resMd.Resource.Data = data;
             }
         }
