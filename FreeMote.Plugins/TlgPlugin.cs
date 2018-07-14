@@ -39,14 +39,30 @@ namespace FreeMote.Plugins
         static TlgPlugin()
         {
             IsReady = false;
-            if (!File.Exists(PluginPath))
+            var path = Path.GetFullPath(PluginPath);
+            if (!File.Exists(path))
             {
-                return;
+                try
+                {
+                    path = Path.Combine(
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ??
+                        Environment.CurrentDirectory, PluginPath);
+                    //Console.WriteLine(path);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                if (!File.Exists(path))
+                {
+                    return;
+                }
             }
 
             try
             {
-                var asm = Assembly.LoadFile(Path.GetFullPath(PluginPath));
+                var asm = Assembly.LoadFile(path);
                 TlgNative = new LateType(asm, "FreeMote.Tlg.TlgNative");
                 //TlgLoader = new LateType(asm, "FreeMote.Tlg.TlgLoader");
                 if (TlgNative.IsAvailable)
