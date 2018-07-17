@@ -25,7 +25,8 @@ namespace FreeMote.PsBuild
         /// <param name="version">PSB version</param>
         /// <param name="cryptKey">CryptKey, if you need to use it outside FreeMote</param>
         /// <param name="platform">PSB Platform</param>
-        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null)
+        /// <param name="renameOutput">If true, the output file extension is renamed by type</param>
+        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -46,11 +47,39 @@ namespace FreeMote.PsBuild
             if (File.Exists(inputResPath))
             {
                 resJson = File.ReadAllText(inputResPath);
-                baseDir = Path.GetDirectoryName(inputPath);
+                baseDir = Path.GetDirectoryName(inputResPath);
+                if (renameOutput)
+                {
+                    if (resJson.Trim().StartsWith("{"))
+                    {
+                        PsbResourceJson resx = JsonConvert.DeserializeObject<PsbResourceJson>(resJson);
+                        string ext;
+                        switch (resx.PsbType)
+                        {
+                            case PsbType.Pimg:
+                                ext = ".pimg";
+                                break;
+                            case PsbType.Scn:
+                                ext = ".scn";
+                                break;
+                            case PsbType.Motion:
+                            case null:
+                            default:
+                                ext = ".psb";
+                                break;
+                        }
+                        var newPath = Path.ChangeExtension(outputPath, ext);
+                        if (!string.IsNullOrWhiteSpace(newPath))
+                        {
+                            outputPath = newPath;
+                        }
+                    }
+                }
             }
 
             var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform);
 
+            // ReSharper disable once AssignNullToNotNullAttribute
             File.WriteAllBytes(outputPath, result);
         }
 
@@ -61,7 +90,7 @@ namespace FreeMote.PsBuild
         /// <param name="inputResJson">Resource Json text</param>
         /// <param name="baseDir">If resource Json uses relative paths (usually it does), specify the base dir</param>
         /// <param name="version">PSB version</param>
-        /// <param name="cryptKey">CryptKey, if you need to use it outside FreeMote</param>
+        /// <param name="cryptKey">CryptKey, use null for pure PSB</param>
         /// <param name="spec">PSB Platform</param>
         /// <returns></returns>
         public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null, ushort? version = null, uint? cryptKey = null,
@@ -316,7 +345,7 @@ namespace FreeMote.PsBuild
                 {
                     resMd = resList.FirstOrDefault(r => r.Index == rid);
                 }
-                if (resMd == null && psb.Type == PsbType.Images)
+                if (resMd == null && psb.Type == PsbType.Pimg)
                 {
                     resMd = resList.FirstOrDefault(r => resName == Path.GetFileNameWithoutExtension(r.Name));
                 }
@@ -345,7 +374,7 @@ namespace FreeMote.PsBuild
                 //Scan for Resource
                 var resMd = resList.FirstOrDefault(r =>
                     resxResource.Key == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
-                if (resMd == null && psb.Type == PsbType.Images)
+                if (resMd == null && psb.Type == PsbType.Pimg)
                 {
                     resMd = resList.FirstOrDefault(r => resxResource.Key == Path.GetFileNameWithoutExtension(r.Name));
                 }

@@ -4,6 +4,10 @@
 
 namespace FreeMote
 {
+    /// <summary>
+    /// PSB Type
+    /// <remarks>It should not use generic name such as `Images` since different image types may still have different structures.</remarks>
+    /// </summary>
     public enum PsbType
     {
         /// <summary>
@@ -13,12 +17,12 @@ namespace FreeMote
         /// <summary>
         /// Images (pimg, dpak)
         /// </summary>
-        Images = 1,
+        Pimg = 1,
         /// <summary>
         /// Script (scn)
         /// </summary>
         /// TODO: KS decompiler?
-        Script = 2,
+        Scn = 2,
     }
 
     /// <summary>

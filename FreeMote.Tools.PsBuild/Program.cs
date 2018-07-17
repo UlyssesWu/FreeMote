@@ -11,6 +11,7 @@ namespace FreeMote.Tools.PsBuild
         //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
         private static uint? _key = null;
         private static ushort? _version = null;
+        private static bool _noRename = false;
 
         static void Main(string[] args)
         {
@@ -56,6 +57,14 @@ namespace FreeMote.Tools.PsBuild
                 {
                     TlgConverter.PreferManaged = false;
                 }
+                else if (s == "/no-rename")
+                {
+                    _noRename = true;
+                }
+                else if (s == "/rename")
+                {
+                    _noRename = false;
+                }
                 //else if (s.StartsWith("/f"))
                 //{
                 //    if (Enum.TryParse(s.Replace("/f", ""), true, out PsbPixelFormat format))
@@ -82,11 +91,12 @@ namespace FreeMote.Tools.PsBuild
         private static void Compile(string s)
         {
             var name = Path.GetFileNameWithoutExtension(s);
-            var ext = Path.GetExtension(s);
+            //var ext = Path.GetExtension(s);
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                PsbCompiler.CompileToFile(s, s + (_key == null ? "-pure.psb" : ".psb"), null, _version, _key, _platform);
+                var filename = s + (_key == null ? _noRename ? ".psb" : "-pure.psb" : ".psb");
+                PsbCompiler.CompileToFile(s, filename, null, _version, _key, _platform, true);
             }
             catch (Exception e)
             {
@@ -103,9 +113,11 @@ namespace FreeMote.Tools.PsBuild
 /k<CryptKey> : Set CryptKey. Default: none(Pure PSB). Requirement: uint, dec.
 /p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common/ems.
     Warning: Platform ONLY works with .bmp/.png format textures.
-/no-tlg: Always use managed TLG decoder (instead of TLG native plugin). Default: Use TLG native plugin when possible.
+/no-rename : Do not add `pure` in compiled filename.
+/no-tlg : Always use managed TLG decoder (instead of TLG native plugin). Default: Use TLG native plugin when possible.
 ");
             Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
         }
     }
 }
+

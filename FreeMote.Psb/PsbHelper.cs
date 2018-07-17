@@ -180,9 +180,9 @@ namespace FreeMote.Psb
         {
             switch (type)
             {
-                case PsbType.Images:
+                case PsbType.Pimg:
                     return "pimg";
-                case PsbType.Script:
+                case PsbType.Scn:
                     return "scn";
                 case PsbType.Motion:
                 default:
