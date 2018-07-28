@@ -135,6 +135,9 @@ namespace FreeMote.Psb
         string ToString();
     }
 
+    /// <summary>
+    /// Null: Reference type
+    /// </summary>
     [Serializable]
     public class PsbNull : IPsbValue, IPsbWrite
     {
@@ -163,6 +166,9 @@ namespace FreeMote.Psb
         public static PsbNull Null => new PsbNull();
     }
 
+    /// <summary>
+    /// Bool: Value type
+    /// </summary>
     [Serializable]
     public class PsbBool : IPsbValue, IPsbWrite
     {
@@ -193,6 +199,9 @@ namespace FreeMote.Psb
         Double
     }
 
+    /// <summary>
+    /// Number: Value type
+    /// </summary>
     [Serializable]
     public class PsbNumber : IPsbValue, IPsbWrite
     {
@@ -509,7 +518,7 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
-    /// uint[]
+    /// uint[]: Value type
     /// </summary>
     [Serializable]
     public class PsbArray : IPsbValue, IPsbWrite
@@ -608,6 +617,9 @@ namespace FreeMote.Psb
         }
     }
 
+    /// <summary>
+    /// String: Reference type
+    /// </summary>
     [Serializable]
     [DebuggerDisplay("{Value}(#{Index})")]
     public class PsbString : IPsbValue, IPsbIndexed, IPsbWrite
@@ -716,7 +728,7 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
-    /// psb_objects_t
+    /// psb_objects_t: {key: value}
     /// </summary>
     [Serializable]
     public class PsbDictionary : Dictionary<string, IPsbValue>, IPsbValue, IPsbCollection
@@ -747,6 +759,9 @@ namespace FreeMote.Psb
         }
     }
 
+    /// <summary>
+    /// [value1, value2...]
+    /// </summary>
     [Serializable]
     public class PsbCollection : List<IPsbValue>, IPsbValue, IPsbCollection
     {
@@ -776,6 +791,9 @@ namespace FreeMote.Psb
         }
     }
 
+    /// <summary>
+    /// Resource: Reference type
+    /// </summary>
     [Serializable]
     [DebuggerDisplay("Resource[{Data?.Length}](#{" + nameof(Index) + "})")]
     public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite, IPsbSingleton

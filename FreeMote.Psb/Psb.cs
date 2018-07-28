@@ -236,9 +236,9 @@ namespace FreeMote.Psb
         /// Unpack PSB Value
         /// </summary>
         /// <param name="br"></param>
-        /// <param name="stub">zero-knowledge reading</param>
+        /// <param name="lazyLoad">for zero-knowledge reading</param>
         /// <returns></returns>
-        private IPsbValue Unpack(BinaryReader br, bool stub = false)
+        private IPsbValue Unpack(BinaryReader br, bool lazyLoad = false)
         {
 
 #if DEBUG_OBJECT_WRITE
@@ -296,12 +296,16 @@ namespace FreeMote.Psb
                 case PsbObjType.StringN3:
                 case PsbObjType.StringN4:
                     var str = new PsbString(typeByte - (byte)PsbObjType.StringN1 + 1, br);
-                    if (stub)
+                    if (lazyLoad)
                     {
                         var found = Strings.Find(s => s.Index != null && s.Index == str.Index);
                         if (found == null)
                         {
                             Strings.Add(str);
+                        }
+                        else
+                        {
+                            str = found;
                         }
                     }
                     else
@@ -314,12 +318,16 @@ namespace FreeMote.Psb
                 case PsbObjType.ResourceN3:
                 case PsbObjType.ResourceN4:
                     var res = new PsbResource(typeByte - (byte)PsbObjType.ResourceN1 + 1, br);
-                    if (stub)
+                    if (lazyLoad)
                     {
                         var found = Resources.Find(r => r.Index != null && r.Index == res.Index);
                         if (found == null)
                         {
                             Resources.Add(res);
+                        }
+                        else
+                        {
+                            res = found;
                         }
                     }
                     else
@@ -328,9 +336,9 @@ namespace FreeMote.Psb
                     }
                     return res;
                 case PsbObjType.Collection:
-                    return LoadCollection(br, stub);
+                    return LoadCollection(br, lazyLoad);
                 case PsbObjType.Objects:
-                    return LoadObjects(br, stub);
+                    return LoadObjects(br, lazyLoad);
                 //Compiler used
                 case PsbObjType.Integer:
                 case PsbObjType.String:
@@ -347,7 +355,13 @@ namespace FreeMote.Psb
             return null;
         }
 
-        private PsbDictionary LoadObjects(BinaryReader br, bool stub = false)
+        /// <summary>
+        /// Load a dictionary
+        /// </summary>
+        /// <param name="br"></param>
+        /// <param name="lazyLoad"></param>
+        /// <returns></returns>
+        private PsbDictionary LoadObjects(BinaryReader br, bool lazyLoad = false)
         {
             var names = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             var offsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
@@ -359,7 +373,7 @@ namespace FreeMote.Psb
                 var name = Names[(int)names[i]];
                 var offset = offsets[i];
                 br.BaseStream.Seek(offset, SeekOrigin.Current);
-                var obj = Unpack(br, stub);
+                var obj = Unpack(br, lazyLoad);
                 if (obj != null)
                 {
                     if (obj is IPsbChild c)
@@ -378,12 +392,12 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Load a collection (unpack needed)
+        /// Load a collection
         /// </summary>
         /// <param name="br"></param>
-        /// <param name="stub"></param>
+        /// <param name="lazyLoad"></param>
         /// <returns></returns>
-        private PsbCollection LoadCollection(BinaryReader br, bool stub = false)
+        private PsbCollection LoadCollection(BinaryReader br, bool lazyLoad = false)
         {
             var offsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             var pos = br.BaseStream.Position;
@@ -392,7 +406,7 @@ namespace FreeMote.Psb
             {
                 var offset = offsets[i];
                 br.BaseStream.Seek(offset, SeekOrigin.Current);
-                var obj = Unpack(br, stub);
+                var obj = Unpack(br, lazyLoad);
                 if (obj != null)
                 {
                     if (obj is IPsbChild c)
@@ -799,13 +813,13 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Try aggressive loading
+        /// Try zero-knowledge loading
         /// <para>May (not) work on any PSB only if body is not encrypted</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="detectSize"></param>
-        public void DullahanLoad(Stream stream, int detectSize = 2048)
+        public void DullahanLoad(Stream stream, int detectSize = 1024)
         {
             byte[] wNumbers = { 0, 0, 0, 1, 0, 2 };
             byte[] nNumbers = { 0, 1, 2, 3, 4, 5 };
@@ -895,6 +909,8 @@ namespace FreeMote.Psb
             ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             if (ChunkOffsets.Value.Count == 0) //unknown1
             {
+                Header.OffsetUnknown1 = Header.OffsetChunkOffsets;
+                Header.OffsetUnknown2 = (uint)br.BaseStream.Position;
                 ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br); //unknown2
                 Header.OffsetChunkOffsets = (uint)br.BaseStream.Position;
                 ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br); //got it
@@ -907,6 +923,17 @@ namespace FreeMote.Psb
             Header.OffsetChunkLengths = (uint)br.BaseStream.Position;
             ChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             Resources.Sort((r1, r2) => (int)((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
+            //WARN: Didn't test very much, if your texture looks strange, FIX THIS
+            //If this is wrong, try to align by EOF
+            var currentPos = (uint)br.BaseStream.Position;
+            var padding = 16 - currentPos % 16;
+            if (padding < 16)
+            {
+                padding += 16;
+            }
+
+            Header.OffsetChunkData = currentPos + padding;
+
             foreach (var res in Resources)
             {
                 if (res.Index == null)
