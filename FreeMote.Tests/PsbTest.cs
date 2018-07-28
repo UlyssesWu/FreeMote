@@ -156,5 +156,18 @@ namespace FreeMote.Tests
             var bmp = painter.Draw(2048, 2048);
             bmp.Save("RenderCommon.png", ImageFormat.Png);
         }
+
+        [TestMethod]
+        public void TestDullahanPsb()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "akira_guide.psb");
+            //var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb");
+            //PsbFile file = new PsbFile(path);
+            //var un1 = file.Header.OffsetUnknown1;
+            //return;
+            var psb = new PSB(4);
+            psb.DullahanLoad(new FileStream(path, FileMode.Open));
+        }
     }
 }
