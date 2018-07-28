@@ -821,20 +821,19 @@ namespace FreeMote.Psb
         /// <param name="detectSize"></param>
         public void DullahanLoad(Stream stream, int detectSize = 1024)
         {
-            byte[] wNumbers = { 0, 0, 0, 1, 0, 2 };
-            byte[] nNumbers = { 0, 1, 2, 3, 4, 5 };
-            int testLength = wNumbers.Length;
+            byte[] wNumbers = { 1, 0, 0, 0};
+            byte[] nNumbers = { 1, 0};
             var possibleHeader = new byte[detectSize];
             stream.Read(possibleHeader, 0, detectSize);
             var namePos = -1;
-            for (var i = 0; i < possibleHeader.Length - testLength - 3 - 2; i++)
+            for (var i = 0; i < possibleHeader.Length - wNumbers.Length - 3; i++)
             {
                 //find 0x0E
                 if (possibleHeader[i] == (int)PsbObjType.ArrayN2)
                 {
                     if (possibleHeader[i + 3] == 0x0E)
-                    {
-                        if (possibleHeader.Skip(i + 3 + 2).Take(testLength).SequenceEqual(wNumbers))
+                    { 
+                        if (possibleHeader.Skip(i + 4).Take(wNumbers.Length).SequenceEqual(wNumbers))
                         {
                             namePos = i;
                             break;
@@ -842,7 +841,7 @@ namespace FreeMote.Psb
                     }
                     else if (possibleHeader[i + 3] == 0x0D)
                     {
-                        if (possibleHeader.Skip(i + 3 + 2).Take(testLength).SequenceEqual(wNumbers))
+                        if (possibleHeader.Skip(i + 4).Take(nNumbers.Length).SequenceEqual(wNumbers))
                         {
                             namePos = i;
                             break;

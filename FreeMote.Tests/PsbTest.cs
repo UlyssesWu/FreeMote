@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
+using FreeMote.PsBuild;
 
 
 namespace FreeMote.Tests
@@ -162,6 +163,7 @@ namespace FreeMote.Tests
         public void TestDullahanPsb()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb");
             var path = Path.Combine(resPath, "HD愛子a_春服.psb");
             var path2 = Path.Combine(resPath, "HD愛子a_春服-pure.psb");
             //var path = Path.Combine(resPath, "akira_guide.psb");
@@ -170,12 +172,13 @@ namespace FreeMote.Tests
             //var un1 = file.Header.OffsetUnknown1;
             //return;
             var psb = new PSB(4);
-            psb.DullahanLoad(new FileStream(path, FileMode.Open));
+            psb.DullahanLoad(new FileStream(path, FileMode.Open), 64);
 
             var p2 = new PsbFile(path2);
             var o1 = psb.Header.OffsetChunkData;
             var o2 = p2.Header.OffsetChunkData;
             var obj = psb.Objects.First();
+            psb.SwitchSpec(PsbSpec.win);
             psb.Merge();
             var r = psb.Resources[0].Data.Length;
             File.WriteAllBytes("Dullahan.psb", psb.Build());
