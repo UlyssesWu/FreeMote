@@ -661,7 +661,7 @@ namespace FreeMote.Psb
                     case 4:
                         return PsbObjType.StringN4;
                     default:
-                        throw new ArgumentOutOfRangeException("size", "Not a valid string");
+                        throw new ArgumentOutOfRangeException("size", size, "String index has wrong size");
                 }
             }
         }
@@ -741,7 +741,6 @@ namespace FreeMote.Psb
         public IPsbCollection Parent { get; set; } = null;
 
         public string Path => Parent != null ? $"{Parent.Path}{(Parent.Path.EndsWith("/") ? "" : "/")}{this.GetName() ?? "(array)"}" : "/";
-
 
         IPsbValue IPsbCollection.this[int i] => ContainsKey(i.ToString()) ? base[i.ToString()] : null;
 

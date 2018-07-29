@@ -878,8 +878,7 @@ namespace FreeMote.Psb
             psb.LoadFromDullahan(stream, detectSize);
             return psb;
         }
-
-
+        
         private void LoadFromDullahan(Stream stream, int detectSize = 1024)
         {
             byte[] wNumbers = { 1, 0, 0, 0 };
@@ -925,7 +924,6 @@ namespace FreeMote.Psb
             Header.OffsetNames = (uint)namePos;
             br.BaseStream.Seek(Header.OffsetNames, SeekOrigin.Begin);
             Charset = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
-            var l = br.BaseStream.Position;
             NamesData = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             NameIndexes = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             LoadNames();

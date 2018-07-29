@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace FreeMote.Psb
 {
@@ -191,7 +189,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Get it's Name in <see cref="PsbDictionary"/>
+        /// Get name in <see cref="PsbDictionary"/>
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
@@ -203,9 +201,10 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Get Name
+        /// Get name
         /// </summary>
         /// <param name="c"></param>
+        /// <param name="parent"></param>
         /// <returns></returns>
         public static string GetName(this IPsbSingleton c, PsbDictionary parent = null)
         {
