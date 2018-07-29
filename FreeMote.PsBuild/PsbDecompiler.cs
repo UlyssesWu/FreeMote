@@ -194,7 +194,7 @@ namespace FreeMote.PsBuild
                     }
                     catch (ArgumentException e)
                     {
-                        throw new BadImageFormatException("There are resources with same names! Try Raw export mode.", e);
+                        throw new PsbBadFormatException(PsbBadFormatReason.Resources, "There are resources with same names! Try Raw export mode.", e);
                     }
                 }
             }

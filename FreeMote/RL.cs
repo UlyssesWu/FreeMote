@@ -63,7 +63,7 @@ namespace FreeMote
                 var result = new byte[bytes.Length / 2];
                 for (int i = 0; i < result.Length; i += 2)
                 {
-                    ushort p = (ushort) ((bytes[i * 2] / 16) | 
+                    ushort p = (ushort)((bytes[i * 2] / 16) |
                                          (bytes[i * 2 + 1] / 16) << 4 |
                                          (bytes[i * 2 + 2] / 16) << 8 |
                                          (bytes[i * 2 + 3] / 16) << 12);
@@ -150,7 +150,7 @@ namespace FreeMote
             }
             catch (Exception e)
             {
-                throw new BadImageFormatException("data incorrect", e);
+                throw new PsbBadFormatException(PsbBadFormatReason.Resources, "data incorrect", e);
             }
             ConvertToImageFile(bytes, path, height, width, format, colorFormat);
         }
@@ -164,7 +164,7 @@ namespace FreeMote
             }
             catch (Exception e)
             {
-                throw new BadImageFormatException("data incorrect", e);
+                throw new PsbBadFormatException(PsbBadFormatReason.Resources, "data incorrect", e);
             }
             return ConvertToImage(bytes, height, width, colorFormat);
         }

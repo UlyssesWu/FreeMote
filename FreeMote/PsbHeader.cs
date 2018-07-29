@@ -112,11 +112,11 @@ namespace FreeMote
             var sig = new string(header.Signature).ToUpperInvariant();
             if (sig.StartsWith("MDF"))
             {
-                throw new BadImageFormatException("Maybe a MDF file");
+                throw new PsbBadFormatException(PsbBadFormatReason.IsMdf, "Maybe a MDF file");
             }
             if (!sig.StartsWith("PSB"))
             {
-                throw new BadImageFormatException("Not a valid PSB file");
+                throw new PsbBadFormatException(PsbBadFormatReason.Header, "Not a valid PSB file");
             }
             //if (header.HeaderEncrypt != 0) //following header is possibly encrypted
             //{
@@ -156,7 +156,7 @@ namespace FreeMote
             };
             if (!new string(header.Signature).ToUpperInvariant().StartsWith("PSB"))
             {
-                throw new BadImageFormatException("Not a valid PSB file");
+                throw new PsbBadFormatException(PsbBadFormatReason.Header, "Not a valid PSB file");
             }
 
             PsbStreamContext context = new PsbStreamContext(key);
@@ -234,7 +234,12 @@ namespace FreeMote
         {
             return GetHeaderLength(Version);
         }
-        
+
+        /// <summary>
+        /// Change version for Header
+        /// </summary>
+        /// <param name="version"></param>
+        /// <param name="offsetFields">if true, offset all fields</param>
         public void SwitchVersion(ushort version = 3, bool offsetFields = false)
         {
             if (version != 2 && version != 3 && version != 4)
@@ -305,6 +310,6 @@ namespace FreeMote
         /// <summary>
         /// Similar as <see cref="PsbFile.TestHeaderEncrypted"/> but not based on file.
         /// </summary>
-        public bool IsHeaderEncrypted => HeaderLength > MAX_HEADER_LENGTH || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
+        public bool IsHeaderEncrypted => HeaderLength > (MAX_HEADER_LENGTH + 16) || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
     }
 }

@@ -4,6 +4,24 @@
 
 namespace FreeMote
 {
+    internal enum PsbBadFormatReason
+    {
+        Header,
+        IsMdf,
+        Objects,
+        Resources,
+    }
+
+    internal class PsbBadFormatException : FormatException
+    {
+        public PsbBadFormatReason Reason { get; }
+
+        public PsbBadFormatException(PsbBadFormatReason reason, string message = null, Exception innerException = null) : base(message, innerException)
+        {
+            Reason = reason;
+        }
+    }
+
     /// <summary>
     /// PSB Type
     /// <remarks>It should not use generic name such as `Images` since different image types may still have different structures.</remarks>
@@ -128,3 +146,4 @@ namespace FreeMote
         Auto
     }
 }
+

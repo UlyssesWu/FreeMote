@@ -85,7 +85,7 @@ namespace FreeMote.Tests
                 PSB psb = new PSB(fs);
             }
         }
-        
+
         [TestMethod]
         public void TestPsbNumbers()
         {
@@ -110,7 +110,7 @@ namespace FreeMote.Tests
             var path2 = Path.Combine(resPath, "emote38-pure.mmo");
 
             MdfFile.CompressPsbToMdfStream(File.OpenRead(path2)).CopyTo(File.Create(path + "-repack.mmo"));
-            
+
             using (var mdfStream = File.OpenRead(path))
             {
                 using (var psbStream = MdfFile.UncompressToPsbStream(mdfStream))
@@ -168,17 +168,19 @@ namespace FreeMote.Tests
             var path2 = Path.Combine(resPath, "HD愛子a_春服-pure.psb");
             //var path = Path.Combine(resPath, "akira_guide.psb");
             //var path2 = Path.Combine(resPath, "akira_guide-pure.psb");
-            //PsbFile file = new PsbFile(path);
-            //var un1 = file.Header.OffsetUnknown1;
-            //return;
-            var psb = new PSB(4);
-            psb.DullahanLoad(new FileStream(path, FileMode.Open), 64);
 
+            var psb = PSB.DullahanLoad(new FileStream(path, FileMode.Open), 64);
             var p2 = new PsbFile(path2);
-            var o1 = psb.Header.OffsetChunkData;
-            var o2 = p2.Header.OffsetChunkData;
+
+            var offset1 = psb.Header.OffsetChunkData;
+            var offset2 = p2.Header.OffsetChunkData;
+            //Assert.AreEqual(offset1, offset2);
+
             var obj = psb.Objects.First();
-            psb.SwitchSpec(PsbSpec.win);
+            if (psb.Platform == PsbSpec.krkr)
+            {
+                psb.SwitchSpec(PsbSpec.win);
+            }
             psb.Merge();
             var r = psb.Resources[0].Data.Length;
             File.WriteAllBytes("Dullahan.psb", psb.Build());

@@ -79,20 +79,50 @@ namespace FreeMote.Psb
         {
             if (!File.Exists(path))
             {
-                throw new IOException("File not exists.");
+                throw new FileNotFoundException("File not exists.", path);
             }
 #if DEBUG_OBJECT_WRITE
             _tw = new StreamWriter(path + ".debug");
 #endif
             using (var fs = new FileStream(path, FileMode.Open))
             {
-                LoadFromStream(fs);
+                try
+                {
+                    LoadFromStream(fs);
+                }
+                catch (PsbBadFormatException e)
+                {
+                    if (e.Reason == PsbBadFormatReason.Header)
+                    {
+                        fs.Seek(0, SeekOrigin.Begin);
+                        LoadFromDullahan(fs);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
         }
 
         public PSB(Stream stream)
         {
-            LoadFromStream(stream);
+            try
+            {
+                LoadFromStream(stream);
+            }
+            catch (PsbBadFormatException e)
+            {
+                if (e.Reason == PsbBadFormatReason.Header)
+                {
+                    stream.Seek(0, SeekOrigin.Begin);
+                    LoadFromDullahan(stream);
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         /// <summary>
@@ -141,6 +171,10 @@ namespace FreeMote.Psb
 
             //Load Header
             Header = PsbHeader.Load(br);
+            if (Header.IsHeaderEncrypted)
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.Header);
+            }
 
             //Pre Load Strings
             br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
@@ -165,24 +199,19 @@ namespace FreeMote.Psb
             br.BaseStream.Seek(Header.OffsetEntries, SeekOrigin.Begin);
             IPsbValue obj;
 
-#if DEBUG
-            obj = Unpack(br);
-            if (obj == null)
-            {
-                throw new Exception("Can not parse objects");
-            }
-            Objects = obj as PsbDictionary ?? throw new Exception("Wrong offset when parsing objects");
-
-#else
+#if !DEBUG
             try
+#endif
             {
                 obj = Unpack(br);
                 if (obj == null)
                 {
-                    throw new Exception("Can not parse objects");
+                    throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
                 }
-                Objects = obj as PsbDictionary ?? throw new Exception("Wrong offset when parsing objects");
+                Objects = obj as PsbDictionary ??
+                    throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Wrong offset when parsing objects");
             }
+#if !DEBUG
             catch (Exception e)
             {
                 Debug.WriteLine(e);
@@ -813,16 +842,46 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Try zero-knowledge loading
+        /// Try skip header and load
+        /// <para>May (not) work on any PSB only if body is not encrypted</para>
+        /// <remarks>DuRaRaRa!!</remarks>
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="detectSize"></param>
+        public static PSB DullahanLoad(string path, int detectSize = 1024)
+        {
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("File not exists.", path);
+            }
+
+            using (var fs = new FileStream(path, FileMode.Open))
+            {
+                var psb = new PSB();
+                psb.LoadFromDullahan(fs, detectSize);
+                return psb;
+            }
+        }
+
+        /// <summary>
+        /// Try skip header and load
         /// <para>May (not) work on any PSB only if body is not encrypted</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="detectSize"></param>
-        public void DullahanLoad(Stream stream, int detectSize = 1024)
+        public static PSB DullahanLoad(Stream stream, int detectSize = 1024)
         {
-            byte[] wNumbers = { 1, 0, 0, 0};
-            byte[] nNumbers = { 1, 0};
+            var psb = new PSB();
+            psb.LoadFromDullahan(stream, detectSize);
+            return psb;
+        }
+
+
+        private void LoadFromDullahan(Stream stream, int detectSize = 1024)
+        {
+            byte[] wNumbers = { 1, 0, 0, 0 };
+            byte[] nNumbers = { 1, 0 };
             var possibleHeader = new byte[detectSize];
             stream.Read(possibleHeader, 0, detectSize);
             var namePos = -1;
@@ -832,7 +891,7 @@ namespace FreeMote.Psb
                 if (possibleHeader[i] == (int)PsbObjType.ArrayN2)
                 {
                     if (possibleHeader[i + 3] == 0x0E)
-                    { 
+                    {
                         if (possibleHeader.Skip(i + 4).Take(wNumbers.Length).SequenceEqual(wNumbers))
                         {
                             namePos = i;
@@ -855,6 +914,7 @@ namespace FreeMote.Psb
                 throw new FormatException("Can not find pattern");
             }
 
+            Header.Version = 3;
             var br = new BinaryReader(stream);
             Strings = new List<PsbString>();
             Resources = new List<PsbResource>();
@@ -908,6 +968,7 @@ namespace FreeMote.Psb
             ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             if (ChunkOffsets.Value.Count == 0) //unknown1
             {
+                Header.Version = 4;
                 Header.OffsetUnknown1 = Header.OffsetChunkOffsets;
                 Header.OffsetUnknown2 = (uint)br.BaseStream.Position;
                 ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br); //unknown2
@@ -932,7 +993,7 @@ namespace FreeMote.Psb
             }
 
             Header.OffsetChunkData = currentPos + padding;
-
+            Header.OffsetResourceOffsets = Header.OffsetChunkData;
             foreach (var res in Resources)
             {
                 if (res.Index == null)
