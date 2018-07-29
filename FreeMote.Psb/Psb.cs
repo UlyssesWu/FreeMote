@@ -800,7 +800,8 @@ namespace FreeMote.Psb
                 mbw.Flush();
                 new PsbArray(namesList).WriteTo(bw);
                 new PsbArray(indexList).WriteTo(bw);
-                bw.Write(ms.ToArray());
+                ms.WriteTo(bw.BaseStream);
+                //bw.Write(ms.ToArray());
             }
 
         }
@@ -825,7 +826,8 @@ namespace FreeMote.Psb
                 }
                 mbw.Flush();
                 new PsbArray(indexList).WriteTo(bw);
-                bw.Write(ms.ToArray());
+                ms.WriteTo(bw.BaseStream);
+                //bw.Write(ms.ToArray());
             }
         }
 
