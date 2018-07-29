@@ -686,7 +686,8 @@ namespace FreeMote.Psb
                 StringOffsets = new PsbArray(offsets);
                 StringOffsets.WriteTo(bw);
                 Header.OffsetStringsData = (uint)bw.BaseStream.Position;
-                bw.Write(strMs.ToArray());
+                strMs.WriteTo(bw.BaseStream);
+                //bw.Write(strMs.ToArray());
             }
 
             #endregion
@@ -716,7 +717,8 @@ namespace FreeMote.Psb
                 ChunkLengths = new PsbArray(lengths);
                 ChunkLengths.WriteTo(bw);
                 Header.OffsetChunkData = (uint)bw.BaseStream.Position;
-                bw.Write(resMs.ToArray());
+                resMs.WriteTo(bw.BaseStream);
+                //bw.Write(resMs.ToArray());
             }
 
             if (Header.Version > 3)
