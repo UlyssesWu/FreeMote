@@ -154,7 +154,12 @@ namespace FreeMote
                 Version = br.ReadUInt16(),
                 HeaderEncrypt = br.ReadUInt16()
             };
-            if (!new string(header.Signature).ToUpperInvariant().StartsWith("PSB"))
+            var sig = new string(header.Signature).ToUpperInvariant();
+            if (sig.StartsWith("MDF"))
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.IsMdf, "Maybe a MDF file");
+            }
+            if (!sig.StartsWith("PSB"))
             {
                 throw new PsbBadFormatException(PsbBadFormatReason.Header, "Not a valid PSB file");
             }
