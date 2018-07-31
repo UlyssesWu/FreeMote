@@ -23,6 +23,8 @@ namespace FreeMote
         /// </summary>
         public const uint Key3 = 521288629;
 
+        public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
+
         public static string ToStringForPsb(this PsbPixelFormat pixelFormat)
         {
             switch (pixelFormat)
@@ -98,17 +100,22 @@ namespace FreeMote
 
         public static string ReadStringZeroTrim(this BinaryReader br)
         {
-            StringBuilder sb = new StringBuilder();
-            while (br.PeekChar() != 0)
+            var pos = br.BaseStream.Position;
+            var length = 0;
+            while (br.ReadByte() > 0)
             {
-                sb.Append(br.ReadChar());
+                length++;
             }
-            return sb.ToString();
+            br.BaseStream.Position = pos;
+            var str = PsbEncoding.GetString(br.ReadBytes(length));
+            br.ReadByte(); //skip \0 - fail if end without \0
+            return str;
         }
 
         public static void WriteStringZeroTrim(this BinaryWriter bw, string str)
         {
-            bw.Write(str.ToCharArray());
+            //bw.Write(str.ToCharArray());
+            bw.Write(PsbEncoding.GetBytes(str));
             bw.Write((byte)0);
         }
 

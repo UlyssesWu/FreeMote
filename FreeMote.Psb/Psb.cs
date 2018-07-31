@@ -2,7 +2,6 @@
 //#define DEBUG_OBJECT_WRITE //Enable if you want to check how much bytes each object costs.
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;

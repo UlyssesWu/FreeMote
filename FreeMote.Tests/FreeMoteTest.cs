@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Text;
 using FreeMote.Plugins;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -225,6 +226,134 @@ namespace FreeMote.Tests
                         Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw"))));
 
             RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.WinRGBA4444);
+        }
+
+        [TestMethod]
+        public void TestReadWriteZeroTrimString()
+        {
+            string ReadPeekAndAppend(BinaryReader br)
+            {
+                StringBuilder sb = new StringBuilder();
+                while (br.PeekChar() != 0)
+                {
+                    sb.Append(br.ReadChar());
+                }
+                br.ReadByte(); //skip \0 - fail if end without \0
+                return sb.ToString();
+            }
+
+            string ReadDetectAndSwallow(BinaryReader br)
+            {
+                var pos = br.BaseStream.Position;
+                var length = 0;
+                while (br.ReadByte() > 0)
+                {
+                    length++;
+                }
+                br.BaseStream.Position = pos;
+                var str = Encoding.UTF8.GetString(br.ReadBytes(length));
+                br.ReadByte(); //skip \0 - fail if end without \0
+                return str;
+            }
+
+            //Generate super long string
+            var theNatureOfHuman = "人类的本质是:";
+            var bts = Encoding.UTF8.GetBytes(theNatureOfHuman);
+            using (var ms = new MemoryStream())
+            using (var bw = new BinaryWriter(ms))
+            using (var br = new BinaryReader(ms))
+            {
+                for (int i = 0; i < 100_0000; i++)
+                {
+                    bw.Write(bts);
+                }
+                bw.Write((byte)0);
+
+                Console.WriteLine("Read 1 long string:");
+                ms.Position = 0;
+                Stopwatch sw = Stopwatch.StartNew();
+                var r = ReadPeekAndAppend(br);
+                sw.Stop();
+                var time = sw.Elapsed;
+                Console.WriteLine($"Time of {nameof(ReadPeekAndAppend)}: \t{time}");
+
+                ms.Position = 0;
+                sw.Restart();
+                r = ReadDetectAndSwallow(br);
+                sw.Stop();
+                time = sw.Elapsed;
+                Console.WriteLine($"Time of {nameof(ReadDetectAndSwallow)}: \t{time}");
+
+                ms.SetLength(0); //Clear
+                for (int i = 0; i < 100_0000; i++)
+                {
+                    bw.Write(bts);
+                    bw.Write((byte)0);
+                }
+                
+                Console.WriteLine("Read 100_0000 short strings:");
+                ms.Position = 0;
+                sw.Restart();
+                while (br.BaseStream.Position < br.BaseStream.Length)
+                {
+                    r = ReadPeekAndAppend(br);
+                }
+                sw.Stop();
+                time = sw.Elapsed;
+                Console.WriteLine($"Time of {nameof(ReadPeekAndAppend)}:\t{time}");
+
+                ms.Position = 0;
+                sw.Restart();
+                while (br.BaseStream.Position < br.BaseStream.Length)
+                {
+                    r = ReadDetectAndSwallow(br);
+                }
+                sw.Stop();
+                time = sw.Elapsed;
+                Console.WriteLine($"Time of {nameof(ReadDetectAndSwallow)}:\t{time}");
+
+                ms.Position = 0;
+                Console.WriteLine("PeekChar vs AppendChar:");
+
+                sw.Restart();
+                for (int i = 0; i < 100_0000; i++)
+                {
+                    br.PeekChar();
+                }
+                sw.Stop();
+                time = sw.Elapsed;
+                Console.WriteLine($"Time of PeekChar: \t{time}");
+
+                StringBuilder sb = new StringBuilder();
+                sw.Restart();
+                for (int i = 0; i < 100_0000; i++)
+                {
+                    sb.Append('咕');
+                }
+                //r = sb.ToString();
+                sw.Stop();
+                time = sw.Elapsed;
+                Console.WriteLine($"Time of Append: \t{time}");
+
+                Console.WriteLine("Write 1 long string:");
+                ms.SetLength(0);
+                r = sb.ToString();
+
+                sw.Restart();
+                bw.Write(r.ToCharArray());
+                bw.Write((byte) 0);
+                sw.Stop();
+                time = sw.Elapsed;
+                Console.WriteLine($"Time of ToCharArray: \t{time}");
+
+                sw.Restart();
+                bw.Write(Encoding.UTF8.GetBytes(r));
+                bw.Write((byte)0);
+                sw.Stop();
+                time = sw.Elapsed;
+                Console.WriteLine($"Time of GetBytes: \t{time}");
+            }
+
         }
     }
 }
