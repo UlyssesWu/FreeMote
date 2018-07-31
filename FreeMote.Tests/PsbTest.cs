@@ -185,5 +185,16 @@ namespace FreeMote.Tests
             var r = psb.Resources[0].Data.Length;
             File.WriteAllBytes("Dullahan.psb", psb.Build());
         }
+
+        [TestMethod]
+        public void TestDullahanScn()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "test.ks.scn");
+            //var path = Path.Combine(resPath, "エリナ－その６_β（邂逅）.ks.scn");
+            //var rPsb = new PSB(path);
+            var psb = PSB.DullahanLoad(new FileStream(path, FileMode.Open), 64);
+
+        }
     }
 }
