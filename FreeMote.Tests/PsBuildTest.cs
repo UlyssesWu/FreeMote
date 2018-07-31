@@ -359,6 +359,19 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestMmioAndDullhanContent()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "00_pro02.txt.scn");
+            var path2 = Path.Combine(resPath, "00_pro02.txt.scn.json");
+            //var path = Path.Combine(resPath, "akira_guide.psb");
+            //var path2 = Path.Combine(resPath, "akira_guide.psb.json");
+            //var psb = new PSB(path);
+            var psb = PSB.DullahanLoad(path);
+            var r = PsbDecompiler.Decompile(psb).Equals(File.ReadAllText(path2));
+        }
+
+        [TestMethod]
         public void TestCompareDecompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

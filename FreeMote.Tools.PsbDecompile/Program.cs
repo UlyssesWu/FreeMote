@@ -13,13 +13,14 @@ namespace FreeMote.Tools.PsbDecompile
         static bool _png = true;
         static void Main(string[] args)
         {
-
             Console.WriteLine("FreeMote PSB Decompiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
             if (TlgConverter.CanSaveTlg)
             {
                 Console.WriteLine("[INFO] TLG Plugin Enabled.");
             }
+
+            PsbConstants.MemoryMappedLoading = true;
             Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
@@ -59,6 +60,21 @@ namespace FreeMote.Tools.PsbDecompile
                     continue;
                 }
 
+                // Disable MM IO
+                //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
+                if (s.ToLowerInvariant() == "/oom" || s.ToLowerInvariant() == "/low-mem")
+                {
+                    PsbConstants.MemoryMappedLoading = false;
+                    continue;
+                }
+
+                //Enable MM IO
+                if (s.ToLowerInvariant() == "/mem" || s.ToLowerInvariant() == "/fast")
+                {
+                    PsbConstants.MemoryMappedLoading = true;
+                    continue;
+                }
+
                 if (File.Exists(s))
                 {
                     Decompile(s, _extractImage, _uncompressImage, _png);
@@ -82,12 +98,14 @@ namespace FreeMote.Tools.PsbDecompile
 
         private static void PrintHelp()
         {
-            Console.WriteLine("Usage: .exe [Mode] <PSB path>");
+            Console.WriteLine("Usage: .exe [Mode] [Setting] <PSB path>");
             Console.WriteLine(@"Mode:
 /raw : Keep resource in original format.
 /er : Similar to raw mode but uncompress those compressed resources.
 /eb : Convert images to BMP format.
 /ep : [Default] Convert images to PNG format.
+Setting:
+/oom : Disable Memory Mapped IO. (Lower memory usage but longer time for loading)
 ");
             Console.WriteLine("Example: PsbDecompile /ep Emote.pure.psb");
             Console.WriteLine("\t PsbDecompile C:\\\\EmoteFolder");

@@ -25,6 +25,15 @@ namespace FreeMote
 
         public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
 
+        /// <summary>
+        /// Take more memory when loading, but maybe faster
+        /// </summary>
+        public static bool MemoryMappedLoading { get; set; } = true;
+        /// <summary>
+        /// Use more inferences to make loading fast, set to False when something is wrong
+        /// </summary>
+        public static bool FastMode { get; set; } = true;
+
         public static string ToStringForPsb(this PsbPixelFormat pixelFormat)
         {
             switch (pixelFormat)

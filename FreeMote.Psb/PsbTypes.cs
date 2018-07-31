@@ -689,8 +689,24 @@ namespace FreeMote.Psb
             }
             return s1.Equals(s2);
         }
-
         public static bool operator !=(PsbString s1, PsbString s2)
+        {
+            return !(s1 == s2);
+        }
+
+        public static bool operator ==(PsbString s1, string s2)
+        {
+            return s1?.Value == s2;
+        }
+        public static bool operator !=(PsbString s1, string s2)
+        {
+            return !(s1 == s2);
+        }
+        public static bool operator ==(string s1, PsbString s2)
+        {
+            return s1 == s2?.Value;
+        }
+        public static bool operator !=(string s1, PsbString s2)
         {
             return !(s1 == s2);
         }
@@ -707,12 +723,18 @@ namespace FreeMote.Psb
             {
                 return false;
             }
+
+            //WARN: PsbString is considered Equal once they have same Index, rather than Value!
+            if (this.Index != null && other.Index != null)
+            {
+                return this.Index == other.Index;
+            }
             return string.Equals(Value, other.Value);
         }
 
         public override int GetHashCode()
         {
-            return (Value != null ? Value.GetHashCode() : 0);
+            return Index != null ? (int) Index.Value : (Value != null ? Value.GetHashCode() : 0);
         }
 
         public void WriteTo(BinaryWriter bw)

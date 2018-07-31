@@ -167,13 +167,22 @@ namespace FreeMote.Psb
             {
                 stream.Seek(-4, SeekOrigin.Current);
             }
-            BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
 
+            BinaryReader sourceBr = new BinaryReader(stream, Encoding.UTF8);
+            BinaryReader br = sourceBr;
+            
             //Load Header
             Header = PsbHeader.Load(br);
             if (Header.IsHeaderEncrypted)
             {
                 throw new PsbBadFormatException(PsbBadFormatReason.Header);
+            }
+
+            //Switch MemoryMapped IO
+            if (PsbConstants.MemoryMappedLoading)
+            {
+                sourceBr.BaseStream.Position = 0;
+                br = new BinaryReader(new MemoryStream(sourceBr.ReadBytes((int)Header.OffsetChunkData)));
             }
 
             //Pre Load Strings
@@ -229,6 +238,17 @@ namespace FreeMote.Psb
             //    var resArray = Unpack(br);
             //}
 
+            if (PsbConstants.MemoryMappedLoading)
+            {
+                br.Close();
+                br.Dispose();
+            }
+
+            //Load Resource
+            foreach (var res in Resources)
+            {
+                LoadResource(res, sourceBr);
+            }
             Resources.Sort((r1, r2) => (int)((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
             Type = InferType();
         }
@@ -327,14 +347,14 @@ namespace FreeMote.Psb
                     var str = new PsbString(typeByte - (byte)PsbObjType.StringN1 + 1, br);
                     if (lazyLoad)
                     {
-                        var found = Strings.Find(s => s.Index != null && s.Index == str.Index);
-                        if (found == null)
+                        var foundStr = Strings.Find(s => s.Index != null && s.Index == str.Index);
+                        if (foundStr == null)
                         {
                             Strings.Add(str);
                         }
                         else
                         {
-                            str = found;
+                            str = foundStr;
                         }
                     }
                     else
@@ -347,21 +367,15 @@ namespace FreeMote.Psb
                 case PsbObjType.ResourceN3:
                 case PsbObjType.ResourceN4:
                     var res = new PsbResource(typeByte - (byte)PsbObjType.ResourceN1 + 1, br);
-                    if (lazyLoad)
+                    //LoadResource(ref res, br); //No longer load Resources here
+                    var foundRes = Resources.Find(r => r.Index == res.Index);
+                    if (foundRes == null)
                     {
-                        var found = Resources.Find(r => r.Index != null && r.Index == res.Index);
-                        if (found == null)
-                        {
-                            Resources.Add(res);
-                        }
-                        else
-                        {
-                            res = found;
-                        }
+                        Resources.Add(res);
                     }
                     else
                     {
-                        LoadResource(ref res, br);
+                        res = foundRes;
                     }
                     return res;
                 case PsbObjType.Collection:
@@ -385,10 +399,10 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Load a dictionary
+        /// Load a dictionary, won't ensure stream Position unless use <paramref name="lazyLoad"/>
         /// </summary>
         /// <param name="br"></param>
-        /// <param name="lazyLoad"></param>
+        /// <param name="lazyLoad">whether to lift stream Position to dictionary end</param>
         /// <returns></returns>
         private PsbDictionary LoadObjects(BinaryReader br, bool lazyLoad = false)
         {
@@ -437,10 +451,10 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Load a collection
+        /// Load a collection, won't ensure stream Position unless use <paramref name="lazyLoad"/>
         /// </summary>
         /// <param name="br"></param>
-        /// <param name="lazyLoad"></param>
+        /// <param name="lazyLoad">whether to lift stream Position</param>
         /// <returns></returns>
         private PsbCollection LoadCollection(BinaryReader br, bool lazyLoad = false)
         {
@@ -474,7 +488,6 @@ namespace FreeMote.Psb
                 {
                     endPos = br.BaseStream.Position;
                 }
-                //br.BaseStream.Seek(pos, SeekOrigin.Begin);
             }
             if (lazyLoad)
             {
@@ -484,58 +497,72 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Load a resource based on index
+        /// Load a resource content based on index, lift stream Position
         /// </summary>
         /// <param name="res"></param>
         /// <param name="br"></param>
-        private void LoadResource(ref PsbResource res, BinaryReader br)
+        private void LoadResource(PsbResource res, BinaryReader br)
         {
             if (res.Index == null)
             {
                 throw new IndexOutOfRangeException("Resource Index invalid");
             }
-            //FIXED: Add check for re-used resources
-            var resIndex = res.Index;
-            var re = Resources.Find(r => r.Index == resIndex);
-            if (re != null)
-            {
-                res = re;
-                return; //Already loaded!
-            }
-            var pos = br.BaseStream.Position;
+            ////No longer used
+            //var resIndex = res.Index;
+            //var re = Resources.Find(r => r.Index == resIndex);
+            //if (re != null)
+            //{
+            //    res = re;
+            //    return; //Already loaded!
+            //}
+            //var pos = br.BaseStream.Position;
             var offset = ChunkOffsets[(int)res.Index];
             var length = ChunkLengths[(int)res.Index];
             br.BaseStream.Seek(Header.OffsetChunkData + offset, SeekOrigin.Begin);
             res.Data = br.ReadBytes((int)length);
-            br.BaseStream.Seek(pos, SeekOrigin.Begin);
-            Resources.Add(res);
+            //br.BaseStream.Seek(pos, SeekOrigin.Begin);
+            //Resources.Add(res);
         }
 
         /// <summary>
-        /// Load a string based on index
+        /// Load a string based on index, lift stream Position
         /// </summary>
         /// <param name="str"></param>
         /// <param name="br"></param>
         private void LoadString(ref PsbString str, BinaryReader br)
         {
-            if (StringOffsets == null)
+            //var pos = br.BaseStream.Position;
+            Debug.Assert(str.Index != null, "Index can not be null");
+            var idx = str.Index.Value;
+            PsbString refStr = null;
+            if (Strings.Contains(str))
             {
+                refStr = Strings.Find(s => s.Index == idx);
+                if (PsbConstants.FastMode)
+                {
+                    str = refStr;
+                    return;
+                }
+                
+            }
+            br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)idx], SeekOrigin.Begin);
+            var strValue = br.ReadStringZeroTrim();
+
+            if (refStr != null && strValue == refStr.Value) //Strict value equal check
+            {
+                str = refStr;
                 return;
             }
-            var pos = br.BaseStream.Position;
-            Debug.Assert(str.Index != null, "Index can not be null");
-            br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)str.Index], SeekOrigin.Begin);
-            var strValue = br.ReadStringZeroTrim();
             str.Value = strValue;
-            br.BaseStream.Seek(pos, SeekOrigin.Begin);
-            if (!Strings.Contains(str))
-            {
-                Strings.Add(str);
-            }
-            else
-            {
-                str = Strings.Find(s => s.Value == strValue);
-            }
+            //br.BaseStream.Seek(pos, SeekOrigin.Begin);
+            //if (!Strings.Contains(str))
+            //{
+            //    Strings.Add(str);
+            //}
+            //else
+            //{
+            //    str = Strings.Find(s => s.Value == strValue);
+            //}
         }
 
         /// <summary>
@@ -876,8 +903,8 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Try skip header and load
-        /// <para>May (not) work on any PSB only if body is not encrypted</para>
+        /// Try skip header and load. May (not) work on any PSB only if body is not encrypted
+        /// <para><see cref="PsbConstants.MemoryMappedLoading"/> won't accelerate.</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
         /// <param name="path"></param>
@@ -979,17 +1006,47 @@ namespace FreeMote.Psb
             StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             Header.OffsetStringsData = (uint)br.BaseStream.Position;
             Strings.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
-            for (var i = 0; i < Strings.Count; i++)
+
+            if (StringOffsets.Value.Count > 0 && PsbConstants.MemoryMappedLoading)
             {
-                var str = Strings[i];
-                if (str.Index == null)
+                uint strsEndPos = StringOffsets.Value.Max();
+                br.BaseStream.Seek(strsEndPos, SeekOrigin.Current);
+                br.ReadStringZeroTrim();
+                strsEndPos = (uint)br.BaseStream.Position;
+                var strsLength = strsEndPos - Header.OffsetStringsData;
+                br.BaseStream.Seek(-strsLength, SeekOrigin.Current);
+
+                using (var strMs = new MemoryStream(br.ReadBytes((int)strsLength)))
+                using (var strBr = new BinaryReader(strMs))
                 {
-                    continue;
+                    for (var i = 0; i < Strings.Count; i++)
+                    {
+                        var str = Strings[i];
+                        if (str.Index == null)
+                        {
+                            continue;
+                        }
+                        strBr.BaseStream.Seek(StringOffsets[(int)str.Index], SeekOrigin.Begin);
+                        var strValue = strBr.ReadStringZeroTrim();
+                        str.Value = strValue;
+                    }
                 }
-                br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)str.Index], SeekOrigin.Begin);
-                var strValue = br.ReadStringZeroTrim();
-                str.Value = strValue;
             }
+            else
+            {
+                for (var i = 0; i < Strings.Count; i++)
+                {
+                    var str = Strings[i];
+                    if (str.Index == null)
+                    {
+                        continue;
+                    }
+                    br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)str.Index], SeekOrigin.Begin);
+                    var strValue = br.ReadStringZeroTrim();
+                    str.Value = strValue;
+                }
+            }
+            
 
             //Load Resources
             while (br.PeekChar() != (int)PsbObjType.ArrayN1 && br.PeekChar() != (int)PsbObjType.ArrayN2)
@@ -1041,14 +1098,7 @@ namespace FreeMote.Psb
                 Header.OffsetResourceOffsets = Header.OffsetChunkData;
                 foreach (var res in Resources)
                 {
-                    if (res.Index == null)
-                    {
-                        continue;
-                    }
-                    var offset = ChunkOffsets[(int)res.Index];
-                    var length = ChunkLengths[(int)res.Index];
-                    br.BaseStream.Seek(Header.OffsetChunkData + offset, SeekOrigin.Begin);
-                    res.Data = br.ReadBytes((int)length);
+                    LoadResource(res, br);
                 }
             }
 

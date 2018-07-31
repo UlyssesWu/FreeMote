@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -102,6 +104,35 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPsbStrings()
+        {
+            var p1 = new PsbString("PSB");
+            var p2 = new PsbString("PSB", index: 1);
+            var p3 = new PsbString("MDF", 1);
+            var p4 = new PsbString("MDF");
+            var s1 = "PSB";
+            var r = p1 == p2;
+            r = p2 == p3;
+            r = p3 == p4;
+            r = p1 == s1;
+            r = s1 == p1;
+            r = p3 == s1;
+            p2.Index = null;
+            r = p2 == p3;
+            p2.Index = 1;
+            var dic = new Dictionary<PsbString, string>();
+            dic.Add(p3, "mdf");
+            r = dic.ContainsKey(p4);
+            r = dic.ContainsKey(p2);
+            r = dic.ContainsKey(p1);
+            dic.Add(p1, "psb");
+            r = dic.ContainsKey(p4);
+            r = dic.ContainsKey(p2);
+            r = dic.ContainsKey(p1);
+            
+        }
+
+        [TestMethod]
         public void TestMdf()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
@@ -190,11 +221,23 @@ namespace FreeMote.Tests
         public void TestDullahanScn()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "test.ks.scn");
+            var path = Path.Combine(resPath, "00_pro02.txt.scn");
             //var path = Path.Combine(resPath, "エリナ－その６_β（邂逅）.ks.scn");
             //var rPsb = new PSB(path);
-            var psb = PSB.DullahanLoad(new FileStream(path, FileMode.Open), 64);
-
+            var fs = new FileStream(path, FileMode.Open);
+            Stopwatch sw = Stopwatch.StartNew();
+            //var psb = PSB.DullahanLoad(fs, 64);
+            var psb = new PSB(fs);
+            sw.Stop();
+            var time = sw.Elapsed;
+            //return;
+            PsbConstants.MemoryMappedLoading = false;
+            fs.Position = 0;
+            sw.Restart();
+            //psb = PSB.DullahanLoad(fs, 64);
+            psb = new PSB(fs);
+            sw.Stop();
+            time = sw.Elapsed;
         }
     }
 }
