@@ -837,15 +837,16 @@ namespace FreeMote.Psb
         private void SaveObjects(BinaryWriter bw, PsbDictionary pDic)
         {
             bw.Write((byte)pDic.Type);
-            var namesList = new List<uint>();
-            var indexList = new List<uint>();
+            var namesList = new List<uint>(pDic.Count);
+            var indexList = new List<uint>(pDic.Count);
             using (var ms = new MemoryStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms);
                 foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
                     //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
-                    var index = Names.FindIndex(s => s == pair.Key);
+                    //var index = Names.FindIndex(s => s == pair.Key);
+                    var index = Names.IndexOf(pair.Key);
                     if (index < 0)
                     {
                         throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
