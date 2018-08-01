@@ -46,6 +46,12 @@ namespace FreeMote.PsBuild
         public int? TlgVersion { get; set; } = 5;
 
         /// <summary>
+        /// Setting Context (mainly for plugins)
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, object> Context { get; set; } = new Dictionary<string, object>();
+
+        /// <summary>
         /// Resources
         /// </summary>
         public Dictionary<string, string> Resources { get; set; }

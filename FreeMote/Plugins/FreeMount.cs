@@ -17,12 +17,12 @@ namespace FreeMote.Plugins
     /// </summary>
     internal class FreeMount : IDisposable
     {
+        public const string PsbShellType = "PsbShellType";
         public Dictionary<string, IPsbShell> Shells { get; private set; } = new Dictionary<string, IPsbShell>();
 
         public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } =
             new Dictionary<string, IPsbImageFormatter>();
 
-        public string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
         private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
         private const string PLUGIN_DIR = "Plugins";
         private CompositionContainer _container;
@@ -33,9 +33,26 @@ namespace FreeMote.Plugins
         [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
 
         private static FreeMount _mount = null;
-        public static FreeMount _ => _mount ?? (_mount = new FreeMount());
+        internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
+        public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
 
-        public void Init(string path = null)
+        public static void Init()
+        {
+            _.Init(null);
+        }
+
+        public static void Free()
+        {
+            _mount.Dispose();
+            _mount = null;
+        }
+
+        public static FreeMountContext CreateContext(Dictionary<string, object> context = null)
+        {
+            return new FreeMountContext(context ?? new Dictionary<string, object>());
+        }
+
+        public void Init(string path)
         {
             if (path == null)
             {
@@ -99,6 +116,19 @@ namespace FreeMote.Plugins
             return _plugins[plugin];
         }
 
+        public void Remove(IPsbPlugin plugin)
+        {
+            if (plugin is IPsbImageFormatter f)
+            {
+                f.Extensions.ForEach(ext => ImageFormatters.Remove(ext));
+            }
+            if (plugin is IPsbShell s)
+            {
+                Shells.Remove(s.Name);
+            }
+            _plugins.Remove(plugin);
+        }
+
         public Bitmap ResourceToBitmap(string ext, in byte[] data, Dictionary<string, object> context = null)
         {
             if (ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBitmap(data))
@@ -106,7 +136,7 @@ namespace FreeMote.Plugins
                 return null;
             }
 
-            return ImageFormatters[ext].ToBitmap(data);
+            return ImageFormatters[ext].ToBitmap(data, context);
         }
 
         public byte[] BitmapToResource(string ext, Bitmap bitmap, Dictionary<string, object> context = null)
@@ -116,17 +146,25 @@ namespace FreeMote.Plugins
                 return null;
             }
 
-            return ImageFormatters[ext].ToBytes(bitmap);
+            return ImageFormatters[ext].ToBytes(bitmap, context);
         }
 
-        public Stream OpenFromShell(Stream stream, out string type, Dictionary<string, object> context = null)
+        public Stream OpenFromShell(Stream stream, ref string type, Dictionary<string, object> context = null)
         {
+            if (type != null)
+            {
+                return Shells[type]?.ToPsb(stream, context);
+            }
             foreach (var psbShell in Shells.Values)
             {
+                if (psbShell == null)
+                {
+                    continue;
+                }
                 if (psbShell.IsInShell(stream))
                 {
                     type = psbShell.Name;
-                    return psbShell.ToPsb(stream);
+                    return psbShell.ToPsb(stream, context);
                 }
             }
 
@@ -134,16 +172,14 @@ namespace FreeMote.Plugins
             return stream;
         }
 
-        public bool PackToShell(Stream stream, string type, out Stream output, Dictionary<string, object> context = null)
+        public Stream PackToShell(Stream stream, string type, Dictionary<string, object> context = null)
         {
             if (Shells[type] == null)
             {
-                output = stream;
-                return false;
+                return null;
             }
 
-            output = Shells[type].ToShell(stream);
-            return true;
+            return Shells[type].ToShell(stream, context);
         }
 
         public void Dispose()
