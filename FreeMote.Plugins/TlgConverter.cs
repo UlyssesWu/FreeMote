@@ -1,12 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Drawing;
 using System.IO;
-using FreeMote.Plugins;
 
-namespace FreeMote.PsBuild
+namespace FreeMote.Plugins
 {
-    public static class TlgConverter
+    [Export(typeof(IPsbImageFormatter))]
+    [ExportMetadata("Name", "FreeMote.Tlg")]
+    [ExportMetadata("Author", "Ulysses")]
+    [ExportMetadata("Comment", "TLG support via TlgLib.")]
+    public class TlgConverter : IPsbImageFormatter
     {
+        private const string TlgVersion = "TlgVersion";
         /// <summary>
         /// Use managed TLG loader if possible
         /// </summary>
@@ -60,7 +66,7 @@ namespace FreeMote.PsBuild
         /// <param name="bmp"></param>
         /// <param name="tlg6">true: Save as TLG6; false: Save as TLG5</param>
         /// <returns></returns>
-        public static byte[] SaveTlg(this Bitmap bmp, bool tlg6 = false)
+        public static byte[] SaveTlg(Bitmap bmp, bool tlg6 = false)
         {
             if (!CanSaveTlg)
             {
@@ -68,6 +74,33 @@ namespace FreeMote.PsBuild
             }
 
             return TlgPlugin.SaveTlg(bmp, tlg6);
+        }
+
+        public List<string> Extensions { get; } = new List<string> { ".tlg", ".tlg5", ".tlg6" };
+        public bool CanToBitmap(in byte[] data, Dictionary<string, object> context = null)
+        {
+            return true;
+        }
+
+        public bool CanToBytes(Bitmap bitmap, Dictionary<string, object> context = null)
+        {
+            return TlgPlugin.IsEnabled;
+        }
+
+        public Bitmap ToBitmap(in byte[] data, Dictionary<string, object> context = null)
+        {
+            var bmp = LoadTlg(data, out var v);
+            if (v > 5 && context != null)
+            {
+                context[TlgVersion] = v;
+            }
+
+            return bmp;
+        }
+
+        public byte[] ToBytes(Bitmap bitmap, Dictionary<string, object> context = null)
+        {
+            return SaveTlg(bitmap, context != null && context[TlgVersion] is int v && v == 6);
         }
     }
 }

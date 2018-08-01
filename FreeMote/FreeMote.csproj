@@ -21,6 +21,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,9 +31,11 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime" />
@@ -45,6 +48,10 @@
     <Compile Include="DxtCodec.cs" />
     <Compile Include="DxtUtil.cs" />
     <Compile Include="MdfFile.cs" />
+    <Compile Include="Plugins\FreeMount.cs" />
+    <Compile Include="Plugins\IPsbPluginInfo.cs" />
+    <Compile Include="Plugins\IPsbImageFormatter.cs" />
+    <Compile Include="Plugins\IPsbShell.cs" />
     <Compile Include="RleCompress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsbConstants.cs" />

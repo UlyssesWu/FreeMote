@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using FreeMote.Plugins;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 
@@ -26,7 +27,7 @@ namespace FreeMote.PsBuild
         /// <param name="cryptKey">CryptKey, if you need to use it outside FreeMote</param>
         /// <param name="platform">PSB Platform</param>
         /// <param name="renameOutput">If true, the output file extension is renamed by type</param>
-        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true)
+        public static void  CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -293,11 +294,8 @@ namespace FreeMote.PsBuild
                     data = RL.CompressImage(image, metadata.PixelFormat);
                     break;
                 case PsbCompressType.Tlg:
-                    if (TlgConverter.CanSaveTlg)
-                    {
-                        data = image.SaveTlg(tlg6);
-                    }
-                    else
+                    data = FreeMount._.BitmapToResource(".tlg", image);
+                    if (data == null)
                     {
                         var tlgPath = Path.ChangeExtension(path, ".tlg");
                         if (File.Exists(tlgPath))

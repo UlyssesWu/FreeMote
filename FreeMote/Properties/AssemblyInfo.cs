@@ -24,6 +24,7 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("FreeMote.PsBuild")]
 [assembly: InternalsVisibleTo("FreeMote.Purify")]
 [assembly: InternalsVisibleTo("FreeMote.Psb")]
+[assembly: InternalsVisibleTo("FreeMote.Plugins")]
 [assembly: InternalsVisibleTo("FreeMote.Tests")]
 
 // 程序集的版本信息由下列四个值组成:
