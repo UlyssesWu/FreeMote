@@ -79,7 +79,7 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "D愛子a_春服-pure.psb.json");
-            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
+            var path = Path.Combine(resPath, "dx_れいなh1a1.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
         }
 
@@ -110,6 +110,8 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestJsonNumbers()
         {
+            //var f = (111111111123L).ToString("X16");
+            //var jj = JsonConvert.DeserializeObject("[0xDEADBEEF]");
             List<float> floats = new List<float> { -0.00000001f, 1 / 3f, -0.000027f, 19.200079f, (float)Math.PI, float.MinValue };
             string json = JsonConvert.SerializeObject(floats);
             Console.WriteLine(json);
@@ -372,16 +374,31 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestNaN()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var path = Path.Combine(resPath, "dx_れいなh1a1.psb");
+            //var psb = new PSB(path);
+            var path = Path.Combine(resPath, "dx_れいなh1a1.psb.json");
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            var o = psb.Objects.FindByPath(
+                "/object/head_parts/motion/頭部変形基礎/layer/[0]/children/[3]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[1]/children/[0]/children/[0]/children/[0]/children/[0]/frameList/[0]/content/coord") as PsbCollection;
+            var num = o[0] as PsbNumber;
+            var val = num.IntValue;
+            var valNaN = num.FloatValue;
+        }
+
+        [TestMethod]
         public void TestCompareDecompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
-            var pccPsb = new PSB(Path.Combine(resPath, "e-mote38_win-pure.psb"));
+            var pccPsb = new PSB(Path.Combine(resPath, "dx_れいなh1a1.psb"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01.psb"));
 
             //var psbuildPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json.psbuild.psb"));
-            var psbuildPsb = new PSB(Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json.psbuild.psb"));
+            var psbuildPsb = new PSB(Path.Combine(resPath, "dx_れいなh1a1.psb.json-pure.psb"));
 
             //foreach (var s in psbuildPsb.Strings)
             //{
@@ -492,6 +509,8 @@ namespace FreeMote.Tests
                             {
                                 continue;
                             }
+
+                            Console.WriteLine(c1.Path);
                             //Console.WriteLine($"{c1.Value[i]} != {c2.Value[i]}");
                         }
                         return true;

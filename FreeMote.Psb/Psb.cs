@@ -570,14 +570,16 @@ namespace FreeMote.Psb
         /// </summary>
         public void Merge()
         {
-            Names = new List<string>();
-            Strings = new List<PsbString>();
             Resources = new List<PsbResource>();
+            var namesSet = new HashSet<string>();
+            var stringsDic = new Dictionary<string, PsbString>();
             Collect(Objects);
 
+            Names = new List<string>(namesSet);
             Names.Sort(String.CompareOrdinal); //FIXED: Compared by bytes
+            Strings = new List<PsbString>(stringsDic.Values);
             UpdateIndexes();
-            UniqueString(Objects);
+            //UniqueString(Objects);
 
             void Collect(IPsbValue obj)
             {
@@ -590,9 +592,10 @@ namespace FreeMote.Psb
                         }
                         break;
                     case PsbString s:
-                        if (!Strings.Contains(s))
+                        if (!stringsDic.ContainsKey(s.Value))
                         {
-                            Strings.Add(s);
+                            stringsDic.Add(s.Value, s);
+                            //Strings.Add(s);
                         }
                         break;
                     case PsbCollection c:
@@ -604,9 +607,9 @@ namespace FreeMote.Psb
                     case PsbDictionary d:
                         foreach (var pair in d)
                         {
-                            if (!Names.Contains(pair.Key))
+                            if (!namesSet.Contains(pair.Key))
                             {
-                                Names.Add(pair.Key);
+                                namesSet.Add(pair.Key);
 
                                 //Does Name appears in String Table? No.
                                 //var psbStr = new PsbString(pair.Name);

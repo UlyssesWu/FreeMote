@@ -73,7 +73,7 @@ namespace FreeMote.Psb
     /// <summary>
     /// Contained by a <see cref="IPsbCollection"/>
     /// </summary>
-    public interface IPsbChild
+    public interface IPsbChild : IPsbValue
     {
         /// <summary>
         /// <see cref="IPsbCollection"/> which contain this
@@ -196,7 +196,7 @@ namespace FreeMote.Psb
     {
         Int,
         Float,
-        Double
+        Double,
     }
 
     /// <summary>
@@ -307,9 +307,15 @@ namespace FreeMote.Psb
             IntValue = (int)val;
         }
 
+        public PsbNumber(long val)
+        {
+            NumberType = PsbNumberType.Int;
+            LongValue = val;
+        }
+
         public byte[] Data { get; set; }
 
-        public PsbNumberType NumberType { get; set; } = PsbNumberType.Int;
+        public PsbNumberType NumberType { get; set; }
 
         public ValueType Value
         {
@@ -340,23 +346,21 @@ namespace FreeMote.Psb
             get => BitConverter.ToSingle(Data, 0);
             set => Data = BitConverter.GetBytes(value);
         }
+
         public double DoubleValue
         {
-            get => BitConverter.ToDouble(Data, 0);
+            get => Data.Length < 8 ? BitConverter.ToSingle(Data, 0) : BitConverter.ToDouble(Data, 0);
             set => Data = BitConverter.GetBytes(value);
         }
         public long LongValue
         {
-            get => BitConverter.ToInt64(Data, 0);
+            get => Data.Length < 8 ? BitConverter.ToInt32(Data, 0) : BitConverter.ToInt64(Data, 0);
             set => Data = BitConverter.GetBytes(value);
         }
 
-        public bool IsNumber32()
-        {
-            return Type == PsbObjType.NumberN0 || Type == PsbObjType.NumberN1 ||
+        public bool IsNumber32 => Type == PsbObjType.NumberN0 || Type == PsbObjType.NumberN1 ||
                    Type == PsbObjType.NumberN2 || Type == PsbObjType.NumberN3 ||
                    Type == PsbObjType.NumberN4;
-        }
 
         public static explicit operator int(PsbNumber p)
         {
@@ -421,11 +425,13 @@ namespace FreeMote.Psb
             {
                 switch (NumberType)
                 {
-                    case PsbNumberType.Int: //FIXED: What did I wrote? when IntValue <= 8 && IntValue >= 0
-                        switch (IntValue.GetSize())
+                    case PsbNumberType.Int:
+                        switch (LongValue.GetSize())
                         {
+                            case 0:
+                                return PsbObjType.NumberN0;
                             case 1:
-                                if (IntValue == 0)
+                                if (LongValue == 0L)
                                 {
                                     return PsbObjType.NumberN0;
                                 }
@@ -475,7 +481,7 @@ namespace FreeMote.Psb
                 case PsbNumberType.Int:
                     if (Type != PsbObjType.NumberN0)
                     {
-                        bw.Write(IntValue.ZipNumberBytes());
+                        bw.Write(IsNumber32 ? IntValue.ZipNumberBytes() : LongValue.ZipNumberBytes());
                     }
                     break;
                 case PsbNumberType.Float:
@@ -500,7 +506,7 @@ namespace FreeMote.Psb
                 case PsbNumberType.Int:
                     if (Type != PsbObjType.NumberN0)
                     {
-                        return IntValue.ZipNumberBytes();
+                        return IsNumber32 ? IntValue.ZipNumberBytes() : LongValue.ZipNumberBytes();
                     }
                     return new byte[0];
                 case PsbNumberType.Float:
@@ -563,6 +569,7 @@ namespace FreeMote.Psb
             {
                 switch (Value.Count.GetSize())
                 {
+                    case 0:
                     case 1:
                         return PsbObjType.ArrayN1;
                     case 2:
@@ -652,6 +659,7 @@ namespace FreeMote.Psb
                 var size = Index?.GetSize() ?? 0.GetSize();
                 switch (size)
                 {
+                    case 0:
                     case 1:
                         return PsbObjType.StringN1;
                     case 2:
@@ -713,13 +721,24 @@ namespace FreeMote.Psb
 
         public override bool Equals(object obj)
         {
-            var s = obj as PsbString;
-            return s != null ? Equals(s) : base.Equals(obj);
+            if (obj is PsbString ps)
+            {
+                return Equals(ps);
+            }
+
+            if (obj is string s)
+            {
+                return this == s;
+            }
+
+            return false;
+            //var s = obj as PsbString;
+            //return s != null ? Equals(s) : base.Equals(obj);
         }
 
         protected bool Equals(PsbString other)
         {
-            if (other is null)
+            if (other == null)
             {
                 return false;
             }
@@ -734,7 +753,7 @@ namespace FreeMote.Psb
 
         public override int GetHashCode()
         {
-            return Index != null ? (int) Index.Value : (Value != null ? Value.GetHashCode() : 0);
+            return Index != null ? (int)Index.Value : (Value != null ? Value.GetHashCode() : 0);
         }
 
         public void WriteTo(BinaryWriter bw)
@@ -762,7 +781,18 @@ namespace FreeMote.Psb
 
         public IPsbCollection Parent { get; set; } = null;
 
-        public string Path => Parent != null ? $"{Parent.Path}{(Parent.Path.EndsWith("/") ? "" : "/")}{this.GetName() ?? "(array)"}" : "/";
+        public string Path
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    var parentPath = Parent.Path;
+                    return $"{parentPath}{(parentPath.EndsWith("/") ? "" : "/")}{this.GetName() ?? "*"}";
+                }
+                return "/";
+            }
+        }
 
         IPsbValue IPsbCollection.this[int i] => ContainsKey(i.ToString()) ? base[i.ToString()] : null;
 
@@ -839,9 +869,11 @@ namespace FreeMote.Psb
         {
             get
             {
-                var size = Index?.GetSize() ?? 0.GetSize();
+                //var size = Index?.GetSize() ?? 0.GetSize();
+                var size = Index?.GetSize() ?? 0;
                 switch (size)
                 {
+                    case 0:
                     case 1:
                         return PsbObjType.ResourceN1;
                     case 2:
