@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Drawing;
 using System.IO;
+using FreeMote.Tlg;
 
 namespace FreeMote.Plugins
 {
@@ -20,7 +21,7 @@ namespace FreeMote.Plugins
         /// <summary>
         /// Is TLG encode plugin enabled
         /// </summary>
-        public static bool CanSaveTlg => TlgNativePlugin.IsEnabled;
+        //public static bool CanSaveTlg => TlgNativePlugin.IsEnabled;
 
         private static TlgImageConverter _managedConverter = null;
 
@@ -32,11 +33,11 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public static Bitmap LoadTlg(byte[] tlgData, out int version)
         {
-            if (!PreferManaged && TlgNativePlugin.IsEnabled)
+            if (!PreferManaged)
             {
                 try
                 {
-                    return TlgNativePlugin.LoadTlg(tlgData, out version);
+                    return TlgNative.ToBitmap(tlgData, out version);
                 }
                 catch (Exception)
                 {
@@ -68,12 +69,7 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public static byte[] SaveTlg(Bitmap bmp, bool tlg6 = false)
         {
-            if (!CanSaveTlg)
-            {
-                throw new NotSupportedException("Can not encoding TLG");
-            }
-
-            return TlgNativePlugin.SaveTlg(bmp, tlg6);
+            return tlg6 ? bmp.ToTlg6() : bmp.ToTlg5();
         }
 
         public List<string> Extensions { get; } = new List<string> { ".tlg", ".tlg5", ".tlg6" };
@@ -84,7 +80,8 @@ namespace FreeMote.Plugins
 
         public bool CanToBytes(Bitmap bitmap, Dictionary<string, object> context = null)
         {
-            return TlgNativePlugin.IsEnabled;
+            var bpp = Image.GetPixelFormatSize(bitmap.PixelFormat);
+            return bpp == 32 || bpp == 24 || bpp == 8;
         }
 
         public Bitmap ToBitmap(in byte[] data, Dictionary<string, object> context = null)

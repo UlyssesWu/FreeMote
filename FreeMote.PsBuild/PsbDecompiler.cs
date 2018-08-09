@@ -37,7 +37,7 @@ namespace FreeMote.PsBuild
         {
             using (var fs = File.OpenRead(path))
             {
-                
+
                 psb = new PSB(fs);
                 return Decompile(psb);
             }
@@ -137,6 +137,16 @@ namespace FreeMote.PsBuild
                                     : Path.GetExtension(resource.Name), resource.Data);
                                 if (bmp == null)
                                 {
+                                    if (resource.Compress == PsbCompressType.Tlg) //Fallback to managed TLG decoder
+                                    {
+                                        using (var ms = new MemoryStream(resource.Data))
+                                        using (var br = new BinaryReader(ms))
+                                        {
+                                            bmp = new TlgImageConverter().Read(br);
+                                            bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
+                                            bmp.Dispose();
+                                        }
+                                    }
                                     relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
                                     File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
                                 }

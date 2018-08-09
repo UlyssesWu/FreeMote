@@ -187,21 +187,17 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestTlgNative()
         {
-            if (!TlgNativePlugin.IsReady)
-            {
-                return;
-            }
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "title-pimg");
             var path = Path.Combine(resPath, "title-pimg", "566.tlg");
-            var bmp = TlgNativePlugin.LoadTlg(File.ReadAllBytes(path), out int ver);
+            var bmp = TlgImageFormatter.LoadTlg(File.ReadAllBytes(path), out int ver);
             var width = bmp.Width;
             var height = bmp.Height;
             bmp.Save("tlg.png", ImageFormat.Png);
 
             path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.png");
             Bitmap bmp2 = new Bitmap(path);
-            var bts = TlgNativePlugin.SaveTlg(bmp2);
+            var bts = TlgImageFormatter.SaveTlg(bmp2);
             TlgImageConverter converter = new TlgImageConverter();
             using (var ms = new MemoryStream(bts))
             {
