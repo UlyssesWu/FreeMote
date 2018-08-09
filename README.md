@@ -14,8 +14,10 @@ Parse PSB format. Draw the Emote model (statically) without Emote engine.
 Compile and decompile PSB files. Convert PSB among different platforms.
 ### FreeMote.Plugins
 External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMote/wiki) for usages.
-#### [FreeMote.Tlg](https://github.com/Project-AZUSA/TlgLib)
-TLG encoding/decoding support.
+
+* TLG: Encoding/decoding support via [**FreeMote.Tlg**](https://github.com/Project-AZUSA/TlgLib) (by Ulysses).
+* LZ4: Compress/decompress support via [**LZ4.Frame**](https://github.com/UlyssesWu/LZ4.Frame) (by Ulysses).
+
 ### FreeMote.Purify (Unreleased)
 Infer and calculate the key used by Emote PSB file just from the PSB file (rather than get from engine).
 ### FreeMote.FreeLive (Unrealistic)
@@ -34,7 +36,7 @@ Open and render Emote _pure_ PSB.
 FreeMote GUI tool.
 
 ## Build
-This project requires VS 2017 and .NET 4.6-4.7 to build.
+This project requires **VS 2017** and .NET 4.6-4.7 to build.
 
 **FreeMote.Plugins** requires a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get FreeMote.Tlg (TlgLib) reference. If you don't need FreeMote.Plugins, you can unload FreeMote.Plugins project and remove it from other projects' reference.
 
