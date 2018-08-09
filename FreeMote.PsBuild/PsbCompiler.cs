@@ -252,7 +252,7 @@ namespace FreeMote.PsBuild
                 case ".tlg" when metadata.Compress == PsbCompressType.Tlg:
                     return File.ReadAllBytes(path);
                 case ".tlg":
-                    image = TlgConverter.LoadTlg(File.ReadAllBytes(path), out _);
+                    image = TlgImageFormatter.LoadTlg(File.ReadAllBytes(path), out _);
                     break;
                 //rl
                 case ".rl" when metadata.Compress == PsbCompressType.RL:

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using FreeMote.Plugins;
 using FreeMote.PsBuild;
 
 namespace FreeMote.Tools.PsbDecompile
@@ -15,13 +16,12 @@ namespace FreeMote.Tools.PsbDecompile
         {
             Console.WriteLine("FreeMote PSB Decompiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
-            //if (TlgConverter.CanSaveTlg)
-            //{
-            //    Console.WriteLine("[INFO] TLG Plugin Enabled.");
-            //}
 
+            FreeMount.Init();
+            Console.WriteLine("Plugins Loaded:");
+            Console.WriteLine(FreeMount.PrintPluginInfos());
             PsbConstants.MemoryMappedLoading = true;
-            Console.WriteLine();
+            //Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
             {

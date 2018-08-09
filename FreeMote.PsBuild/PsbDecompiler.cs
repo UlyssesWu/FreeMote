@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using FreeMote.Psb;
 using FreeMote.Plugins;
-using FreeMote.PsBuild.Converters;
 using Newtonsoft.Json;
 
 // ReSharper disable AssignNullToNotNullAttribute
@@ -36,8 +35,12 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         public static string Decompile(string path, out PSB psb)
         {
-            psb = new PSB(path);
-            return Decompile(psb);
+            using (var fs = File.OpenRead(path))
+            {
+                
+                psb = new PSB(fs);
+                return Decompile(psb);
+            }
         }
 
         internal static string Decompile(PSB psb)
@@ -65,6 +68,9 @@ namespace FreeMote.PsBuild
                 Platform = psb.Platform,
                 ExternalTextures = psb.Type == PsbType.Motion && psb.Resources.Count <= 0
             };
+
+            var ctx = FreeMount.CreateContext();
+
             if (!Directory.Exists(dirPath)) //ensure no file with same name!
             {
                 Directory.CreateDirectory(dirPath);
@@ -124,28 +130,27 @@ namespace FreeMote.PsBuild
                                 RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
                                     resource.Height, resource.Width, extractFormat, resource.PixelFormat);
                             }
-                            else if (resource.Compress == PsbCompressType.Tlg
-                                     || resource.Compress == PsbCompressType.ByName && resource.Name.EndsWith(".tlg", true, null))
+                            else if (resource.Compress == PsbCompressType.Tlg || resource.Compress == PsbCompressType.ByName)
                             {
-                                var bmp = TlgConverter.LoadTlg(resource.Data, out var ver);
-                                bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
-                                if (ver >= 6)
+                                var bmp = ctx.ResourceToBitmap(resource.Compress == PsbCompressType.Tlg
+                                    ? ".tlg"
+                                    : Path.GetExtension(resource.Name), resource.Data);
+                                if (bmp == null)
                                 {
-                                    resx.TlgVersion = 6;
-                                }
-                                bmp.Dispose();
-                                if (!TlgConverter.CanSaveTlg)
-                                {
-                                    //WARN: tlg is kept and recorded in resource json for compile 
-                                    relativePath = Path.ChangeExtension(relativePath, ".tlg");
+                                    relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
                                     File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
                                 }
+                                else
+                                {
+                                    bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
+                                    bmp.Dispose();
+                                }
                             }
-                            else if (resource.Compress == PsbCompressType.ByName)
-                            {
-                                relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                            }
+                            //else if (resource.Compress == PsbCompressType.ByName)
+                            //{
+                            //    relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
+                            //    File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
+                            //}
                             else
                             {
                                 RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
@@ -203,6 +208,7 @@ namespace FreeMote.PsBuild
             if (useResx)
             {
                 resx.Resources = resDictionary;
+                resx.Context = ctx.Context;
                 File.WriteAllText(inputPath + ".resx.json", JsonConvert.SerializeObject(resx, Formatting.Indented));
             }
             else

@@ -10,7 +10,7 @@ namespace FreeMote.Plugins
     [ExportMetadata("Name", "FreeMote.Tlg")]
     [ExportMetadata("Author", "Ulysses")]
     [ExportMetadata("Comment", "TLG support via TlgLib.")]
-    public class TlgConverter : IPsbImageFormatter
+    public class TlgImageFormatter : IPsbImageFormatter
     {
         private const string TlgVersion = "TlgVersion";
         /// <summary>
@@ -20,7 +20,7 @@ namespace FreeMote.Plugins
         /// <summary>
         /// Is TLG encode plugin enabled
         /// </summary>
-        public static bool CanSaveTlg => TlgPlugin.IsEnabled;
+        public static bool CanSaveTlg => TlgNativePlugin.IsEnabled;
 
         private static TlgImageConverter _managedConverter = null;
 
@@ -32,11 +32,11 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public static Bitmap LoadTlg(byte[] tlgData, out int version)
         {
-            if (!PreferManaged && TlgPlugin.IsEnabled)
+            if (!PreferManaged && TlgNativePlugin.IsEnabled)
             {
                 try
                 {
-                    return TlgPlugin.LoadTlg(tlgData, out version);
+                    return TlgNativePlugin.LoadTlg(tlgData, out version);
                 }
                 catch (Exception)
                 {
@@ -73,7 +73,7 @@ namespace FreeMote.Plugins
                 throw new NotSupportedException("Can not encoding TLG");
             }
 
-            return TlgPlugin.SaveTlg(bmp, tlg6);
+            return TlgNativePlugin.SaveTlg(bmp, tlg6);
         }
 
         public List<string> Extensions { get; } = new List<string> { ".tlg", ".tlg5", ".tlg6" };
@@ -84,7 +84,7 @@ namespace FreeMote.Plugins
 
         public bool CanToBytes(Bitmap bitmap, Dictionary<string, object> context = null)
         {
-            return TlgPlugin.IsEnabled;
+            return TlgNativePlugin.IsEnabled;
         }
 
         public Bitmap ToBitmap(in byte[] data, Dictionary<string, object> context = null)

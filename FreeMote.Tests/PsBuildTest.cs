@@ -376,12 +376,12 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
-            var pccPsb = new PSB(Path.Combine(resPath, "e-mote38_win-pure.psb"));
+            var pccPsb = new PSB(Path.Combine(resPath, "dx_れいなh1a1.psb"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01.psb"));
 
             //var psbuildPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json.psbuild.psb"));
-            var psbuildPsb = new PSB(Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json.psbuild.psb"));
+            var psbuildPsb = new PSB(Path.Combine(resPath, "dx_れいなh1a1.psb.json-pure.psb"));
 
             //foreach (var s in psbuildPsb.Strings)
             //{

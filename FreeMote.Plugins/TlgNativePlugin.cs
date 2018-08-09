@@ -10,7 +10,7 @@ namespace FreeMote.Plugins
     /// FreeMote.Tlg
     /// <para>Native TLG Plugin</para>
     /// </summary>
-    public static class TlgPlugin
+    public static class TlgNativePlugin
     {
         private static bool _isEnabled = true;
 
@@ -36,7 +36,7 @@ namespace FreeMote.Plugins
         private const string PluginPath = "TlgLib.dll";
         private static dynamic TlgNative = null;
         //private static dynamic TlgLoader = null;
-        static TlgPlugin()
+        static TlgNativePlugin()
         {
             IsReady = false;
 

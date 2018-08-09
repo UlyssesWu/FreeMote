@@ -44,9 +44,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Shells\Lz4Shell.cs" />
+    <Compile Include="Shells\MdfShell.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TlgConverter.cs" />
-    <Compile Include="TlgPlugin.cs" />
+    <Compile Include="Images\TlgImageFormatter.cs" />
+    <Compile Include="Shells\PszShell.cs" />
+    <Compile Include="TlgNativePlugin.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Dynamitey">

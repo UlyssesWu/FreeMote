@@ -5,26 +5,26 @@ using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FreeMote.Plugins
 {
+    /// <inheritdoc />
     /// <summary>
     /// FreeMote Plugin System
     /// </summary>
-    internal class FreeMount : IDisposable
+    public class FreeMount : IDisposable
     {
         public const string PsbShellType = "PsbShellType";
+        private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
+        private const string PLUGIN_DIR = "Plugins";
+
         public Dictionary<string, IPsbShell> Shells { get; private set; } = new Dictionary<string, IPsbShell>();
 
         public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } =
             new Dictionary<string, IPsbImageFormatter>();
-
-        private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
-        private const string PLUGIN_DIR = "Plugins";
+        
         private CompositionContainer _container;
         private Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new Dictionary<IPsbPlugin, IPsbPluginInfo>();
 
@@ -36,15 +36,41 @@ namespace FreeMote.Plugins
         internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
         public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
 
+        /// <summary>
+        /// Init Plugins
+        /// <para>Must be called before using FreeMount features</para>
+        /// </summary>
         public static void Init()
         {
             _.Init(null);
         }
 
+        /// <summary>
+        /// Dispose Plugins
+        /// </summary>
         public static void Free()
         {
             _mount.Dispose();
             _mount = null;
+        }
+
+        /// <summary>
+        /// Print Plugin infos
+        /// </summary>
+        /// <returns></returns>
+        public static string PrintPluginInfos()
+        {
+            if (_ == null || _._plugins.Count == 0)
+            {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder();
+            foreach (var psbShell in _._plugins)
+            {
+                sb.AppendLine($"{psbShell.Value.Name} by {psbShell.Value.Author} : {psbShell.Value.Comment}");
+            }
+
+            return sb.ToString();
         }
 
         public static FreeMountContext CreateContext(Dictionary<string, object> context = null)

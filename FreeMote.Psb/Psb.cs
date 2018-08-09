@@ -179,7 +179,7 @@ namespace FreeMote.Psb
             }
 
             //Switch MemoryMapped IO
-            if (PsbConstants.MemoryMappedLoading)
+            if (PsbConstants.MemoryMappedLoading && !(stream is MemoryStream))
             {
                 sourceBr.BaseStream.Position = 0;
                 br = new BinaryReader(new MemoryStream(sourceBr.ReadBytes((int)Header.OffsetChunkData)));

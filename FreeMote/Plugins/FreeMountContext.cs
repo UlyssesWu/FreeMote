@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FreeMote.Plugins
 {
@@ -26,17 +22,16 @@ namespace FreeMote.Plugins
         {
             return FreeMount._.BitmapToResource(ext, bitmap, Context);
         }
+        
+        public Stream OpenFromShell(Stream stream, ref string type)
+        {
+            return FreeMount._.OpenFromShell(stream, ref type, Context);
+        }
 
-        //TODO:
-        //public Stream OpenFromShell(Stream stream)
-        //{
-        //    return FreeMount._.OpenFromShell(stream, ref type, Context);
-        //}
-
-        //public Stream PackToShell(Stream input)
-        //{
-        //    return FreeMount._.PackToShell(input, type, out output, Context);
-        //}
+        public Stream PackToShell(Stream input, string type = null)
+        {
+            return FreeMount._.PackToShell(input, type ?? Context[FreeMount.PsbShellType] as string, Context);
+        }
 
     }
 }

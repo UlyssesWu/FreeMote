@@ -567,6 +567,19 @@ namespace FreeMote
             return header;
         }
 
+        public static bool IsSignaturePsb(Stream stream)
+        {
+            var header = new byte[4];
+            var pos = stream.Position;
+            stream.Read(header, 0, 4);
+            stream.Position = pos;
+            if (header[0] == 'P' && header[1] == 'S' && header[2] == 'B' && header[3] == 0)
+            {
+                return true;
+            }
+            return false;
+        }
+
     }
 }
 

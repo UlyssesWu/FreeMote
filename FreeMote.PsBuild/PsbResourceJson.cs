@@ -42,6 +42,7 @@ namespace FreeMote.PsBuild
         /// <summary>
         /// TLG Image Preferred Version
         /// </summary>
+        [Obsolete("Should be set in Context")]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? TlgVersion { get; set; } = 5;
 
