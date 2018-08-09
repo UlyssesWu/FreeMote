@@ -6,6 +6,7 @@ namespace FreeMote.Psb
 {
     internal static class PsbHelper
     {
+        //WARN: GetSize should not return 0
         /// <summary>
         /// Black magic to get size hehehe...
         /// </summary>
@@ -66,12 +67,56 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
+        /// Black magic... hehehe...
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static int GetSize(this long i)
+        {
+            bool neg = false;
+            if (i < 0)
+            {
+                neg = true;
+                i = Math.Abs(i);
+            }
+            var hex = i.ToString("X");
+            var l = hex.Length;
+            bool firstBitOne = hex[0] >= '8' && hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
+
+            if (l % 2 != 0)
+            {
+                l++;
+            }
+            l = l / 2;
+            if (neg || firstBitOne)
+            {
+                l++;
+            }
+            if (l > 8)
+            {
+                l = 8;
+            }
+            return l;
+        }
+
+        /// <summary>
         /// Shorten number bytes
         /// </summary>
         /// <param name="i"></param>
         /// <param name="size">Fix size</param>
         /// <returns></returns>
         public static byte[] ZipNumberBytes(this int i, int size = 0)
+        {
+            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
+        }
+
+        /// <summary>
+        /// Shorten number bytes
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="size">Fix size</param>
+        /// <returns></returns>
+        public static byte[] ZipNumberBytes(this long i, int size = 0)
         {
             return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
         }
@@ -195,9 +240,23 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static string GetName(this IPsbChild c)
         {
-            var source = c?.Parent as PsbDictionary;
-            var result = source?.FirstOrDefault(pair => Equals(pair.Value, c));
-            return result?.Value == null ? null : result.Value.Key;
+            if (c?.Parent is PsbDictionary dic)
+            {
+                var result = dic.FirstOrDefault(pair => Equals(pair.Value, c));
+                return result.Value == null ? null : result.Key;
+            }
+
+            if (c?.Parent is PsbCollection col)
+            {
+                var result = col.Value.IndexOf(c);
+                if (result < 0)
+                {
+                    return null;
+                }
+                return $"[{result}]";
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -213,6 +272,25 @@ namespace FreeMote.Psb
             return result?.Value == null ? null : result.Value.Key;
         }
 
+        /// <summary>
+        /// Check if number is not NaN
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        public static bool IsFinite(this float num)
+        {
+            return !float.IsNaN(num) && !float.IsInfinity(num);
+        }
+
+        /// <summary>
+        /// Check if number is not NaN
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        public static bool IsFinite(this double num)
+        {
+            return !double.IsNaN(num) && !double.IsInfinity(num);
+        }
     }
 
     public class ByteListComparer : IComparer<IList<byte>>

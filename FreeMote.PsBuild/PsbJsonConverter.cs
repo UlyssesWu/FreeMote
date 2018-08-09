@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,6 +12,9 @@ namespace FreeMote.PsBuild
     /// </summary>
     class PsbJsonConverter : JsonConverter
     {
+        //WARN: some tricks are used to keep original values as exact
+        //"0x0000C0FFf" will be convert to (float)NaN
+
         //internal static List<Type> SupportTypes = new List<Type> {
         //    typeof(PsbNull),typeof(PsbBool),typeof(PsbNumber),
         //    typeof(PsbArray), typeof(PsbString),typeof(PsbResource),
@@ -34,11 +38,25 @@ namespace FreeMote.PsBuild
                             writer.WriteValue(num.IntValue);
                             break;
                         case PsbNumberType.Float:
-                            writer.WriteValue(num.FloatValue);
+                            if (num.FloatValue.IsFinite())
+                            {
+                                writer.WriteValue(num.FloatValue);
+                            }
+                            else
+                            {
+                                writer.WriteValue($"{PsbResCollector.NumberStringPrefix}{num.IntValue:X8}f");
+                            }
                             //writer.WriteRawValue(num.FloatValue.ToString("R"));
                             break;
                         case PsbNumberType.Double:
-                            writer.WriteValue(num.DoubleValue);
+                            if (num.DoubleValue.IsFinite())
+                            {
+                                writer.WriteValue(num.DoubleValue);
+                            }
+                            else
+                            {
+                                writer.WriteValue($"{PsbResCollector.NumberStringPrefix}{num.LongValue:X16}d");
+                            }
                             break;
                         default:
                             writer.WriteValue(num.LongValue);
@@ -84,18 +102,23 @@ namespace FreeMote.PsBuild
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            List<PsbString> context = new List<PsbString>();
+            Dictionary<string, PsbString> context = new Dictionary<string, PsbString>();
             JObject obj = JObject.Load(reader);
             return ConvertToken(obj, context);
         }
 
-        internal IPsbValue ConvertToken(JToken token, List<PsbString> context)
+        internal IPsbValue ConvertToken(JToken token, Dictionary<string, PsbString> context)
         {
             switch (token.Type)
             {
                 case JTokenType.Null:
                     return PsbNull.Null;
                 case JTokenType.Integer:
+                    var l = token.Value<long>();
+                    if (l > Int32.MaxValue || l < Int32.MinValue)
+                    {
+                        return new PsbNumber(l);
+                    }
                     return new PsbNumber(token.Value<int>());
                 case JTokenType.Float:
                     var d = token.Value<double>();
@@ -113,18 +136,31 @@ namespace FreeMote.PsBuild
                     return new PsbBool(token.Value<bool>());
                 case JTokenType.String:
                     string str = token.Value<string>();
+                    if (str.StartsWith(PsbResCollector.NumberStringPrefix))
+                    {
+                        var prefixLen = PsbResCollector.NumberStringPrefix.Length;
+                        if (str.EndsWith("f"))
+                        {
+                            return new PsbNumber(int.Parse(str.Substring(prefixLen, 8), NumberStyles.AllowHexSpecifier)) { NumberType = PsbNumberType.Float };
+                        }
+                        if (str.EndsWith("d"))
+                        {
+                            return new PsbNumber(long.Parse(str.Substring(prefixLen, 16), NumberStyles.AllowHexSpecifier)) { NumberType = PsbNumberType.Double };
+                        }
+                        return new PsbNumber(long.Parse(str.Substring(prefixLen), NumberStyles.AllowHexSpecifier));
+                    }
                     if (str.StartsWith(PsbResCollector.ResourceIdentifier))
                     {
                         return new PsbResource(uint.Parse(str.Replace(PsbResCollector.ResourceIdentifier, "")));
                     }
                     var psbStr = new PsbString(str, (uint)context.Count);
-                    if (context.Contains(psbStr))
+                    if (context.ContainsKey(str))
                     {
-                        return context.Find(ps => ps.Value == str);
+                        return context[str];
                     }
                     else
                     {
-                        context.Add(psbStr);
+                        context.Add(str, psbStr);
                     }
                     return psbStr;
                 case JTokenType.Array:

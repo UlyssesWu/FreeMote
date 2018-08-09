@@ -7,6 +7,13 @@ namespace FreeMote.Psb
 {
     public static class PsbResCollector
     {
+        /// <summary>
+        /// The string with this prefix will be convert to number when compile/decompile
+        /// </summary>
+        public const string NumberStringPrefix = "#0x";
+        /// <summary>
+        /// The string with this prefix (with ID followed) will be convert to resource when compile/decompile
+        /// </summary>
         public const string ResourceIdentifier = "#resource#";
         public const string ResourceKey = "pixel";
         public const string MotionSourceKey = "source";
@@ -328,13 +335,63 @@ namespace FreeMote.Psb
                     return psbObj[current];
                 }
                 var currentObj = psbObj[current];
-                if (currentObj is PsbDictionary collection)
+                if (currentObj is PsbDictionary dictionary)
+                {
+                    path = path.Substring(pos);
+                    return dictionary.FindByPath(path);
+                }
+
+                if (currentObj is PsbCollection collection)
                 {
                     path = path.Substring(pos);
                     return collection.FindByPath(path);
                 }
             }
             return psbObj[path];
+        }
+
+        public static IPsbValue FindByPath(this PsbCollection psbObj, string path)
+        {
+            if (psbObj == null)
+                return null;
+            if (path.StartsWith("/"))
+            {
+                path = new string(path.SkipWhile(c => c == '/').ToArray());
+            }
+
+            if (path.Contains("/"))
+            {
+                var pos = path.IndexOf('/');
+                var current = path.Substring(0, pos);
+                IPsbValue currentObj = null;
+                if (current == "*")
+                {
+                    currentObj = psbObj.FirstOrDefault();
+                }
+
+                if (current.StartsWith("[") && current.EndsWith("]") && int.TryParse(current.Substring(1, current.Length - 2), out var id))
+                {
+                    currentObj = psbObj[id];
+                }
+
+                if (pos == path.Length - 1)
+                {
+                    return currentObj;
+                }
+
+                if (currentObj is PsbDictionary dictionary)
+                {
+                    path = path.Substring(pos);
+                    return dictionary.FindByPath(path);
+                }
+
+                if (currentObj is PsbCollection collection)
+                {
+                    path = path.Substring(pos);
+                    return collection.FindByPath(path);
+                }
+            }
+            return null;
         }
 
         public static IPsbValue Children(this IPsbValue col, string name)
