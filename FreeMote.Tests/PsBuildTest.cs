@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using FreeMote.Plugins;
+using FreeMote.Plugins.Shells;
 using FreeMote.Psb;
 using FreeMote.Psb.Textures;
 using FreeMote.PsBuild;
@@ -386,6 +388,22 @@ namespace FreeMote.Tests
             var num = o[0] as PsbNumber;
             var val = num.IntValue;
             var valNaN = num.FloatValue;
+        }
+
+        [TestMethod]
+        public void TestPsz()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "ca01_l_body_1.psz");
+            PszShell pszShell = new PszShell();
+            var context = new Dictionary<string, object>();
+            var oriStream = File.OpenRead(path);
+            var psbStream = pszShell.ToPsb(oriStream, context);
+            var config = context[ZlibCompress.PsbZlibCompressConfig];
+            var compact = (byte)config == 0xDA;
+            //context[ZlibCompress.PsbZlibCompressConfig] = (byte) 0x9C;
+            var pszStream = pszShell.ToShell(psbStream, context) as MemoryStream;
+            File.WriteAllBytes("test.psz", pszStream.ToArray());
         }
 
         [TestMethod]

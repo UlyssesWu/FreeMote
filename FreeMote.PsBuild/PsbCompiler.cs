@@ -93,10 +93,12 @@ namespace FreeMote.PsBuild
         /// <param name="version">PSB version</param>
         /// <param name="cryptKey">CryptKey, use null for pure PSB</param>
         /// <param name="spec">PSB Platform</param>
+        /// <param name="keepShell">If true, try to compress PSB to shell type (MDF/LZ4 etc.) specified in resx.json; otherwise just output PSB</param>
         /// <returns></returns>
         public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null, ushort? version = null, uint? cryptKey = null,
-            PsbSpec? spec = null)
+            PsbSpec? spec = null, bool keepShell = true)
         {
+            var context = FreeMount.CreateContext();
             //Parse
             PSB psb = Parse(inputJson, version ?? 3);
             //Link
@@ -122,6 +124,8 @@ namespace FreeMote.PsBuild
                         cryptKey = resx.CryptKey;
                     }
 
+                    context = FreeMount.CreateContext(resx.Context);
+
                     if (resx.ExternalTextures)
                     {
                         Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
@@ -146,7 +150,18 @@ namespace FreeMote.PsBuild
             }
             var bytes = psb.Build();
             //Convert
-            return cryptKey != null ? PsbFile.EncodeToBytes(cryptKey.Value, bytes, EncodeMode.Encrypt, EncodePosition.Auto) : bytes;
+
+            if (cryptKey != null)
+            {
+                return PsbFile.EncodeToBytes(cryptKey.Value, bytes, EncodeMode.Encrypt, EncodePosition.Auto);
+            }
+
+            if (context.HasShell && keepShell)
+            {
+                return context.PackToShell(new MemoryStream(bytes)).ToArray();
+            }
+
+            return bytes;
         }
 
         /// <summary>
@@ -235,7 +250,7 @@ namespace FreeMote.PsBuild
             return psb;
         }
 
-        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata, bool tlg6 = false)
+        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata, FreeMountContext context)
         {
             byte[] data;
             Bitmap image = null;
@@ -252,7 +267,7 @@ namespace FreeMote.PsBuild
                 case ".tlg" when metadata.Compress == PsbCompressType.Tlg:
                     return File.ReadAllBytes(path);
                 case ".tlg":
-                    image = FreeMount._.ResourceToBitmap(".tlg", File.ReadAllBytes(path)); //TODO: use context
+                    image = context.ResourceToBitmap(".tlg", File.ReadAllBytes(path));
                     break;
                 //rl
                 case ".rl" when metadata.Compress == PsbCompressType.RL:
@@ -353,7 +368,7 @@ namespace FreeMote.PsBuild
                     continue;
                 }
                 var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd);
+                byte[] data = LoadImageBytes(fullPath, resMd, FreeMount.CreateContext());
                 resMd.Resource.Data = data;
             }
         }
@@ -366,6 +381,7 @@ namespace FreeMote.PsBuild
         /// <param name="baseDir"></param>
         internal static void Link(this PSB psb, PsbResourceJson resx, string baseDir)
         {
+            FreeMountContext context = FreeMount.CreateContext(resx.Context);
             var resList = psb.CollectResources();
             foreach (var resxResource in resx.Resources)
             {
@@ -390,7 +406,7 @@ namespace FreeMote.PsBuild
                 var fullPath = Path.IsPathRooted(resxResource.Value)
                     ? resxResource.Value
                     : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd, resx.TlgVersion >= 6);
+                byte[] data = LoadImageBytes(fullPath, resMd, context);
                 resMd.Resource.Data = data;
             }
         }

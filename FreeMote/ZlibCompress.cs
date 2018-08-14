@@ -5,6 +5,7 @@ namespace FreeMote
 {
     public static class ZlibCompress
     {
+        public const string PsbZlibCompressConfig = "PsbZlibCompressConfig";
         public static byte[] Uncompress(Stream input)
         {
             using (MemoryStream ms = new MemoryStream())
@@ -40,6 +41,20 @@ namespace FreeMote
                 }
                 return ms.ToArray();
             }
+        }
+
+        public static Stream CompressToStream(Stream input, bool fast = false)
+        {
+            MemoryStream ms = new MemoryStream();
+            ms.WriteByte(0x78);
+            ms.WriteByte((byte)(fast ? 0x9C : 0xDA));
+            using (DeflateStream deflateStream = new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
+            {
+                input.CopyTo(deflateStream);
+            }
+
+            ms.Position = 0;
+            return ms;
         }
 
     }

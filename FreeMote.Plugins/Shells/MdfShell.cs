@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 
 namespace FreeMote.Plugins
 {
@@ -18,7 +19,7 @@ namespace FreeMote.Plugins
             var pos = stream.Position;
             stream.Read(header, 0, 4);
             stream.Position = pos;
-            if (header[0] == MdfFile.Signature[0] && header[1] == MdfFile.Signature[1] && header[2] == MdfFile.Signature[2] && header[3] == 0)
+            if (header.SequenceEqual(Signature))
             {
                 if (context != null)
                 {
@@ -30,14 +31,21 @@ namespace FreeMote.Plugins
             return false;
         }
 
-        public Stream ToPsb(Stream stream, Dictionary<string, object> context = null)
+        public MemoryStream ToPsb(Stream stream, Dictionary<string, object> context = null)
         {
-            return MdfFile.UncompressToPsbStream(stream);
+            return MdfFile.UncompressToPsbStream(stream) as MemoryStream;
         }
 
-        public Stream ToShell(Stream stream, Dictionary<string, object> context = null)
+        public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
-            return MdfFile.CompressPsbToMdfStream(stream);
+            bool fast = false;
+            if (context != null)
+            {
+                fast = (byte)context[ZlibCompress.PsbZlibCompressConfig] == 0x9C;
+            }
+            return MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
         }
+
+        public byte[] Signature { get; } = {(byte) 'm', (byte) 'd', (byte) 'f', 0};
     }
 }

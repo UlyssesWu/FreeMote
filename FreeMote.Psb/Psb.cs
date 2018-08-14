@@ -179,7 +179,7 @@ namespace FreeMote.Psb
             }
 
             //Switch MemoryMapped IO
-            if (PsbConstants.MemoryMappedLoading && !(stream is MemoryStream))
+            if (PsbConstants.MemoryPreloading && !(stream is MemoryStream))
             {
                 sourceBr.BaseStream.Position = 0;
                 br = new BinaryReader(new MemoryStream(sourceBr.ReadBytes((int)Header.OffsetChunkData)));
@@ -238,7 +238,7 @@ namespace FreeMote.Psb
             //    var resArray = Unpack(br);
             //}
 
-            if (PsbConstants.MemoryMappedLoading)
+            if (PsbConstants.MemoryPreloading)
             {
                 br.Close();
                 br.Dispose();
@@ -908,7 +908,7 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Try skip header and load. May (not) work on any PSB only if body is not encrypted
-        /// <para><see cref="PsbConstants.MemoryMappedLoading"/> won't accelerate.</para>
+        /// <para><see cref="PsbConstants.MemoryPreloading"/> won't accelerate.</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
         /// <param name="path"></param>
@@ -1011,7 +1011,7 @@ namespace FreeMote.Psb
             Header.OffsetStringsData = (uint)br.BaseStream.Position;
             Strings.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
 
-            if (StringOffsets.Value.Count > 0 && PsbConstants.MemoryMappedLoading)
+            if (StringOffsets.Value.Count > 0 && PsbConstants.MemoryPreloading)
             {
                 uint strsEndPos = StringOffsets.Value.Max();
                 br.BaseStream.Seek(strsEndPos, SeekOrigin.Current);

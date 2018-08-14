@@ -13,6 +13,8 @@ namespace FreeMote.Plugins
             Context = context;
         }
 
+        public bool HasShell => Context[FreeMount.PsbShellType] != null && string.IsNullOrEmpty(Context[FreeMount.PsbShellType].ToString());
+
         public Bitmap ResourceToBitmap(string ext, in byte[] data)
         {
             return FreeMount._.ResourceToBitmap(ext, data, Context);
@@ -23,12 +25,12 @@ namespace FreeMote.Plugins
             return FreeMount._.BitmapToResource(ext, bitmap, Context);
         }
         
-        public Stream OpenFromShell(Stream stream, ref string type)
+        public MemoryStream OpenFromShell(Stream stream, ref string type)
         {
             return FreeMount._.OpenFromShell(stream, ref type, Context);
         }
 
-        public Stream PackToShell(Stream input, string type = null)
+        public MemoryStream PackToShell(Stream input, string type = null)
         {
             return FreeMount._.PackToShell(input, type ?? Context[FreeMount.PsbShellType] as string, Context);
         }

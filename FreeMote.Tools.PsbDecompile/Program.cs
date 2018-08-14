@@ -20,7 +20,7 @@ namespace FreeMote.Tools.PsbDecompile
             FreeMount.Init();
             Console.WriteLine("Plugins Loaded:");
             Console.WriteLine(FreeMount.PrintPluginInfos());
-            PsbConstants.MemoryMappedLoading = true;
+            PsbConstants.MemoryPreloading = true;
             //Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
@@ -64,14 +64,14 @@ namespace FreeMote.Tools.PsbDecompile
                 //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
                 if (s.ToLowerInvariant() == "/oom" || s.ToLowerInvariant() == "/low-mem")
                 {
-                    PsbConstants.MemoryMappedLoading = false;
+                    PsbConstants.MemoryPreloading = false;
                     continue;
                 }
 
                 //Enable MM IO
                 if (s.ToLowerInvariant() == "/mem" || s.ToLowerInvariant() == "/fast")
                 {
-                    PsbConstants.MemoryMappedLoading = true;
+                    PsbConstants.MemoryPreloading = true;
                     continue;
                 }
 

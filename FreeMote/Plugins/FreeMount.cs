@@ -5,6 +5,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -27,7 +28,7 @@ namespace FreeMote.Plugins
         
         private CompositionContainer _container;
         private Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new Dictionary<IPsbPlugin, IPsbPluginInfo>();
-
+        private int _maxShellSigLength = 4;
         [ImportMany] private IEnumerable<Lazy<IPsbShell, IPsbPluginInfo>> _shells;
 
         [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
@@ -111,6 +112,11 @@ namespace FreeMote.Plugins
             ImageFormatters = new Dictionary<string, IPsbImageFormatter>();
             foreach (var shell in _shells)
             {
+                if (shell.Value.Signature?.Length > _maxShellSigLength)
+                {
+                    _maxShellSigLength = shell.Value.Signature.Length;
+                }
+
                 _plugins.Add(shell.Value, shell.Metadata);
                 Shells.Add(shell.Value.Name, shell.Value);
             }
@@ -175,12 +181,31 @@ namespace FreeMote.Plugins
             return ImageFormatters[ext].ToBytes(bitmap, context);
         }
 
-        public Stream OpenFromShell(Stream stream, ref string type, Dictionary<string, object> context = null)
+        public MemoryStream OpenFromShell(Stream stream, ref string type, Dictionary<string, object> context = null)
         {
             if (type != null)
             {
                 return Shells[type]?.ToPsb(stream, context);
             }
+
+            var header = new byte[_maxShellSigLength];
+            var pos = stream.Position;
+            stream.Read(header, 0, _maxShellSigLength);
+            stream.Position = pos;
+
+            foreach (var psbShell in Shells.Values)
+            {
+                if (psbShell?.Signature == null)
+                {
+                    continue;
+                }
+                if (header.Take(psbShell.Signature.Length).SequenceEqual(psbShell.Signature))
+                {
+                    type = psbShell.Name;
+                    return psbShell.ToPsb(stream, context);
+                }
+            }
+
             foreach (var psbShell in Shells.Values)
             {
                 if (psbShell == null)
@@ -195,10 +220,10 @@ namespace FreeMote.Plugins
             }
 
             type = null;
-            return stream;
+            return null;
         }
 
-        public Stream PackToShell(Stream stream, string type, Dictionary<string, object> context = null)
+        public MemoryStream PackToShell(Stream stream, string type, Dictionary<string, object> context = null)
         {
             if (Shells[type] == null)
             {
