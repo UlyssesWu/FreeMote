@@ -41,6 +41,10 @@ namespace FreeMote
         /// </summary>
         /// TODO: KS decompiler?
         Scn = 2,
+        /// <summary>
+        /// Emote project - Mtwo MOtion (mmo)
+        /// </summary>
+        Mmo = 3,
     }
 
     /// <summary>
