@@ -32,13 +32,24 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="path"></param>
         /// <param name="psb"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public static string Decompile(string path, out PSB psb)
+        public static string Decompile(string path, out PSB psb, Dictionary<string, object> context = null)
         {
             using (var fs = File.OpenRead(path))
             {
-
-                psb = new PSB(fs);
+                var ctx = FreeMount.CreateContext(context);
+                string type = null;
+                var ms = ctx.OpenFromShell(fs, ref type);
+                if (ms != null)
+                {
+                    ctx.Context[FreeMount.PsbShellType] = type;
+                    psb = new PSB(ms);
+                }
+                else
+                {
+                    psb = new PSB(fs);
+                }
                 return Decompile(psb);
             }
         }
@@ -57,19 +68,19 @@ namespace FreeMote.PsBuild
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original, PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true)
         {
+            var context = FreeMount.CreateContext();
+
             var name = Path.GetFileNameWithoutExtension(inputPath);
             var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
-            File.WriteAllText(inputPath + ".json", Decompile(inputPath, out var psb));
+            File.WriteAllText(inputPath + ".json", Decompile(inputPath, out var psb, context.Context));
             var resources = psb.CollectResources();
             PsbResourceJson resx = new PsbResourceJson
             {
                 PsbVersion = psb.Header.Version,
                 PsbType = psb.Type,
                 Platform = psb.Platform,
-                ExternalTextures = psb.Type == PsbType.Motion && psb.Resources.Count <= 0
+                ExternalTextures = psb.Type == PsbType.Motion && psb.Resources.Count <= 0,
             };
-
-            var ctx = FreeMount.CreateContext();
 
             if (!Directory.Exists(dirPath)) //ensure no file with same name!
             {
@@ -132,7 +143,7 @@ namespace FreeMote.PsBuild
                             }
                             else if (resource.Compress == PsbCompressType.Tlg || resource.Compress == PsbCompressType.ByName)
                             {
-                                var bmp = ctx.ResourceToBitmap(resource.Compress == PsbCompressType.Tlg
+                                var bmp = context.ResourceToBitmap(resource.Compress == PsbCompressType.Tlg
                                     ? ".tlg"
                                     : Path.GetExtension(resource.Name), resource.Data);
                                 if (bmp == null)
@@ -218,7 +229,7 @@ namespace FreeMote.PsBuild
             if (useResx)
             {
                 resx.Resources = resDictionary;
-                resx.Context = ctx.Context;
+                resx.Context = context.Context;
                 File.WriteAllText(inputPath + ".resx.json", JsonConvert.SerializeObject(resx, Formatting.Indented));
             }
             else

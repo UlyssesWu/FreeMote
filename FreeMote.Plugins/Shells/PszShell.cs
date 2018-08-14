@@ -47,7 +47,7 @@ namespace FreeMote.Plugins.Shells
                 var config = br.ReadByte(); //0x9C: fast; 0xDA: compact
                 if (context != null)
                 {
-                    context[ZlibCompress.PsbZlibCompressConfig] = config;
+                    context[ZlibCompress.PsbZlibFastCompress] = config == (byte)0x9C;
                 }
 
                 return ZlibCompress.UncompressToStream(stream) as MemoryStream;
@@ -59,7 +59,7 @@ namespace FreeMote.Plugins.Shells
             bool fast = false;
             if (context != null)
             {
-                fast = (byte)context[ZlibCompress.PsbZlibCompressConfig] == 0x9C;
+                fast = (bool)context[ZlibCompress.PsbZlibFastCompress];
             }
 
             var oriLen = (int)stream.Length;

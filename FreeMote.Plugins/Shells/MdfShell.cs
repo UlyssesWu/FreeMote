@@ -41,7 +41,7 @@ namespace FreeMote.Plugins
             bool fast = false;
             if (context != null)
             {
-                fast = (byte)context[ZlibCompress.PsbZlibCompressConfig] == 0x9C;
+                fast = (bool)context[ZlibCompress.PsbZlibFastCompress];
             }
             return MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
         }

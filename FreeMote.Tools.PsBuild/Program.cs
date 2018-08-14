@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using FreeMote.Plugins;
 using FreeMote.PsBuild;
 
 namespace FreeMote.Tools.PsBuild
@@ -12,15 +13,21 @@ namespace FreeMote.Tools.PsBuild
         private static uint? _key = null;
         private static ushort? _version = null;
         private static bool _noRename = false;
+        private static bool _keepShell = true;
 
         static void Main(string[] args)
         {
             Console.WriteLine("FreeMote PSB Compiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
-            //if (TlgConverter.CanSaveTlg)
-            //{
-            //    Console.WriteLine("[INFO] TLG Plugin Enabled.");
-            //}
+
+            FreeMount.Init();
+            var pluginInfo = FreeMount.PrintPluginInfos();
+            if (!string.IsNullOrEmpty(pluginInfo))
+            {
+                Console.WriteLine("Plugins Loaded:");
+                Console.WriteLine(pluginInfo);
+            }
+            PsbConstants.MemoryPreloading = true;
             Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
@@ -65,6 +72,14 @@ namespace FreeMote.Tools.PsBuild
                 {
                     _noRename = false;
                 }
+                else if (s == "/no-shell")
+                {
+                    _keepShell = false;
+                }
+                else if (s == "/shell")
+                {
+                    _keepShell = true;
+                }
                 //else if (s.StartsWith("/f"))
                 //{
                 //    if (Enum.TryParse(s.Replace("/f", ""), true, out PsbPixelFormat format))
@@ -95,8 +110,8 @@ namespace FreeMote.Tools.PsBuild
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                var filename = s + (_key == null ? _noRename ? ".psb" : "-pure.psb" : ".psb");
-                PsbCompiler.CompileToFile(s, filename, null, _version, _key, _platform, true);
+                var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
+                PsbCompiler.CompileToFile(s, filename, null, _version, _key, _platform, true, _keepShell);
             }
             catch (Exception e)
             {
@@ -113,9 +128,9 @@ namespace FreeMote.Tools.PsBuild
 /k<CryptKey> : Set CryptKey. Default: none(Pure PSB). Requirement: uint, dec.
 /p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common/ems.
     Warning: Platform ONLY works with .bmp/.png format textures.
-/no-rename : Do not add `pure` in compiled filename.
+/no-shell : Do not compress PSB to shell types even if shell type is specified in resx.json.
+/no-rename : Do not add `pure` in compiled filename. [WARN] This setting may overwrite your original files!
 ");
-            // /no-tlg : Always use managed TLG decoder (instead of TLG native plugin). Default: Use TLG native plugin when possible.
             Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
         }
     }

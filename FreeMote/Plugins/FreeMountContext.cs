@@ -8,12 +8,18 @@ namespace FreeMote.Plugins
     {
         public Dictionary<string, object> Context { get; set; }
 
-        public FreeMountContext(Dictionary<string,object> context)
+        public FreeMountContext(Dictionary<string, object> context)
         {
             Context = context;
         }
 
-        public bool HasShell => Context[FreeMount.PsbShellType] != null && string.IsNullOrEmpty(Context[FreeMount.PsbShellType].ToString());
+        public bool HasShell => Context[FreeMount.PsbShellType] != null && !string.IsNullOrEmpty(Context[FreeMount.PsbShellType].ToString());
+
+        public bool SupportImageExt(string ext)
+        {
+            return FreeMount._.ImageFormatters.ContainsKey(ext);
+        }
+
 
         public Bitmap ResourceToBitmap(string ext, in byte[] data)
         {
@@ -24,7 +30,7 @@ namespace FreeMote.Plugins
         {
             return FreeMount._.BitmapToResource(ext, bitmap, Context);
         }
-        
+
         public MemoryStream OpenFromShell(Stream stream, ref string type)
         {
             return FreeMount._.OpenFromShell(stream, ref type, Context);

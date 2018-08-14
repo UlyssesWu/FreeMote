@@ -179,7 +179,8 @@ namespace FreeMote.Psb
             }
 
             //Switch MemoryMapped IO
-            if (PsbConstants.MemoryPreloading && !(stream is MemoryStream))
+            bool memoryPreload = PsbConstants.MemoryPreloading && !(stream is MemoryStream);
+            if (memoryPreload)
             {
                 sourceBr.BaseStream.Position = 0;
                 br = new BinaryReader(new MemoryStream(sourceBr.ReadBytes((int)Header.OffsetChunkData)));
@@ -238,7 +239,7 @@ namespace FreeMote.Psb
             //    var resArray = Unpack(br);
             //}
 
-            if (PsbConstants.MemoryPreloading)
+            if (memoryPreload)
             {
                 br.Close();
                 br.Dispose();

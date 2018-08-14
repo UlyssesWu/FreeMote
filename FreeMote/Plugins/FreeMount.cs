@@ -188,6 +188,7 @@ namespace FreeMote.Plugins
                 return Shells[type]?.ToPsb(stream, context);
             }
 
+            //Detect signature
             var header = new byte[_maxShellSigLength];
             var pos = stream.Position;
             stream.Read(header, 0, _maxShellSigLength);
@@ -206,6 +207,7 @@ namespace FreeMote.Plugins
                 }
             }
 
+            //Detailed detect
             foreach (var psbShell in Shells.Values)
             {
                 if (psbShell == null)
@@ -225,7 +227,7 @@ namespace FreeMote.Plugins
 
         public MemoryStream PackToShell(Stream stream, string type, Dictionary<string, object> context = null)
         {
-            if (Shells[type] == null)
+            if (type == "PSB" || Shells[type] == null)
             {
                 return null;
             }

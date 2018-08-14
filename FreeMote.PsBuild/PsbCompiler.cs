@@ -27,7 +27,8 @@ namespace FreeMote.PsBuild
         /// <param name="cryptKey">CryptKey, if you need to use it outside FreeMote</param>
         /// <param name="platform">PSB Platform</param>
         /// <param name="renameOutput">If true, the output file extension is renamed by type</param>
-        public static void  CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true)
+        /// <param name="keepShell">If true, the output can be compressed PSB shell type (if specified)</param>
+        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true, bool keepShell = true)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -69,6 +70,11 @@ namespace FreeMote.PsBuild
                                 ext = ".psb";
                                 break;
                         }
+                        var shellType = resx.Context?[FreeMount.PsbShellType] as string;
+                        if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
+                        {
+                            ext += $".{shellType.ToLowerInvariant()}";
+                        }
                         var newPath = Path.ChangeExtension(outputPath, ext);
                         if (!string.IsNullOrWhiteSpace(newPath))
                         {
@@ -78,7 +84,7 @@ namespace FreeMote.PsBuild
                 }
             }
 
-            var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform);
+            var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform, keepShell);
 
             // ReSharper disable once AssignNullToNotNullAttribute
             File.WriteAllBytes(outputPath, result);
@@ -296,6 +302,10 @@ namespace FreeMote.PsBuild
                     {
                         image = new Bitmap(path);
                     }
+                    else if (context.SupportImageExt(ext))
+                    {
+                        image = context.ResourceToBitmap(ext, File.ReadAllBytes(path));
+                    }
                     else
                     {
                         return File.ReadAllBytes(path);
@@ -309,7 +319,7 @@ namespace FreeMote.PsBuild
                     data = RL.CompressImage(image, metadata.PixelFormat);
                     break;
                 case PsbCompressType.Tlg:
-                    data = FreeMount._.BitmapToResource(".tlg", image);
+                    data = context.BitmapToResource(".tlg", image);
                     if (data == null)
                     {
                         var tlgPath = Path.ChangeExtension(path, ".tlg");
@@ -323,6 +333,18 @@ namespace FreeMote.PsBuild
                             Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
                             data = File.ReadAllBytes(path);
                         }
+                    }
+                    break;
+                case PsbCompressType.ByName:
+                    var imgExt = Path.GetExtension(metadata.Name);
+                    if (context.SupportImageExt(imgExt))
+                    {
+                        data = context.BitmapToResource(imgExt, image);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[WARN] Unsupported image: {path}");
+                        data = File.ReadAllBytes(path);
                     }
                     break;
                 case PsbCompressType.None:

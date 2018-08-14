@@ -12,7 +12,7 @@ namespace FreeMote.Plugins.Shells
     [Export(typeof(IPsbShell))]
     [ExportMetadata("Name", "FreeMote.Lz4")]
     [ExportMetadata("Author", "Ulysses")]
-    [ExportMetadata("Comment", "LZ4 support.")]
+    [ExportMetadata("Comment", "LZ4 support via LZ4.Frame.")]
     class Lz4Shell : IPsbShell
     {
         public string Name => "LZ4";

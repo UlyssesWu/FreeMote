@@ -18,10 +18,14 @@ namespace FreeMote.Tools.PsbDecompile
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
 
             FreeMount.Init();
-            Console.WriteLine("Plugins Loaded:");
-            Console.WriteLine(FreeMount.PrintPluginInfos());
+            var pluginInfo = FreeMount.PrintPluginInfos();
+            if (!string.IsNullOrEmpty(pluginInfo))
+            {
+                Console.WriteLine("Plugins Loaded:");
+                Console.WriteLine(pluginInfo);
+            }
             PsbConstants.MemoryPreloading = true;
-            //Console.WriteLine();
+            Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
             {
@@ -86,6 +90,7 @@ namespace FreeMote.Tools.PsbDecompile
                         .Union(Directory.EnumerateFiles(s, "*.pimg"))
                         .Union(Directory.EnumerateFiles(s, "*.scn"))
                         .Union(Directory.EnumerateFiles(s, "*.dpak"))
+                        .Union(Directory.EnumerateFiles(s, "*.psz"))
                     )
                     {
                         Decompile(file, _extractImage, _uncompressImage, _png);
