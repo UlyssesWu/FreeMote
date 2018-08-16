@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using FreeMote.Plugins;
 using FreeMote.PsBuild;
 
@@ -21,13 +22,9 @@ namespace FreeMote.Tools.PsBuild
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
 
             FreeMount.Init();
-            var pluginInfo = FreeMount.PrintPluginInfos();
-            if (!string.IsNullOrEmpty(pluginInfo))
-            {
-                Console.WriteLine("Plugins Loaded:");
-                Console.WriteLine(pluginInfo);
-            }
-            PsbConstants.MemoryPreloading = true;
+            Console.WriteLine($"{FreeMount.PluginInfos.Count()} Plugins Loaded.");
+
+            PsbConstants.InMemoryLoading = true;
             Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
@@ -110,8 +107,9 @@ namespace FreeMote.Tools.PsBuild
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
-                PsbCompiler.CompileToFile(s, filename, null, _version, _key, _platform, true, _keepShell);
+                //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
+                var filename = name + ".psb";
+                PsbCompiler.CompileToFile(s, filename, null, _version, _key, _platform, !_noRename, _keepShell);
             }
             catch (Exception e)
             {
@@ -122,6 +120,12 @@ namespace FreeMote.Tools.PsBuild
 
         private static void PrintHelp()
         {
+            var pluginInfo = FreeMount.PrintPluginInfos();
+            if (!string.IsNullOrEmpty(pluginInfo))
+            {
+                Console.WriteLine(pluginInfo);
+            }
+
             Console.WriteLine("Usage: .exe [Param] <PSB json path>");
             Console.WriteLine(@"Param:
 /v<VerNumber> : Set compile version from [2,4] . Default: 3.
@@ -129,7 +133,8 @@ namespace FreeMote.Tools.PsBuild
 /p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common/ems.
     Warning: Platform ONLY works with .bmp/.png format textures.
 /no-shell : Do not compress PSB to shell types even if shell type is specified in resx.json.
-/no-rename : Do not add `pure` in compiled filename. [WARN] This setting may overwrite your original files!
+/no-rename : Compiled filename will be same as the json filename (with .psb extension). 
+    Warning: This setting may overwrite your original PSB files!
 ");
             Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
         }

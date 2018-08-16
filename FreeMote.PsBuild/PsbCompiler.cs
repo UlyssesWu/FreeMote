@@ -50,31 +50,40 @@ namespace FreeMote.PsBuild
             {
                 resJson = File.ReadAllText(inputResPath);
                 baseDir = Path.GetDirectoryName(inputResPath);
-                if (renameOutput)
+                if (renameOutput) //start renaming
                 {
                     if (resJson.Trim().StartsWith("{"))
                     {
                         PsbResourceJson resx = JsonConvert.DeserializeObject<PsbResourceJson>(resJson);
-                        string ext;
+                        bool pure = cryptKey == null && resx.CryptKey == null;
+                        string ext = pure? ".pure": ".impure";
                         switch (resx.PsbType)
                         {
                             case PsbType.Pimg:
-                                ext = ".pimg";
+                                ext += ".pimg";
                                 break;
                             case PsbType.Scn:
-                                ext = ".scn";
+                                ext += ".scn";
+                                break;
+                            case PsbType.Mmo:
+                                ext += ".mmo";
                                 break;
                             case PsbType.Motion:
                             case null:
                             default:
-                                ext = ".psb";
+                                ext += ".psb";
                                 break;
                         }
-                        var shellType = resx.Context?[FreeMount.PsbShellType] as string;
-                        if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
+
+                        if (resx.Context != null && resx.Context.ContainsKey(FreeMount.PsbShellType))
                         {
-                            ext += $".{shellType.ToLowerInvariant()}";
+                            var shellType = resx.Context[FreeMount.PsbShellType].ToString();
+                            if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
+                            {
+                                ext += $".{shellType.ToLowerInvariant()}";
+                            }
                         }
+
                         var newPath = Path.ChangeExtension(outputPath, ext);
                         if (!string.IsNullOrWhiteSpace(newPath))
                         {

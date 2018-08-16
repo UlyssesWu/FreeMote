@@ -17,7 +17,19 @@ namespace FreeMote.Plugins
     /// </summary>
     public class FreeMount : IDisposable
     {
+        /// <summary>
+        /// Type: string
+        /// </summary>
         public const string PsbShellType = "PsbShellType";
+        /// <summary>
+        /// Type: uint?
+        /// </summary>
+        public const string CryptKey = "CryptKey";
+        /// <summary>
+        /// Type: bool
+        /// </summary>
+        public const string PsbZlibFastCompress = "PsbZlibFastCompress";
+
         private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
         private const string PLUGIN_DIR = "Plugins";
 
@@ -33,11 +45,13 @@ namespace FreeMote.Plugins
 
         [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
 
-        [Import] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
+        [Import(AllowDefault = true)] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
 
         private static FreeMount _mount = null;
         internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
         public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
+
+        public static IEnumerable<IPsbPluginInfo> PluginInfos => _._plugins.Values;
 
         /// <summary>
         /// Init Plugins
@@ -247,14 +261,9 @@ namespace FreeMote.Plugins
             return Shells[type].ToShell(stream, context);
         }
 
-        public uint? GetKey(Stream stream)
+        public uint? GetKey(Stream stream, Dictionary<string, object> context = null)
         {
-            if (_keyProvider?.Value == null)
-            {
-                return null;
-            }
-
-            return _keyProvider.Value.GetKey(stream);
+            return _keyProvider?.Value?.GetKey(stream, context);
         }
 
         public void Dispose()

@@ -399,7 +399,7 @@ namespace FreeMote.Tests
             var context = new Dictionary<string, object>();
             var oriStream = File.OpenRead(path);
             var psbStream = pszShell.ToPsb(oriStream, context);
-            var config = context[ZlibCompress.PsbZlibFastCompress];
+            var config = context[FreeMount.PsbZlibFastCompress];
             //context[ZlibCompress.PsbZlibCompressConfig] = (byte) 0x9C;
             var pszStream = pszShell.ToShell(psbStream, context) as MemoryStream;
             File.WriteAllBytes("test.psz", pszStream.ToArray());

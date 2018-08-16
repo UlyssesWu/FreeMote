@@ -28,7 +28,7 @@ namespace FreeMote
         /// <summary>
         /// Take more memory when loading, but maybe faster
         /// </summary>
-        public static bool MemoryPreloading { get; set; } = true;
+        public static bool InMemoryLoading { get; set; } = true;
         /// <summary>
         /// Use more inferences to make loading fast, set to False when something is wrong
         /// </summary>

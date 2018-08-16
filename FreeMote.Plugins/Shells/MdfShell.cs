@@ -33,15 +33,22 @@ namespace FreeMote.Plugins
 
         public MemoryStream ToPsb(Stream stream, Dictionary<string, object> context = null)
         {
+            if (context != null)
+            {
+                var pos = stream.Position;
+                stream.Seek(9, SeekOrigin.Current);
+                context[FreeMount.PsbZlibFastCompress] = stream.ReadByte() == (byte)0x9C;
+                stream.Position = pos;
+            }
             return MdfFile.UncompressToPsbStream(stream) as MemoryStream;
         }
 
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
-            bool fast = false;
-            if (context != null)
+            bool fast = true; //mdf use fast mode by default
+            if (context != null && context.ContainsKey(FreeMount.PsbZlibFastCompress))
             {
-                fast = (bool)context[ZlibCompress.PsbZlibFastCompress];
+                fast = (bool)context[FreeMount.PsbZlibFastCompress];
             }
             return MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
         }

@@ -7,7 +7,6 @@ namespace FreeMote
 {
     /// <summary>
     /// PSB Header
-    /// <para>Usually you shouldn't use it</para>
     /// </summary>
     //[StructLayout(LayoutKind.Explicit)]
     public class PsbHeader

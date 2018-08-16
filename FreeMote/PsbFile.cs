@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace FreeMote
 {
@@ -29,18 +30,23 @@ namespace FreeMote
             }
             using (var fs = File.OpenRead(Path))
             {
-                BinaryReader br = new BinaryReader(fs);
-                var sig = new string(br.ReadChars(4)).ToUpperInvariant();
-                if (sig.StartsWith("MDF"))
-                {
-                    IsMdf = true;
-                    Header = new PsbHeader();
-                    return;
-                }
-
-                br.BaseStream.Seek(0, SeekOrigin.Begin);
-                Header = PsbHeader.Load(br);
+                ParseHeader(fs);
             }
+        }
+
+        private void ParseHeader(Stream stream)
+        {
+            BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true);
+            var sig = new string(br.ReadChars(4)).ToUpperInvariant();
+            if (sig.StartsWith("MDF"))
+            {
+                IsMdf = true;
+                Header = new PsbHeader();
+                return;
+            }
+
+            br.BaseStream.Seek(0, SeekOrigin.Begin);
+            Header = PsbHeader.Load(br);
         }
 
         /// <summary>
@@ -86,10 +92,10 @@ namespace FreeMote
             throw new NotImplementedException();
         }
 
-        private static bool TestHeaderEncrypted(BinaryReader br, PsbHeader header)
+        internal static bool TestHeaderEncrypted(Stream stream, PsbHeader header)
         {
             //MARK: Not always works
-            if (header.HeaderLength < br.BaseStream.Length
+            if (header.HeaderLength < stream.Length
                 && header.OffsetNames != 0
                 && (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0))
             {
@@ -112,10 +118,10 @@ namespace FreeMote
             return true;
         }
 
-        private static bool TestBodyEncrypted(BinaryReader br, PsbHeader header)
+        internal static bool TestBodyEncrypted(BinaryReader br, PsbHeader header)
         {
             //MARK: Not always works
-            long pos = br.BaseStream.Position;
+            var pos = br.BaseStream.Position;
 
             switch (header.Version)
             {
@@ -441,7 +447,7 @@ namespace FreeMote
             switch (position)
             {
                 case EncodePosition.Auto:
-                    bool headerEnc = TestHeaderEncrypted(br, header);
+                    bool headerEnc = TestHeaderEncrypted(br.BaseStream, header);
                     bool bodyEnc = TestBodyEncrypted(br, header);
                     if (headerEnc && bodyEnc) //MARK: is this possible?
                     {

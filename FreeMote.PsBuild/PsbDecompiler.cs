@@ -40,16 +40,54 @@ namespace FreeMote.PsBuild
             {
                 var ctx = FreeMount.CreateContext(context);
                 string type = null;
+                Stream stream = fs;
                 var ms = ctx.OpenFromShell(fs, ref type);
                 if (ms != null)
                 {
                     ctx.Context[FreeMount.PsbShellType] = type;
-                    psb = new PSB(ms);
+                    fs.Dispose();
+                    stream = ms;
                 }
-                else
+                try
                 {
-                    psb = new PSB(fs);
+                    psb = new PSB(stream, false);
                 }
+                catch (PsbBadFormatException e) when (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array || e.Reason == PsbBadFormatReason.Body) //maybe encrypted
+                {
+                    stream.Position = 0;
+                    var key = ctx.GetKey(stream);
+                    stream.Position = 0;
+                    if (key != null) //try use key
+                    {
+                        try
+                        {
+                            using (var mms = new MemoryStream((int)stream.Length))
+                            {
+                                PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
+                                stream.Dispose();
+                                psb = new PSB(mms);
+                                ctx.Context[FreeMount.CryptKey] = key;
+                            }
+                        }
+                        catch
+                        {
+                            throw e;
+                        }
+                    }
+                    else //key = null
+                    {
+                        if (e.Reason == PsbBadFormatReason.Header) //now try Dullahan loading
+                        {
+                            psb = PSB.DullahanLoad(stream);
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                    
+                }
+
                 return Decompile(psb);
             }
         }
@@ -72,13 +110,14 @@ namespace FreeMote.PsBuild
 
             var name = Path.GetFileNameWithoutExtension(inputPath);
             var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
-            File.WriteAllText(inputPath + ".json", Decompile(inputPath, out var psb, context.Context));
+            File.WriteAllText(Path.ChangeExtension(inputPath, ".json"), Decompile(inputPath, out var psb, context.Context)); //MARK: breaking change for json path
             var resources = psb.CollectResources();
             PsbResourceJson resx = new PsbResourceJson
             {
                 PsbVersion = psb.Header.Version,
                 PsbType = psb.Type,
                 Platform = psb.Platform,
+                CryptKey = context.Context.ContainsKey(FreeMount.CryptKey) ? (uint?)context.Context[FreeMount.CryptKey] : null,
                 ExternalTextures = psb.Type == PsbType.Motion && psb.Resources.Count <= 0,
             };
 
@@ -230,11 +269,11 @@ namespace FreeMote.PsBuild
             {
                 resx.Resources = resDictionary;
                 resx.Context = context.Context;
-                File.WriteAllText(inputPath + ".resx.json", JsonConvert.SerializeObject(resx, Formatting.Indented));
+                File.WriteAllText(Path.ChangeExtension(inputPath, ".resx.json"), JsonConvert.SerializeObject(resx, Formatting.Indented));
             }
             else
             {
-                File.WriteAllText(inputPath + ".res.json", JsonConvert.SerializeObject(resDictionary.Values.ToList(), Formatting.Indented));
+                File.WriteAllText(Path.ChangeExtension(inputPath, ".res.json"), JsonConvert.SerializeObject(resDictionary.Values.ToList(), Formatting.Indented));
             }
         }
     }

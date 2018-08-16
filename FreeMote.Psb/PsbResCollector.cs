@@ -18,6 +18,7 @@ namespace FreeMote.Psb
         public const string ResourceKey = "pixel";
         public const string MotionSourceKey = "source";
         public const string MmoSourceKey = "sourceChildren";
+        public const string MmoBgSourceKey = "bgChildren";
         public const string PimgSourceKey = "layers";
         /// <summary>
         /// delimiter for output texture filename
@@ -47,13 +48,13 @@ namespace FreeMote.Psb
                         }));
                     FindPimgResources(resourceList, psb.Objects[PimgSourceKey], deDuplication);
                     break;
+                case PsbType.Mmo:
+                    FindMmoResources(resourceList, psb.Objects[MmoBgSourceKey], MmoBgSourceKey, deDuplication);
+                    FindMmoResources(resourceList, psb.Objects[MmoSourceKey], MmoSourceKey, deDuplication);
+                    break;
                 case PsbType.Motion:
                 default:
                     FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
-                    if (psb.Objects.ContainsKey(MmoSourceKey))
-                    {
-                        FindMotionResources(resourceList, psb.Objects[MmoSourceKey], deDuplication);
-                    }
                     //Set Spec
                     resourceList.ForEach(r => r.Spec = psb.Platform);
                     break;
@@ -61,6 +62,102 @@ namespace FreeMote.Psb
             resourceList.Sort((md1, md2) => (int)(md1.Index - md2.Index));
 
             return resourceList;
+        }
+
+        private static void FindMmoResources(List<ResourceMetadata> list, IPsbValue obj, in string defaultPartname = "", bool deDuplication = true)
+        {
+            switch (obj)
+            {
+                case PsbCollection c:
+                    foreach (var o in c) FindMmoResources(list, o, defaultPartname, deDuplication);
+                    break;
+                case PsbDictionary d:
+                    if (d[ResourceKey] is PsbResource r)
+                    {
+                        if (!deDuplication)
+                        {
+                            list.Add(GenerateMmoResMetadata(d, defaultPartname, r));
+                        }
+                        else if (r.Index == null || list.FirstOrDefault(md => md.Index == r.Index.Value) == null)
+                        {
+                            list.Add(GenerateMmoResMetadata(d, defaultPartname, r));
+                        }
+                    }
+                    foreach (var o in d.Values)
+                    {
+                        FindMmoResources(list, o, defaultPartname, deDuplication);
+                    }
+                    break;
+            }
+
+        }
+
+        private static ResourceMetadata GenerateMmoResMetadata(PsbDictionary d, string defaultPartname = "", PsbResource r = null)
+        {
+            if (r == null)
+            {
+                r = d.Values.FirstOrDefault(v => v is PsbResource) as PsbResource;
+            }
+
+            var dd = d.Parent.Parent as PsbDictionary ?? d;
+
+            string name = "";
+            string part = defaultPartname;
+            if ((dd["label"]) is PsbString lbl)
+            {
+                name = lbl.Value;
+            }
+
+            //if (dd.Parent.Parent["className"] is PsbString className)
+            //{
+            //    part = className;
+            //}
+
+            bool is2D = false;
+            var compress = PsbCompressType.None;
+            if (d["compress"] is PsbString sc)
+            {
+                is2D = true;
+                if (sc.Value.ToUpperInvariant() == "RL")
+                {
+                    compress = PsbCompressType.RL;
+                }
+            }
+            int width = 1, height = 1;
+            float originX = 0, originY = 0;
+            if ((d["width"] ?? dd["width"]) is PsbNumber nw)
+            {
+                is2D = true;
+                width = (int)nw;
+            }
+            if ((d["height"] ?? dd["height"]) is PsbNumber nh)
+            {
+                is2D = true;
+                height = (int)nh;
+            }
+            if ((dd["originX"] ?? d["originX"]) is PsbNumber nx)
+            {
+                is2D = true;
+                originX = (float)nx;
+            }
+            if ((dd["originY"] ?? d["originY"]) is PsbNumber ny)
+            {
+                is2D = true;
+                originY = (float)ny;
+            }
+            var md = new ResourceMetadata()
+            {
+                Is2D = is2D,
+                Compress = compress,
+                OriginX = originX,
+                OriginY = originY,
+                Width = width,
+                Height = height,
+                Name = name,
+                Part = part,
+                Resource = r,
+            };
+            return md;
         }
 
         private static void FindPimgResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
@@ -410,6 +507,6 @@ namespace FreeMote.Psb
             }
         }
 
-       
+
     }
 }

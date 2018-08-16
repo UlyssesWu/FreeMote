@@ -105,23 +105,16 @@ namespace FreeMote.Psb
             }
         }
 
-        public PSB(Stream stream)
+        public PSB(Stream stream, bool tryDullahanLoading = true)
         {
             try
             {
                 LoadFromStream(stream);
             }
-            catch (PsbBadFormatException e)
+            catch (PsbBadFormatException e) when (tryDullahanLoading && e.Reason == PsbBadFormatReason.Header)
             {
-                if (e.Reason == PsbBadFormatReason.Header)
-                {
-                    stream.Seek(0, SeekOrigin.Begin);
-                    LoadFromDullahan(stream);
-                }
-                else
-                {
-                    throw;
-                }
+                stream.Seek(0, SeekOrigin.Begin);
+                LoadFromDullahan(stream);
             }
         }
 
@@ -131,12 +124,11 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public PsbType InferType()
         {
-            if (Objects.Any(k => k.Key.Contains(".") && k.Value is PsbResource))
+            if (Objects.ContainsKey("layers") && Objects.ContainsKey("height") && Objects.ContainsKey("width"))
             {
                 return PsbType.Pimg;
             }
-
-            if (Objects.ContainsKey("layers") && Objects.ContainsKey("height") && Objects.ContainsKey("width"))
+            if (Objects.Any(k => k.Key.Contains(".") && k.Value is PsbResource))
             {
                 return PsbType.Pimg;
             }
@@ -144,6 +136,11 @@ namespace FreeMote.Psb
             if (Objects.ContainsKey("scenes") && Objects.ContainsKey("name"))
             {
                 return PsbType.Scn;
+            }
+
+            if (Objects.ContainsKey("objectChildren") && Objects.ContainsKey("sourceChildren"))
+            {
+                return PsbType.Mmo;
             }
 
             return PsbType.Motion;
@@ -179,7 +176,7 @@ namespace FreeMote.Psb
             }
 
             //Switch MemoryMapped IO
-            bool memoryPreload = PsbConstants.MemoryPreloading && !(stream is MemoryStream);
+            bool memoryPreload = PsbConstants.InMemoryLoading && !(stream is MemoryStream);
             if (memoryPreload)
             {
                 sourceBr.BaseStream.Position = 0;
@@ -909,7 +906,7 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Try skip header and load. May (not) work on any PSB only if body is not encrypted
-        /// <para><see cref="PsbConstants.MemoryPreloading"/> won't accelerate.</para>
+        /// <para><see cref="PsbConstants.InMemoryLoading"/> won't accelerate.</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
         /// <param name="path"></param>
@@ -976,7 +973,7 @@ namespace FreeMote.Psb
 
             if (namePos < 0)
             {
-                throw new FormatException("Can not find Names segment, Dulllahan load failed");
+                throw new PsbBadFormatException(PsbBadFormatReason.Body, "Can not find Names segment, Dulllahan load failed");
             }
 
             Header.Version = 3;
@@ -1012,7 +1009,7 @@ namespace FreeMote.Psb
             Header.OffsetStringsData = (uint)br.BaseStream.Position;
             Strings.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
 
-            if (StringOffsets.Value.Count > 0 && PsbConstants.MemoryPreloading)
+            if (StringOffsets.Value.Count > 0 && PsbConstants.InMemoryLoading)
             {
                 uint strsEndPos = StringOffsets.Value.Max();
                 br.BaseStream.Seek(strsEndPos, SeekOrigin.Current);

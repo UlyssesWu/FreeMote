@@ -18,13 +18,9 @@ namespace FreeMote.Tools.PsbDecompile
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
 
             FreeMount.Init();
-            var pluginInfo = FreeMount.PrintPluginInfos();
-            if (!string.IsNullOrEmpty(pluginInfo))
-            {
-                Console.WriteLine("Plugins Loaded:");
-                Console.WriteLine(pluginInfo);
-            }
-            PsbConstants.MemoryPreloading = true;
+            Console.WriteLine($"{FreeMount.PluginInfos.Count()} Plugins Loaded.");
+
+            PsbConstants.InMemoryLoading = true;
             Console.WriteLine();
 
             if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
@@ -68,14 +64,14 @@ namespace FreeMote.Tools.PsbDecompile
                 //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
                 if (s.ToLowerInvariant() == "/oom" || s.ToLowerInvariant() == "/low-mem")
                 {
-                    PsbConstants.MemoryPreloading = false;
+                    PsbConstants.InMemoryLoading = false;
                     continue;
                 }
 
                 //Enable MM IO
                 if (s.ToLowerInvariant() == "/mem" || s.ToLowerInvariant() == "/fast")
                 {
-                    PsbConstants.MemoryPreloading = true;
+                    PsbConstants.InMemoryLoading = true;
                     continue;
                 }
 
@@ -103,6 +99,12 @@ namespace FreeMote.Tools.PsbDecompile
 
         private static void PrintHelp()
         {
+            var pluginInfo = FreeMount.PrintPluginInfos();
+            if (!string.IsNullOrEmpty(pluginInfo))
+            {
+                Console.WriteLine(pluginInfo);
+            }
+
             Console.WriteLine("Usage: .exe [Mode] [Setting] <PSB path>");
             Console.WriteLine(@"Mode:
 /raw : Keep resource in original format.
@@ -110,7 +112,7 @@ namespace FreeMote.Tools.PsbDecompile
 /eb : Convert images to BMP format.
 /ep : [Default] Convert images to PNG format.
 Setting:
-/oom : Disable Memory Mapped IO. (Lower memory usage but longer time for loading)
+/oom : Disable In-Memory Loading. (Lower memory usage but longer time for loading)
 ");
             Console.WriteLine("Example: PsbDecompile /ep Emote.pure.psb");
             Console.WriteLine("\t PsbDecompile C:\\\\EmoteFolder");

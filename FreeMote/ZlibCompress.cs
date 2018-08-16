@@ -5,7 +5,6 @@ namespace FreeMote
 {
     public static class ZlibCompress
     {
-        public const string PsbZlibFastCompress = "PsbZlibFastCompress";
         public static byte[] Uncompress(Stream input)
         {
             using (MemoryStream ms = new MemoryStream())

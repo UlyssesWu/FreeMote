@@ -10,6 +10,8 @@ namespace FreeMote
         IsMdf,
         Objects,
         Resources,
+        Array,
+        Body,
     }
 
     internal class PsbBadFormatException : FormatException
