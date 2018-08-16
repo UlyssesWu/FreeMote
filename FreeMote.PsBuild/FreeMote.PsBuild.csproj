@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -38,7 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TlgConverter.cs" />
     <Compile Include="MmoCompiler.cs" />
     <Compile Include="MmoGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -53,10 +54,6 @@
     <Compile Include="Converters\Common2KrkrConverter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FreeMote.Plugins\FreeMote.Plugins.csproj">
-      <Project>{F37472B9-6501-440E-8898-7774304F7FEC}</Project>
-      <Name>FreeMote.Plugins</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
       <Project>{c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7}</Project>
       <Name>FreeMote.Psb</Name>

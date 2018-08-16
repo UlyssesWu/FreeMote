@@ -42,5 +42,19 @@ namespace FreeMote
             }
         }
 
+        public static Stream CompressToStream(Stream input, bool fast = false)
+        {
+            MemoryStream ms = new MemoryStream();
+            ms.WriteByte(0x78);
+            ms.WriteByte((byte)(fast ? 0x9C : 0xDA));
+            using (DeflateStream deflateStream = new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
+            {
+                input.CopyTo(deflateStream);
+            }
+
+            ms.Position = 0;
+            return ms;
+        }
+
     }
 }

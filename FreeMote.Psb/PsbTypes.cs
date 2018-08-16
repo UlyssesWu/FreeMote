@@ -531,6 +531,10 @@ namespace FreeMote.Psb
     {
         internal PsbArray(int n, BinaryReader br)
         {
+            if (n < 0 || n > 8)
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.Array);
+            }
             uint count = br.ReadBytes(n).UnzipUInt();
             if (count > int.MaxValue)
             {

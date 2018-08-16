@@ -41,7 +41,7 @@ namespace FreeMote
             return ZlibCompress.UncompressToStream(input);
         }
 
-        public static Stream CompressPsbToMdfStream(Stream input)
+        public static Stream CompressPsbToMdfStream(Stream input, bool fast = true)
         {
             var pos = input.Position;
             Adler32 checksumer = new Adler32();
@@ -53,7 +53,7 @@ namespace FreeMote
             BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
             bw.WriteStringZeroTrim(Signature);
             bw.Write((uint)input.Length);
-            bw.Write(ZlibCompress.Compress(input));
+            bw.Write(ZlibCompress.Compress(input, fast));
             bw.WriteBE(checksum);
             bw.Flush();
             bw.Dispose();
@@ -61,7 +61,7 @@ namespace FreeMote
             return ms;
         }
 
-        public static void CompressToMdfFile(this PsbFile psbFile, string outputPath = null)
+        public static void CompressToMdfFile(this PsbFile psbFile, string outputPath = null, bool fast = true)
         {
             var bytes = File.ReadAllBytes(psbFile.Path);
             Adler32 checksumer = new Adler32();
@@ -74,7 +74,7 @@ namespace FreeMote
                 BinaryWriter bw = new BinaryWriter(fs);
                 bw.WriteStringZeroTrim(Signature);
                 bw.Write((uint)ms.Length);
-                bw.Write(ZlibCompress.Compress(ms));
+                bw.Write(ZlibCompress.Compress(ms, fast));
                 bw.WriteBE(checksum);
                 ms.Dispose();
                 bw.Flush();
