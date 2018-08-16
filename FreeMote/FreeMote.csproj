@@ -50,6 +50,7 @@
     <Compile Include="MdfFile.cs" />
     <Compile Include="Plugins\FreeMount.cs" />
     <Compile Include="Plugins\FreeMountContext.cs" />
+    <Compile Include="Plugins\IPsbKeyProvider.cs" />
     <Compile Include="Plugins\IPsbPluginInfo.cs" />
     <Compile Include="Plugins\IPsbImageFormatter.cs" />
     <Compile Include="Plugins\IPsbShell.cs" />

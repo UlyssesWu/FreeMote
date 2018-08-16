@@ -33,6 +33,8 @@ namespace FreeMote.Plugins
 
         [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
 
+        [Import] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
+
         private static FreeMount _mount = null;
         internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
         public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
@@ -129,6 +131,11 @@ namespace FreeMote.Plugins
                     ImageFormatters[extension] = imageFormatter.Value;
                 }
             }
+
+            if (_keyProvider != null)
+            {
+                _plugins.Add(_keyProvider.Value, _keyProvider.Metadata);
+            }
         }
         
         private void AddCatalog(string path, AggregateCatalog catalog)
@@ -157,6 +164,11 @@ namespace FreeMote.Plugins
             if (plugin is IPsbShell s)
             {
                 Shells.Remove(s.Name);
+            }
+
+            if (plugin is IPsbKeyProvider)
+            {
+                _keyProvider = null;
             }
             _plugins.Remove(plugin);
         }
@@ -235,9 +247,22 @@ namespace FreeMote.Plugins
             return Shells[type].ToShell(stream, context);
         }
 
+        public uint? GetKey(Stream stream)
+        {
+            if (_keyProvider?.Value == null)
+            {
+                return null;
+            }
+
+            return _keyProvider.Value.GetKey(stream);
+        }
+
         public void Dispose()
         {
             _container?.Dispose();
         }
     }
 }
+
+
+
