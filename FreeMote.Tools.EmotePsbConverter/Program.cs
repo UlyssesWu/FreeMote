@@ -11,11 +11,40 @@ namespace FreeMote.Tools.EmotePsbConverter
         private static uint? NewKey = null;
         static void Main(string[] args)
         {
-            Console.WriteLine("FreeMote PSB Converter");
-            Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
             FreeMount.Init();
 
+            if (args.Length > 1 && args[0].StartsWith("c")) // compress mode
+            {
+                Console.WriteLine("FreeMote PSB Shell Converter");
+                Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+                Console.WriteLine();
+                var type = args[0].Substring(1);
+                for (int i = 1; i < args.Length; i++)
+                {
+                    var path = args[i];
+                    if (Directory.Exists(path))
+                    {
+                        foreach (var file in Directory.EnumerateFiles(path, "*.psb"))
+                        {
+                            ShellConvert(file, type);
+                        }
+                    }
+                    if (!File.Exists(path))
+                    {
+                        continue;
+                    }
+
+                    ShellConvert(path, type);
+                }
+
+                Console.WriteLine("Done.");
+                return;
+            }
+
+            Console.WriteLine("FreeMote PSB Converter");
+            Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
             Console.WriteLine();
+
             if (args.Length >= 3)
             {
                 if (!File.Exists(args[0]))
@@ -102,13 +131,69 @@ namespace FreeMote.Tools.EmotePsbConverter
             Console.ReadLine();
         }
 
+        private static bool ShellConvert(string path, string type)
+        {
+            try
+            {
+                using (var fs = File.OpenRead(path))
+                {
+                    var ctx = FreeMount.CreateContext();
+                    string currentType = null;
+                    var ms = ctx.OpenFromShell(fs, ref currentType);
+                    if (ms == null) // no shell, compress
+                    {
+                        if (string.IsNullOrEmpty(type))
+                        {
+                            return false;
+                        }
+                        var mms = ctx.PackToShell(fs, type);
+                        if (mms == null)
+                        {
+                            Console.WriteLine($"Shell type unsupported: {type}");
+                            return false;
+                        }
+
+                        File.WriteAllBytes(path + "." + type, mms.ToArray());
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(type) || currentType == type)
+                        {
+                            Console.WriteLine($"Shell Type [{currentType}] detected for {path}");
+                            File.WriteAllBytes(path + ".decompressed", ms.ToArray());
+                        }
+                        else
+                        {
+                            var mms = ctx.PackToShell(ms, type);
+                            if (mms == null)
+                            {
+                                Console.WriteLine($"Shell type unsupported: {type}");
+                                return false;
+                            }
+
+                            File.WriteAllBytes(path + "." + type, mms.ToArray());
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"Shell Convert failed: {path}");
+                return false;
+            }
+
+            return true;
+        }
+
         private static void PrintHelp()
         {
-            Console.WriteLine("Usage: .exe <PSB file path> <key> [new key]");
-            Console.WriteLine("Example: EmoteConv emote_test.psb 123456789");
-            Console.WriteLine("\t EmoteConv emote_test.psb 123456789 987654321");
-            Console.WriteLine("Hint: If ths tool can't decrypt your PSB, try PsbDecompile.");
-
+            Console.WriteLine(@"Usage: .exe [mode] <PSB file path> <key> [new key]
+Mode: use `c<shell type>` for shell compress/decompress mode.
+Example: EmoteConv emote_test.psb 123456789
+\t EmoteConv emote_test.psb 123456789 987654321
+\t EmoteConv cLZ4 emote_test.psb (compressed to LZ4)
+Hint: If ths tool can't decrypt your PSB, try PsbDecompile.
+");
         }
 
         static void AskForKey()
@@ -152,12 +237,6 @@ namespace FreeMote.Tools.EmotePsbConverter
                 return false;
             }
 
-            if (!key.HasValue && FreeMount.KeyProvider == null)
-            {
-                Console.WriteLine("Key not valid.");
-                return false;
-            }
-
             try
             {
                 using (var fs = new FileStream(path, FileMode.Open))
@@ -165,10 +244,12 @@ namespace FreeMote.Tools.EmotePsbConverter
                     Stream stream = fs;
                     string type = null;
                     var ms = FreeMount.CreateContext().OpenFromShell(fs, ref type);
+                    bool hasShell = false;
                     if (ms != null)
                     {
                         Console.WriteLine($"Shell type: {type}");
                         stream = ms;
+                        hasShell = true;
                     }
                     BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
                     if (!key.HasValue)
@@ -179,9 +260,14 @@ namespace FreeMote.Tools.EmotePsbConverter
                             key = k;
                             Console.WriteLine($"Using key: {key}");
                         }
+                        else if (hasShell)
+                        {
+                            File.WriteAllBytes(path + ".decompressed", ms.ToArray());
+                            return true;
+                        }
                         else
                         {
-                            Console.WriteLine("Key not valid.");
+                            Console.WriteLine("No Key and No Shell.");
                             return false;
                         }
                     }
