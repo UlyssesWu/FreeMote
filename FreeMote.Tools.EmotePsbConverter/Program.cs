@@ -153,6 +153,7 @@ namespace FreeMote.Tools.EmotePsbConverter
                             return false;
                         }
 
+                        Console.WriteLine($"[{type}] Shell applied for {path}");
                         File.WriteAllBytes(path + "." + type, mms.ToArray());
                     }
                     else
@@ -171,6 +172,7 @@ namespace FreeMote.Tools.EmotePsbConverter
                                 return false;
                             }
 
+                            Console.WriteLine($"[{type}] Shell applied for {path}");
                             File.WriteAllBytes(path + "." + type, mms.ToArray());
                         }
                     }
