@@ -167,7 +167,7 @@ namespace FreeMote.Psb
 
             BinaryReader sourceBr = new BinaryReader(stream, Encoding.UTF8);
             BinaryReader br = sourceBr;
-            
+
             //Load Header
             Header = PsbHeader.Load(br);
             if (Header.IsHeaderEncrypted)
@@ -541,7 +541,7 @@ namespace FreeMote.Psb
                     str = refStr;
                     return;
                 }
-                
+
             }
             br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)idx], SeekOrigin.Begin);
             var strValue = br.ReadStringZeroTrim();
@@ -586,7 +586,7 @@ namespace FreeMote.Psb
             {
                 while (dic.ContainsKey(idx))
                 {
-                    idx++;
+                    idx = unchecked(idx + 1u);
                 }
 
                 return idx;
@@ -614,7 +614,7 @@ namespace FreeMote.Psb
                             stringsIndexDic.Add(s.Index.Value, s); //and record it for lookup
                             //Strings.Add(s);
                         }
-                        else if(s.Index != stringsDic[s.Value].Index) //if value is same but has different index, should let them point to same object
+                        else if (s.Index != stringsDic[s.Value].Index) //if value is same but has different index, should let them point to same object
                         {
                             s.Index = stringsDic[s.Value].Index; //set index
                         }
@@ -1071,7 +1071,7 @@ namespace FreeMote.Psb
                     str.Value = strValue;
                 }
             }
-            
+
 
             //Load Resources
             while (br.PeekChar() != (int)PsbObjType.ArrayN1 && br.PeekChar() != (int)PsbObjType.ArrayN2)
