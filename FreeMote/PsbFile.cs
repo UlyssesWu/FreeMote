@@ -92,7 +92,7 @@ namespace FreeMote
             throw new NotImplementedException();
         }
 
-        internal static bool TestHeaderEncrypted(Stream stream, PsbHeader header)
+        public static bool TestHeaderEncrypted(Stream stream, PsbHeader header)
         {
             //MARK: Not always works
             if (header.HeaderLength < stream.Length
@@ -118,7 +118,7 @@ namespace FreeMote
             return true;
         }
 
-        internal static bool TestBodyEncrypted(BinaryReader br, PsbHeader header)
+        public static bool TestBodyEncrypted(BinaryReader br, PsbHeader header)
         {
             //MARK: Not always works
             var pos = br.BaseStream.Position;

@@ -22,7 +22,7 @@ namespace FreeMote.Tools.PsBuild
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
 
             FreeMount.Init();
-            Console.WriteLine($"{FreeMount.PluginInfos.Count()} Plugins Loaded.");
+            Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
 
             PsbConstants.InMemoryLoading = true;
             Console.WriteLine();
@@ -77,6 +77,10 @@ namespace FreeMote.Tools.PsBuild
                 {
                     _keepShell = true;
                 }
+                //else if (s == "/no-key")
+                //{
+                //    _key = null;
+                //}
                 //else if (s.StartsWith("/f"))
                 //{
                 //    if (Enum.TryParse(s.Replace("/f", ""), true, out PsbPixelFormat format))
@@ -133,9 +137,10 @@ namespace FreeMote.Tools.PsBuild
 /p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common/ems.
     Warning: Platform ONLY works with .bmp/.png format textures.
 /no-shell : Do not compress PSB to shell types even if shell type is specified in resx.json.
-/no-rename : Compiled filename will be same as the json filename (with .psb extension). 
+/no-rename : Compiled filename will be same as the json filename (with .psb extension).
     Warning: This setting may overwrite your original PSB files!
 ");
+//no-key : Ignore any key setting and output pure PSB.
             Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
         }
     }

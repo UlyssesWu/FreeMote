@@ -12,13 +12,14 @@ namespace FreeMote.Tools.PsbDecompile
         static bool _extractImage = true;
         static bool _uncompressImage = false;
         static bool _png = true;
+        private static uint? _key = null;
         static void Main(string[] args)
         {
             Console.WriteLine("FreeMote PSB Decompiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
 
             FreeMount.Init();
-            Console.WriteLine($"{FreeMount.PluginInfos.Count()} Plugins Loaded.");
+            Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
 
             PsbConstants.InMemoryLoading = true;
             Console.WriteLine();
@@ -75,9 +76,26 @@ namespace FreeMote.Tools.PsbDecompile
                     continue;
                 }
 
+                
+                if (s.StartsWith("/k"))
+                {
+                    if (s == "/k")
+                    {
+                        _key = null;
+                    }
+                    if (uint.TryParse(s.Replace("/k", ""), out var k))
+                    {
+                        _key = k;
+                    }
+                    else
+                    {
+                        _key = null;
+                    }
+                }
+
                 if (File.Exists(s))
                 {
-                    Decompile(s, _extractImage, _uncompressImage, _png);
+                    Decompile(s, _extractImage, _uncompressImage, _png, _key);
                 }
                 else if (Directory.Exists(s))
                 {
@@ -89,7 +107,7 @@ namespace FreeMote.Tools.PsbDecompile
                         .Union(Directory.EnumerateFiles(s, "*.psz"))
                     )
                     {
-                        Decompile(file, _extractImage, _uncompressImage, _png);
+                        Decompile(file, _extractImage, _uncompressImage, _png, _key);
                     }
                 }
             }
@@ -113,12 +131,13 @@ namespace FreeMote.Tools.PsbDecompile
 /ep : [Default] Convert images to PNG format.
 Setting:
 /oom : Disable In-Memory Loading. (Lower memory usage but longer time for loading)
+/k<Key> : Set PSB key. use `/k` (without key specified) to reset.
 ");
             Console.WriteLine("Example: PsbDecompile /ep Emote.pure.psb");
             Console.WriteLine("\t PsbDecompile C:\\\\EmoteFolder");
         }
 
-        static void Decompile(string path, bool extractImage = false, bool uncompress = false, bool usePng = false)
+        static void Decompile(string path, bool extractImage = false, bool uncompress = false, bool usePng = false, uint? key = null)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");
@@ -128,15 +147,15 @@ Setting:
                 if (extractImage)
                 {
                     PsbDecompiler.DecompileToFile(path, PsbImageOption.Extract,
-                        usePng ? PsbImageFormat.Png : PsbImageFormat.Bmp);
+                        usePng ? PsbImageFormat.Png : PsbImageFormat.Bmp, key: key);
                 }
                 else if (uncompress)
                 {
-                    PsbDecompiler.DecompileToFile(path, PsbImageOption.Uncompress);
+                    PsbDecompiler.DecompileToFile(path, PsbImageOption.Uncompress, key: key);
                 }
                 else
                 {
-                    PsbDecompiler.DecompileToFile(path);
+                    PsbDecompiler.DecompileToFile(path, key: key);
                 }
             }
             catch (Exception e)

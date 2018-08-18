@@ -40,9 +40,11 @@ This project requires **VS 2017** and .NET 4.6-4.7 to build.
 
 **FreeMote.Plugins** requires a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get FreeMote.Tlg (TlgLib) reference. If you don't need FreeMote.Plugins, you can unload FreeMote.Plugins project and remove it from other projects' reference.
 
-To install FreeMote.Tlg nuget package, switch your default project to FreeMote.Plugins and use nuget command:
+To install `FreeMote.Tlg` nuget package, switch your default project to FreeMote.Plugins and use nuget command:
 
 `PM> Install-Package FreeMote.Tlg -Source https://www.myget.org/F/monarchsolutions/api/v3/index.json`
+
+Or, you can add the nuget feed in your VS. (Recommended) 
 
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA

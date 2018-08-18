@@ -55,7 +55,16 @@ namespace FreeMote.PsBuild
                 catch (PsbBadFormatException e) when (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array || e.Reason == PsbBadFormatReason.Body) //maybe encrypted
                 {
                     stream.Position = 0;
-                    var key = ctx.GetKey(stream);
+                    uint? key = null;
+                    if (ctx.Context.ContainsKey(FreeMount.CryptKey))
+                    {
+                        key = ctx.Context[FreeMount.CryptKey] as uint?;
+                    }
+                    else
+                    {
+                        key = ctx.GetKey(stream);
+                    }
+
                     stream.Position = 0;
                     if (key != null) //try use key
                     {
@@ -104,10 +113,14 @@ namespace FreeMote.PsBuild
         /// <param name="imageOption">whether to extract image to common format</param>
         /// <param name="extractFormat">if extract, what format do you want</param>
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
-        public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original, PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true)
+        /// <param name="key">PSB CryptKey</param>
+        public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original, PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
         {
             var context = FreeMount.CreateContext();
-
+            if (key != null)
+            {
+                context.Context[FreeMount.CryptKey] = key;
+            }
             var name = Path.GetFileNameWithoutExtension(inputPath);
             var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
             File.WriteAllText(Path.ChangeExtension(inputPath, ".json"), Decompile(inputPath, out var psb, context.Context)); //MARK: breaking change for json path

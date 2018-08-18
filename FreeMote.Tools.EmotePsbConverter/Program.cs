@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using FreeMote.Plugins;
 
 namespace FreeMote.Tools.EmotePsbConverter
 {
@@ -15,6 +13,8 @@ namespace FreeMote.Tools.EmotePsbConverter
         {
             Console.WriteLine("FreeMote PSB Converter");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+            FreeMount.Init();
+
             Console.WriteLine();
             if (args.Length >= 3)
             {
@@ -49,8 +49,8 @@ namespace FreeMote.Tools.EmotePsbConverter
                 uint key;
                 if (!uint.TryParse(args[1], out key))
                 {
-                    Console.WriteLine("Key is not valid.");
-                    return;
+                    //Console.WriteLine("Key is not valid.");
+                    //return;
                 }
                 Key = key;
                 Convert(Key, args[0]);
@@ -62,7 +62,7 @@ namespace FreeMote.Tools.EmotePsbConverter
                     PrintHelp();
                     return;
                 }
-                AskForKey();
+                //AskForKey();
                 Convert(Key, args[0]);
             }
             else
@@ -97,9 +97,9 @@ namespace FreeMote.Tools.EmotePsbConverter
                     }
                 }
                 Console.WriteLine($"Completed! {count} files processed in total.");
-                Console.WriteLine("Press ENTER to exit...");
-                Console.ReadLine();
             }
+            Console.WriteLine("Done. Press ENTER to exit...");
+            Console.ReadLine();
         }
 
         private static void PrintHelp()
@@ -107,6 +107,7 @@ namespace FreeMote.Tools.EmotePsbConverter
             Console.WriteLine("Usage: .exe <PSB file path> <key> [new key]");
             Console.WriteLine("Example: EmoteConv emote_test.psb 123456789");
             Console.WriteLine("\t EmoteConv emote_test.psb 123456789 987654321");
+            Console.WriteLine("Hint: If ths tool can't decrypt your PSB, try PsbDecompile.");
 
         }
 
@@ -145,39 +146,78 @@ namespace FreeMote.Tools.EmotePsbConverter
 
         static bool Convert(uint? key, string path)
         {
-            if (!key.HasValue)
-            {
-                Console.WriteLine("Key not valid.");
-                return false;
-            }
             if (!File.Exists(path))
             {
                 Console.WriteLine($"File:{path} not exists.");
                 return false;
             }
+
+            if (!key.HasValue && FreeMount.KeyProvider == null)
+            {
+                Console.WriteLine("Key not valid.");
+                return false;
+            }
+
             try
             {
-                PsbFile psb = new PsbFile(path);
-                if (psb.Version > 2)
+                using (var fs = new FileStream(path, FileMode.Open))
                 {
-                    if (psb.TestHeaderEncrypted()) //Decrypt
+                    Stream stream = fs;
+                    string type = null;
+                    var ms = FreeMount.CreateContext().OpenFromShell(fs, ref type);
+                    if (ms != null)
                     {
-                        psb.EncodeToFile(key.Value, path + ".decrypted", EncodeMode.Decrypt);
+                        Console.WriteLine($"Shell type: {type}");
+                        stream = ms;
                     }
-                    else
+                    BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
+                    if (!key.HasValue)
                     {
-                        psb.EncodeToFile(key.Value, path + ".encrypted", EncodeMode.Encrypt);
+                        var k = FreeMount.CreateContext().GetKey(stream);
+                        if (k != null)
+                        {
+                            key = k;
+                            Console.WriteLine($"Using key: {key}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Key not valid.");
+                            return false;
+                        }
                     }
-                }
-                else
-                {
-                    if (psb.TestBodyEncrypted()) //Decrypt
+
+                    var header = PsbHeader.Load(br);
+
+                    using (var outMs = new MemoryStream((int)stream.Length))
                     {
-                        psb.EncodeToFile(key.Value, path + ".decrypted", EncodeMode.Decrypt);
-                    }
-                    else
-                    {
-                        psb.EncodeToFile(key.Value, path + ".encrypted", EncodeMode.Encrypt);
+                        if (header.Version > 2)
+                        {
+                            if (PsbFile.TestHeaderEncrypted(stream, header)) //Decrypt
+                            {
+                                //psb.EncodeToFile(key.Value, path + ".decrypted", EncodeMode.Decrypt);
+                                PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
+                                File.WriteAllBytes(path + ".decrypted", outMs.ToArray());
+                            }
+                            else
+                            {
+                                //psb.EncodeToFile(key.Value, path + ".encrypted", EncodeMode.Encrypt);
+                                PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
+                                File.WriteAllBytes(path + ".encrypted", outMs.ToArray());
+                            }
+                        }
+                        else
+                        {
+                            if (PsbFile.TestBodyEncrypted(br, header)) //Decrypt
+                            {
+                                PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
+                                File.WriteAllBytes(path + ".decrypted", outMs.ToArray());
+                            }
+                            else
+                            {
+                                PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
+                                File.WriteAllBytes(path + ".encrypted", outMs.ToArray());
+                            }
+                        }
                     }
                 }
             }

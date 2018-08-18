@@ -33,6 +33,13 @@ namespace FreeMote.Plugins
         private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
         private const string PLUGIN_DIR = "Plugins";
 
+
+        [ImportMany] private IEnumerable<Lazy<IPsbShell, IPsbPluginInfo>> _shells;
+
+        [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
+
+        [Import(AllowDefault = true)] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
+
         public Dictionary<string, IPsbShell> Shells { get; private set; } = new Dictionary<string, IPsbShell>();
 
         public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } =
@@ -41,17 +48,18 @@ namespace FreeMote.Plugins
         private CompositionContainer _container;
         private Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new Dictionary<IPsbPlugin, IPsbPluginInfo>();
         private int _maxShellSigLength = 4;
-        [ImportMany] private IEnumerable<Lazy<IPsbShell, IPsbPluginInfo>> _shells;
-
-        [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
-
-        [Import(AllowDefault = true)] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
 
         private static FreeMount _mount = null;
         internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
         public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
 
         public static IEnumerable<IPsbPluginInfo> PluginInfos => _._plugins.Values;
+        /// <summary>
+        /// Loaded Plugins count
+        /// </summary>
+        public static int PluginsCount => _._plugins?.Count ?? 0;
+
+        public static IPsbKeyProvider KeyProvider => _._keyProvider?.Value;
 
         /// <summary>
         /// Init Plugins
