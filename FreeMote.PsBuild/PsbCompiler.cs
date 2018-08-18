@@ -77,7 +77,7 @@ namespace FreeMote.PsBuild
 
                         if (resx.Context != null && resx.Context.ContainsKey(FreeMount.PsbShellType))
                         {
-                            var shellType = resx.Context[FreeMount.PsbShellType].ToString();
+                            var shellType = resx.Context[FreeMount.PsbShellType] as string;
                             if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
                             {
                                 ext += $".{shellType.ToLowerInvariant()}";
