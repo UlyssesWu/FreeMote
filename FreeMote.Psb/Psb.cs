@@ -568,9 +568,12 @@ namespace FreeMote.Psb
         /// </summary>
         public void Merge()
         {
+            //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
             var namesSet = new HashSet<string>();
             var stringsDic = new Dictionary<string, PsbString>();
+            var stringsIndexDic = new Dictionary<uint, PsbString>();
+            uint strIdx = 0;
             Collect(Objects);
 
             Names = new List<string>(namesSet);
@@ -578,6 +581,16 @@ namespace FreeMote.Psb
             Strings = new List<PsbString>(stringsDic.Values);
             UpdateIndexes();
             //UniqueString(Objects);
+
+            uint NextIndex(Dictionary<uint, PsbString> dic, ref uint idx)
+            {
+                while (dic.ContainsKey(idx))
+                {
+                    idx++;
+                }
+
+                return idx;
+            }
 
             void Collect(IPsbValue obj)
             {
@@ -592,8 +605,18 @@ namespace FreeMote.Psb
                     case PsbString s:
                         if (!stringsDic.ContainsKey(s.Value))
                         {
-                            stringsDic.Add(s.Value, s);
+                            stringsDic.Add(s.Value, s); //Ensure value is unique
+                            if (s.Index == null || stringsIndexDic.ContainsKey(s.Index.Value)) //However index can be null or conflict
+                            {
+                                var newIdx = NextIndex(stringsIndexDic, ref strIdx); //at this time we assign a new index
+                                s.Index = newIdx;
+                            }
+                            stringsIndexDic.Add(s.Index.Value, s); //and record it for lookup
                             //Strings.Add(s);
+                        }
+                        else if(s.Index != stringsDic[s.Value].Index) //if value is same but has different index, should let them point to same object
+                        {
+                            s.Index = stringsDic[s.Value].Index; //set index
                         }
                         break;
                     case PsbCollection c:
