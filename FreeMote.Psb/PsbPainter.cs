@@ -14,7 +14,7 @@ namespace FreeMote.Psb
     public class PsbPainter
     {
         public PSB Source { get; set; }
-        public List<ResourceMetadata> Resources{ get; private set; } = new List<ResourceMetadata>();
+        public List<ResourceMetadata> Resources { get; private set; } = new List<ResourceMetadata>();
 
         public PsbPainter(PSB psb)
         {
@@ -81,8 +81,20 @@ namespace FreeMote.Psb
         private void CollectResource()
         {
             var resources = Source.Platform == PsbSpec.krkr ? Source.CollectResources() : Source.CollectSpiltedResources();
-
-            foreach (var motion in (PsbDictionary)Source.Objects["object"].Children("all_parts").Children("motion"))
+            //get base chara (in case of logo)
+            var basePart = "all_parts";
+            try
+            {
+                if (Source.Objects["metadata"].Children("base").Children("chara") is PsbString chara && !string.IsNullOrEmpty(chara.Value))
+                {
+                    basePart = chara;
+                }
+            }
+            catch
+            {
+                //ignore
+            }
+            foreach (var motion in (PsbDictionary)Source.Objects["object"].Children(basePart).Children("motion"))
             {
                 //Console.WriteLine($"Motion: {motion.Key}");
                 var layerCol = motion.Value.Children("layer") as PsbCollection;
@@ -95,7 +107,7 @@ namespace FreeMote.Psb
                 }
             }
 
-            Resources.Sort((md1, md2) => (int) ((md1.ZIndex - md2.ZIndex) * 100));
+            Resources.Sort((md1, md2) => (int)((md1.ZIndex - md2.ZIndex) * 100));
 
             //Travel
             void Travel(IPsbCollection collection, (float x, float y, float z)? baseLocation, bool baseVisible = true)

@@ -171,8 +171,8 @@ namespace FreeMote.Tests
         public void TestDrawWin()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            //var path = Path.Combine(resPath, "miku_v4_win-pure.psb");
-            var path = Path.Combine(resPath, "vanilla-pure.psb");
+            var path = Path.Combine(resPath, "emote_logo_d5-pure.psb");
+            //var path = Path.Combine(resPath, "vanilla-pure.psb");
             var psb = new PSB(path);
             var painter = new PsbPainter(psb);
             var bmp = painter.Draw(4096, 4096);

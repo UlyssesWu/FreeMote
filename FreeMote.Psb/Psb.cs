@@ -138,6 +138,11 @@ namespace FreeMote.Psb
                 return PsbType.Scn;
             }
 
+            if (Objects.ContainsKey("list") && Objects.ContainsKey("map") && Resources?.Count == 0)
+            {
+                return PsbType.Scn; //filelist.scn
+            }
+
             if (Objects.ContainsKey("objectChildren") && Objects.ContainsKey("sourceChildren"))
             {
                 return PsbType.Mmo;
