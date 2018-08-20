@@ -49,7 +49,7 @@ Or, you can add the nuget feed in your VS. (Recommended)
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
-FreeMote is licensed under **LGPL**.
+FreeMote is licensed under **LGPL**. You can use FreeMote tools freely, but if you've made other tools using FreeMote, they should be open-source. 
 
 [Issue Report](https://github.com/UlyssesWu/FreeMote/issues) · [Pull Request](https://github.com/UlyssesWu/FreeMote/pulls) · [Wiki](https://github.com/UlyssesWu/FreeMote/wiki)
 
