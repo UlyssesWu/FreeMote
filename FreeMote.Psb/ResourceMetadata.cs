@@ -85,7 +85,7 @@ namespace FreeMote.Psb
         {
             get => Resource?.Data;
 
-            private set
+            internal set
             {
                 if (Resource == null)
                 {
