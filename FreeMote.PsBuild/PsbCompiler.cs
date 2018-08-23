@@ -56,7 +56,7 @@ namespace FreeMote.PsBuild
                     {
                         PsbResourceJson resx = JsonConvert.DeserializeObject<PsbResourceJson>(resJson);
                         bool pure = cryptKey == null && resx.CryptKey == null;
-                        string ext = pure? ".pure": ".impure";
+                        string ext = pure ? ".pure" : ".impure";
                         switch (resx.PsbType)
                         {
                             case PsbType.Pimg:
@@ -418,7 +418,7 @@ namespace FreeMote.PsBuild
             {
                 //Scan for Resource
                 var resMd = resList.FirstOrDefault(r =>
-                    resxResource.Key == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
+                    resxResource.Key == r.GetFriendlyName(psb.Type));
                 if (resMd == null && psb.Type == PsbType.Pimg)
                 {
                     resMd = resList.FirstOrDefault(r => resxResource.Key == Path.GetFileNameWithoutExtension(r.Name));

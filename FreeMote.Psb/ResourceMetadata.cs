@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using FreeMote.Plugins;
 
 namespace FreeMote.Psb
 {
@@ -73,11 +74,28 @@ namespace FreeMote.Psb
         public int Left { get; set; }
         public float OriginX { get; set; }
         public float OriginY { get; set; }
+        /// <summary>
+        /// Pixel Format Type
+        /// </summary>
         public string Type => TypeString?.Value;
         public PsbString TypeString { get; set; }
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
-        public byte[] Data => Resource?.Data;
+        public byte[] Data
+        {
+            get => Resource?.Data;
+
+            private set
+            {
+                if (Resource == null)
+                {
+                    throw new NullReferenceException("Resource is null");
+                }
+
+                Resource.Data = value;
+            }
+        }
+
         /// <summary>
         /// Additional z-index info
         /// </summary>
@@ -126,9 +144,49 @@ namespace FreeMote.Psb
             }
         }
 
+        /// <summary>
+        /// Set Image to <see cref="PsbResource.Data"/>
+        /// </summary>
+        /// <param name="bmp"></param>
+        public void SetData(Bitmap bmp)
+        {
+            switch (Compress)
+            {
+                case PsbCompressType.RL:
+                    Data = RL.CompressImage(bmp, PixelFormat);
+                    break;
+                case PsbCompressType.Tlg:
+                    Data = FreeMount.CreateContext().BitmapToResource(".tlg", bmp);
+                    break;
+                default:
+                    Data = RL.GetPixelBytesFromImage(bmp, PixelFormat);
+                    break;
+            }
+        }
+
         public override string ToString()
         {
             return $"{Part}/{Name}";
+        }
+
+        /// <summary>
+        /// Name for export & import
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public string GetFriendlyName(PsbType type)
+        {
+            if (type == PsbType.Pimg && !string.IsNullOrWhiteSpace(Name))
+            {
+                return Path.GetFileNameWithoutExtension(Name);
+            }
+
+            if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Part))
+            {
+                return Index.ToString();
+            }
+
+            return $"{Part}{PsbResCollector.ResourceNameDelimiter}{Name}";
         }
     }
 }
