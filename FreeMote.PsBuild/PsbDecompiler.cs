@@ -158,20 +158,8 @@ namespace FreeMote.PsBuild
                 {
                     var resource = resources[i];
                     //Generate Friendly Name
-                    string relativePath;
-                    if (psb.Type == PsbType.Pimg && !string.IsNullOrWhiteSpace(resource.Name))
-                    {
-                        relativePath = Path.GetFileNameWithoutExtension(resource.Name);
-                    }
-                    else if (string.IsNullOrWhiteSpace(resource.Name) || string.IsNullOrWhiteSpace(resource.Part))
-                    {
-                        relativePath = resource.Index.ToString();
-                    }
-                    else
-                    {
-                        relativePath = $"{resource.Part}{PsbResCollector.ResourceNameDelimiter}{resource.Name}";
-                    }
-
+                    string relativePath = resource.GetFriendlyName(psb.Type);
+                    
                     switch (imageOption)
                     {
                         case PsbImageOption.Extract:

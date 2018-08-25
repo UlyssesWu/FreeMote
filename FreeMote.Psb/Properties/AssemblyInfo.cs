@@ -25,6 +25,7 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("FreeMote.Purify")]
 [assembly: InternalsVisibleTo("FreeMote.Psd")]
 [assembly: InternalsVisibleTo("FreeMote.Tests")]
+[assembly: InternalsVisibleTo("FreeMote.Editor")]
 
 // 程序集的版本信息由下列四个值组成:
 //

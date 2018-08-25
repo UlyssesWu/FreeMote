@@ -50,7 +50,7 @@ namespace FreeMote
     }
 
     /// <summary>
-    /// PSB Platform
+    /// Emote PSB Platform
     /// </summary>
     public enum PsbSpec : byte
     {
