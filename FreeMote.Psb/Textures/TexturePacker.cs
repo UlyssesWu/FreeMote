@@ -116,8 +116,9 @@ namespace FreeMote.Psb.Textures
         /// </summary>
         public List<Node> Nodes;
 
-        public Image ToImage(bool debugMode = false)
+        public Image ToImage(bool debugMode = false, Color? background = null)
         {
+            var bgColor = background ?? Color.FromArgb(0, Color.Black);
             Bitmap img = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
             //avoid using Graphics
 #if USE_FASTBITMAP
@@ -125,6 +126,10 @@ namespace FreeMote.Psb.Textures
             {
                 using (var f = img.FastLock())
                 {
+                    if (background != null)
+                    {
+                        f.Clear(bgColor);
+                    }
                     foreach (Node n in Nodes)
                     {
                         if (n.Texture != null)
@@ -144,7 +149,8 @@ namespace FreeMote.Psb.Textures
 #endif
 
             Graphics g = Graphics.FromImage(img);
-            g.Clear(Color.FromArgb(0, Color.Black));
+            g.Clear(bgColor);
+
             //g.PixelOffsetMode = PixelOffsetMode.Half;
             //g.InterpolationMode = InterpolationMode.Default;
             //g.SmoothingMode = SmoothingMode.None;
@@ -236,6 +242,11 @@ namespace FreeMote.Psb.Textures
         public bool DebugMode;
 
         /// <summary>
+        /// Toggle for Scrapbook mode - just paste all textures to same size
+        /// </summary>
+        public bool ScrapbookMode = false;
+
+        /// <summary>
         /// Which heuristic to use when doing the fit
         /// </summary>
         public BestFitHeuristic FitHeuristic;
@@ -281,6 +292,11 @@ namespace FreeMote.Psb.Textures
             LoadTexturesFromImages(images);
 
             Process();
+        }
+
+        private void ScrapProcess()
+        {
+            //TODO:
         }
 
         private void Process()
@@ -434,7 +450,7 @@ namespace FreeMote.Psb.Textures
                         Width = img.Width,
                         Height = img.Height
                     };
-                    
+
                     SourceTextures.Add(ti);
 
                     Log.WriteLine("Added " + fi.FullName);

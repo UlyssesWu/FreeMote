@@ -13,6 +13,7 @@ namespace FreeMote.PsBuild
         public static PSB Build(PSB psb)
         {
             PSB mmo = new PSB();
+            mmo.Type = PsbType.Mmo;
 
             mmo.Objects["bgChildren"] = BuildBackground();
             mmo.Objects["comment"] = psb.Objects["comment"] ?? "Built by FreeMote".ToPsbString();
