@@ -781,6 +781,10 @@ namespace FreeMote.Psb
         public PsbDictionary(int capacity) : base(capacity)
         {
         }
+        public PsbDictionary() : base()
+        {
+        }
+
         public Dictionary<string, IPsbValue> Value => this;
 
         public IPsbCollection Parent { get; set; } = null;
@@ -821,6 +825,9 @@ namespace FreeMote.Psb
     public class PsbCollection : List<IPsbValue>, IPsbValue, IPsbCollection
     {
         public PsbCollection(int capacity) : base(capacity)
+        {
+        }
+        public PsbCollection() : base()
         {
         }
 

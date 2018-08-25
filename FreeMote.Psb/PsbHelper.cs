@@ -291,6 +291,16 @@ namespace FreeMote.Psb
         {
             return !double.IsNaN(num) && !double.IsInfinity(num);
         }
+
+        public static PsbString ToPsbString(this string s)
+        {
+            return new PsbString(s);
+        }
+
+        public static PsbNumber ToPsbNumber(this int i)
+        {
+            return new PsbNumber(i);
+        }
     }
 
     public class ByteListComparer : IComparer<IList<byte>>
