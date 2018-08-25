@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace FreeMote.PsBuild
 {
-    [Obsolete("Not Implemented")]
-    class MmoGenerator
+    /// <summary>
+    /// Build MMO from Emote PSB
+    /// </summary>
+    class MmoBuilder
     {
     }
 }
