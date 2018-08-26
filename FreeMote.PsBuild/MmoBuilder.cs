@@ -1,7 +1,16 @@
-﻿using FreeMote.Psb;
+﻿using System.Collections.Generic;
+using FreeMote.Psb;
 
 namespace FreeMote.PsBuild
 {
+    public enum MmoClassName
+    {
+        //ObjLayerItem = 0, CharaItem, MotionItem
+        LayoutLayerItem = 2,
+        MotionLayerItem = 3,
+        StencilLayerItem = 12,
+    }
+
     /// <summary>
     /// Build MMO from Emote PSB
     /// <para>Current Ver: 3.12</para>
@@ -49,6 +58,10 @@ namespace FreeMote.PsBuild
             return mmo;
         }
 
+        /// <summary>
+        /// Use Template
+        /// </summary>
+        /// <returns></returns>
         private static IPsbValue BuildTargetOwn()
         {
             return new PsbDictionary()
@@ -69,6 +82,11 @@ namespace FreeMote.PsBuild
             return new PsbCollection();
         }
 
+        /// <summary>
+        /// Use Template
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
         private static IPsbValue BuildPreviewSize(PSB psb)
         {
             return new PsbDictionary(4)
@@ -80,29 +98,103 @@ namespace FreeMote.PsBuild
             };
         }
 
+        /// <summary>
+        /// Should be able to build from PSB's `object`
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
         private static IPsbValue BuildObjects(PSB psb)
         {
-            return new PsbDictionary();
+            PsbCollection objectChildren = new PsbCollection();
+            foreach (KeyValuePair<string, IPsbValue> motionItemKv in (PsbDictionary)psb.Objects["objects"])
+            {
+                PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
+                PsbDictionary objectChildrenItem = new PsbDictionary();
+                objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
+                objectChildrenItem["className"] = "CharaItem".ToPsbString();
+                objectChildrenItem["comment"] = "".ToPsbString();
+                objectChildrenItem["defaultCoordinate"] = 0.ToPsbNumber();
+                objectChildrenItem["marker"] = 0.ToPsbNumber();
+                objectChildrenItem["metadata"] = motionItem["metadata"];
+                objectChildrenItem["children"] = BuildChildrenFromMotion((PsbDictionary)motionItem["motion"]);
+                //objectChildrenItem["uniqId"] = ;
+
+                objectChildren.Add(objectChildrenItem);
+            }
+            
+            PsbCollection BuildChildrenFromMotion(PsbDictionary dic)
+            {
+                PsbCollection objectChildren_children = new PsbCollection();
+                foreach (KeyValuePair<string, IPsbValue> motionItemKv in dic)
+                {
+                    PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
+                    PsbDictionary objectChildrenItem = new PsbDictionary();
+                    objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
+                    objectChildrenItem["className"] = "MotionItem".ToPsbString();
+                    objectChildrenItem["comment"] = "".ToPsbString();
+                    objectChildrenItem["exportSelf"] = 1.ToPsbNumber();
+                    objectChildrenItem["marker"] = 0.ToPsbNumber();
+                    objectChildrenItem["metadata"] = motionItem["metadata"];
+                    objectChildrenItem["priorityFrameList"] = motionItem["priority"];
+                    PsbCollection parameter = (PsbCollection)motionItem["parameter"];
+                    objectChildrenItem["parameterize"] = motionItem["parameterize"] == null
+                        ? PsbNull.Null
+                        : parameter[((PsbNumber) motionItem["parameterize"]).IntValue];
+                    objectChildrenItem["layerChildren"] = BuildLayerChildren((PsbCollection)motionItem["layer"], parameter);
+                    //objectChildrenItem["uniqId"] = ;
+                    //TODO:
+
+                    objectChildren_children.Add(objectChildrenItem);
+                }
+
+                return objectChildren_children;
+            }
+
+            PsbCollection BuildLayerChildren(PsbCollection col, PsbCollection parameter)
+            {
+                return null; //TODO:
+            }
+
+            return objectChildren;
         }
 
+        /// <summary>
+        /// Can be null
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
         private static IPsbValue BuildMetaFormat(PSB psb)
         {
-            return new PsbDictionary();
+            return PsbNull.Null;
         }
 
+        /// <summary>
+        /// Metadata: fetch from PSB
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
         private static IPsbValue BuildMetadata(PSB psb)
         {
             PsbDictionary metadata = new PsbDictionary(2);
             metadata["type"] = 1.ToPsbNumber();
-            metadata["data"] = new PsbDictionary();
+            metadata["data"] = psb.Objects["metadata"];
             return metadata;
         }
 
+        /// <summary>
+        /// Default: 4096
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
         private static IPsbValue BuildMaxTextureSize(PSB psb)
         {
             return 4096.ToPsbNumber();
         }
 
+        /// <summary>
+        /// Can be null
+        /// </summary>
+        /// <returns></returns>
         private static IPsbValue BuildBackground()
         {
             return new PsbCollection(0);
