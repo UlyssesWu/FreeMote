@@ -15,8 +15,8 @@ namespace FreeMote.PsBuild.Converters
         /// </summary>
         public PsbPixelFormat TargetPixelFormat { get; set; } = PsbPixelFormat.WinRGBA8;
         public bool UseRL { get; set; } = true;
-        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec>{PsbSpec.win, PsbSpec.common};
-        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.krkr};
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> { PsbSpec.win, PsbSpec.common };
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> { PsbSpec.krkr };
 
 
         public void Convert(PSB psb)
@@ -129,7 +129,8 @@ namespace FreeMote.PsBuild.Converters
                     }
 
                     var num = (PsbNumber)dic["mask"];
-                    num.IntValue = num.IntValue + 1;
+                    num.IntValue |= 1;
+                    //num.IntValue = num.IntValue + 1;
                     //add src = layout || src = shape/point (0)
                     if (num.IntValue == 1 || num.IntValue == 3 || num.IntValue == 19)
                     {

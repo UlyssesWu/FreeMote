@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text;
-using System.Collections.Generic;
 using System.IO;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
@@ -49,7 +47,7 @@ namespace FreeMote.Tests
         public void TestLoadMmo()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath,"mmo", "template39.mmo");
+            var path = Path.Combine(resPath, "mmo", "template39.mmo");
             var psb = new PSB(path);
             var content = (PsbDictionary)psb.Objects.FindByPath("objectChildren/[0]/children/[0]/layerChildren/[0]/frameList/[0]/content");
             foreach (var kv in content)
@@ -72,7 +70,7 @@ namespace FreeMote.Tests
 
             mmo.Merge();
             mmo.SaveAsMdfFile(Path.Combine(resPath, "mmo", "temp.mmo"));
-            
+
         }
     }
 }
