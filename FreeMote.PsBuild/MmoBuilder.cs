@@ -33,10 +33,10 @@ namespace FreeMote.PsBuild
             mmo.Objects["fontInfoIdCount"] = PsbNull.Null;
             mmo.Objects["fontInfoList"] = new PsbCollection(0);
             mmo.Objects["forceRepack"] = 1.ToPsbNumber();
-            mmo.Objects["ignoreMotionPanel"] = 0.ToPsbNumber();
+            mmo.Objects["ignoreMotionPanel"] = PsbNumber.Zero;
             mmo.Objects["keepSourceIconName"] = 1.ToPsbNumber();
             mmo.Objects["label"] = "template".ToPsbString();
-            mmo.Objects["marker"] = 0.ToPsbNumber();
+            mmo.Objects["marker"] = PsbNumber.Zero;
             mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
             mmo.Objects["metadata"] = BuildMetadata(psb);
             mmo.Objects["metaformat"] = BuildMetaFormat(psb);
@@ -47,13 +47,13 @@ namespace FreeMote.PsBuild
             mmo.Objects["newTextureCellWidth"] = 8.ToPsbNumber();
             mmo.Objects["objectChildren"] = BuildObjects(psb);
             mmo.Objects["optimizeMargin"] = 1.ToPsbNumber();
-            mmo.Objects["outputDepth"] = 0.ToPsbNumber();
+            mmo.Objects["outputDepth"] = PsbNumber.Zero;
             mmo.Objects["previewSize"] = FillDefaultPreviewSize();
-            mmo.Objects["projectType"] = 0.ToPsbNumber();
-            mmo.Objects["saveFormat"] = 0.ToPsbNumber();
+            mmo.Objects["projectType"] = PsbNumber.Zero;
+            mmo.Objects["saveFormat"] = PsbNumber.Zero;
             mmo.Objects["sourceChildren"] = BuildSources(psb);
             mmo.Objects["stereovisionProfile"] = psb.Objects["stereovisionProfile"];
-            mmo.Objects["targetOwn"] = BuildTargetOwn();
+            mmo.Objects["targetOwn"] = FillDefaultTargetOwn();
             mmo.Objects["unifyTexture"] = 1.ToPsbNumber();
             mmo.Objects["uniqId"] = 114514.ToPsbNumber();
             mmo.Objects["version"] = new PsbNumber(3.12f);
@@ -62,43 +62,13 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
-        /// Use Template
-        /// </summary>
-        /// <returns></returns>
-        private static IPsbValue BuildTargetOwn()
-        {
-            return new PsbDictionary()
-            {
-                {"nitro2d", new PsbDictionary
-                {
-                    {"baseFrameCount", 1.ToPsbNumber() }
-                } },
-                {"revo", new PsbDictionary
-                {
-                    {"directColorFormat", "5553".ToPsbString() }
-                } }
-            };
-        }
-
-        private static IPsbValue BuildSources(PSB psb)
-        {
-            return new PsbCollection();
-        }
-
-        /// <summary>
-        /// Use Template
+        /// 
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue FillDefaultPreviewSize()
+        private static IPsbValue BuildSources(PSB psb)
         {
-            return new PsbDictionary(4)
-            {
-                {"height", 1080.ToPsbNumber() },
-                {"width", 800.ToPsbNumber() },
-                {"originX", 0.ToPsbNumber() },
-                {"originY", 0.ToPsbNumber() },
-            };
+            return new PsbCollection(); //TODO:
         }
 
         /// <summary>
@@ -115,9 +85,9 @@ namespace FreeMote.PsBuild
                 PsbDictionary objectChildrenItem = new PsbDictionary();
                 objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
                 objectChildrenItem["className"] = "CharaItem".ToPsbString();
-                objectChildrenItem["comment"] = "".ToPsbString();
-                objectChildrenItem["defaultCoordinate"] = 0.ToPsbNumber();
-                objectChildrenItem["marker"] = 0.ToPsbNumber();
+                objectChildrenItem["comment"] = PsbString.Empty;
+                objectChildrenItem["defaultCoordinate"] = PsbNumber.Zero;
+                objectChildrenItem["marker"] = PsbNumber.Zero;
                 objectChildrenItem["metadata"] = motionItem["metadata"];
                 objectChildrenItem["children"] = BuildChildrenFromMotion((PsbDictionary)motionItem["motion"]);
                 //objectChildrenItem["uniqId"] = ;
@@ -133,17 +103,17 @@ namespace FreeMote.PsBuild
                     PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
                     PsbDictionary objectChildrenItem = new PsbDictionary();
                     objectChildrenItem["className"] = "MotionItem".ToPsbString();
-                    objectChildrenItem["comment"] = "".ToPsbString();
-                    objectChildrenItem["exportBounds"] = 0.ToPsbNumber();
+                    objectChildrenItem["comment"] = PsbString.Empty;
+                    objectChildrenItem["exportBounds"] = PsbNumber.Zero;
                     objectChildrenItem["exportSelf"] = 1.ToPsbNumber();
-                    objectChildrenItem["forcePreviewLoop"] = 0.ToPsbNumber();
+                    objectChildrenItem["forcePreviewLoop"] = PsbNumber.Zero;
                     objectChildrenItem["fps"] = 60.ToPsbNumber();
-                    objectChildrenItem["isDelivered"] = 0.ToPsbNumber();
+                    objectChildrenItem["isDelivered"] = PsbNumber.Zero;
                     objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
                     objectChildrenItem["lastTime"] = motionItem["lastTime"];
                     objectChildrenItem["loopBeginTime"] = motionItem["loopTime"]; //TODO: loop
                     objectChildrenItem["loopEndTime"] = motionItem["loopTime"]; //currently begin = end = -1
-                    objectChildrenItem["marker"] = 0.ToPsbNumber();
+                    objectChildrenItem["marker"] = PsbNumber.Zero;
                     objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"]; //TODO: should we set all to default?
                     PsbCollection parameter = (PsbCollection)motionItem["parameter"];
                     objectChildrenItem["parameterize"] = motionItem["parameterize"] is PsbNull
@@ -152,9 +122,9 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["priorityFrameList"] = BuildPriorityFrameList((PsbCollection)motionItem["priority"]);
                     objectChildrenItem["referenceModelFileList"] = motionItem["referenceModelFileList"];
                     objectChildrenItem["referenceProjectFileList"] = motionItem["referenceProjectFileList"];
-                    objectChildrenItem["streamed"] = 0.ToPsbNumber();
+                    objectChildrenItem["streamed"] = PsbNumber.Zero;
                     objectChildrenItem["tagFrameList"] = motionItem["tag"];
-                    //objectChildrenItem["uniqId"] = ;
+                    //objectChildrenItem["uniqId"] = 1551;
                     objectChildrenItem["variableChildren"] = motionItem["variable"];
 
                     BuildLayerChildren((PsbCollection)motionItem["layer"], parameter);
@@ -203,7 +173,7 @@ namespace FreeMote.PsBuild
                     }
 
                     dic["className"] = className.ToPsbString();
-                    dic["comment"] = "".ToPsbString();
+                    dic["comment"] = PsbString.Empty;
 
                     if (dic["frameList"] is PsbCollection frameList)
                     {
@@ -234,8 +204,8 @@ namespace FreeMote.PsBuild
                     {
                         dic["metadata"] = new PsbDictionary(2)
                         {
-                            {"data", "".ToPsbString() },
-                            {"type", 0.ToPsbNumber() },
+                            {"data", PsbString.Empty },
+                            {"type", PsbNumber.Zero },
                         };
                     }
 
@@ -272,59 +242,44 @@ namespace FreeMote.PsBuild
             return fl;
         }
 
-        private static IPsbValue FillDefaultParameterize()
-        {
-            return new PsbDictionary(5)
-            {
-                {"discretization", 0.ToPsbNumber() },
-                {"enabled", 0.ToPsbNumber() },
-                {"id", "param".ToPsbString() },
-                {"rangeBegin", 0.ToPsbNumber() },
-                {"rangeEnd", 1.ToPsbNumber() },
-            };
-        }
-
-        private static PsbDictionary FillDefaultMetadata()
-        {
-            return new PsbDictionary(2)
-            {
-                {"data", PsbNull.Null },
-                {"type", 1.ToPsbNumber() },
-            };
-        }
-
-        private static void FillDefaultsIntoChildren(PsbDictionary dic)
-        {
-            return;
-        }
-
         private static void BuildFrameList(PsbCollection frameList)
         {
             foreach (var fl in frameList)
             {
                 if (fl is PsbDictionary dic)
                 {
-                    if (dic["content"] is PsbDictionary content && content.ContainsKey("mesh"))
+                    if (dic["content"] is PsbDictionary content)
                     {
-                        content["mbp"] = content["mesh"].Children("bp");
-                        content["mcc"] = content["mesh"].Children("cc");
+                        if (content.ContainsKey("mask")) //Expand params from mask
+                        {
+                            //Low to High:
+                            //0: ox,oy
+                            //1: coord
+                            //4: angle
+                            //5,6: zx,zy
+                            //9: color
+                            //10: opa
+                            //17: bm
+                            //19: motion/timeOffset?
+                            //25: mesh
+                        }
+
+
+                        if (content.ContainsKey("mesh")) //25
+                        {
+                            content["mbp"] = content["mesh"].Children("bp");
+                            content["mcc"] = content["mesh"].Children("cc");
+                        }
+
+
                         FillDefaultsIntoFrameList(dic);
-                    }
-                    else
-                    {
-                        dic["content"] = PsbNull.Null;
                     }
                 }
             }
         }
 
-        private static void FillDefaultsIntoFrameList(PsbDictionary fl)
-        {
-            return;
-        }
-
         /// <summary>
-        /// Can be null
+        /// Can be null?
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
@@ -364,5 +319,120 @@ namespace FreeMote.PsBuild
         {
             return new PsbCollection(0);
         }
+
+        #region Fill Defaults
+        private static void FillDefaultsIntoFrameList(PsbDictionary fl)
+        {
+            return;
+        }
+
+        private static IPsbValue FillDefaultParameterize()
+        {
+            return new PsbDictionary(5)
+            {
+                {"discretization", PsbNumber.Zero },
+                {"enabled", PsbNumber.Zero },
+                {"id", "param".ToPsbString() },
+                {"rangeBegin", PsbNumber.Zero },
+                {"rangeEnd", 1.ToPsbNumber() },
+            };
+        }
+
+        private static PsbDictionary FillDefaultMetadata()
+        {
+            return new PsbDictionary(2)
+            {
+                {"data", PsbNull.Null },
+                {"type", 1.ToPsbNumber() },
+            };
+        }
+
+        private static void FillDefaultsIntoChildren(PsbDictionary dic)
+        {
+            return;
+        }
+
+        private static readonly PsbDictionary DefaultFrameListContent = new PsbDictionary
+        {
+            {"acc", PsbNull.Null },
+            {"act", PsbString.Empty },
+            {"angle", PsbNumber.Zero },
+            {"bm", 16.ToPsbNumber() },
+            {"bp", PsbNumber.Zero },
+            {"ccc", PsbNull.Null },
+            {"cm", PsbString.Empty },
+            {"color", PsbNull.Null },
+            {"coord", new PsbCollection(3){PsbNumber.Zero, PsbNumber.Zero, PsbNumber.Zero } },
+            {"cp", PsbNull.Null },
+            {"fx", PsbNumber.Zero },
+            {"fy", PsbNumber.Zero },
+            {"mbp", PsbNull.Null },
+            {"mcc", PsbNull.Null },
+            {"md", new PsbDictionary(2)
+                { {"data", PsbNull.Null}, {"type", 1.ToPsbNumber()} } },
+            {"occ", PsbNull.Null },
+            {"opa", 255.ToPsbNumber() },
+            {"ox", PsbNumber.Zero }, //TODO: since ox,oy is always used AFAIK, what's the default value of them?
+            {"oy", PsbNumber.Zero },
+            {"scc", PsbNull.Null },
+            //{"src", "layout".ToPsbString() },
+            {"sx", PsbNumber.Zero },
+            {"sy", PsbNumber.Zero },
+            {"ti", PsbNumber.Zero },
+            {"zcc", PsbNull.Null },
+            {"zx", 1.ToPsbNumber() },
+            {"zy", 1.ToPsbNumber() },
+        };
+
+        /// <summary>
+        /// frameList/[]/content/motion
+        /// <para>need more info, only know `timeOffset` = 0</para>
+        /// </summary>
+        private static readonly PsbDictionary DefaultFrameListContent_Motion = new PsbDictionary
+        {
+            {"mdocmpl", PsbNumber.Zero },
+            {"mdofst", PsbNumber.Zero }, //maybe timeOffset?
+            {"mdt", 1.ToPsbNumber() },
+            {"mdtgt", PsbString.Empty },
+            {"mpac", PsbNumber.Zero },
+            {"mpc", PsbNumber.Zero },
+            {"mpf", PsbNumber.Zero },
+            {"mpj", PsbNumber.Zero },
+        };
+
+        /// <summary>
+        /// Use Template
+        /// </summary>
+        /// <returns></returns>
+        private static IPsbValue FillDefaultPreviewSize()
+        {
+            return new PsbDictionary(4)
+            {
+                {"height", 1080.ToPsbNumber() },
+                {"width", 800.ToPsbNumber() },
+                {"originX", PsbNumber.Zero },
+                {"originY", PsbNumber.Zero },
+            };
+        }
+
+        /// <summary>
+        /// Use Template
+        /// </summary>
+        /// <returns></returns>
+        private static IPsbValue FillDefaultTargetOwn()
+        {
+            return new PsbDictionary()
+            {
+                {"nitro2d", new PsbDictionary
+                {
+                    {"baseFrameCount", 1.ToPsbNumber() }
+                } },
+                {"revo", new PsbDictionary
+                {
+                    {"directColorFormat", "5553".ToPsbString() }
+                } }
+            };
+        }
+        #endregion
     }
 }

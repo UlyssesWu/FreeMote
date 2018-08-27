@@ -102,7 +102,7 @@ namespace FreeMote.PsBuild.Converters
             if (collection is PsbDictionary dic)
             {
                 //mask+=1
-                //add ox=0, oy=0
+                //add ox=0, oy=0 //explain: the last bit of mask (00...01) is whether to use ox & oy. if use, last bit of mask is 1
                 //change src
                 if (dic.ContainsKey("mask") && dic.GetName() == "content")
                 {
@@ -161,11 +161,11 @@ namespace FreeMote.PsBuild.Converters
                     }
                     if (!dic.ContainsKey("ox"))
                     {
-                        dic.Add("ox", new PsbNumber(0));
+                        dic.Add("ox", PsbNumber.Zero);
                     }
                     if (!dic.ContainsKey("oy"))
                     {
-                        dic.Add("oy", new PsbNumber(0));
+                        dic.Add("oy", PsbNumber.Zero);
                     }
                 }
 

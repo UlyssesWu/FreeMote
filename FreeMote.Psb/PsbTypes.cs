@@ -205,6 +205,11 @@ namespace FreeMote.Psb
     [Serializable]
     public class PsbNumber : IPsbValue, IPsbWrite
     {
+        /// <summary>
+        /// PsbNumber: (int) 0
+        /// </summary>
+        public static readonly PsbNumber Zero = new PsbNumber(0);
+
         internal PsbNumber(PsbObjType objType, BinaryReader br)
         {
             Data = new byte[8];
@@ -635,6 +640,11 @@ namespace FreeMote.Psb
     [DebuggerDisplay("{Value}(#{Index})")]
     public class PsbString : IPsbValue, IPsbIndexed, IPsbWrite
     {
+        /// <summary>
+        /// new empty PsbString
+        /// </summary>
+        public static PsbString Empty => new PsbString();
+
         internal PsbString(int n, BinaryReader br)
         {
             Index = br.ReadBytes(n).UnzipUInt();
