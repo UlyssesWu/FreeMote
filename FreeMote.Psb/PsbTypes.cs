@@ -163,7 +163,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Null
         /// </summary>
-        public static PsbNull Null => new PsbNull();
+        public static readonly PsbNull Null = new PsbNull();
     }
 
     /// <summary>

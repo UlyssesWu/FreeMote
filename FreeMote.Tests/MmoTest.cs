@@ -57,7 +57,7 @@ namespace FreeMote.Tests
             mmo.Objects["objectChildren"] = psbMmo.Objects["objectChildren"];
 
             mmo.Merge();
-            mmo.SaveAsMdfFile("temp.mmo");
+            mmo.SaveAsMdfFile(Path.Combine(resPath, "mmo", "temp.mmo"));
             
         }
     }

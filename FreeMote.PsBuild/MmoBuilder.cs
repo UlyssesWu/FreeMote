@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FreeMote.Psb;
 // ReSharper disable InconsistentNaming
 
@@ -25,6 +26,7 @@ namespace FreeMote.PsBuild
             PSB mmo = new PSB();
             mmo.Type = PsbType.Mmo;
 
+            mmo.Objects = new PsbDictionary();
             mmo.Objects["bgChildren"] = BuildBackground();
             mmo.Objects["comment"] = psb.Objects["comment"] ?? "Built by FreeMote".ToPsbString();
             mmo.Objects["defaultFPS"] = 60.ToPsbNumber();
@@ -46,7 +48,7 @@ namespace FreeMote.PsBuild
             mmo.Objects["objectChildren"] = BuildObjects(psb);
             mmo.Objects["optimizeMargin"] = 1.ToPsbNumber();
             mmo.Objects["outputDepth"] = 0.ToPsbNumber();
-            mmo.Objects["previewSize"] = BuildPreviewSize(psb);
+            mmo.Objects["previewSize"] = FillDefaultPreviewSize();
             mmo.Objects["projectType"] = 0.ToPsbNumber();
             mmo.Objects["saveFormat"] = 0.ToPsbNumber();
             mmo.Objects["sourceChildren"] = BuildSources(psb);
@@ -88,7 +90,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildPreviewSize(PSB psb)
+        private static IPsbValue FillDefaultPreviewSize()
         {
             return new PsbDictionary(4)
             {
@@ -107,7 +109,7 @@ namespace FreeMote.PsBuild
         private static IPsbValue BuildObjects(PSB psb)
         {
             PsbCollection objectChildren = new PsbCollection();
-            foreach (KeyValuePair<string, IPsbValue> motionItemKv in (PsbDictionary)psb.Objects["objects"])
+            foreach (KeyValuePair<string, IPsbValue> motionItemKv in (PsbDictionary)psb.Objects["object"])
             {
                 PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
                 PsbDictionary objectChildrenItem = new PsbDictionary();
@@ -130,27 +132,33 @@ namespace FreeMote.PsBuild
                 {
                     PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
                     PsbDictionary objectChildrenItem = new PsbDictionary();
-                    objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
                     objectChildrenItem["className"] = "MotionItem".ToPsbString();
                     objectChildrenItem["comment"] = "".ToPsbString();
+                    objectChildrenItem["exportBounds"] = 0.ToPsbNumber();
                     objectChildrenItem["exportSelf"] = 1.ToPsbNumber();
-                    objectChildrenItem["marker"] = 0.ToPsbNumber();
-                    objectChildrenItem["metadata"] = motionItem["metadata"];
-                    objectChildrenItem["priorityFrameList"] = motionItem["priority"];
+                    objectChildrenItem["forcePreviewLoop"] = 0.ToPsbNumber();
+                    objectChildrenItem["fps"] = 60.ToPsbNumber();
+                    objectChildrenItem["isDelivered"] = 0.ToPsbNumber();
+                    objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
                     objectChildrenItem["lastTime"] = motionItem["lastTime"];
                     objectChildrenItem["loopBeginTime"] = motionItem["loopTime"]; //TODO: loop
                     objectChildrenItem["loopEndTime"] = motionItem["loopTime"]; //currently begin = end = -1
-                    objectChildrenItem["variableChildren"] = motionItem["variable"];
-                    objectChildrenItem["tagFrameList"] = motionItem["tag"];
+                    objectChildrenItem["marker"] = 0.ToPsbNumber();
+                    objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"]; //TODO: should we set all to default?
+                    PsbCollection parameter = (PsbCollection)motionItem["parameter"];
+                    objectChildrenItem["parameterize"] = motionItem["parameterize"] is PsbNull
+                        ? FillDefaultParameterize()
+                        : parameter[((PsbNumber)motionItem["parameterize"]).IntValue];
+                    objectChildrenItem["priorityFrameList"] = BuildPriorityFrameList((PsbCollection)motionItem["priority"]);
                     objectChildrenItem["referenceModelFileList"] = motionItem["referenceModelFileList"];
                     objectChildrenItem["referenceProjectFileList"] = motionItem["referenceProjectFileList"];
-                    PsbCollection parameter = (PsbCollection)motionItem["parameter"];
-                    objectChildrenItem["parameterize"] = motionItem["parameterize"] == null
-                        ? PsbNull.Null
-                        : parameter[((PsbNumber)motionItem["parameterize"]).IntValue];
+                    objectChildrenItem["streamed"] = 0.ToPsbNumber();
+                    objectChildrenItem["tagFrameList"] = motionItem["tag"];
+                    //objectChildrenItem["uniqId"] = ;
+                    objectChildrenItem["variableChildren"] = motionItem["variable"];
+
                     BuildLayerChildren((PsbCollection)motionItem["layer"], parameter);
                     objectChildrenItem["layerChildren"] = motionItem["layer"];
-                    //objectChildrenItem["uniqId"] = ;
 
                     objectChildren_children.Add(objectChildrenItem);
                 }
@@ -222,6 +230,15 @@ namespace FreeMote.PsBuild
                         BuildLayerChildren(children, parameter);
                     }
 
+                    if (dic["metadata"] is PsbNull)
+                    {
+                        dic["metadata"] = new PsbDictionary(2)
+                        {
+                            {"data", "".ToPsbString() },
+                            {"type", 0.ToPsbNumber() },
+                        };
+                    }
+
                     //other
                     FillDefaultsIntoChildren(dic);
                 }
@@ -229,6 +246,51 @@ namespace FreeMote.PsBuild
             }
 
             return objectChildren;
+        }
+
+        private static PsbCollection BuildPriorityFrameList(PsbCollection fl)
+        {
+            for (int i = 0; i < fl.Count; i++)
+            {
+                var flItem = fl[i];
+                if (flItem is PsbDictionary dic)
+                {
+                    if (!dic.ContainsKey("content"))
+                    {
+                        fl.Remove(flItem);
+                    }
+                    else
+                    {
+                        if (dic["content"] is PsbNull)
+                        {
+                            fl.Remove(flItem);
+                        }
+                    }
+                }
+            }
+
+            return fl;
+        }
+
+        private static IPsbValue FillDefaultParameterize()
+        {
+            return new PsbDictionary(5)
+            {
+                {"discretization", 0.ToPsbNumber() },
+                {"enabled", 0.ToPsbNumber() },
+                {"id", "param".ToPsbString() },
+                {"rangeBegin", 0.ToPsbNumber() },
+                {"rangeEnd", 1.ToPsbNumber() },
+            };
+        }
+
+        private static PsbDictionary FillDefaultMetadata()
+        {
+            return new PsbDictionary(2)
+            {
+                {"data", PsbNull.Null },
+                {"type", 1.ToPsbNumber() },
+            };
         }
 
         private static void FillDefaultsIntoChildren(PsbDictionary dic)
@@ -242,7 +304,7 @@ namespace FreeMote.PsBuild
             {
                 if (fl is PsbDictionary dic)
                 {
-                    if (dic["content"] is PsbDictionary content)
+                    if (dic["content"] is PsbDictionary content && content.ContainsKey("mesh"))
                     {
                         content["mbp"] = content["mesh"].Children("bp");
                         content["mcc"] = content["mesh"].Children("cc");
