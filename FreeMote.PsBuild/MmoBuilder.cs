@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using FreeMote.Psb;
+// ReSharper disable InconsistentNaming
 
 namespace FreeMote.PsBuild
 {
@@ -121,7 +122,7 @@ namespace FreeMote.PsBuild
 
                 objectChildren.Add(objectChildrenItem);
             }
-            
+
             PsbCollection BuildChildrenFromMotion(PsbDictionary dic)
             {
                 PsbCollection objectChildren_children = new PsbCollection();
@@ -136,13 +137,20 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["marker"] = 0.ToPsbNumber();
                     objectChildrenItem["metadata"] = motionItem["metadata"];
                     objectChildrenItem["priorityFrameList"] = motionItem["priority"];
+                    objectChildrenItem["lastTime"] = motionItem["lastTime"];
+                    objectChildrenItem["loopBeginTime"] = motionItem["loopTime"]; //TODO: loop
+                    objectChildrenItem["loopEndTime"] = motionItem["loopTime"]; //currently begin = end = -1
+                    objectChildrenItem["variableChildren"] = motionItem["variable"];
+                    objectChildrenItem["tagFrameList"] = motionItem["tag"];
+                    objectChildrenItem["referenceModelFileList"] = motionItem["referenceModelFileList"];
+                    objectChildrenItem["referenceProjectFileList"] = motionItem["referenceProjectFileList"];
                     PsbCollection parameter = (PsbCollection)motionItem["parameter"];
                     objectChildrenItem["parameterize"] = motionItem["parameterize"] == null
                         ? PsbNull.Null
-                        : parameter[((PsbNumber) motionItem["parameterize"]).IntValue];
-                    objectChildrenItem["layerChildren"] = BuildLayerChildren((PsbCollection)motionItem["layer"], parameter);
+                        : parameter[((PsbNumber)motionItem["parameterize"]).IntValue];
+                    BuildLayerChildren((PsbCollection)motionItem["layer"], parameter);
+                    objectChildrenItem["layerChildren"] = motionItem["layer"];
                     //objectChildrenItem["uniqId"] = ;
-                    //TODO:
 
                     objectChildren_children.Add(objectChildrenItem);
                 }
@@ -150,12 +158,107 @@ namespace FreeMote.PsBuild
                 return objectChildren_children;
             }
 
-            PsbCollection BuildLayerChildren(PsbCollection col, PsbCollection parameter)
+            void BuildLayerChildren(IPsbCollection child, PsbCollection parameter)
             {
-                return null; //TODO:
+                if (child is PsbCollection col)
+                {
+                    foreach (var c in col)
+                    {
+                        if (c is IPsbCollection cchild)
+                        {
+                            BuildLayerChildren(cchild, parameter);
+                        }
+                    }
+                }
+                else if (child is PsbDictionary dic)
+                {
+                    //ClassName
+                    var typeNum = dic["type"] as PsbNumber;
+                    string className = "ObjLayerItem";
+                    if (typeNum != null)
+                    {
+                        switch (typeNum.IntValue)
+                        {
+                            case 0:
+                                className = "ObjLayerItem";
+                                break;
+                            case 2:
+                                className = "LayoutLayerItem";
+                                break;
+                            case 3:
+                                className = "MotionLayerItem";
+                                break;
+                            case 12:
+                                className = "StencilLayerItem";
+                                break;
+                        }
+                    }
+
+                    dic["className"] = className.ToPsbString();
+                    dic["comment"] = "".ToPsbString();
+
+                    if (dic["frameList"] is PsbCollection frameList)
+                    {
+                        BuildFrameList(frameList);
+                    }
+
+                    //parameterize: find from psb table amd expand
+                    if (dic["parameterize"] is PsbNumber parameterize && parameterize.IntValue >= 0)
+                    {
+                        dic["parameterize"] = parameter[parameterize.IntValue];
+                    }
+
+                    //stencilType conversion: 5 (psb) -> 1 (mmo)
+                    if (dic["stencilType"] is PsbNumber stencilType)
+                    {
+                        if (stencilType.IntValue == 5)
+                        {
+                            dic["stencilType"] = 1.ToPsbNumber();
+                        }
+                    }
+
+                    if (dic["children"] is PsbCollection children)
+                    {
+                        BuildLayerChildren(children, parameter);
+                    }
+
+                    //other
+                    FillDefaultsIntoChildren(dic);
+                }
+
             }
 
             return objectChildren;
+        }
+
+        private static void FillDefaultsIntoChildren(PsbDictionary dic)
+        {
+            return;
+        }
+
+        private static void BuildFrameList(PsbCollection frameList)
+        {
+            foreach (var fl in frameList)
+            {
+                if (fl is PsbDictionary dic)
+                {
+                    if (dic["content"] is PsbDictionary content)
+                    {
+                        content["mbp"] = content["mesh"].Children("bp");
+                        content["mcc"] = content["mesh"].Children("cc");
+                        FillDefaultsIntoFrameList(dic);
+                    }
+                    else
+                    {
+                        dic["content"] = PsbNull.Null;
+                    }
+                }
+            }
+        }
+
+        private static void FillDefaultsIntoFrameList(PsbDictionary fl)
+        {
+            return;
         }
 
         /// <summary>
