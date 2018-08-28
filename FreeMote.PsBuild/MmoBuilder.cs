@@ -6,12 +6,105 @@ using FreeMote.Psb;
 
 namespace FreeMote.PsBuild
 {
-    public enum MmoClassName
+    public enum MmoMarkerColor
     {
-        //ObjLayerItem = 0, CharaItem, MotionItem
+        /// <summary>
+        /// なし
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// 赤
+        /// </summary>
+        Red = 1,
+        /// <summary>
+        /// 绿
+        /// </summary>
+        Green = 2,
+        /// <summary>
+        /// 青
+        /// </summary>
+        Blue = 3,
+        /// <summary>
+        /// 橙
+        /// </summary>
+        Orange = 4,
+        /// <summary>
+        /// 紫
+        /// </summary>
+        Purple = 5,
+        /// <summary>
+        /// 桃
+        /// </summary>
+        Pink = 6,
+        /// <summary>
+        /// 灰
+        /// </summary>
+        Gray = 7,
+    }
+    public enum MmoItemClass
+    {
+        ObjLayerItem = 0, //CharaItem, MotionItem
+        //"objClipping": 0,
+        //"objMaskThresholdOpacity": 64,
+        //"objTriPriority": 2,
+        //TextLayer is always hold by a ObjLayer with "#text00000" label and "src/#font00000/#text00000" frameList/content/src
+        ShapeLayerItem = 1,
+        //"shape": "point" (psb: 0) | "circle" (psb: 1) | "rect" (psb: 2) | "quad" (psb: 3)
         LayoutLayerItem = 2,
         MotionLayerItem = 3,
+        /*
+          "motionClipping": 0,
+          "motionIndependentLayerInherit": 0,
+          "motionMaskThresholdOpacity": 64,
+         */
+        ParticleLayerItem = 4,
+        //"particle": "point" (psb: 0) | "ellipse" (psb: 1) | "quad" (psb: 2) 
+        /*                                 
+          "particleAccelRatio": 1.0,
+          "particleApplyZoomToVelocity": 0,
+          "particleDeleteOutsideScreen": 0,
+          "particleFlyDirection": 0,
+          "particleInheritAngle": 0,
+          "particleInheritOpacity": 1,
+          "particleInheritVelocity": 0,
+          "particleMaxNum": 20,
+          "particleMotionList": [],
+          "particleTriVolume": 0,
+         */
+
+        CameraLayerItem = 5,
+        ClipLayerItem = 7, //nothing special
+        TextLayerItem = 8,
+        /*
+        "fontParams": {
+        "antiAlias": 1,
+        "bold": 0,
+        "brushColor1": -16777216,
+        "brushColor2": -16777216,
+        "depth": 1,
+        "name": "ＭＳ ゴシック",
+        "penColor": -16777216,
+        "penSize": 0,
+        "rev": 1,
+        "size": 16
+        },
+        "textParams": {
+        "alignment": 0,
+        "colSpace": 0,
+        "defaultVertexColor": -1,
+        "originAlignment": 1,
+        "rasterlize": 2,
+        "rowSpace": 0,
+        "text": "Built by FreeMote"
+        },
+         */
+        MeshLayerItem = 11, //nothing special, take care of meshXXX
         StencilLayerItem = 12,
+        /*
+          "stencilCompositeMaskLayerList": [],
+          "stencilMaskThresholdOpacity": 64,
+          "stencilType": 1,
+         */
     }
 
     /// <summary>
@@ -113,7 +206,7 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["fps"] = 60.ToPsbNumber();
                     objectChildrenItem["isDelivered"] = PsbNumber.Zero;
                     objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
-                    objectChildrenItem["lastTime"] = motionItem["lastTime"];
+                    objectChildrenItem["lastTime"] = motionItem["lastTime"]; //TODO: WARN: should reduce 61 to 60
                     objectChildrenItem["loopBeginTime"] = motionItem["loopTime"]; //TODO: loop
                     objectChildrenItem["loopEndTime"] = motionItem["loopTime"]; //currently begin = end = -1
                     objectChildrenItem["marker"] = PsbNumber.Zero;
@@ -158,21 +251,7 @@ namespace FreeMote.PsBuild
                     string className = "ObjLayerItem";
                     if (typeNum != null)
                     {
-                        switch (typeNum.IntValue)
-                        {
-                            case 0:
-                                className = "ObjLayerItem";
-                                break;
-                            case 2:
-                                className = "LayoutLayerItem";
-                                break;
-                            case 3:
-                                className = "MotionLayerItem";
-                                break;
-                            case 12:
-                                className = "StencilLayerItem";
-                                break;
-                        }
+                        className = ((MmoItemClass)typeNum.IntValue).ToString();
                     }
 
                     dic["className"] = className.ToPsbString();
@@ -263,7 +342,7 @@ namespace FreeMote.PsBuild
                         dic["inheritFlipY"] = mask[28] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
                         dic["inheritFlipX"] = mask[29] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
                     }
-
+                    //"marker": just different color marks
                     //other
                     FillDefaultsIntoChildren(dic);
                 }
@@ -303,7 +382,11 @@ namespace FreeMote.PsBuild
             {
                 if (fl is PsbDictionary dic)
                 {
-                    if (dic["content"] is PsbDictionary content)
+                    if (!dic.ContainsKey("content"))
+                    {
+                        dic.Add("content", PsbNull.Null);
+                    }
+                    else if (dic["content"] is PsbDictionary content)
                     {
                         if (content.ContainsKey("mask")) //Expand params from mask
                         {
@@ -434,7 +517,20 @@ namespace FreeMote.PsBuild
 
         private static void FillDefaultsIntoChildren(PsbDictionary dic)
         {
-            return;
+            if (!dic.ContainsKey("objClipping"))
+            {
+                dic["objClipping"] = PsbNumber.Zero;
+            }
+
+            if (!dic.ContainsKey("objMaskThresholdOpacity"))
+            {
+                dic["objMaskThresholdOpacity"] = 64.ToPsbNumber();
+            }
+
+            if (!dic.ContainsKey("marker"))
+            {
+                dic["marker"] = PsbNumber.Zero;
+            }
         }
 
         private static readonly PsbDictionary DefaultFrameListContent = new PsbDictionary
@@ -520,6 +616,6 @@ namespace FreeMote.PsBuild
         }
         #endregion
 
-        
+
     }
 }
