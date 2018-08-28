@@ -88,9 +88,11 @@ namespace FreeMote.PsBuild
                 objectChildrenItem["comment"] = PsbString.Empty;
                 objectChildrenItem["defaultCoordinate"] = PsbNumber.Zero;
                 objectChildrenItem["marker"] = PsbNumber.Zero;
-                objectChildrenItem["metadata"] = motionItem["metadata"];
+                objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"];
                 objectChildrenItem["children"] = BuildChildrenFromMotion((PsbDictionary)motionItem["motion"]);
-                //objectChildrenItem["uniqId"] = ;
+                objectChildrenItem["templateReferenceChara"] = PsbString.Empty;
+                objectChildrenItem["templateSourceMap"] = new PsbDictionary(0);
+                //objectChildrenItem["uniqId"] = 4396;
 
                 objectChildren.Add(objectChildrenItem);
             }
@@ -264,6 +266,17 @@ namespace FreeMote.PsBuild
                             //25: mesh
                         }
 
+                        bool hasMotion = false;
+
+                        if (content.ContainsKey("motion"))
+                        {
+                            hasMotion = true;
+                            var motion = (PsbDictionary) content["motion"];
+                            if (motion.ContainsKey("timeOffset"))
+                            {
+                                content["mdofst"] = motion["timeOffset"];
+                            }
+                        }
 
                         if (content.ContainsKey("mesh")) //25
                         {
@@ -271,8 +284,7 @@ namespace FreeMote.PsBuild
                             content["mcc"] = content["mesh"].Children("cc");
                         }
 
-
-                        FillDefaultsIntoFrameList(dic);
+                        FillDefaultsIntoFrameListContent(content, hasMotion);
                     }
                 }
             }
@@ -321,8 +333,26 @@ namespace FreeMote.PsBuild
         }
 
         #region Fill Defaults
-        private static void FillDefaultsIntoFrameList(PsbDictionary fl)
+        private static void FillDefaultsIntoFrameListContent(PsbDictionary content, bool hasMotion = false)
         {
+            foreach (var flContent in DefaultFrameListContent)
+            {
+                if (!content.ContainsKey(flContent.Key))
+                {
+                    content.Add(flContent.Key, flContent.Value);
+                }
+            }
+
+            if (hasMotion)
+            {
+                foreach (var flContent in DefaultFrameListContent_Motion)
+                {
+                    if (!content.ContainsKey(flContent.Key))
+                    {
+                        content.Add(flContent.Key, flContent.Value);
+                    }
+                }
+            }
             return;
         }
 
@@ -338,12 +368,12 @@ namespace FreeMote.PsBuild
             };
         }
 
-        private static PsbDictionary FillDefaultMetadata()
+        private static PsbDictionary FillDefaultMetadata(int type = 1)
         {
             return new PsbDictionary(2)
             {
                 {"data", PsbNull.Null },
-                {"type", 1.ToPsbNumber() },
+                {"type", type.ToPsbNumber() },
             };
         }
 
