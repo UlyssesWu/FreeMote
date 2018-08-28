@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using FreeMote.Psb;
 // ReSharper disable InconsistentNaming
@@ -79,7 +80,7 @@ namespace FreeMote.PsBuild
         private static IPsbValue BuildObjects(PSB psb)
         {
             PsbCollection objectChildren = new PsbCollection();
-            foreach (KeyValuePair<string, IPsbValue> motionItemKv in (PsbDictionary)psb.Objects["object"])
+            foreach (var motionItemKv in (PsbDictionary)psb.Objects["object"])
             {
                 PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
                 PsbDictionary objectChildrenItem = new PsbDictionary();
@@ -100,7 +101,7 @@ namespace FreeMote.PsBuild
             PsbCollection BuildChildrenFromMotion(PsbDictionary dic)
             {
                 PsbCollection objectChildren_children = new PsbCollection();
-                foreach (KeyValuePair<string, IPsbValue> motionItemKv in dic)
+                foreach (var motionItemKv in dic)
                 {
                     PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
                     PsbDictionary objectChildrenItem = new PsbDictionary();
@@ -204,11 +205,63 @@ namespace FreeMote.PsBuild
 
                     if (dic["metadata"] is PsbNull)
                     {
-                        dic["metadata"] = new PsbDictionary(2)
+                        dic["metadata"] = new PsbDictionary(2) //metadata: data is string => type0; data is null?dictionary => type1
                         {
                             {"data", PsbString.Empty },
                             {"type", PsbNumber.Zero },
                         };
+                    }
+
+                    //Expand meshSyncChildMask
+                    if (dic["meshSyncChildMask"] is PsbNumber number)
+                    {
+                        dic["meshSyncChildShape"] = (number.IntValue & 8) == 8 ? 1.ToPsbNumber() : PsbNumber.Zero;
+
+                        if ((number.IntValue & 4) == 4)
+                        {
+                            Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
+                        }
+
+                        if ((number.IntValue & 2) == 2)
+                        {
+                            Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
+                        }
+
+                        dic["meshSyncChildCoord"] = (number.IntValue & 1) == 1 ? 1.ToPsbNumber() : PsbNumber.Zero;
+                    }
+                    else
+                    {
+                        dic["meshSyncChildShape"] = PsbNumber.Zero;
+                        dic["meshSyncChildCoord"] = PsbNumber.Zero;
+                    }
+
+                    if (!dic.ContainsKey("meshSyncChildAngle"))
+                    {
+                        dic["meshSyncChildAngle"] = PsbNumber.Zero;
+                    }
+                    if (!dic.ContainsKey("meshSyncChildZoom"))
+                    {
+                        dic["meshSyncChildZoom"] = PsbNumber.Zero;
+                    }
+
+                    //Expand inheritMask
+                    //inheritAngle:         16  10000
+                    //inheritParent:
+                    //inheritColorWeight:   512 1000000000
+                    if (dic["inheritMask"] is PsbNumber inheritMask)
+                    {
+                        var mask = Convert.ToString(inheritMask.IntValue, 2).PadLeft(32, '0');
+                        dic["inheritShape"] = mask[6] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritParent"] = mask[9] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritOpacity"] = mask[21] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritColorWeight"] = mask[22] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritSlantY"] = mask[23] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritSlantX"] = mask[24] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritZoomY"] = mask[25] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritZoomX"] = mask[26] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritAngle"] = mask[27] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritFlipY"] = mask[28] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["inheritFlipX"] = mask[29] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
                     }
 
                     //other
@@ -271,7 +324,7 @@ namespace FreeMote.PsBuild
                         if (content.ContainsKey("motion"))
                         {
                             hasMotion = true;
-                            var motion = (PsbDictionary) content["motion"];
+                            var motion = (PsbDictionary)content["motion"];
                             if (motion.ContainsKey("timeOffset"))
                             {
                                 content["mdofst"] = motion["timeOffset"];
@@ -307,9 +360,11 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         private static IPsbValue BuildMetadata(PSB psb)
         {
-            PsbDictionary metadata = new PsbDictionary(2);
-            metadata["type"] = 1.ToPsbNumber();
-            metadata["data"] = psb.Objects["metadata"];
+            PsbDictionary metadata = new PsbDictionary(2)
+            {
+                ["type"] = 1.ToPsbNumber(),
+                ["data"] = psb.Objects["metadata"]
+            };
             return metadata;
         }
 
@@ -372,7 +427,7 @@ namespace FreeMote.PsBuild
         {
             return new PsbDictionary(2)
             {
-                {"data", PsbNull.Null },
+                {"data", type == 0 ? (IPsbValue)PsbString.Empty : PsbNull.Null },
                 {"type", type.ToPsbNumber() },
             };
         }
@@ -451,7 +506,7 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         private static IPsbValue FillDefaultTargetOwn()
         {
-            return new PsbDictionary()
+            return new PsbDictionary
             {
                 {"nitro2d", new PsbDictionary
                 {
@@ -464,5 +519,7 @@ namespace FreeMote.PsBuild
             };
         }
         #endregion
+
+        
     }
 }
