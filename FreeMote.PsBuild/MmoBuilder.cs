@@ -115,6 +115,12 @@ namespace FreeMote.PsBuild
     {
         //public PSB Mmo { get; private set; }
 
+        /// <summary>
+        /// Generate MMO from Emote KRKR PSB
+        /// <para>When this method is called, the PSB you passed in can NO longer be used.</para>
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
         public static PSB Build(PSB psb)
         {
             PSB mmo = new PSB();
@@ -156,13 +162,18 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
-        /// 
+        /// Build from PSB source. Currently only works for krkr PSB
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
         private static IPsbValue BuildSources(PSB psb)
         {
-            return new PsbCollection(); //TODO:
+            PsbCollection sourceChildren = new PsbCollection();
+            foreach (var motionItemKv in (PsbDictionary) psb.Objects["source"])
+            {
+            }
+
+            return sourceChildren;
         }
 
         /// <summary>
