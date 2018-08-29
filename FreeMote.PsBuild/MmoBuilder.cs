@@ -206,7 +206,7 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["fps"] = 60.ToPsbNumber();
                     objectChildrenItem["isDelivered"] = PsbNumber.Zero;
                     objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
-                    objectChildrenItem["lastTime"] = motionItem["lastTime"]; //TODO: WARN: should reduce 61 to 60
+                    objectChildrenItem["lastTime"] = BuildLastTime(motionItem["lastTime"]); //TODO: WARN: should reduce 61 to 60
                     objectChildrenItem["loopBeginTime"] = motionItem["loopTime"]; //TODO: loop
                     objectChildrenItem["loopEndTime"] = motionItem["loopTime"]; //currently begin = end = -1
                     objectChildrenItem["marker"] = PsbNumber.Zero;
@@ -248,13 +248,13 @@ namespace FreeMote.PsBuild
                 {
                     //ClassName
                     var typeNum = dic["type"] as PsbNumber;
-                    string className = "ObjLayerItem";
+                    MmoItemClass classType = MmoItemClass.ObjLayerItem;
                     if (typeNum != null)
                     {
-                        className = ((MmoItemClass)typeNum.IntValue).ToString();
+                        classType = (MmoItemClass)typeNum.IntValue;
                     }
 
-                    dic["className"] = className.ToPsbString();
+                    dic["className"] = classType.ToString().ToPsbString();
                     dic["comment"] = PsbString.Empty;
 
                     if (dic["frameList"] is PsbCollection frameList)
@@ -267,6 +267,11 @@ namespace FreeMote.PsBuild
                     {
                         dic["parameterize"] = parameter[parameterize.IntValue];
                     }
+                    else
+                    {
+                        dic["parameterize"] = FillDefaultParameterize();
+                    }
+                    
 
                     //stencilType conversion: 5 (psb) -> 1 (mmo)
                     if (dic["stencilType"] is PsbNumber stencilType)
@@ -296,6 +301,7 @@ namespace FreeMote.PsBuild
                     {
                         dic["meshSyncChildShape"] = (number.IntValue & 8) == 8 ? 1.ToPsbNumber() : PsbNumber.Zero;
 
+                        //0110 is not enabled in editor?
                         if ((number.IntValue & 4) == 4)
                         {
                             Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
@@ -342,14 +348,83 @@ namespace FreeMote.PsBuild
                         dic["inheritFlipY"] = mask[28] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
                         dic["inheritFlipX"] = mask[29] == '1' ? 1.ToPsbNumber() : PsbNumber.Zero;
                     }
-                    //"marker": just different color marks
+
+                    if (classType == MmoItemClass.ShapeLayerItem)
+                    {
+                        if (dic["shape"] is PsbNumber shape)
+                        {
+                            switch (shape.IntValue)
+                            {
+                                case 0:
+                                    dic["shape"] = "point".ToPsbString();
+                                    break;
+                                case 1:
+                                    dic["shape"] = "circle".ToPsbString();
+                                    break;
+                                case 2:
+                                    dic["shape"] = "rect".ToPsbString();
+                                    break;
+                                case 3:
+                                    dic["shape"] = "quad".ToPsbString();
+                                    break;
+                                default:
+                                    Console.WriteLine("[WARN] unknown shape!");
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (classType == MmoItemClass.ParticleLayerItem)
+                    {
+                        //All params are kept in PSB
+                        if (dic["particle"] is PsbNumber particle)
+                        {
+                            switch (particle.IntValue)
+                            {
+                                case 0:
+                                    dic["particle"] = "point".ToPsbString();
+                                    break;
+                                case 1:
+                                    dic["particle"] = "ellipse".ToPsbString();
+                                    break;
+                                case 2:
+                                    dic["particle"] = "quad".ToPsbString();
+                                    break;
+                                default:
+                                    Console.WriteLine("[WARN] unknown particle!");
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (classType == MmoItemClass.TextLayerItem)
+                    {
+                        //TODO: Haven't seen any sample with Text
+                    }
+
                     //other
-                    FillDefaultsIntoChildren(dic);
+                    FillDefaultsIntoChildren(dic, classType);
                 }
 
             }
 
             return objectChildren;
+        }
+
+        private static IPsbValue BuildLastTime(IPsbValue val)
+        {
+            //TODO: 目L：61 in krkr vs -1 in MMO
+            if (val is PsbNumber num)
+            {
+                if (num.IntValue >= 0)
+                {
+                    num.IntValue -= 1;
+                }
+
+                return num;
+            }
+
+            return val;
         }
 
         private static PsbCollection BuildPriorityFrameList(PsbCollection fl)
@@ -515,21 +590,50 @@ namespace FreeMote.PsBuild
             };
         }
 
-        private static void FillDefaultsIntoChildren(PsbDictionary dic)
+        private static void FillDefaultsIntoChildren(PsbDictionary dic, MmoItemClass classType)
         {
-            if (!dic.ContainsKey("objClipping"))
-            {
-                dic["objClipping"] = PsbNumber.Zero;
-            }
-
-            if (!dic.ContainsKey("objMaskThresholdOpacity"))
-            {
-                dic["objMaskThresholdOpacity"] = 64.ToPsbNumber();
-            }
-
             if (!dic.ContainsKey("marker"))
             {
                 dic["marker"] = PsbNumber.Zero;
+            }
+
+            if (classType == MmoItemClass.ObjLayerItem)
+            {
+                if (!dic.ContainsKey("objClipping"))
+                {
+                    dic["objClipping"] = PsbNumber.Zero;
+                }
+
+                if (!dic.ContainsKey("objMaskThresholdOpacity"))
+                {
+                    dic["objMaskThresholdOpacity"] = 64.ToPsbNumber();
+                }
+            }
+
+            if (classType == MmoItemClass.MotionLayerItem)
+            {
+                if (!dic.ContainsKey("motionIndependentLayerInherit"))
+                {
+                    dic["motionIndependentLayerInherit"] = PsbNumber.Zero;
+                }
+
+                if (!dic.ContainsKey("motionMaskThresholdOpacity"))
+                {
+                    dic["motionMaskThresholdOpacity"] = 64.ToPsbNumber();
+                }
+
+                if (!dic.ContainsKey("motionClipping"))
+                {
+                    dic["motionClipping"] = PsbNumber.Zero;
+                }
+            }
+
+            if (classType == MmoItemClass.StencilLayerItem)
+            {
+                if (!dic.ContainsKey("stencilMaskThresholdOpacity"))
+                {
+                    dic["stencilMaskThresholdOpacity"] = 64.ToPsbNumber();
+                }
             }
         }
 
