@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
@@ -71,6 +72,55 @@ namespace FreeMote.Tests
             mmo.Merge();
             mmo.SaveAsMdfFile(Path.Combine(resPath, "mmo", "temp.mmo"));
 
+        }
+
+        [TestMethod]
+        public void TestMmoGraft2()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "template39.json");
+            var path2 = Path.Combine(resPath, "template39-krkr.json");
+            var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
+            var psbMmo = MmoBuilder.Build(psb);
+            psbMmo.Objects["sourceChildren"] = mmo.Objects["sourceChildren"];
+            psbMmo.Objects["metaformat"] = mmo.Objects["metaformat"];
+            psbMmo.Objects["metadata"] = mmo.Objects["metadata"];
+            psbMmo.Merge();
+            File.WriteAllBytes(Path.Combine(resPath, "mmo", "crash-temp.mmo"), psbMmo.Build());
+        }
+
+        [TestMethod]
+        public void TestCompareMmo()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res\mmo");
+            var path = Path.Combine(resPath, "template39.json");
+            var path2 = Path.Combine(resPath, "temp.mmo");
+
+            var mmo1 = PsbCompiler.LoadPsbFromJsonFile(path);
+            var allpart1 = FindPart((PsbCollection)mmo1.Objects["objectChildren"], "body_parts");
+            var mmo2 = new PSB(path2);
+            var allpart2 = FindPart((PsbCollection)mmo2.Objects["objectChildren"], "body_parts");
+
+            //var p1 = mmo1.Objects.FindByPath(
+            //    "/objectChildren/[3]/children/[1]/layerChildren/[0]/children/[0]/frameList/[0]/content/coord");
+            //var pp = ((IPsbChild) p1).Parent.Parent.Parent.Parent["label"];
+            PsbDictionary FindPart(PsbCollection col, string label)
+            {
+                foreach (var c in col)
+                {
+                    if (c is PsbDictionary d)
+                    {
+                        if (d["label"] is PsbString s && s.Value == label)
+                        {
+                            return d;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            PsBuildTest.CompareValue(allpart1, allpart2);
         }
     }
 }

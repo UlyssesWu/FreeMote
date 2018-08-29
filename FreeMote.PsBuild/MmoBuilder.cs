@@ -128,7 +128,7 @@ namespace FreeMote.PsBuild
             mmo.Objects["fontInfoList"] = new PsbCollection(0);
             mmo.Objects["forceRepack"] = 1.ToPsbNumber();
             mmo.Objects["ignoreMotionPanel"] = PsbNumber.Zero;
-            mmo.Objects["keepSourceIconName"] = 1.ToPsbNumber();
+            mmo.Objects["keepSourceIconName"] = PsbNumber.Zero; //1.ToPsbNumber();
             mmo.Objects["label"] = "template".ToPsbString();
             mmo.Objects["marker"] = PsbNumber.Zero;
             mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
@@ -149,7 +149,7 @@ namespace FreeMote.PsBuild
             mmo.Objects["stereovisionProfile"] = psb.Objects["stereovisionProfile"];
             mmo.Objects["targetOwn"] = FillDefaultTargetOwn();
             mmo.Objects["unifyTexture"] = 1.ToPsbNumber();
-            mmo.Objects["uniqId"] = 114514.ToPsbNumber();
+            //mmo.Objects["uniqId"] = 114514.ToPsbNumber();
             mmo.Objects["version"] = new PsbNumber(3.12f);
 
             return mmo;
@@ -206,7 +206,7 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["fps"] = 60.ToPsbNumber();
                     objectChildrenItem["isDelivered"] = PsbNumber.Zero;
                     objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
-                    objectChildrenItem["lastTime"] = BuildLastTime(motionItem["lastTime"]); //TODO: WARN: should reduce 61 to 60
+                    objectChildrenItem["lastTime"] = BuildLastTime(motionItem["lastTime"]);
                     objectChildrenItem["loopBeginTime"] = motionItem["loopTime"]; //TODO: loop
                     objectChildrenItem["loopEndTime"] = motionItem["loopTime"]; //currently begin = end = -1
                     objectChildrenItem["marker"] = PsbNumber.Zero;
@@ -259,7 +259,7 @@ namespace FreeMote.PsBuild
 
                     if (dic["frameList"] is PsbCollection frameList)
                     {
-                        BuildFrameList(frameList);
+                        BuildFrameList(frameList, classType);
                     }
 
                     //parameterize: find from psb table amd expand
@@ -271,7 +271,7 @@ namespace FreeMote.PsBuild
                     {
                         dic["parameterize"] = FillDefaultParameterize();
                     }
-                    
+
 
                     //stencilType conversion: 5 (psb) -> 1 (mmo)
                     if (dic["stencilType"] is PsbNumber stencilType)
@@ -292,6 +292,14 @@ namespace FreeMote.PsBuild
                         dic["metadata"] = new PsbDictionary(2) //metadata: data is string => type0; data is null?dictionary => type1
                         {
                             {"data", PsbString.Empty },
+                            {"type", PsbNumber.Zero },
+                        };
+                    }
+                    else if (dic["metadata"] is PsbString s)
+                    {
+                        dic["metadata"] = new PsbDictionary(2)
+                        {
+                            {"data", s },
                             {"type", PsbNumber.Zero },
                         };
                     }
@@ -372,6 +380,9 @@ namespace FreeMote.PsBuild
                                     break;
                             }
                         }
+
+                        dic.Remove("type"); //the "type" here will be misunderstand for "point" type so must be removed
+                        dic.Remove("inheritMask");
                     }
 
                     if (classType == MmoItemClass.ParticleLayerItem)
@@ -451,7 +462,7 @@ namespace FreeMote.PsBuild
             return fl;
         }
 
-        private static void BuildFrameList(PsbCollection frameList)
+        private static void BuildFrameList(PsbCollection frameList, MmoItemClass classType = MmoItemClass.ObjLayerItem)
         {
             foreach (var fl in frameList)
             {
@@ -475,6 +486,11 @@ namespace FreeMote.PsBuild
                             //17: bm
                             //19: motion/timeOffset?
                             //25: mesh
+
+                            if (content["src"] is PsbString s && s.Value.StartsWith("shape/"))
+                            {
+                                content.Remove("mask"); //necessary to prevent Member "point" does not exist error
+                            }
                         }
 
                         bool hasMotion = false;
@@ -495,7 +511,8 @@ namespace FreeMote.PsBuild
                             content["mcc"] = content["mesh"].Children("cc");
                         }
 
-                        FillDefaultsIntoFrameListContent(content, hasMotion);
+                        bool hasStencil = classType == MmoItemClass.StencilLayerItem;
+                        FillDefaultsIntoFrameListContent(content, hasMotion, hasStencil);
                     }
                 }
             }
@@ -546,7 +563,7 @@ namespace FreeMote.PsBuild
         }
 
         #region Fill Defaults
-        private static void FillDefaultsIntoFrameListContent(PsbDictionary content, bool hasMotion = false)
+        private static void FillDefaultsIntoFrameListContent(PsbDictionary content, bool hasMotion = false, bool hasStencil = false)
         {
             foreach (var flContent in DefaultFrameListContent)
             {
@@ -566,6 +583,23 @@ namespace FreeMote.PsBuild
                     }
                 }
             }
+
+            if (hasStencil)
+            {
+                foreach (var flContent in DefaultFrameListContent_Stencil)
+                {
+                    if (!content.ContainsKey(flContent.Key))
+                    {
+                        content.Add(flContent.Key, flContent.Value);
+                    }
+                }
+            }
+
+            //if (!(content["mbp"] is PsbNull) && content["src"] is PsbString s && s.Value.StartsWith("blank/"))
+            //{
+            //    content["color"] = DefaultFrameListContent_Color;
+            //}
+
             return;
         }
 
@@ -683,6 +717,26 @@ namespace FreeMote.PsBuild
             {"mpc", PsbNumber.Zero },
             {"mpf", PsbNumber.Zero },
             {"mpj", PsbNumber.Zero },
+        };
+
+        /// <summary>
+        /// frameList/[]/content/
+        /// </summary>
+        private static readonly PsbDictionary DefaultFrameListContent_Stencil = new PsbDictionary
+        {
+            {"swpcc", PsbNull.Null },
+            {"swpen", PsbNumber.Zero }, //maybe timeOffset?
+            {"swpratio", new PsbNumber(0.5f) },
+            {"swprv", PsbNumber.Zero },
+            {"swpsoft", new PsbNumber(1.0f)},
+        };
+
+        /// <summary>
+        /// when mbp != null and src.StartWith("blank/") //not correct
+        /// </summary>
+        private static readonly PsbCollection DefaultFrameListContent_Color = new PsbCollection(4)
+        {
+            (-8355712).ToPsbNumber(),(-8355712).ToPsbNumber(),(-8355712).ToPsbNumber(),(-8355712).ToPsbNumber()
         };
 
         /// <summary>

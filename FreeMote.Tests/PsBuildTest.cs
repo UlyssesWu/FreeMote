@@ -437,117 +437,135 @@ namespace FreeMote.Tests
             //Console.WriteLine("============");
             //CompareValue(psbuildPsb.Objects, pccPsb.Objects);
 
-            bool CompareValue(IPsbValue p1, IPsbValue p2)
-            {
-                //if (p1.Type != p2.Type && !(p1 is PsbString))
-                //{
-                //    Console.WriteLine($"Strict Type diff: {p1}({p1.Type}) vs {p2}({p2.Type})");
-                //}
-                if (p1.GetType() != p2.GetType())
-                {
-                    Console.WriteLine($"Type diff: {p1} vs {p2}");
-                    return false;
-                }
-                switch (p1)
-                {
-                    case PsbResource r1:
-                        var r2 = (PsbResource)p2;
-                        if (r1.Data.SequenceEqual(r2.Data))
-                        {
-                            return true;
-                        }
-                        Console.WriteLine($"Res Diff: {r1} vs {r2}");
-                        return false;
-                    case PsbNull _:
-                        return true;
-                    case PsbNumber n1:
-                        var n2 = (PsbNumber)p2;
-                        if (n1.Type != n2.Type)
-                        {
-                            Console.WriteLine($"Wrong Number Type: {n1}({n1.Type}) vs {n2}({n2.Type})");
-                            return false;
-                        }
-                        switch (n1.NumberType)
-                        {
-                            case PsbNumberType.Int:
-                                if ((int)n1 != (int)n2)
-                                {
-                                    Console.WriteLine($"{n1} != {n2}");
-                                    return false;
-                                }
-                                break;
-                            case PsbNumberType.Float:
-                                if (Math.Abs((float)n1 - (float)n2) > float.Epsilon)
-                                {
-                                    Console.WriteLine($"{n1} != {n2}");
-                                    return false;
-                                }
-                                break;
-                            case PsbNumberType.Double:
-                                if (Math.Abs((double)n1 - (double)n2) > double.Epsilon)
-                                {
-                                    Console.WriteLine($"{n1} != {n2}");
-                                    return false;
-                                }
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-                        return true;
-                    case PsbString s1:
-                        var s2 = (PsbString)p2;
-                        if (s1.Value == s2.Value)
-                        {
-                            return true;
-                        }
-                        Console.WriteLine($"{s1} != {s2}");
-                        return false;
-                    case PsbBool b1:
-                        var b2 = (PsbBool)p2;
-                        if (b1.Value == b2.Value)
-                        {
-                            return true;
-                        }
-                        Console.WriteLine($"{b1} != {b2}");
-                        return false;
-                    case PsbArray a1:
-                        var a2 = (PsbArray)p2;
-                        if (a1.Value.SequenceEqual(a2.Value))
-                        {
-                            return true;
-                        }
-                        Console.WriteLine($"{a1} != {a2}");
-                        return false;
-                    case PsbCollection c1:
-                        var c2 = (PsbCollection)p2;
-                        for (var i = 0; i < c1.Count; i++)
-                        {
-                            if (CompareValue(c1[i], c2[i]))
-                            {
-                                continue;
-                            }
+            
+        }
 
-                            Console.WriteLine(c1.Path);
-                            //Console.WriteLine($"{c1.Value[i]} != {c2.Value[i]}");
-                        }
-                        return true;
-                    case PsbDictionary d1:
-                        var d2 = (PsbDictionary)p2;
-                        foreach (var pair1 in d1)
-                        {
-                            if (!d2.ContainsKey(pair1.Key))
-                            {
-                                Console.WriteLine($"Missing {pair1.Key}");
-                            }
-                            else
-                            {
-                                CompareValue(pair1.Value, d2[pair1.Key]);
-                            }
-                        }
-                        return true;
-                }
+        public static bool CompareValue(IPsbValue p1, IPsbValue p2)
+        {
+            //if (p1.Type != p2.Type && !(p1 is PsbString))
+            //{
+            //    Console.WriteLine($"Strict Type diff: {p1}({p1.Type}) vs {p2}({p2.Type})");
+            //}
+            if (p1 != null && p2 == null)
+            {
+                Console.WriteLine($"p1 == {p1.ToString()} && p2 == null");
+                return false;
+            }
+            if (p1 == null && p2 != null)
+            {
+                Console.WriteLine($"p1 == null && p2 == {p2.ToString()}");
+                return false;
+            }
+
+            if (p1 == null && p2 == null)
+            {
                 return true;
             }
+
+            if (p1.GetType() != p2.GetType())
+            {
+                Console.WriteLine($"Type diff: {p1}({p1.GetType()}) vs {p2}({p2.GetType()})");
+                return false;
+            }
+            switch (p1)
+            {
+                case PsbResource r1:
+                    var r2 = (PsbResource)p2;
+                    if (r1.Data.SequenceEqual(r2.Data))
+                    {
+                        return true;
+                    }
+                    Console.WriteLine($"Res Diff: {r1} vs {r2}");
+                    return false;
+                case PsbNull _:
+                    return true;
+                case PsbNumber n1:
+                    var n2 = (PsbNumber)p2;
+                    if (n1.Type != n2.Type)
+                    {
+                        Console.WriteLine($"Wrong Number Type: {n1}({n1.Type}) vs {n2}({n2.Type})");
+                        return false;
+                    }
+                    switch (n1.NumberType)
+                    {
+                        case PsbNumberType.Int:
+                            if ((int)n1 != (int)n2)
+                            {
+                                Console.WriteLine($"{n1} != {n2}");
+                                return false;
+                            }
+                            break;
+                        case PsbNumberType.Float:
+                            if (Math.Abs((float)n1 - (float)n2) > float.Epsilon)
+                            {
+                                Console.WriteLine($"{n1} != {n2}");
+                                return false;
+                            }
+                            break;
+                        case PsbNumberType.Double:
+                            if (Math.Abs((double)n1 - (double)n2) > double.Epsilon)
+                            {
+                                Console.WriteLine($"{n1} != {n2}");
+                                return false;
+                            }
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                    return true;
+                case PsbString s1:
+                    var s2 = (PsbString)p2;
+                    if (s1.Value == s2.Value)
+                    {
+                        return true;
+                    }
+                    Console.WriteLine($"{s1} != {s2}");
+                    return false;
+                case PsbBool b1:
+                    var b2 = (PsbBool)p2;
+                    if (b1.Value == b2.Value)
+                    {
+                        return true;
+                    }
+                    Console.WriteLine($"{b1} != {b2}");
+                    return false;
+                case PsbArray a1:
+                    var a2 = (PsbArray)p2;
+                    if (a1.Value.SequenceEqual(a2.Value))
+                    {
+                        return true;
+                    }
+                    Console.WriteLine($"{a1} != {a2}");
+                    return false;
+                case PsbCollection c1:
+                    var c2 = (PsbCollection)p2;
+                    for (var i = 0; i < c1.Count; i++)
+                    {
+                        if (CompareValue(c1[i], c2[i]))
+                        {
+                            continue;
+                        }
+
+                        Console.WriteLine(c1.Path);
+                        //Console.WriteLine($"{c1.Value[i]} != {c2.Value[i]}");
+                    }
+                    return true;
+                case PsbDictionary d1:
+                    var d2 = (PsbDictionary)p2;
+                    foreach (var pair1 in d1)
+                    {
+                        if (!d2.ContainsKey(pair1.Key))
+                        {
+                            Console.WriteLine($"Missing {pair1.Key}");
+                        }
+                        else
+                        {
+                            CompareValue(pair1.Value, d2[pair1.Key]);
+                        }
+                    }
+                    return true;
+            }
+            return true;
         }
     }
 }
