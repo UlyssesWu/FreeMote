@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using FreeMote.Psb;
 using FreeMote.Psb.Textures;
+using FreeMote.PsBuild.Properties;
+using Newtonsoft.Json;
 
 // ReSharper disable InconsistentNaming
 
@@ -688,7 +691,48 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         private static IPsbValue BuildMetaFormat(PSB psb)
         {
-            return PsbNull.Null;
+            var jsonConverter = new PsbJsonConverter();
+            PsbDictionary metaFormatContent = new PsbDictionary();
+            PsbDictionary metaFormat = new PsbDictionary()
+            {
+                {"data", metaFormatContent },
+                {"type", 1.ToPsbNumber() }
+            };
+            //return new PsbDictionary
+            //{
+            //    {"data", "by Ulysses, wdwxy12345@gmail.com".ToPsbString() },
+            //    {"type", PsbNumber.Zero }
+            //};
+            var metadata = (PsbDictionary)psb.Objects["metadata"];
+            metaFormatContent["baseChara"] = metadata["base"].Children("chara");
+            metaFormatContent["baseMotion"] = metadata["base"].Children("motion");
+            metaFormatContent["bustControlDefinitionList"] = metadata["bustControl"];
+            //metaFormatContent["bustControlParameterDefinitionList"] =
+            //    JsonConvert.DeserializeObject<PsbCollection>(Resources.bustControlParameterDefinitionList,
+            //        jsonConverter);
+            metaFormatContent["bustControlParameterDefinitionList"] =
+                JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"bust.txt"),
+                    jsonConverter);
+            metaFormatContent["captureList"] = new PsbCollection
+            {
+                new PsbDictionary
+                {
+                    {"chara", metaFormatContent["baseChara"] },
+                    { "height", 600.ToPsbNumber()},
+                    {"label", "FreeMote".ToPsbString() },
+                    {"motion", metaFormatContent["baseMotion"] },
+                    {"scale", new PsbNumber(0.5f) },
+                    {"testChara", PsbString.Empty },
+                    {"testMotion", PsbString.Empty },
+                    {"width", 600.ToPsbNumber() }
+                }
+            };
+            //metaFormatContent["charaProfileDefinitionList"] = metadata["base"].Children("chara");
+            //metaFormatContent["baseChara"] = metadata["base"].Children("chara");
+
+
+
+            return metaFormat;
         }
 
         /// <summary>
@@ -941,7 +985,5 @@ namespace FreeMote.PsBuild
             };
         }
         #endregion
-
-
     }
 }

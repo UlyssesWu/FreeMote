@@ -68,8 +68,8 @@ namespace FreeMote.Tests
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
             var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
             var psbMmo = MmoBuilder.Build(psb);
-            mmo.Objects["objectChildren"] = psbMmo.Objects["objectChildren"];
-
+            //mmo.Objects["objectChildren"] = psbMmo.Objects["objectChildren"];
+            mmo.Objects["metaformat"] = psbMmo.Objects["metadata"];
             mmo.Merge();
             mmo.SaveAsMdfFile(Path.Combine(resPath, "mmo", "temp.mmo"));
 
@@ -81,12 +81,13 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "template39.json");
             var path2 = Path.Combine(resPath, "template39-krkr.json");
+            //var path = Path.Combine(resPath, "e-mote38基本テンプレート(正面zバイナリ専用)_free.json");
+            //var path2 = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
+            //var path2 = Path.Combine(resPath, "mmo", "e-mote38基本テンプレート(正面zバイナリ専用)-krkr.json");
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
             var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
             var psbMmo = MmoBuilder.Build(psb);
-            psbMmo.Objects["sourceChildren"] = mmo.Objects["sourceChildren"];
             psbMmo.Objects["metaformat"] = mmo.Objects["metaformat"];
-            psbMmo.Objects["metadata"] = mmo.Objects["metadata"];
             psbMmo.Merge();
             File.WriteAllBytes(Path.Combine(resPath, "mmo", "crash-temp.mmo"), psbMmo.Build());
         }
