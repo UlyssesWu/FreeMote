@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using FreeMote.Psb;
+using FreeMote.Psb.Textures;
+
 // ReSharper disable InconsistentNaming
 
 namespace FreeMote.PsBuild
@@ -166,11 +170,55 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildSources(PSB psb)
+        private static IPsbValue BuildSources(PSB psb, int widthPadding = 10, int heightPadding = 10)
         {
             PsbCollection sourceChildren = new PsbCollection();
             foreach (var motionItemKv in (PsbDictionary) psb.Objects["source"])
             {
+                PsbDictionary motionItem = new PsbDictionary();
+                motionItem["label"] = motionItemKv.Key.ToPsbString();
+                motionItem["comment"] = PsbString.Empty;
+                motionItem["metadata"] = FillDefaultMetadata();
+                PsbDictionary item = (PsbDictionary)motionItemKv.Value;
+                PsbDictionary icon = (PsbDictionary)item["icon"];
+                bool isTexture = icon.Values.Any(d => d is PsbDictionary dic && dic.ContainsKey("attr"));
+                if (isTexture)
+                {
+                    int maxWidth =
+                        icon.Values.Max(d => d is PsbDictionary dic ? ((PsbNumber) dic["width"]).IntValue : 0);
+                    int maxHeight =
+                        icon.Values.Max(d => d is PsbDictionary dic ? ((PsbNumber)dic["height"]).IntValue : 0);
+                    motionItem["cellWidth"] = (maxWidth + widthPadding).ToPsbNumber();
+                    motionItem["cellHeight"] = (maxHeight + heightPadding).ToPsbNumber();
+                    motionItem["className"] = "TextureItem".ToPsbString();
+                    var iconList = new PsbCollection(icon.Count);
+                    motionItem["iconList"] = iconList;
+                    List<Image> texs = new List<Image>(icon.Count);
+                    foreach (var iconKv in icon)
+                    {
+                        var iconItem = (PsbDictionary) iconKv.Value;
+                        iconItem["label"] = iconKv.Key.ToPsbString();
+                        iconItem["metadata"] = FillDefaultMetadata();
+                        var height = ((PsbNumber) iconItem["height"]).IntValue;
+                        var width = ((PsbNumber) iconItem["width"]).IntValue;
+                        bool rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
+                        var res = (PsbResource) iconItem["pixel"];
+                        texs.Add(rl
+                            ? RL.UncompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
+                            : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat()));
+                    }
+                    TexturePacker packer = new TexturePacker();
+
+                }
+                else
+                {
+                    motionItem["cellHeight"] = 8.ToPsbNumber();
+                    motionItem["cellWidth"] = 8.ToPsbNumber();
+                    motionItem["className"] = "ScrapbookItem".ToPsbString();
+
+                }
+
+                sourceChildren.Add(motionItem);
             }
 
             return sourceChildren;
@@ -392,7 +440,7 @@ namespace FreeMote.PsBuild
                             }
                         }
 
-                        dic.Remove("type"); //the "type" here will be misunderstand for "point" type so must be removed
+                        dic.Remove("type"); //FIXED: the "type" here will be misunderstand for "point" type so must be removed
                         dic.Remove("inheritMask");
                     }
 
@@ -626,6 +674,11 @@ namespace FreeMote.PsBuild
             };
         }
 
+        /// <summary>
+        /// type 1: json (default = PsbNull) ; type 0: string (default = PsbString.Empty)
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static PsbDictionary FillDefaultMetadata(int type = 1)
         {
             return new PsbDictionary(2)

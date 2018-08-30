@@ -294,8 +294,10 @@ namespace FreeMote.Psb.Textures
             Process();
         }
 
-        private void ScrapProcess()
+        public void CellProcess(IDictionary<string, Image> images, int cellHeight, int cellWidth, int mode = 0, bool debugMode = false)
         {
+            LoadTexturesFromImages(images);
+
             //TODO:
         }
 
