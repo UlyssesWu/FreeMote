@@ -294,7 +294,7 @@ namespace FreeMote.PsBuild.Converters
                     }
                     //mask -= 1
                     var num = (PsbNumber)dic["mask"];
-                    if (dic["ox"] is PsbNumber ox && dic["oy"] is PsbNumber oy 
+                    if (dic["ox"] is PsbNumber ox && dic["oy"] is PsbNumber oy
                         && (ox != PsbNumber.Zero || oy != PsbNumber.Zero))
                     {
                         //keep ox,oy

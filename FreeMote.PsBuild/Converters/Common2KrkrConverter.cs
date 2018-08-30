@@ -94,7 +94,7 @@ namespace FreeMote.PsBuild.Converters
                         {
                             icon.Remove("attr");
                         }
-                        
+
                     }
 
                     texDic.Remove("texture");
@@ -153,7 +153,16 @@ namespace FreeMote.PsBuild.Converters
                                     string shape;
                                     switch (((PsbNumber)childrenArrayDic["shape"]).IntValue)
                                     {
-                                        case 0: //We only know 0 = point
+                                        case 1:
+                                            shape = "circle";
+                                            break;
+                                        case 2:
+                                            shape = "rect";
+                                            break;
+                                        case 3:
+                                            shape = "quad";
+                                            break;
+                                        case 0:
                                         default:
                                             shape = "point";
                                             break;
