@@ -294,11 +294,61 @@ namespace FreeMote.Psb.Textures
             Process();
         }
 
-        public void CellProcess(IDictionary<string, Image> images, int cellHeight, int cellWidth, int mode = 0, bool debugMode = false)
+        public Bitmap CellProcess(IDictionary<string, Image> images, int cellHeight, int cellWidth, int mode = 0, bool debugMode = false)
         {
             LoadTexturesFromImages(images);
 
             //TODO:
+            //Firstly implement a straight packer
+            int texWidth = 3 * cellWidth;
+            int texHeight = cellHeight * (1 + images.Count);
+            Bitmap img = new Bitmap(texWidth, texHeight, PixelFormat.Format32bppArgb);
+            //avoid using Graphics
+            int posX = cellWidth;
+            int posY = cellHeight;
+            Atlasses = new List<Atlas>(1);
+            Atlas atlas = new Atlas
+            {
+                Height = texHeight,
+                Width = texWidth
+            };
+#if USE_FASTBITMAP
+
+            using (var f = img.FastLock())
+            {
+                f.Clear(Color.FromArgb(255, 0, 255, 0));
+                foreach (var image in images)
+                {
+                    Node n = new Node();
+                    n.Texture = new TextureInfo
+                    {
+                        Source = image.Key,
+                        Width = image.Value.Width,
+                        Height = image.Value.Height
+                    };
+                    n.Bounds = new Rectangle(posX, posY, cellWidth, cellHeight);
+                }
+                //foreach (Node n in Nodes)
+                //{
+                //    if (n.Texture != null)
+                //    {
+                //        Image sourceImg = n.Texture.SourceImage ?? new Bitmap(n.Texture.Source);
+                //        if (!(sourceImg is Bitmap s))
+                //        {
+                //            s = new Bitmap(sourceImg);
+                //        }
+                //        f.CopyRegion(s, new Rectangle(0, 0, s.Width, s.Height), n.Bounds);
+                //    }
+                //}
+            }
+            //img.Save("tex.png", ImageFormat.Png);
+            return img;
+
+
+#else
+            throw new NotImplementedException("This feature requires FastBitmapLib.");
+#endif
+
         }
 
         private void Process()
