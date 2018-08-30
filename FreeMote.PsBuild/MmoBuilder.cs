@@ -139,7 +139,7 @@ namespace FreeMote.PsBuild
             mmo.Objects["forceRepack"] = 1.ToPsbNumber();
             mmo.Objects["ignoreMotionPanel"] = PsbNumber.Zero;
             mmo.Objects["keepSourceIconName"] = PsbNumber.Zero; //1.ToPsbNumber();
-            mmo.Objects["label"] = "template".ToPsbString();
+            mmo.Objects["label"] = "FreeMote".ToPsbString();
             mmo.Objects["marker"] = PsbNumber.Zero;
             mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
             mmo.Objects["metadata"] = BuildMetadata(psb);
@@ -200,6 +200,10 @@ namespace FreeMote.PsBuild
                         iconItem["label"] = iconKv.Key.ToPsbString();
                         iconItem["metadata"] = FillDefaultMetadata();
                         iconItem["comment"] = PsbString.Empty;
+                        if (!iconItem.ContainsKey("resolution"))
+                        {
+                            iconItem["resolution"] = 1.ToPsbNumber();
+                        }
                         var height = ((PsbNumber)iconItem["height"]).AsInt;
                         var width = ((PsbNumber)iconItem["width"]).AsInt;
                         var originX = ((PsbNumber)iconItem["originX"]).AsInt;
@@ -263,6 +267,10 @@ namespace FreeMote.PsBuild
                         iconItem["label"] = iconKv.Key.ToPsbString();
                         iconItem["metadata"] = FillDefaultMetadata();
                         iconItem["comment"] = PsbString.Empty;
+                        if (!iconItem.ContainsKey("resolution"))
+                        {
+                            iconItem["resolution"] = 1.ToPsbNumber();
+                        }
                         var height = ((PsbNumber)iconItem["height"]).AsInt;
                         var width = ((PsbNumber)iconItem["width"]).AsInt;
                         bool rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
