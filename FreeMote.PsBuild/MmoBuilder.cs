@@ -172,56 +172,153 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         private static IPsbValue BuildSources(PSB psb, int widthPadding = 10, int heightPadding = 10)
         {
+            Dictionary<uint, Bitmap> bitmaps = new Dictionary<uint, Bitmap>();
             PsbCollection sourceChildren = new PsbCollection();
-            foreach (var motionItemKv in (PsbDictionary) psb.Objects["source"])
+            foreach (var motionItemKv in (PsbDictionary)psb.Objects["source"])
             {
                 PsbDictionary motionItem = new PsbDictionary();
-                motionItem["label"] = motionItemKv.Key.ToPsbString();
-                motionItem["comment"] = PsbString.Empty;
-                motionItem["metadata"] = FillDefaultMetadata();
                 PsbDictionary item = (PsbDictionary)motionItemKv.Value;
                 PsbDictionary icon = (PsbDictionary)item["icon"];
                 bool isTexture = icon.Values.Any(d => d is PsbDictionary dic && dic.ContainsKey("attr"));
-                if (isTexture)
+                motionItem["label"] = motionItemKv.Key.ToPsbString();
+                motionItem["comment"] = PsbString.Empty;
+                motionItem["metadata"] = FillDefaultMetadata();
+                motionItem["outputDepth"] = PsbNumber.Zero;
+                motionItem["systemLock"] = PsbNumber.Zero;
+                motionItem["resolution"] = 1.ToPsbNumber();
+                motionItem["marker"] = isTexture ? MmoMarkerColor.Green.ToPsbNumber() : MmoMarkerColor.Blue.ToPsbNumber();
+                if (isTexture) //Texture
                 {
-                    int maxWidth =
-                        icon.Values.Max(d => d is PsbDictionary dic ? ((PsbNumber) dic["width"]).IntValue : 0);
-                    int maxHeight =
-                        icon.Values.Max(d => d is PsbDictionary dic ? ((PsbNumber)dic["height"]).IntValue : 0);
-                    motionItem["cellWidth"] = (maxWidth + widthPadding).ToPsbNumber();
-                    motionItem["cellHeight"] = (maxHeight + heightPadding).ToPsbNumber();
                     motionItem["className"] = "TextureItem".ToPsbString();
                     var iconList = new PsbCollection(icon.Count);
                     motionItem["iconList"] = iconList;
-                    List<Image> texs = new List<Image>(icon.Count);
+                    Dictionary<string, Image> texs = new Dictionary<string, Image>(icon.Count);
+                    Dictionary<string, (int oriX, int oriY, int width, int height)> texsOrigin = new Dictionary<string, (int oriX, int oriY, int width, int height)>(icon.Count);
                     foreach (var iconKv in icon)
                     {
-                        var iconItem = (PsbDictionary) iconKv.Value;
+                        var iconItem = (PsbDictionary)iconKv.Value;
                         iconItem["label"] = iconKv.Key.ToPsbString();
                         iconItem["metadata"] = FillDefaultMetadata();
-                        var height = ((PsbNumber) iconItem["height"]).IntValue;
-                        var width = ((PsbNumber) iconItem["width"]).IntValue;
+                        iconItem["comment"] = PsbString.Empty;
+                        var height = ((PsbNumber)iconItem["height"]).AsInt;
+                        var width = ((PsbNumber)iconItem["width"]).AsInt;
+                        var originX = ((PsbNumber)iconItem["originX"]).AsInt;
+                        var originY = ((PsbNumber)iconItem["originY"]).AsInt;
+                        var (realWidth, realHeight) =
+                            ExpandClipArea((PsbDictionary)iconItem["clip"], width, height);
+                        texsOrigin.Add(iconKv.Key, (originX, originY, realWidth, realHeight));
                         bool rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
-                        var res = (PsbResource) iconItem["pixel"];
-                        texs.Add(rl
-                            ? RL.UncompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
-                            : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat()));
+                        var res = (PsbResource)iconItem["pixel"];
+                        Bitmap bmp = null;
+                        if (res.Index == null)
+                        {
+                            throw new ArgumentNullException("Index", "PsbResource.Index can't be null at this time.");
+                        }
+                        if (bitmaps.ContainsKey(res.Index.Value))
+                        {
+                            bmp = bitmaps[res.Index.Value];
+                        }
+                        else
+                        {
+                            bmp = rl
+                                ? RL.UncompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
+                                : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
+                            bitmaps.Add(res.Index.Value, bmp);
+                        }
+                        texs.Add(iconKv.Key, bmp);
+                        iconItem.Remove("compress");
+                        iconItem.Remove("attr");
+                        iconList.Add(iconItem);
                     }
                     TexturePacker packer = new TexturePacker();
+                    var texture = packer.CellProcess(texs, texsOrigin, widthPadding, heightPadding, out int cellWidth,
+                        out int cellHeight);
+                    motionItem["image"] = BuildSourceImage(texture);
+                    foreach (var iconKv in icon)
+                    {
+                        var iconItem = (PsbDictionary)iconKv.Value;
+                        var node = packer.Atlasses[0].Nodes.Find(n => n.Texture.Source == iconKv.Key);
+                        iconItem["left"] = node.Bounds.Left.ToPsbNumber();
+                        iconItem["top"] = node.Bounds.Top.ToPsbNumber();
+                        iconItem["originX"] = (node.Bounds.Width / 2).ToPsbNumber();
+                        iconItem["originY"] = (node.Bounds.Height / 2).ToPsbNumber();
+                        iconItem["width"] = (node.Bounds.Width).ToPsbNumber();
+                        iconItem["height"] = (node.Bounds.Height).ToPsbNumber();
+                        iconItem.Remove("pixel");
+                    }
 
+                    motionItem["cellWidth"] = cellWidth.ToPsbNumber();
+                    motionItem["cellHeight"] = cellHeight.ToPsbNumber();
                 }
-                else
+                else //Scrapbook
                 {
                     motionItem["cellHeight"] = 8.ToPsbNumber();
                     motionItem["cellWidth"] = 8.ToPsbNumber();
                     motionItem["className"] = "ScrapbookItem".ToPsbString();
+                    var iconList = new PsbCollection(icon.Count);
+                    motionItem["iconList"] = iconList;
+                    foreach (var iconKv in icon)
+                    {
+                        var iconItem = (PsbDictionary)iconKv.Value;
+                        iconItem["label"] = iconKv.Key.ToPsbString();
+                        iconItem["metadata"] = FillDefaultMetadata();
+                        iconItem["comment"] = PsbString.Empty;
+                        var height = ((PsbNumber)iconItem["height"]).AsInt;
+                        var width = ((PsbNumber)iconItem["width"]).AsInt;
+                        bool rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
+                        var res = (PsbResource)iconItem["pixel"];
+                        var texture = rl
+                            ? RL.UncompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
+                            : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
 
+                        iconItem["image"] = BuildSourceImage(texture);
+                        iconItem.Remove("compress");
+                        iconItem.Remove("pixel");
+                        iconList.Add(iconItem);
+                    }
                 }
 
                 sourceChildren.Add(motionItem);
             }
 
+            foreach (var bitmap in bitmaps.Values)
+            {
+                bitmap?.Dispose();
+            }
+
             return sourceChildren;
+        }
+
+        private static (int width, int height) ExpandClipArea(PsbDictionary clip, int width, int height)
+        {
+            if (clip == null)
+            {
+                return (width, height);
+            }
+            double top = ((PsbNumber)clip["top"]).AsDouble;
+            double bottom = ((PsbNumber)clip["bottom"]).AsDouble;
+            double left = ((PsbNumber)clip["left"]).AsDouble;
+            double right = ((PsbNumber)clip["right"]).AsDouble;
+
+            return ((int)(width / (bottom - top)), (int)(height / (right - left)));
+        }
+
+        private static PsbDictionary BuildSourceImage(Bitmap pixel, int type = 2)
+        {
+            var image = new PsbDictionary(2)
+            {
+                ["data"] = new PsbDictionary()
+            {
+                {"bitCount", 32.ToPsbNumber()},
+                {"compress", "RL".ToPsbString()},
+                {"height", pixel.Height.ToPsbNumber()},
+                {"id", "rgbabitmap".ToPsbString()},
+                {"pixel", new PsbResource {Data = RL.CompressImage(pixel, PsbPixelFormat.WinRGBA8)}},
+                {"width", pixel.Width.ToPsbNumber()},
+            },
+                ["type"] = 2.ToPsbNumber()
+            };
+            return image;
         }
 
         /// <summary>

@@ -86,7 +86,15 @@ namespace FreeMote.PsBuild.Converters
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
                         icon.Remove("top");
-                        icon.Remove("attr");
+                        if (icon["attr"] is PsbNumber n && n.AsInt > 0)
+                        {
+                            icon["attr"] = PsbNull.Null;
+                        }
+                        else
+                        {
+                            icon.Remove("attr");
+                        }
+                        
                     }
 
                     texDic.Remove("texture");
@@ -129,7 +137,7 @@ namespace FreeMote.PsBuild.Converters
                     }
 
                     var num = (PsbNumber)dic["mask"];
-                    num.IntValue |= 1;
+                    num.AsInt |= 1;
                     //num.IntValue = num.IntValue + 1;
                     //add src = layout || src = shape/point (0)
                     if (num.IntValue == 1 || num.IntValue == 3 || num.IntValue == 19)

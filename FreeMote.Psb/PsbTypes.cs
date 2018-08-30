@@ -340,6 +340,78 @@ namespace FreeMote.Psb
             }
         }
 
+        /// <summary>
+        /// When set, change number type to Int
+        /// </summary>
+        public int AsInt
+        {
+            get
+            {
+                switch (NumberType)
+                {
+                    case PsbNumberType.Int:
+                        return IntValue;
+                    case PsbNumberType.Float:
+                        return (int)FloatValue;
+                    case PsbNumberType.Double:
+                        return (int)DoubleValue;
+                    default:
+                        return (int)LongValue;
+                }
+            }
+            set
+            {
+                NumberType = PsbNumberType.Int;
+                IntValue = value;
+            }
+        }
+
+        public float AsFloat
+        {
+            get
+            {
+                switch (NumberType)
+                {
+                    case PsbNumberType.Int:
+                        return (float)IntValue;
+                    case PsbNumberType.Float:
+                        return FloatValue;
+                    case PsbNumberType.Double:
+                        return (float)DoubleValue;
+                    default:
+                        return (float)LongValue;
+                }
+            }
+            set
+            {
+                NumberType = PsbNumberType.Float;
+                FloatValue = value;
+            }
+        }
+
+        public double AsDouble
+        {
+            get
+            {
+                switch (NumberType)
+                {
+                    case PsbNumberType.Int:
+                        return (double)IntValue;
+                    case PsbNumberType.Float:
+                        return (double)FloatValue;
+                    case PsbNumberType.Double:
+                        return DoubleValue;
+                    default:
+                        return (double)LongValue;
+                }
+            }
+            set
+            {
+                NumberType = PsbNumberType.Double;
+                DoubleValue = value;
+            }
+        }
+
         public int IntValue
         {
             get => BitConverter.ToInt32(Data, 0);

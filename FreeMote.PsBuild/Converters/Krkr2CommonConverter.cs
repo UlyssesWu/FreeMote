@@ -304,7 +304,7 @@ namespace FreeMote.PsBuild.Converters
                         //ox = 0,oy = 0, it's redundant, remove ox, oy
                         dic.Remove("ox");
                         dic.Remove("oy");
-                        num.IntValue = num.IntValue & int.MaxValue - 1; //set last bit to 0
+                        num.AsInt = num.IntValue & int.MaxValue - 1; //set last bit to 0
                     }
                 }
 

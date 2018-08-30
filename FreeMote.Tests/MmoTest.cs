@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
@@ -75,7 +76,7 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
-        public void TestMmoGraft2()
+        public void TestBuildMmo()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "template39.json");
@@ -83,9 +84,9 @@ namespace FreeMote.Tests
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
             var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
             var psbMmo = MmoBuilder.Build(psb);
-            psbMmo.Objects["sourceChildren"] = mmo.Objects["sourceChildren"];
-            psbMmo.Objects["metaformat"] = mmo.Objects["metaformat"];
-            psbMmo.Objects["metadata"] = mmo.Objects["metadata"];
+            //psbMmo.Objects["sourceChildren"] = mmo.Objects["sourceChildren"];
+            //psbMmo.Objects["metaformat"] = mmo.Objects["metaformat"];
+            //psbMmo.Objects["metadata"] = mmo.Objects["metadata"];
             psbMmo.Merge();
             File.WriteAllBytes(Path.Combine(resPath, "mmo", "crash-temp.mmo"), psbMmo.Build());
         }

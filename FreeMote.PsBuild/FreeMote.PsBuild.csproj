@@ -45,6 +45,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PsbCompiler.cs" />
     <Compile Include="PsbDecompiler.cs" />
+    <Compile Include="PsBuildHelper.cs" />
     <Compile Include="PsbResourceJson.cs" />
     <Compile Include="PsbJsonConverter.cs" />
     <Compile Include="PsbSpecConverter.cs" />

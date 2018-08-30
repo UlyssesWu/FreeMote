@@ -294,14 +294,34 @@ namespace FreeMote.Psb.Textures
             Process();
         }
 
-        public Bitmap CellProcess(IDictionary<string, Image> images, int cellHeight, int cellWidth, int mode = 0, bool debugMode = false)
+        public Bitmap CellProcess(IDictionary<string, Image> images, Dictionary<string, (int oriX, int oriY, int width, int height)> origins, int paddingWidth, int paddingHeight, out int cellWidth, out int cellHeight, int mode = 0, bool debugMode = false)
         {
+            AtlasSize = 8192;
             LoadTexturesFromImages(images);
 
-            //TODO:
+            cellWidth = 0;
+            cellHeight = 0;
+            foreach (var image in images)
+            {
+                //TODO: width and height?
+                if (origins[image.Key].width > cellWidth)
+                {
+                    cellWidth = origins[image.Key].width;
+                }
+
+                if (origins[image.Key].height > cellHeight)
+                {
+                    cellHeight = origins[image.Key].height;
+                }
+            }
+
+            cellWidth += paddingWidth;
+            cellHeight += paddingHeight;
+
+            //TODO: best arrange method?
             //Firstly implement a straight packer
             int texWidth = 3 * cellWidth;
-            int texHeight = cellHeight * (1 + images.Count);
+            int texHeight = cellHeight * (1 + images.Count * 2);
             Bitmap img = new Bitmap(texWidth, texHeight, PixelFormat.Format32bppArgb);
             //avoid using Graphics
             int posX = cellWidth;
@@ -310,8 +330,11 @@ namespace FreeMote.Psb.Textures
             Atlas atlas = new Atlas
             {
                 Height = texHeight,
-                Width = texWidth
+                Width = texWidth,
+                Nodes = new List<Node>()
             };
+            Atlasses.Add(atlas);
+
 #if USE_FASTBITMAP
 
             using (var f = img.FastLock())
@@ -327,19 +350,17 @@ namespace FreeMote.Psb.Textures
                         Height = image.Value.Height
                     };
                     n.Bounds = new Rectangle(posX, posY, cellWidth, cellHeight);
+                    atlas.Nodes.Add(n);
+                    f.ClearRegion(n.Bounds, Color.Transparent);
+                    var bmp = (Bitmap)image.Value;
+                    int centerX = posX + cellWidth / 2;
+                    int centerY = posY + cellHeight / 2;
+                    int leftTopX = centerX - origins[image.Key].oriX;
+                    int leftTopY = centerY - origins[image.Key].oriY;
+                    f.CopyRegion(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height),
+                        new Rectangle(leftTopX, leftTopY, bmp.Width, bmp.Height));
+                    posY += 2 * cellHeight;
                 }
-                //foreach (Node n in Nodes)
-                //{
-                //    if (n.Texture != null)
-                //    {
-                //        Image sourceImg = n.Texture.SourceImage ?? new Bitmap(n.Texture.Source);
-                //        if (!(sourceImg is Bitmap s))
-                //        {
-                //            s = new Bitmap(sourceImg);
-                //        }
-                //        f.CopyRegion(s, new Rectangle(0, 0, s.Width, s.Height), n.Bounds);
-                //    }
-                //}
             }
             //img.Save("tex.png", ImageFormat.Png);
             return img;
