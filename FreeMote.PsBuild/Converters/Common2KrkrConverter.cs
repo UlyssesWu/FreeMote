@@ -15,8 +15,8 @@ namespace FreeMote.PsBuild.Converters
         /// </summary>
         public PsbPixelFormat TargetPixelFormat { get; set; } = PsbPixelFormat.WinRGBA8;
         public bool UseRL { get; set; } = true;
-        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec>{PsbSpec.win, PsbSpec.common};
-        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.krkr};
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> { PsbSpec.win, PsbSpec.common };
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> { PsbSpec.krkr };
 
 
         public void Convert(PSB psb)
@@ -86,7 +86,15 @@ namespace FreeMote.PsBuild.Converters
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
                         icon.Remove("top");
-                        icon.Remove("attr");
+                        if (icon["attr"] is PsbNumber n && n.AsInt > 0)
+                        {
+                            icon["attr"] = PsbNull.Null;
+                        }
+                        else
+                        {
+                            icon.Remove("attr");
+                        }
+
                     }
 
                     texDic.Remove("texture");
@@ -102,7 +110,7 @@ namespace FreeMote.PsBuild.Converters
             if (collection is PsbDictionary dic)
             {
                 //mask+=1
-                //add ox=0, oy=0
+                //add ox=0, oy=0 //explain: the last bit of mask (00...01) is whether to use ox & oy. if use, last bit of mask is 1
                 //change src
                 if (dic.ContainsKey("mask") && dic.GetName() == "content")
                 {
@@ -129,7 +137,8 @@ namespace FreeMote.PsBuild.Converters
                     }
 
                     var num = (PsbNumber)dic["mask"];
-                    num.IntValue = num.IntValue + 1;
+                    num.AsInt |= 1;
+                    //num.IntValue = num.IntValue + 1;
                     //add src = layout || src = shape/point (0)
                     if (num.IntValue == 1 || num.IntValue == 3 || num.IntValue == 19)
                     {
@@ -144,7 +153,16 @@ namespace FreeMote.PsBuild.Converters
                                     string shape;
                                     switch (((PsbNumber)childrenArrayDic["shape"]).IntValue)
                                     {
-                                        case 0: //We only know 0 = point
+                                        case 1:
+                                            shape = "circle";
+                                            break;
+                                        case 2:
+                                            shape = "rect";
+                                            break;
+                                        case 3:
+                                            shape = "quad";
+                                            break;
+                                        case 0:
                                         default:
                                             shape = "point";
                                             break;
@@ -161,11 +179,11 @@ namespace FreeMote.PsBuild.Converters
                     }
                     if (!dic.ContainsKey("ox"))
                     {
-                        dic.Add("ox", new PsbNumber(0));
+                        dic.Add("ox", PsbNumber.Zero);
                     }
                     if (!dic.ContainsKey("oy"))
                     {
-                        dic.Add("oy", new PsbNumber(0));
+                        dic.Add("oy", PsbNumber.Zero);
                     }
                 }
 

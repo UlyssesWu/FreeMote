@@ -79,10 +79,10 @@ namespace FreeMote.PsBuild.Converters
                         {
                             var bounds = new PsbDictionary(4)
                             {
-                            {"top", new PsbNumber(0)},
-                            {"left", new PsbNumber(0)},
-                            {"right", new PsbNumber(0)},
-                            {"bottom", new PsbNumber(0)}
+                            {"top", PsbNumber.Zero},
+                            {"left", PsbNumber.Zero},
+                            {"right", PsbNumber.Zero},
+                            {"bottom", PsbNumber.Zero}
                             };
                             mDic.Add("bounds", bounds);
                         }
@@ -208,7 +208,7 @@ namespace FreeMote.PsBuild.Converters
                     var icon = (PsbDictionary)source[paths[0]].Children("icon").Children(paths[1]);
                     icon.Remove("compress");
                     icon.Remove("pixel");
-                    icon["attr"] = new PsbNumber(0);
+                    icon["attr"] = PsbNumber.Zero;
                     icon["left"] = new PsbNumber(node.Bounds.Left);
                     icon["top"] = new PsbNumber(node.Bounds.Top);
                     icon.Parent = icons;
@@ -230,7 +230,7 @@ namespace FreeMote.PsBuild.Converters
                 texture.Add("pixel", new PsbResource { Data = data, Parents = new List<IPsbCollection> { texture } });
                 texDic.Add("texture", texture);
                 //type
-                texDic.Add("type", new PsbNumber(0));
+                texDic.Add("type", PsbNumber.Zero);
 
                 texs.Add(texDic);
             }
@@ -294,12 +294,17 @@ namespace FreeMote.PsBuild.Converters
                     }
                     //mask -= 1
                     var num = (PsbNumber)dic["mask"];
-                    num.IntValue = num.IntValue - 1;
-                    //remove ox, oy ?
-                    //if (ConvertOption == SpecConvertOption.Minimum)
+                    if (dic["ox"] is PsbNumber ox && dic["oy"] is PsbNumber oy
+                        && (ox != PsbNumber.Zero || oy != PsbNumber.Zero))
                     {
+                        //keep ox,oy
+                    }
+                    else
+                    {
+                        //ox = 0,oy = 0, it's redundant, remove ox, oy
                         dic.Remove("ox");
                         dic.Remove("oy");
+                        num.AsInt = num.IntValue & int.MaxValue - 1; //set last bit to 0
                     }
                 }
 

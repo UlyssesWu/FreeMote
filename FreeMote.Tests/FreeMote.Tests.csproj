@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FreeMoteTest.cs" />
+    <Compile Include="MmoTest.cs" />
     <Compile Include="PsbTest.cs" />
     <Compile Include="PsBuildTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

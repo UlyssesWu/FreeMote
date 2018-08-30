@@ -106,6 +106,12 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestPsbStrings()
         {
+            var se1 = PsbString.Empty;
+            var se2 = PsbString.Empty;
+            se1.Index = 114514;
+            var se2i = se2.Index;
+            return;
+
             var p1 = new PsbString("PSB");
             var p2 = new PsbString("PSB", index: 1);
             var p3 = new PsbString("MDF", 1);

@@ -163,7 +163,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Null
         /// </summary>
-        public static PsbNull Null => new PsbNull();
+        public static readonly PsbNull Null = new PsbNull();
     }
 
     /// <summary>
@@ -205,6 +205,11 @@ namespace FreeMote.Psb
     [Serializable]
     public class PsbNumber : IPsbValue, IPsbWrite
     {
+        /// <summary>
+        /// PsbNumber: (int) 0
+        /// </summary>
+        public static readonly PsbNumber Zero = new PsbNumber(0);
+
         internal PsbNumber(PsbObjType objType, BinaryReader br)
         {
             Data = new byte[8];
@@ -332,6 +337,78 @@ namespace FreeMote.Psb
                     default:
                         return LongValue;
                 }
+            }
+        }
+
+        /// <summary>
+        /// When set, change number type to Int
+        /// </summary>
+        public int AsInt
+        {
+            get
+            {
+                switch (NumberType)
+                {
+                    case PsbNumberType.Int:
+                        return IntValue;
+                    case PsbNumberType.Float:
+                        return (int)FloatValue;
+                    case PsbNumberType.Double:
+                        return (int)DoubleValue;
+                    default:
+                        return (int)LongValue;
+                }
+            }
+            set
+            {
+                NumberType = PsbNumberType.Int;
+                IntValue = value;
+            }
+        }
+
+        public float AsFloat
+        {
+            get
+            {
+                switch (NumberType)
+                {
+                    case PsbNumberType.Int:
+                        return (float)IntValue;
+                    case PsbNumberType.Float:
+                        return FloatValue;
+                    case PsbNumberType.Double:
+                        return (float)DoubleValue;
+                    default:
+                        return (float)LongValue;
+                }
+            }
+            set
+            {
+                NumberType = PsbNumberType.Float;
+                FloatValue = value;
+            }
+        }
+
+        public double AsDouble
+        {
+            get
+            {
+                switch (NumberType)
+                {
+                    case PsbNumberType.Int:
+                        return (double)IntValue;
+                    case PsbNumberType.Float:
+                        return (double)FloatValue;
+                    case PsbNumberType.Double:
+                        return DoubleValue;
+                    default:
+                        return (double)LongValue;
+                }
+            }
+            set
+            {
+                NumberType = PsbNumberType.Double;
+                DoubleValue = value;
             }
         }
 
@@ -635,6 +712,11 @@ namespace FreeMote.Psb
     [DebuggerDisplay("{Value}(#{Index})")]
     public class PsbString : IPsbValue, IPsbIndexed, IPsbWrite
     {
+        /// <summary>
+        /// new empty PsbString
+        /// </summary>
+        public static PsbString Empty => new PsbString();
+
         internal PsbString(int n, BinaryReader br)
         {
             Index = br.ReadBytes(n).UnzipUInt();
@@ -781,6 +863,10 @@ namespace FreeMote.Psb
         public PsbDictionary(int capacity) : base(capacity)
         {
         }
+        public PsbDictionary() : base()
+        {
+        }
+
         public Dictionary<string, IPsbValue> Value => this;
 
         public IPsbCollection Parent { get; set; } = null;
@@ -821,6 +907,9 @@ namespace FreeMote.Psb
     public class PsbCollection : List<IPsbValue>, IPsbValue, IPsbCollection
     {
         public PsbCollection(int capacity) : base(capacity)
+        {
+        }
+        public PsbCollection() : base()
         {
         }
 

@@ -116,8 +116,9 @@ namespace FreeMote.Psb.Textures
         /// </summary>
         public List<Node> Nodes;
 
-        public Image ToImage(bool debugMode = false)
+        public Image ToImage(bool debugMode = false, Color? background = null)
         {
+            var bgColor = background ?? Color.FromArgb(0, Color.Black);
             Bitmap img = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
             //avoid using Graphics
 #if USE_FASTBITMAP
@@ -125,6 +126,10 @@ namespace FreeMote.Psb.Textures
             {
                 using (var f = img.FastLock())
                 {
+                    if (background != null)
+                    {
+                        f.Clear(bgColor);
+                    }
                     foreach (Node n in Nodes)
                     {
                         if (n.Texture != null)
@@ -144,7 +149,8 @@ namespace FreeMote.Psb.Textures
 #endif
 
             Graphics g = Graphics.FromImage(img);
-            g.Clear(Color.FromArgb(0, Color.Black));
+            g.Clear(bgColor);
+
             //g.PixelOffsetMode = PixelOffsetMode.Half;
             //g.InterpolationMode = InterpolationMode.Default;
             //g.SmoothingMode = SmoothingMode.None;
@@ -236,6 +242,11 @@ namespace FreeMote.Psb.Textures
         public bool DebugMode;
 
         /// <summary>
+        /// Toggle for Scrapbook mode - just paste all textures to same size
+        /// </summary>
+        public bool ScrapbookMode = false;
+
+        /// <summary>
         /// Which heuristic to use when doing the fit
         /// </summary>
         public BestFitHeuristic FitHeuristic;
@@ -281,6 +292,84 @@ namespace FreeMote.Psb.Textures
             LoadTexturesFromImages(images);
 
             Process();
+        }
+
+        public Bitmap CellProcess(IDictionary<string, Image> images, Dictionary<string, (int oriX, int oriY, int width, int height)> origins, int paddingWidth, int paddingHeight, out int cellWidth, out int cellHeight, int mode = 0, bool debugMode = false)
+        {
+            AtlasSize = 8192;
+            LoadTexturesFromImages(images);
+
+            cellWidth = 0;
+            cellHeight = 0;
+            foreach (var image in images)
+            {
+                //TODO: width and height?
+                if (origins[image.Key].width > cellWidth)
+                {
+                    cellWidth = origins[image.Key].width;
+                }
+
+                if (origins[image.Key].height > cellHeight)
+                {
+                    cellHeight = origins[image.Key].height;
+                }
+            }
+
+            cellWidth += paddingWidth;
+            cellHeight += paddingHeight;
+
+            //TODO: best arrange method?
+            //Firstly implement a straight packer
+            int texWidth = 3 * cellWidth;
+            int texHeight = cellHeight * (1 + images.Count * 2);
+            Bitmap img = new Bitmap(texWidth, texHeight, PixelFormat.Format32bppArgb);
+            //avoid using Graphics
+            int posX = cellWidth;
+            int posY = cellHeight;
+            Atlasses = new List<Atlas>(1);
+            Atlas atlas = new Atlas
+            {
+                Height = texHeight,
+                Width = texWidth,
+                Nodes = new List<Node>()
+            };
+            Atlasses.Add(atlas);
+
+#if USE_FASTBITMAP
+
+            using (var f = img.FastLock())
+            {
+                f.Clear(Color.FromArgb(255, 0, 255, 0));
+                foreach (var image in images)
+                {
+                    Node n = new Node();
+                    n.Texture = new TextureInfo
+                    {
+                        Source = image.Key,
+                        Width = image.Value.Width,
+                        Height = image.Value.Height
+                    };
+                    n.Bounds = new Rectangle(posX, posY, cellWidth, cellHeight);
+                    atlas.Nodes.Add(n);
+                    f.ClearRegion(n.Bounds, Color.Transparent);
+                    var bmp = (Bitmap)image.Value;
+                    int centerX = posX + cellWidth / 2;
+                    int centerY = posY + cellHeight / 2;
+                    int leftTopX = centerX - origins[image.Key].oriX;
+                    int leftTopY = centerY - origins[image.Key].oriY;
+                    f.CopyRegion(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height),
+                        new Rectangle(leftTopX, leftTopY, bmp.Width, bmp.Height));
+                    posY += 2 * cellHeight;
+                }
+            }
+            //img.Save("tex.png", ImageFormat.Png);
+            return img;
+
+
+#else
+            throw new NotImplementedException("This feature requires FastBitmapLib.");
+#endif
+
         }
 
         private void Process()
@@ -434,7 +523,7 @@ namespace FreeMote.Psb.Textures
                         Width = img.Width,
                         Height = img.Height
                     };
-                    
+
                     SourceTextures.Add(ti);
 
                     Log.WriteLine("Added " + fi.FullName);
