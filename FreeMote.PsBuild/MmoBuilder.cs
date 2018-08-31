@@ -326,7 +326,7 @@ namespace FreeMote.PsBuild
                 {"pixel", new PsbResource {Data = RL.CompressImage(pixel, PsbPixelFormat.WinRGBA8)}},
                 {"width", pixel.Width.ToPsbNumber()},
             },
-                ["type"] = 2.ToPsbNumber()
+                ["type"] = type.ToPsbNumber()
             };
             return image;
         }
@@ -727,12 +727,35 @@ namespace FreeMote.PsBuild
                     {"width", 600.ToPsbNumber() }
                 }
             };
-            //metaFormatContent["charaProfileDefinitionList"] = metadata["base"].Children("chara");
-            //metaFormatContent["baseChara"] = metadata["base"].Children("chara");
-
-
+            metaFormatContent["charaProfileDefinitionList"] = BuildCharaProfileDefinition(metadata);
+            metaFormatContent["clampControlDefinitionList"] = metadata["clampControl"];
+            metaFormatContent["customPartsBaseDefinitionList"] = BuildCustomPartsBaseDefinition(psb.Objects);
+            metaFormatContent["customPartsCount"] = ((PsbCollection)metadata["customPartsOrder"]).Count.ToPsbNumber(); //PsbNumber.Zero;
+            metaFormatContent["customPartsMountDefinitionList"] = new PsbCollection();
+            metaFormatContent["eyeControlDefinitionList"] = metadata["eyeControl"];
+            metaFormatContent["eyeControlParameterDefinitionList"] = JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"eye.txt"),
+                jsonConverter);
+            metaFormatContent["eyebrowControlDefinitionList"] = metadata["eyebrowControl"];
+            metaFormatContent["guideCount"] = PsbNumber.Zero;
+            metaFormatContent["hairControlDefinitionList"] = BuildHairControlDefinition((PsbCollection)metadata["hairControl"]);
+            
 
             return metaFormat;
+        }
+
+        private static IPsbValue BuildHairControlDefinition(PsbCollection hairControl)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static IPsbValue BuildCustomPartsBaseDefinition(PsbDictionary psbObjects)
+        {
+            return new PsbCollection();
+        }
+
+        private static IPsbValue BuildCharaProfileDefinition(PsbDictionary metadata)
+        {
+            return new PsbCollection();
         }
 
         /// <summary>
