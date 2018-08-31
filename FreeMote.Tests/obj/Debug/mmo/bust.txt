@@ -1,0 +1,65 @@
+[
+        {
+          "comment": "",
+          "friction": 0.125,
+          "gravity": 0.3,
+          "label": "ふらり",
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "spring": 0.015625
+        },
+        {
+          "comment": "",
+          "friction": 0.125,
+          "gravity": 0.3,
+          "label": "標準",
+          "scale_x": 1.0,
+          "scale_y": 2.0,
+          "spring": 0.03125
+        },
+        {
+          "comment": "",
+          "friction": 0.1,
+          "gravity": 0.6,
+          "label": "ゆさり",
+          "scale_x": 3.0,
+          "scale_y": 3.0,
+          "spring": 0.015625
+        },
+        {
+          "comment": "",
+          "friction": 0.06,
+          "gravity": 0.1,
+          "label": "ぽよん",
+          "scale_x": 1.0,
+          "scale_y": 2.0,
+          "spring": 0.03125
+        },
+        {
+          "comment": "",
+          "friction": 0.046875,
+          "gravity": 0.3,
+          "label": "ゆさゆさ",
+          "scale_x": 2.0,
+          "scale_y": 1.0,
+          "spring": 0.015625
+        },
+        {
+          "comment": "",
+          "friction": 0.02,
+          "gravity": 0.1,
+          "label": "ぼよよん",
+          "scale_x": 1.5,
+          "scale_y": 1.5,
+          "spring": 0.06
+        },
+        {
+          "comment": "",
+          "friction": 0.009375,
+          "gravity": 0.8,
+          "label": "無重力",
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "spring": 0.002
+        }
+      ]

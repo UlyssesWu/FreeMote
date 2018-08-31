@@ -738,14 +738,43 @@ namespace FreeMote.PsBuild
             metaFormatContent["eyebrowControlDefinitionList"] = metadata["eyebrowControl"];
             metaFormatContent["guideCount"] = PsbNumber.Zero;
             metaFormatContent["hairControlDefinitionList"] = BuildHairControlDefinition((PsbCollection)metadata["hairControl"]);
-            
+            metaFormatContent["hairControlParameterDefinitionList"] = JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"hair.txt"),
+                jsonConverter);
+            metaFormatContent["clampControlDefinitionList"] = metadata["clampControl"];
+            metaFormatContent["layoutDefinitionList"] = new PsbCollection();
+            metaFormatContent["license"] = 5.ToPsbNumber();
+            metaFormatContent["logo"] = metadata["logo"];
+            metaFormatContent["loopControlDefinitionList"] = metadata["loopControl"];
+            metaFormatContent["loopControlParameterDefinitionList"] = new PsbCollection();
+            metaFormatContent["mirrorDefinition"] = metadata["mirrorControl"];
+            metaFormatContent["mouthControlDefinitionList"] = metadata["mouthControl"];
+            metaFormatContent["orbitControlDefinitionList"] = metadata["orbitControl"];
+
 
             return metaFormat;
         }
 
         private static IPsbValue BuildHairControlDefinition(PsbCollection hairControl)
         {
-            throw new NotImplementedException();
+            PsbCollection hairControlDef = new PsbCollection(hairControl.Count);
+            foreach (var psbValue in hairControl)
+            {
+                var hairItem = (PsbDictionary) psbValue;
+                PsbDictionary hairDefItem = new PsbDictionary()
+                {
+                    {"baseLayer", hairItem["baseLayer"] },
+                    {"comment", PsbString.Empty },
+                    {"enabled", hairItem["enabled"] },
+                    {"label", hairItem["label"] },
+                    {"parameter", "標準".ToPsbString() }, //TODO: generate param
+                    {"var_lr", hairItem["var_lr"] },
+                    {"var_lrm", hairItem["var_lrm"] },
+                    {"var_ud", hairItem["var_ud"] },
+                };
+                hairControlDef.Add(hairDefItem);
+            }
+
+            return hairControlDef;
         }
 
         private static IPsbValue BuildCustomPartsBaseDefinition(PsbDictionary psbObjects)
