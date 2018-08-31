@@ -103,7 +103,15 @@ namespace FreeMote.PsBuild
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             Dictionary<string, PsbString> context = new Dictionary<string, PsbString>();
-            JObject obj = JObject.Load(reader);
+            JToken obj;
+            if (reader.TokenType == JsonToken.StartArray)
+            {
+                obj = JArray.Load(reader);
+            }
+            else
+            {
+                obj = JObject.Load(reader);
+            }
             return ConvertToken(obj, context);
         }
 

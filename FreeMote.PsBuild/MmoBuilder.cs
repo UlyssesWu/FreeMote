@@ -119,6 +119,7 @@ namespace FreeMote.PsBuild
     /// </summary>
     class MmoBuilder
     {
+        internal static bool DebugMode { get; set; } = false;
         //public PSB Mmo { get; private set; }
 
         /// <summary>
@@ -692,6 +693,18 @@ namespace FreeMote.PsBuild
         private static IPsbValue BuildMetaFormat(PSB psb)
         {
             var jsonConverter = new PsbJsonConverter();
+            PsbDictionary mmoRef = null;
+            if (DebugMode)
+            {
+                 mmoRef = JsonConvert.DeserializeObject<PsbDictionary>(File.ReadAllText("mmo.json"),
+                    jsonConverter);
+            }
+            else
+            {
+                mmoRef = JsonConvert.DeserializeObject<PsbDictionary>(Resources.Mmo,
+                    jsonConverter);
+            }
+
             PsbDictionary metaFormatContent = new PsbDictionary();
             PsbDictionary metaFormat = new PsbDictionary()
             {
@@ -707,12 +720,10 @@ namespace FreeMote.PsBuild
             metaFormatContent["baseChara"] = metadata["base"].Children("chara");
             metaFormatContent["baseMotion"] = metadata["base"].Children("motion");
             metaFormatContent["bustControlDefinitionList"] = metadata["bustControl"];
+            metaFormatContent["bustControlParameterDefinitionList"] = mmoRef["bustControlParameterDefinitionList"];
             //metaFormatContent["bustControlParameterDefinitionList"] =
-            //    JsonConvert.DeserializeObject<PsbCollection>(Resources.bustControlParameterDefinitionList,
+            //    JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"bust.txt"),
             //        jsonConverter);
-            metaFormatContent["bustControlParameterDefinitionList"] =
-                JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"bust.txt"),
-                    jsonConverter);
             metaFormatContent["captureList"] = new PsbCollection
             {
                 new PsbDictionary
@@ -733,13 +744,11 @@ namespace FreeMote.PsBuild
             metaFormatContent["customPartsCount"] = ((PsbCollection)metadata["customPartsOrder"]).Count.ToPsbNumber(); //PsbNumber.Zero;
             metaFormatContent["customPartsMountDefinitionList"] = new PsbCollection();
             metaFormatContent["eyeControlDefinitionList"] = metadata["eyeControl"];
-            metaFormatContent["eyeControlParameterDefinitionList"] = JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"eye.txt"),
-                jsonConverter);
+            metaFormatContent["eyeControlParameterDefinitionList"] = mmoRef["eyeControlParameterDefinitionList"];
             metaFormatContent["eyebrowControlDefinitionList"] = metadata["eyebrowControl"];
             metaFormatContent["guideCount"] = PsbNumber.Zero;
             metaFormatContent["hairControlDefinitionList"] = BuildHairControlDefinition((PsbCollection)metadata["hairControl"]);
-            metaFormatContent["hairControlParameterDefinitionList"] = JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"hair.txt"),
-                jsonConverter);
+            metaFormatContent["hairControlParameterDefinitionList"] = mmoRef["hairControlParameterDefinitionList"];
             metaFormatContent["clampControlDefinitionList"] = metadata["clampControl"];
             metaFormatContent["layoutDefinitionList"] = new PsbCollection();
             metaFormatContent["license"] = 5.ToPsbNumber();
@@ -759,7 +768,7 @@ namespace FreeMote.PsBuild
             PsbCollection hairControlDef = new PsbCollection(hairControl.Count);
             foreach (var psbValue in hairControl)
             {
-                var hairItem = (PsbDictionary) psbValue;
+                var hairItem = (PsbDictionary)psbValue;
                 PsbDictionary hairDefItem = new PsbDictionary()
                 {
                     {"baseLayer", hairItem["baseLayer"] },

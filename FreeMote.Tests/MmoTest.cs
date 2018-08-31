@@ -98,6 +98,7 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            MmoBuilder.DebugMode = true;
             var psbMmo = MmoBuilder.Build(psb);
             psbMmo.Merge();
             File.WriteAllBytes(Path.Combine(resPath, "mmo", "NekoCrash.mmo"), psbMmo.Build());

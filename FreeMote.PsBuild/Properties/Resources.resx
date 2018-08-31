@@ -117,8 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="bustControlParameterDefinitionList" xml:space="preserve">
-    <value>[
+  <data name="Mmo" xml:space="preserve">
+    <value>{
+      "bustControlParameterDefinitionList": [
         {
           "comment": "",
           "friction": 0.125,
@@ -182,6 +183,241 @@
           "scale_y": 1.0,
           "spring": 0.002
         }
-      ]</value>
+      ],
+      "eyeControlParameterDefinitionList": [
+        {
+          "blinkFrameCount": 6,
+          "blinkIntervalMax": 120,
+          "blinkIntervalMin": 10,
+          "comment": "",
+          "label": "速多"
+        },
+        {
+          "blinkFrameCount": 8,
+          "blinkIntervalMax": 240,
+          "blinkIntervalMin": 120,
+          "comment": "",
+          "label": "速少"
+        },
+        {
+          "blinkFrameCount": 16,
+          "blinkIntervalMax": 180,
+          "blinkIntervalMin": 30,
+          "comment": "",
+          "label": "標準"
+        },
+        {
+          "blinkFrameCount": 24,
+          "blinkIntervalMax": 200,
+          "blinkIntervalMin": 30,
+          "comment": "",
+          "label": "遅多"
+        },
+        {
+          "blinkFrameCount": 48,
+          "blinkIntervalMax": 400,
+          "blinkIntervalMin": 120,
+          "comment": "",
+          "label": "遅少"
+        }
+      ],
+      "hairControlParameterDefinitionList": [
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.392699081698625,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.03125,
+          "friction_y": 0.03125,
+          "gravity": 0.2,
+          "label": "標準",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.5
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.098174770424656249,
+          "bend_vol": 4.0,
+          "comment": "",
+          "friction_x": 0.0625,
+          "friction_y": 0.0625,
+          "gravity": 0.2,
+          "label": "ふんわり",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 2.0
+        },
+        {
+          "b_rate": 0.005,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.005,
+          "friction_y": 0.02,
+          "gravity": 0.01,
+          "label": "ふんわりB",
+          "length": [64.0,64.0],
+          "scale_x": [1.0,0.5],
+          "scale_y": [0.5,0.5],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.005,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.015,
+          "friction_y": 0.02,
+          "gravity": 0.007,
+          "label": "ふんわりC",
+          "length": [64.0,64.0],
+          "scale_x": [1.0,0.5],
+          "scale_y": [1.0,1.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.4,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.015625,
+          "friction_y": 0.09375,
+          "gravity": 0.6,
+          "label": "さらさら",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 1.0
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.3,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.03125,
+          "friction_y": 0.09375,
+          "gravity": 0.6,
+          "label": "さらさらB",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 1.0
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.2,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.046875,
+          "friction_y": 0.09375,
+          "gravity": 0.6,
+          "label": "さらさらC",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 1.0
+        },
+        {
+          "b_rate": 0.00390625,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.078125,
+          "friction_y": 0.078125,
+          "gravity": 0.5,
+          "label": "がっちりハード",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.95
+        },
+        {
+          "b_rate": 0.25,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.125,
+          "friction_y": 0.125,
+          "gravity": 4.0,
+          "label": "鉄の鎖",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.03125,
+          "bend_spd": 0.392699081698625,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.0625,
+          "friction_y": 0.015625,
+          "gravity": 0.5,
+          "label": "ゴムひも",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.003515625,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.0078125,
+          "friction_y": 0.0078125,
+          "gravity": 0.005,
+          "label": "無重力",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [1.0,1.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.003515625,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.0078125,
+          "friction_y": 0.0078125,
+          "gravity": 0.005,
+          "label": "無重力B",
+          "length": [64.0,48.0],
+          "scale_x": [0.5,0.5],
+          "scale_y": [0.5,0.5],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.005,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.015,
+          "friction_y": 0.02,
+          "gravity": 0.02,
+          "label": "無重力C",
+          "length": [64.0,64.0],
+          "scale_x": [1.0,1.0],
+          "scale_y": [1.0,1.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        }
+      ],
+}</value>
   </data>
 </root>

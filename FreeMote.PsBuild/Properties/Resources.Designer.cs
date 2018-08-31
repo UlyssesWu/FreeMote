@@ -61,7 +61,8 @@ namespace FreeMote.PsBuild.Properties {
         }
         
         /// <summary>
-        ///   查找类似 [
+        ///   查找类似 {
+        ///      &quot;bustControlParameterDefinitionList&quot;: [
         ///        {
         ///          &quot;comment&quot;: &quot;&quot;,
         ///          &quot;friction&quot;: 0.125,
@@ -81,13 +82,11 @@ namespace FreeMote.PsBuild.Properties {
         ///          &quot;spring&quot;: 0.03125
         ///        },
         ///        {
-        ///          &quot;comment&quot;: &quot;&quot;,
-        ///          &quot;friction&quot;: 0.1,
-        ///          &quot;g [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///          &quot;comment&quot; [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
-        public static string bustControlParameterDefinitionList {
+        public static string Mmo {
             get {
-                return ResourceManager.GetString("bustControlParameterDefinitionList", resourceCulture);
+                return ResourceManager.GetString("Mmo", resourceCulture);
             }
         }
     }

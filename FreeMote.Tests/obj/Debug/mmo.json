@@ -1,4 +1,107 @@
-[
+{
+      "bustControlParameterDefinitionList": [
+        {
+          "comment": "",
+          "friction": 0.125,
+          "gravity": 0.3,
+          "label": "ふらり",
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "spring": 0.015625
+        },
+        {
+          "comment": "",
+          "friction": 0.125,
+          "gravity": 0.3,
+          "label": "標準",
+          "scale_x": 1.0,
+          "scale_y": 2.0,
+          "spring": 0.03125
+        },
+        {
+          "comment": "",
+          "friction": 0.1,
+          "gravity": 0.6,
+          "label": "ゆさり",
+          "scale_x": 3.0,
+          "scale_y": 3.0,
+          "spring": 0.015625
+        },
+        {
+          "comment": "",
+          "friction": 0.06,
+          "gravity": 0.1,
+          "label": "ぽよん",
+          "scale_x": 1.0,
+          "scale_y": 2.0,
+          "spring": 0.03125
+        },
+        {
+          "comment": "",
+          "friction": 0.046875,
+          "gravity": 0.3,
+          "label": "ゆさゆさ",
+          "scale_x": 2.0,
+          "scale_y": 1.0,
+          "spring": 0.015625
+        },
+        {
+          "comment": "",
+          "friction": 0.02,
+          "gravity": 0.1,
+          "label": "ぼよよん",
+          "scale_x": 1.5,
+          "scale_y": 1.5,
+          "spring": 0.06
+        },
+        {
+          "comment": "",
+          "friction": 0.009375,
+          "gravity": 0.8,
+          "label": "無重力",
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "spring": 0.002
+        }
+      ],
+      "eyeControlParameterDefinitionList": [
+        {
+          "blinkFrameCount": 6,
+          "blinkIntervalMax": 120,
+          "blinkIntervalMin": 10,
+          "comment": "",
+          "label": "速多"
+        },
+        {
+          "blinkFrameCount": 8,
+          "blinkIntervalMax": 240,
+          "blinkIntervalMin": 120,
+          "comment": "",
+          "label": "速少"
+        },
+        {
+          "blinkFrameCount": 16,
+          "blinkIntervalMax": 180,
+          "blinkIntervalMin": 30,
+          "comment": "",
+          "label": "標準"
+        },
+        {
+          "blinkFrameCount": 24,
+          "blinkIntervalMax": 200,
+          "blinkIntervalMin": 30,
+          "comment": "",
+          "label": "遅多"
+        },
+        {
+          "blinkFrameCount": 48,
+          "blinkIntervalMax": 400,
+          "blinkIntervalMin": 120,
+          "comment": "",
+          "label": "遅少"
+        }
+      ],
+      "hairControlParameterDefinitionList": [
         {
           "b_rate": 0.0037109375,
           "bend_spd": 0.392699081698625,
@@ -194,4 +297,5 @@
           "ud_eft": 0,
           "v_bound": 0.1
         }
-      ]
+      ],
+}
