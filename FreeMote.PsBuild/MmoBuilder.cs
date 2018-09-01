@@ -696,8 +696,8 @@ namespace FreeMote.PsBuild
             PsbDictionary mmoRef = null;
             if (DebugMode)
             {
-                 mmoRef = JsonConvert.DeserializeObject<PsbDictionary>(File.ReadAllText("mmo.json"),
-                    jsonConverter);
+                mmoRef = JsonConvert.DeserializeObject<PsbDictionary>(File.ReadAllText("mmo.json"),
+                   jsonConverter);
             }
             else
             {
@@ -716,6 +716,7 @@ namespace FreeMote.PsBuild
             //    {"data", "by Ulysses, wdwxy12345@gmail.com".ToPsbString() },
             //    {"type", PsbNumber.Zero }
             //};
+
             var metadata = (PsbDictionary)psb.Objects["metadata"];
             metaFormatContent["baseChara"] = metadata["base"].Children("chara");
             metaFormatContent["baseMotion"] = metadata["base"].Children("motion");
@@ -747,43 +748,92 @@ namespace FreeMote.PsBuild
             metaFormatContent["eyeControlParameterDefinitionList"] = mmoRef["eyeControlParameterDefinitionList"];
             metaFormatContent["eyebrowControlDefinitionList"] = metadata["eyebrowControl"];
             metaFormatContent["guideCount"] = PsbNumber.Zero;
-            metaFormatContent["hairControlDefinitionList"] = BuildHairControlDefinition((PsbCollection)metadata["hairControl"]);
+            metaFormatContent["hairControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["hairControl"]);
             metaFormatContent["hairControlParameterDefinitionList"] = mmoRef["hairControlParameterDefinitionList"];
             metaFormatContent["clampControlDefinitionList"] = metadata["clampControl"];
             metaFormatContent["layoutDefinitionList"] = new PsbCollection();
             metaFormatContent["license"] = 5.ToPsbNumber();
-            metaFormatContent["logo"] = metadata["logo"];
+            metaFormatContent["logo"] = metadata["logo"] ?? PsbNumber.Zero;
             metaFormatContent["loopControlDefinitionList"] = metadata["loopControl"];
             metaFormatContent["loopControlParameterDefinitionList"] = new PsbCollection();
             metaFormatContent["mirrorDefinition"] = metadata["mirrorControl"];
             metaFormatContent["mouthControlDefinitionList"] = metadata["mouthControl"];
             metaFormatContent["orbitControlDefinitionList"] = metadata["orbitControl"];
+            metaFormatContent["parameterEditDefinition"] = mmoRef["parameterEditDefinition"];
+            metaFormatContent["partialExportDefinitionList"] = new PsbCollection();
+            metaFormatContent["partsControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["partsControl"]);
+            metaFormatContent["partsControlParameterDefinitionList"] = mmoRef["partsControlParameterDefinitionList"];
+            metaFormatContent["partsList"] = new PsbCollection();
+            metaFormatContent["physicsMotionList"] = new PsbCollection();
+            metaFormatContent["physicsVariableList"] = new PsbCollection();
+            metaFormatContent["scrapbookDefinitionList"] = new PsbCollection();
+            metaFormatContent["selectorControlDefinitionList"] = metadata["selectorControl"];
+            metaFormatContent["sourceDefinitionOrderList"] = new PsbCollection();
+            metaFormatContent["stereovisionDefinition"] = metadata["stereovisionControl"];
+            metaFormatContent["subtype"] = "E-mote Meta Format".ToPsbString();
+            metaFormatContent["testAnimationList"] = new PsbCollection();
+            metaFormatContent["textureDefinitionList"] = new PsbCollection();
+            metaFormatContent["transitionControlDefinitionList"] = metadata["transitionControl"];
+            metaFormatContent["variableAliasFrameBind"] = new PsbDictionary();
+            BuildVariableList((PsbCollection)metadata["variableList"], out var variableAlias, out var variableFrameAlias);
+            metaFormatContent["variableAlias"] = variableAlias;
+            metaFormatContent["variableFrameAlias"] = variableFrameAlias;
+            metaFormatContent["variableFrameAliasUniq"] = new PsbDictionary();
+            metaFormatContent["vesion"] = new PsbNumber(1.08f);
+            metaFormatContent["windDefinitionList"] = mmoRef["windDefinitionList"];
+
 
 
             return metaFormat;
         }
 
-        private static IPsbValue BuildHairControlDefinition(PsbCollection hairControl)
+        private static void BuildVariableList(PsbCollection variableList, out PsbCollection variableAlias, out PsbCollection variableFrameAlias)
         {
-            PsbCollection hairControlDef = new PsbCollection(hairControl.Count);
-            foreach (var psbValue in hairControl)
+            variableAlias = new PsbCollection();
+            variableFrameAlias = new PsbCollection();
+
+            foreach (var val in variableList)
             {
-                var hairItem = (PsbDictionary)psbValue;
-                PsbDictionary hairDefItem = new PsbDictionary()
+                PsbDictionary item = (PsbDictionary)val;
+
+                variableAlias.Add(new PsbDictionary
                 {
-                    {"baseLayer", hairItem["baseLayer"] },
+                    {"bind", item["label"] }, //TODO: bind default name Dictionary
                     {"comment", PsbString.Empty },
-                    {"enabled", hairItem["enabled"] },
-                    {"label", hairItem["label"] },
+                    {"id", item["label"] },
+                    {"label", item["label"] },
+                });
+
+                variableFrameAlias.Add(new PsbDictionary
+                {
+                    {"comment", PsbString.Empty },
+                    {"frames", item["frameList"] },
+                    {"id", item["label"] },
+                });
+            }
+        }
+
+        private static IPsbValue BuildControlDefinition(PsbCollection control)
+        {
+            PsbCollection controlDefinition = new PsbCollection(control.Count);
+            foreach (var psbValue in control)
+            {
+                var item = (PsbDictionary)psbValue;
+                PsbDictionary defItem = new PsbDictionary()
+                {
+                    {"baseLayer", item["baseLayer"] },
+                    {"comment", PsbString.Empty },
+                    {"enabled", item["enabled"] },
+                    {"label", item["label"] },
                     {"parameter", "標準".ToPsbString() }, //TODO: generate param
-                    {"var_lr", hairItem["var_lr"] },
-                    {"var_lrm", hairItem["var_lrm"] },
-                    {"var_ud", hairItem["var_ud"] },
+                    {"var_lr", item["var_lr"] },
+                    {"var_lrm", item["var_lrm"] },
+                    {"var_ud", item["var_ud"] },
                 };
-                hairControlDef.Add(hairDefItem);
+                controlDefinition.Add(defItem);
             }
 
-            return hairControlDef;
+            return controlDefinition;
         }
 
         private static IPsbValue BuildCustomPartsBaseDefinition(PsbDictionary psbObjects)

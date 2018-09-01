@@ -418,6 +418,260 @@
           "v_bound": 0.1
         }
       ],
+	  "parameterEditDefinition": {
+        "ctrlLRVariableList": ["head_LR","body_LR","face_eye_LR"],
+        "ctrlUDVariableList": ["head_UD","body_UD","face_eye_UD"],
+        "shiftLRVariableList": ["body_slant","head_slant"],
+        "shiftUDVariableList": ["act_sp"]
+      },
+	  "partsControlParameterDefinitionList": [
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.392699081698625,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.03125,
+          "friction_y": 0.03125,
+          "gravity": 0.2,
+          "label": "標準",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.5
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.098174770424656249,
+          "bend_vol": 4.0,
+          "comment": "",
+          "friction_x": 0.0625,
+          "friction_y": 0.0625,
+          "gravity": 0.2,
+          "label": "ふんわり",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 2.0
+        },
+        {
+          "b_rate": 0.005,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.005,
+          "friction_y": 0.02,
+          "gravity": 0.01,
+          "label": "ふんわりB",
+          "length": [64.0,64.0],
+          "scale_x": [1.0,0.5],
+          "scale_y": [0.5,0.5],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.005,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.015,
+          "friction_y": 0.02,
+          "gravity": 0.007,
+          "label": "ふんわりC",
+          "length": [64.0,64.0],
+          "scale_x": [1.0,0.5],
+          "scale_y": [1.0,1.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.4,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.015625,
+          "friction_y": 0.09375,
+          "gravity": 0.6,
+          "label": "さらさら",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 1.0
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.3,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.03125,
+          "friction_y": 0.09375,
+          "gravity": 0.6,
+          "label": "さらさらB",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 1.0
+        },
+        {
+          "b_rate": 0.0037109375,
+          "bend_spd": 0.2,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.046875,
+          "friction_y": 0.09375,
+          "gravity": 0.6,
+          "label": "さらさらC",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 1.0
+        },
+        {
+          "b_rate": 0.00390625,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.078125,
+          "friction_y": 0.078125,
+          "gravity": 0.5,
+          "label": "がっちりハード",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.95
+        },
+        {
+          "b_rate": 0.25,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.125,
+          "friction_y": 0.125,
+          "gravity": 4.0,
+          "label": "鉄の鎖",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.03125,
+          "bend_spd": 0.392699081698625,
+          "bend_vol": 3.0,
+          "comment": "",
+          "friction_x": 0.0625,
+          "friction_y": 0.015625,
+          "gravity": 0.5,
+          "label": "ゴムひも",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [2.0,3.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.003515625,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.0078125,
+          "friction_y": 0.0078125,
+          "gravity": 0.005,
+          "label": "無重力",
+          "length": [64.0,48.0],
+          "scale_x": [0.75,0.25],
+          "scale_y": [1.0,1.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.003515625,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.0078125,
+          "friction_y": 0.0078125,
+          "gravity": 0.005,
+          "label": "無重力B",
+          "length": [64.0,48.0],
+          "scale_x": [0.5,0.5],
+          "scale_y": [0.5,0.5],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        },
+        {
+          "b_rate": 0.005,
+          "bend_spd": 0.25,
+          "bend_vol": 0.0,
+          "comment": "",
+          "friction_x": 0.015,
+          "friction_y": 0.02,
+          "gravity": 0.02,
+          "label": "無重力C",
+          "length": [64.0,64.0],
+          "scale_x": [1.0,1.0],
+          "scale_y": [1.0,1.0],
+          "ud_eft": 0,
+          "v_bound": 0.1
+        }
+      ],
+      "windDefinitionList": [
+        {
+          "comment": "",
+          "label": "←←←",
+          "windPowMax": 1.0,
+          "windPowMin": 0,
+          "windSpeed": -6
+        },
+        {
+          "comment": "",
+          "label": "←←",
+          "windPowMax": 0.5,
+          "windPowMin": 0,
+          "windSpeed": -5
+        },
+        {
+          "comment": "",
+          "label": "←",
+          "windPowMax": 0.1,
+          "windPowMin": 0,
+          "windSpeed": -3
+        },
+        {
+          "comment": "",
+          "label": "無風",
+          "windPowMax": 0,
+          "windPowMin": 0,
+          "windSpeed": 0
+        },
+        {
+          "comment": "",
+          "label": "→",
+          "windPowMax": 0.1,
+          "windPowMin": 0,
+          "windSpeed": 3
+        },
+        {
+          "comment": "",
+          "label": "→→",
+          "windPowMax": 0.5,
+          "windPowMin": 0,
+          "windSpeed": 5
+        },
+        {
+          "comment": "",
+          "label": "→→→",
+          "windPowMax": 1.0,
+          "windPowMin": 0,
+          "windSpeed": 6
+        }
+      ]
 }</value>
   </data>
 </root>

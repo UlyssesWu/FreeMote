@@ -832,7 +832,8 @@ namespace FreeMote.Psb
         {
             switch (obj)
             {
-                case null:
+                case null: //
+                    PsbNull.Null.WriteTo(bw);
                     return;
                 case PsbNull pNull:
                     pNull.WriteTo(bw);
