@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using LZ4.Frame;
+//TODO: switch to CLI solution?
 
 namespace FreeMote.Plugins.Shells
 {

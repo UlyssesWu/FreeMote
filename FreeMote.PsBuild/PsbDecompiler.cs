@@ -94,7 +94,7 @@ namespace FreeMote.PsBuild
                             throw;
                         }
                     }
-                    
+
                 }
 
                 return Decompile(psb);
@@ -134,6 +134,10 @@ namespace FreeMote.PsBuild
                 ExternalTextures = psb.Type == PsbType.Motion && psb.Resources.Count <= 0,
             };
 
+            if (File.Exists(dirPath))
+            {
+                dirPath += "-resources";
+            }
             if (!Directory.Exists(dirPath)) //ensure no file with same name!
             {
                 Directory.CreateDirectory(dirPath);
@@ -159,7 +163,7 @@ namespace FreeMote.PsBuild
                     var resource = resources[i];
                     //Generate Friendly Name
                     string relativePath = resource.GetFriendlyName(psb.Type);
-                    
+
                     switch (imageOption)
                     {
                         case PsbImageOption.Extract:

@@ -112,8 +112,8 @@ namespace FreeMote.Plugins
             //An aggregate catalog that combines multiple catalogs
             var catalog = new AggregateCatalog();
             //Adds all the parts found in the same assembly as the Program class
-            AddCatalog(path, catalog);
             AddCatalog(Path.Combine(CurrentPath, PLUGIN_DLL), catalog);
+            AddCatalog(path, catalog); //Plugins folder can override default plugin
 
             //Create the CompositionContainer with the parts in the catalog
             _container = new CompositionContainer(catalog);

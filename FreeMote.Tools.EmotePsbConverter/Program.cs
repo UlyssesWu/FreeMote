@@ -66,7 +66,7 @@ namespace FreeMote.Tools.EmotePsbConverter
                 }
                 NewKey = key;
                 byte[] bytes = File.ReadAllBytes(args[0]);
-                File.WriteAllBytes(args[0] + ".converted", PsbFile.Transfer(Key.Value, NewKey.Value, bytes));
+                File.WriteAllBytes(Path.ChangeExtension(args[0], ".converted.psb"), PsbFile.Transfer(Key.Value, NewKey.Value, bytes));
             }
             else if (args.Length == 2)
             {
@@ -108,7 +108,8 @@ namespace FreeMote.Tools.EmotePsbConverter
                     {
                         try
                         {
-                            File.WriteAllBytes(file.FullName + ".converted", PsbFile.Transfer(Key.Value, NewKey.Value, File.ReadAllBytes(file.FullName)));
+                            File.WriteAllBytes(Path.ChangeExtension(file.FullName, ".converted.psb"),
+                                PsbFile.Transfer(Key.Value, NewKey.Value, File.ReadAllBytes(file.FullName)));
                             count++;
                         }
                         catch (Exception e)
@@ -161,7 +162,7 @@ namespace FreeMote.Tools.EmotePsbConverter
                         if (string.IsNullOrEmpty(type) || currentType == type)
                         {
                             Console.WriteLine($"Shell Type [{currentType}] detected for {path}");
-                            File.WriteAllBytes(path + ".decompressed", ms.ToArray());
+                            File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
                         }
                         else
                         {
@@ -173,7 +174,7 @@ namespace FreeMote.Tools.EmotePsbConverter
                             }
 
                             Console.WriteLine($"[{type}] Shell applied for {path}");
-                            File.WriteAllBytes(path + "." + type, mms.ToArray());
+                            File.WriteAllBytes(Path.ChangeExtension(path, $".compressed.{type}"), mms.ToArray());
                         }
                     }
                 }
@@ -265,7 +266,7 @@ Hint: If ths tool can't decrypt your PSB, try PsbDecompile.
                         }
                         else if (hasShell)
                         {
-                            File.WriteAllBytes(path + ".decompressed", ms.ToArray());
+                            File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
                             return true;
                         }
                         else
@@ -285,13 +286,13 @@ Hint: If ths tool can't decrypt your PSB, try PsbDecompile.
                             {
                                 //psb.EncodeToFile(key.Value, path + ".decrypted", EncodeMode.Decrypt);
                                 PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(path + ".decrypted", outMs.ToArray());
+                                File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
                             }
                             else
                             {
                                 //psb.EncodeToFile(key.Value, path + ".encrypted", EncodeMode.Encrypt);
                                 PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(path + ".encrypted", outMs.ToArray());
+                                File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
                             }
                         }
                         else
@@ -299,12 +300,12 @@ Hint: If ths tool can't decrypt your PSB, try PsbDecompile.
                             if (PsbFile.TestBodyEncrypted(br, header)) //Decrypt
                             {
                                 PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(path + ".decrypted", outMs.ToArray());
+                                File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
                             }
                             else
                             {
                                 PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(path + ".encrypted", outMs.ToArray());
+                                File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
                             }
                         }
                     }
