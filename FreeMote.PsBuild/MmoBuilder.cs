@@ -741,9 +741,10 @@ namespace FreeMote.PsBuild
             };
             metaFormatContent["charaProfileDefinitionList"] = BuildCharaProfileDefinition(metadata);
             metaFormatContent["clampControlDefinitionList"] = metadata["clampControl"];
-            metaFormatContent["customPartsBaseDefinitionList"] = BuildCustomPartsBaseDefinition(psb.Objects);
+            metaFormatContent["customPartsBaseDefinitionList"] = mmoRef["customPartsBaseDefinitionList"]; //BuildCustomPartsBaseDefinition(psb.Objects);
             metaFormatContent["customPartsCount"] = ((PsbCollection)metadata["customPartsOrder"]).Count.ToPsbNumber(); //PsbNumber.Zero;
-            metaFormatContent["customPartsMountDefinitionList"] = new PsbCollection();
+            metaFormatContent["customPartsDefinitionList"] = new PsbCollection(); //new PsbCollection();
+            metaFormatContent["customPartsMountDefinitionList"] = mmoRef["customPartsMountDefinitionList"]; //new PsbCollection();
             metaFormatContent["eyeControlDefinitionList"] = metadata["eyeControl"];
             metaFormatContent["eyeControlParameterDefinitionList"] = mmoRef["eyeControlParameterDefinitionList"];
             metaFormatContent["eyebrowControlDefinitionList"] = metadata["eyebrowControl"];
@@ -751,28 +752,30 @@ namespace FreeMote.PsBuild
             metaFormatContent["hairControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["hairControl"]);
             metaFormatContent["hairControlParameterDefinitionList"] = mmoRef["hairControlParameterDefinitionList"];
             metaFormatContent["clampControlDefinitionList"] = metadata["clampControl"];
-            metaFormatContent["layoutDefinitionList"] = new PsbCollection();
+            metaFormatContent["instantVariableList"] = metadata["instantVariableList"];
+            metaFormatContent["layoutDefinitionList"] = new PsbCollection(); //can be null
             metaFormatContent["license"] = 5.ToPsbNumber();
             metaFormatContent["logo"] = metadata["logo"] ?? PsbNumber.Zero;
             metaFormatContent["loopControlDefinitionList"] = metadata["loopControl"];
             metaFormatContent["loopControlParameterDefinitionList"] = new PsbCollection();
             metaFormatContent["mirrorDefinition"] = metadata["mirrorControl"];
             metaFormatContent["mouthControlDefinitionList"] = metadata["mouthControl"];
-            metaFormatContent["orbitControlDefinitionList"] = metadata["orbitControl"];
+            metaFormatContent["orbitControlDefinitionList"] = metadata["orbitControl"]; //TODO: we don't have sample with orbit
+            metaFormatContent["orbitControlParameterDefinitionList"] = new PsbCollection();
             metaFormatContent["parameterEditDefinition"] = mmoRef["parameterEditDefinition"];
             metaFormatContent["partialExportDefinitionList"] = new PsbCollection();
             metaFormatContent["partsControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["partsControl"]);
             metaFormatContent["partsControlParameterDefinitionList"] = mmoRef["partsControlParameterDefinitionList"];
-            metaFormatContent["partsList"] = new PsbCollection();
+            metaFormatContent["partsList"] = new PsbCollection(); //can be null
             metaFormatContent["physicsMotionList"] = new PsbCollection();
             metaFormatContent["physicsVariableList"] = new PsbCollection();
-            metaFormatContent["scrapbookDefinitionList"] = new PsbCollection();
+            metaFormatContent["scrapbookDefinitionList"] = new PsbCollection(); //Have to build for change scrapbook
             metaFormatContent["selectorControlDefinitionList"] = metadata["selectorControl"];
-            metaFormatContent["sourceDefinitionOrderList"] = new PsbCollection();
+            metaFormatContent["sourceDefinitionOrderList"] = new PsbCollection(); //can be null?
             metaFormatContent["stereovisionDefinition"] = metadata["stereovisionControl"];
             metaFormatContent["subtype"] = "E-mote Meta Format".ToPsbString();
             metaFormatContent["testAnimationList"] = new PsbCollection();
-            metaFormatContent["textureDefinitionList"] = new PsbCollection();
+            metaFormatContent["textureDefinitionList"] = new PsbCollection(); //Have to build for change texture
             metaFormatContent["transitionControlDefinitionList"] = metadata["transitionControl"];
             metaFormatContent["variableAliasFrameBind"] = new PsbDictionary();
             BuildVariableList((PsbCollection)metadata["variableList"], out var variableAlias, out var variableFrameAlias);
@@ -841,6 +844,11 @@ namespace FreeMote.PsBuild
             return new PsbCollection();
         }
 
+        /// <summary>
+        /// Can be empty
+        /// </summary>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
         private static IPsbValue BuildCharaProfileDefinition(PsbDictionary metadata)
         {
             return new PsbCollection();

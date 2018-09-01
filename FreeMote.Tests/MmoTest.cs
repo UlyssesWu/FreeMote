@@ -67,9 +67,12 @@ namespace FreeMote.Tests
             var path2 = Path.Combine(resPath, "template39-krkr.json");
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
             var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
+            MmoBuilder.DebugMode = true;
             var psbMmo = MmoBuilder.Build(psb);
             //mmo.Objects["objectChildren"] = psbMmo.Objects["objectChildren"];
-            mmo.Objects["metaformat"] = psbMmo.Objects["metadata"];
+            var data = (PsbDictionary) mmo.Objects["metaformat"].Children("data");
+            var data2 = (PsbDictionary) psbMmo.Objects["metaformat"].Children("data");
+            data["bustControlDefinitionList"] = data2["bustControlDefinitionList"];
             mmo.Merge();
             mmo.SaveAsMdfFile(Path.Combine(resPath, "mmo", "temp.mmo"));
 
@@ -96,7 +99,8 @@ namespace FreeMote.Tests
         public void TestBuildMmo()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
+            //var path = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
+            var path = Path.Combine(resPath, "template39-krkr.json");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             MmoBuilder.DebugMode = true;
             var psbMmo = MmoBuilder.Build(psb);

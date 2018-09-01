@@ -551,5 +551,1350 @@
           "windPowMin": 0,
           "windSpeed": 6
         }
-      ]
+      ],
+	  "customPartsMountDefinitionList": [
+        {
+          "comment": "",
+          "label": "全体+独立",
+          "mount": {
+            "chara": "all_parts",
+            "layer": "■背景構造",
+            "motion": "背景構造"
+          }
+        },
+        {
+          "comment": "",
+          "label": "全体+キャラＢＧ",
+          "mount": {
+            "chara": "all_parts",
+            "layer": "■全体レイアウト",
+            "motion": "全体構造"
+          }
+        },
+        {
+          "comment": "",
+          "label": "頭部+独立",
+          "mount": {
+            "chara": "all_parts",
+            "layer": "■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□頭部調整_le",
+            "motion": "全体構造"
+          }
+        },
+        {
+          "comment": "",
+          "label": "頭部+頭部枠同期",
+          "mount": {
+            "chara": "head_parts",
+            "layer": "■頭部セット",
+            "motion": "頭部変形基礎"
+          }
+        },
+        {
+          "comment": "",
+          "label": "頭部+輪郭に接着",
+          "mount": {
+            "chara": "head_parts",
+            "layer": "■頭部セット/輪郭_le/UD/LR/mouth_talk/■輪郭",
+            "motion": "頭部変形基礎"
+          }
+        },
+        {
+          "comment": "",
+          "label": "頭部+前髪に接着",
+          "mount": {
+            "chara": "head_parts",
+            "layer": "■頭部セット/前髪_le/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■前髪",
+            "motion": "頭部変形基礎"
+          }
+        },
+        {
+          "comment": "",
+          "label": "頭部+後髪に接着",
+          "mount": {
+            "chara": "head_parts",
+            "layer": "■頭部セット/後髪_le/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■後髪",
+            "motion": "頭部変形基礎"
+          }
+        },
+        {
+          "comment": "",
+          "label": "胴体+独立",
+          "mount": {
+            "chara": "all_parts",
+            "layer": "■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□胴体調整_le",
+            "motion": "全体構造"
+          }
+        },
+        {
+          "comment": "",
+          "label": "胴体+胴体枠同期",
+          "mount": {
+            "chara": "body_parts",
+            "layer": "■胴体セット",
+            "motion": "全身変形基礎"
+          }
+        },
+        {
+          "comment": "",
+          "label": "胴体+胴体に接着",
+          "mount": {
+            "chara": "body_parts",
+            "layer": "■胴体セット/胴体_le/act_sp/UD/LR/QUD/QLR/■胴体",
+            "motion": "全身変形基礎"
+          }
+        },
+        {
+          "comment": "",
+          "label": "胴体+胸に接着",
+          "mount": {
+            "chara": "body_parts",
+            "layer": "■胴体セット/胴体_le/act_sp/UD/LR/胸_le/act_sp/UD/LR/QUD/QLR/■胸",
+            "motion": "全身変形基礎"
+          }
+        },
+        {
+          "comment": "",
+          "label": "頭部+頭部で切り抜き",
+          "mount": {
+            "chara": "all_parts",
+            "layer": "■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□頭部調整_le/act_sp/胴体同期UD/胴体同期LR/首傾き設定/頭部変形基礎/stencil/□頭部マスク配置_le",
+            "motion": "全体構造"
+          }
+        },
+        {
+          "comment": "",
+          "label": "胴体+胴体で切り抜き",
+          "mount": {
+            "chara": "all_parts",
+            "layer": "■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□胴体調整_le/act_sp/頭部同期UD/頭部同期SL/頭部同期LR/全身変形基礎/stencil/□胴体マスク配置_le",
+            "motion": "全体構造"
+          }
+        }
+      ],
+      "customPartsBaseDefinitionList": [
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/■追加パーツ"
+            }
+          ],
+          "label": "揺れ無し",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/■追加パーツ"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/■追加パーツ"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ揺れ_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■追加パーツ揺れ"
+            }
+          ],
+          "label": "揺れ有り",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■追加パーツ揺れ"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■追加パーツ揺れ"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ揺れ予備_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■追加パーツ揺れ予備"
+            }
+          ],
+          "label": "揺れ予備",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■追加パーツ揺れ予備"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■追加パーツ揺れ予備"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "髪揺れ_前髪_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_前髪"
+            }
+          ],
+          "label": "前髪揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_前髪"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_前髪"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "髪揺れ_髪Ｌ_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_髪Ｌ"
+            }
+          ],
+          "label": "横髪L揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_髪Ｌ"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_髪Ｌ"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "髪揺れ_髪Ｒ_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_髪Ｒ"
+            }
+          ],
+          "label": "横髪R揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_髪Ｒ"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_髪Ｒ"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "髪揺れ_後髪_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_後髪"
+            }
+          ],
+          "label": "後髪揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_後髪"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/■髪揺れ_後髪"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "胸揺れ_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR/■胸揺れ"
+            }
+          ],
+          "label": "胸揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR/■胸揺れ"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR/■胸揺れ"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "胸揺れ予備_le",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR/■胸揺れ予備"
+            }
+          ],
+          "label": "胸揺れ予備",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR/■胸揺れ予備"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/ROLL_BUD/ROLL_BLR/■胸揺れ予備"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ揺れ_le_fade_v",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_v/■追加パーツ揺れ_fade_v"
+            }
+          ],
+          "label": "fade_v揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_v/■追加パーツ揺れ_fade_v"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_v",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_v/■追加パーツ揺れ_fade_v"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ揺れ_le_fade_w",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_w/■追加パーツ揺れ_fade_w"
+            }
+          ],
+          "label": "fade_w揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_w/■追加パーツ揺れ_fade_w"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_w",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_w/■追加パーツ揺れ_fade_w"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ揺れ_le_fade_x",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_x/■追加パーツ揺れ_fade_x"
+            }
+          ],
+          "label": "fade_x揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_x/■追加パーツ揺れ_fade_x"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_x",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_x/■追加パーツ揺れ_fade_x"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ揺れ_le_fade_y",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_y/■追加パーツ揺れ_fade_y"
+            }
+          ],
+          "label": "fade_y揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_y/■追加パーツ揺れ_fade_y"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_y",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_y/■追加パーツ揺れ_fade_y"
+            }
+          ]
+        },
+        {
+          "base": {
+            "chara": "parts_add",
+            "layer": "追加パーツ揺れ_le_fade_z",
+            "motion": "追加パーツ用テンプレート_基礎"
+          },
+          "blendModePartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_z/■追加パーツ揺れ_fade_z"
+            }
+          ],
+          "label": "fade_z揺れ",
+          "obj": {
+            "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_z/■追加パーツ揺れ_fade_z"
+          },
+          "partsList": [
+            {
+              "comment": "",
+              "layer": "*",
+              "type": "レイアウト"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_z",
+              "type": "メッシュ"
+            },
+            {
+              "comment": "",
+              "layer": "*/act_sp",
+              "type": "メッシュ"
+            }
+          ],
+          "removePartsList": [
+            {
+              "comment": "",
+              "layer": "*"
+            }
+          ],
+          "transparentPartsList": [
+            {
+              "comment": "",
+              "layer": "*/act_sp/SL/BSL/UD/LR/BUD/BLR/QUD/QLR/QLR_M/fade_z/■追加パーツ揺れ_fade_z"
+            }
+          ]
+        }
+      ],
 }
