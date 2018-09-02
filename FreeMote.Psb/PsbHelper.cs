@@ -294,7 +294,7 @@ namespace FreeMote.Psb
 
         public static PsbString ToPsbString(this string s)
         {
-            return new PsbString(s);
+            return s == null ? PsbString.Empty : new PsbString(s);
         }
 
         public static PsbNumber ToPsbNumber(this int i)

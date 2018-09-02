@@ -117,10 +117,106 @@ namespace FreeMote.PsBuild
     /// Build MMO from Emote PSB
     /// <para>Current Ver: 3.12</para>
     /// </summary>
-    class MmoBuilder
+    public class MmoBuilder
     {
-        internal static bool DebugMode { get; set; } = false;
-        //public PSB Mmo { get; private set; }
+        internal bool DebugMode { get; set; } = false;
+        public PSB Mmo { get; private set; }
+
+        public Dictionary<string, MmoPsdMetadata> MmoPsdMetadatas { get; set; }
+
+        public MmoBuilder()
+        {
+            #region Default Metadata
+
+            MmoPsdMetadatas = DebugMode
+            ? new Dictionary<string, MmoPsdMetadata>
+            {
+                    {
+                        "face_eye_mabuta_l", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eye_mabuta_l",
+                            Category = "Emotion",
+                            PsdGroup = "Eye-L",
+                            Label = "Orbit-L"
+                        }
+                    },
+                    {
+                        "face_eye_mabuta_r", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eye_mabuta_r",
+                            Category = "Emotion",
+                            PsdGroup = "Eye-R",
+                            Label = "Orbit-R",
+                        }
+                    },
+                    {
+                        "face_eye_hitomi_l", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eye_hitomi_l",
+                            Category = "Emotion",
+                            PsdGroup = "Eye-L",
+                            Label = "Pupil-L",
+                        }
+                    },
+                    {
+                        "face_eye_hitomi_r", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eye_hitomi_r",
+                            Category = "Emotion",
+                            PsdGroup = "Eye-R",
+                            Label = "Pupil-R",
+                        }
+                    },
+                    {
+                        "face_eye_shirome_l", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eye_shirome_l",
+                            Category = "Emotion",
+                            PsdGroup = "Eye-L",
+                            Label = "EyeWhite-L",
+                        }
+                    },
+                    {
+                        "face_eye_shirome_r", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eye_shirome_r",
+                            Category = "Emotion",
+                            PsdGroup = "Eye-R",
+                            Label = "EyeWhite-R",
+                        }
+                    },
+                    {
+                        "face_eyebrow_l", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eyebrow_l",
+                            Category = "Emotion",
+                            PsdGroup = "Eyebrow-L",
+                            Label = "Eyebrow-L",
+                        }
+                    },
+                    {
+                        "face_eyebrow_r", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_eyebrow_r",
+                            Category = "Emotion",
+                            PsdGroup = "Eyebrow-R",
+                            Label = "Eyebrow-R",
+                        }
+                    },
+                    {
+                        "face_mouth", new MmoPsdMetadata
+                        {
+                            SourceLabel = "face_mouth",
+                            Category = "Emotion",
+                            PsdGroup = "Mouth",
+                            Label = "Mouth",
+                        }
+                    },
+            }
+            : new Dictionary<string, MmoPsdMetadata>();
+
+            #endregion
+        }
 
         /// <summary>
         /// Generate MMO from Emote KRKR PSB
@@ -128,45 +224,45 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        public static PSB Build(PSB psb)
+        public PSB Build(PSB psb)
         {
-            PSB mmo = new PSB();
-            mmo.Type = PsbType.Mmo;
+            Mmo = new PSB();
+            Mmo.Type = PsbType.Mmo;
 
-            mmo.Objects = new PsbDictionary();
-            mmo.Objects["bgChildren"] = BuildBackground();
-            mmo.Objects["comment"] = psb.Objects["comment"] ?? "Built by FreeMote".ToPsbString();
-            mmo.Objects["defaultFPS"] = 60.ToPsbNumber();
-            mmo.Objects["fontInfoIdCount"] = PsbNull.Null;
-            mmo.Objects["fontInfoList"] = new PsbCollection(0);
-            mmo.Objects["forceRepack"] = 1.ToPsbNumber();
-            mmo.Objects["ignoreMotionPanel"] = PsbNumber.Zero;
-            mmo.Objects["keepSourceIconName"] = PsbNumber.Zero; //1.ToPsbNumber();
-            mmo.Objects["label"] = "FreeMote".ToPsbString();
-            mmo.Objects["marker"] = PsbNumber.Zero;
-            mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
-            mmo.Objects["metadata"] = BuildMetadata(psb);
-            mmo.Objects["modelScale"] = 32.ToPsbNumber();
-            mmo.Objects["newScrapbookCellHeight"] = 8.ToPsbNumber();
-            mmo.Objects["newScrapbookCellWidth"] = 8.ToPsbNumber();
-            mmo.Objects["newTextureCellHeight"] = 8.ToPsbNumber();
-            mmo.Objects["newTextureCellWidth"] = 8.ToPsbNumber();
-            mmo.Objects["optimizeMargin"] = 1.ToPsbNumber();
-            mmo.Objects["outputDepth"] = PsbNumber.Zero;
-            mmo.Objects["previewSize"] = FillDefaultPreviewSize();
-            mmo.Objects["projectType"] = PsbNumber.Zero;
-            mmo.Objects["saveFormat"] = PsbNumber.Zero;
-            mmo.Objects["stereovisionProfile"] = psb.Objects["stereovisionProfile"];
-            mmo.Objects["targetOwn"] = FillDefaultTargetOwn();
-            mmo.Objects["unifyTexture"] = 1.ToPsbNumber();
+            Mmo.Objects = new PsbDictionary();
+            Mmo.Objects["bgChildren"] = BuildBackground();
+            Mmo.Objects["comment"] = psb.Objects["comment"] ?? "Built by FreeMote".ToPsbString();
+            Mmo.Objects["defaultFPS"] = 60.ToPsbNumber();
+            Mmo.Objects["fontInfoIdCount"] = PsbNull.Null;
+            Mmo.Objects["fontInfoList"] = new PsbCollection(0);
+            Mmo.Objects["forceRepack"] = 1.ToPsbNumber();
+            Mmo.Objects["ignoreMotionPanel"] = PsbNumber.Zero;
+            Mmo.Objects["keepSourceIconName"] = PsbNumber.Zero; //1.ToPsbNumber();
+            Mmo.Objects["label"] = "FreeMote".ToPsbString();
+            Mmo.Objects["marker"] = PsbNumber.Zero;
+            Mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
+            Mmo.Objects["metadata"] = BuildMetadata(psb);
+            Mmo.Objects["modelScale"] = 32.ToPsbNumber();
+            Mmo.Objects["newScrapbookCellHeight"] = 8.ToPsbNumber();
+            Mmo.Objects["newScrapbookCellWidth"] = 8.ToPsbNumber();
+            Mmo.Objects["newTextureCellHeight"] = 8.ToPsbNumber();
+            Mmo.Objects["newTextureCellWidth"] = 8.ToPsbNumber();
+            Mmo.Objects["optimizeMargin"] = 1.ToPsbNumber();
+            Mmo.Objects["outputDepth"] = PsbNumber.Zero;
+            Mmo.Objects["previewSize"] = FillDefaultPreviewSize();
+            Mmo.Objects["projectType"] = PsbNumber.Zero;
+            Mmo.Objects["saveFormat"] = PsbNumber.Zero;
+            Mmo.Objects["stereovisionProfile"] = psb.Objects["stereovisionProfile"];
+            Mmo.Objects["targetOwn"] = FillDefaultTargetOwn();
+            Mmo.Objects["unifyTexture"] = 1.ToPsbNumber();
             //mmo.Objects["uniqId"] = 114514.ToPsbNumber();
-            mmo.Objects["version"] = new PsbNumber(3.12f);
+            Mmo.Objects["version"] = new PsbNumber(3.12f);
 
-            mmo.Objects["objectChildren"] = BuildObjects(psb);
-            mmo.Objects["sourceChildren"] = BuildSources(psb);
-            mmo.Objects["metaformat"] = BuildMetaFormat(psb, mmo);
+            Mmo.Objects["objectChildren"] = BuildObjects(psb);
+            Mmo.Objects["sourceChildren"] = BuildSources(psb);
+            Mmo.Objects["metaformat"] = BuildMetaFormat(psb, Mmo);
 
-            return mmo;
+            return Mmo;
         }
 
         /// <summary>
@@ -174,7 +270,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildSources(PSB psb, int widthPadding = 10, int heightPadding = 10)
+        private IPsbValue BuildSources(PSB psb, int widthPadding = 10, int heightPadding = 10)
         {
             Dictionary<uint, Bitmap> bitmaps = new Dictionary<uint, Bitmap>();
             PsbCollection sourceChildren = new PsbCollection();
@@ -315,7 +411,7 @@ namespace FreeMote.PsBuild
             return ((int)(width / (bottom - top)), (int)(height / (right - left)));
         }
 
-        private static PsbDictionary BuildSourceImage(Bitmap pixel, int type = 2)
+        private PsbDictionary BuildSourceImage(Bitmap pixel, int type = 2)
         {
             var image = new PsbDictionary(2)
             {
@@ -338,7 +434,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildObjects(PSB psb)
+        private IPsbValue BuildObjects(PSB psb)
         {
             PsbCollection objectChildren = new PsbCollection();
             foreach (var motionItemKv in (PsbDictionary)psb.Objects["object"])
@@ -606,7 +702,7 @@ namespace FreeMote.PsBuild
             return val;
         }
 
-        private static PsbCollection BuildPriorityFrameList(PsbCollection fl)
+        private PsbCollection BuildPriorityFrameList(PsbCollection fl)
         {
             for (int i = 0; i < fl.Count; i++)
             {
@@ -630,7 +726,7 @@ namespace FreeMote.PsBuild
             return fl;
         }
 
-        private static void BuildFrameList(PsbCollection frameList, MmoItemClass classType = MmoItemClass.ObjLayerItem)
+        private void BuildFrameList(PsbCollection frameList, MmoItemClass classType = MmoItemClass.ObjLayerItem)
         {
             foreach (var fl in frameList)
             {
@@ -691,7 +787,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildMetaFormat(PSB psb, PSB mmo)
+        private IPsbValue BuildMetaFormat(PSB psb, PSB mmo)
         {
             var jsonConverter = new PsbJsonConverter();
             PsbDictionary mmoRef = null;
@@ -764,7 +860,7 @@ namespace FreeMote.PsBuild
             metaFormatContent["partialExportDefinitionList"] = new PsbCollection();
             metaFormatContent["partsControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["partsControl"]);
             metaFormatContent["partsControlParameterDefinitionList"] = mmoRef["partsControlParameterDefinitionList"];
-            metaFormatContent["partsList"] = new PsbCollection(); //can be null
+            metaFormatContent["partsList"] = new PsbCollection(); //Have to build for parameter feature
             metaFormatContent["physicsMotionList"] = new PsbCollection();
             metaFormatContent["physicsVariableList"] = new PsbCollection();
             metaFormatContent["scrapbookDefinitionList"] = BuildScrapbookDefinition(); //Have to build for change scrapbook
@@ -773,7 +869,7 @@ namespace FreeMote.PsBuild
             metaFormatContent["stereovisionDefinition"] = metadata["stereovisionControl"];
             metaFormatContent["subtype"] = "E-mote Meta Format".ToPsbString();
             metaFormatContent["testAnimationList"] = new PsbCollection();
-            metaFormatContent["textureDefinitionList"] = FillDefaultTextureDefinition(mmo, (PsbCollection)mmoRef["textureDefinitionList"]); //Have to build for change texture
+            metaFormatContent["textureDefinitionList"] = FillDefaultTextureDefinition(mmo); //Have to build for change texture
             metaFormatContent["transitionControlDefinitionList"] = metadata["transitionControl"];
             metaFormatContent["variableAliasFrameBind"] = new PsbDictionary();
             BuildVariableList((PsbCollection)metadata["variableList"], out var variableAlias, out var variableFrameAlias);
@@ -783,69 +879,68 @@ namespace FreeMote.PsBuild
             metaFormatContent["vesion"] = new PsbNumber(1.08f);
             metaFormatContent["windDefinitionList"] = mmoRef["windDefinitionList"];
 
-
-
             return metaFormat;
         }
 
-        private static IPsbValue BuildScrapbookDefinition()
+        private IPsbValue BuildScrapbookDefinition()
         {
             return new PsbCollection();
         }
 
-        private static IPsbValue FillDefaultTextureDefinition(PSB mmo, PsbCollection mmoRef)
+        private IPsbValue FillDefaultTextureDefinition(PSB mmo)
         {
             var objectChildren = (PsbCollection)mmo.Objects["objectChildren"];
             var sourceChildren = (PsbCollection)mmo.Objects["sourceChildren"];
             var textureDef = new PsbCollection();
-            //We couldn't get complete metadata for this so just try to add default
-            foreach (var mmoItem in mmoRef)
+            //We couldn't get complete metadata for this
+            var textureSources =
+                sourceChildren.Where(s => s is PsbDictionary dic && dic["className"].ToString() == "TextureItem").Cast<PsbDictionary>();
+            foreach (var mmoItem in textureSources)
             {
-                var mmoDic = (PsbDictionary)mmoItem;
-                var sourcePath = mmoDic["sourceLabel"].ToString();
-                var source = sourceChildren.FindByMmoPath(sourcePath) as PsbDictionary;
-                if (
-                    objectChildren.FindByMmoPath(CombineMmoPath((PsbDictionary)mmoDic["blendMode"])) != null &&
-                    objectChildren.FindByMmoPath(CombineMmoPath((PsbDictionary)mmoDic["layout"])) != null &&
-                    source != null
-                    )
+                PsbDictionary texDefItem = new PsbDictionary
                 {
-                    var meshList = (PsbCollection)mmoDic["meshList"];
-                    PsbCollection newMeshList = new PsbCollection();
-                    foreach (var mesh in meshList)
+                    {"sourceLabel", mmoItem["label"]},
+                    {"comment", mmoItem["comment"]},
+                    {"psdMargin", 5.ToPsbNumber()},
+                    {"psdRange", 1.ToPsbNumber()},
+                    //{"layoutFlags", 3.ToPsbNumber()},
+                };
+                var sLabel = mmoItem["label"].ToString();
+                if (MmoPsdMetadatas.ContainsKey(sLabel))
+                {
+                    var md = MmoPsdMetadatas[sLabel];
+                    texDefItem.Add("category", new PsbCollection(1) { md.Category.ToPsbString() });
+                    texDefItem.Add("psdGroup", md.PsdGroup.ToPsbString());
+                    texDefItem.Add("psdFrameLabel", md.PsdFrameLabel.ToPsbString());
+                    texDefItem.Add("psdComment", md.PsdComment.ToPsbString());
+                    texDefItem.Add("label", md.Label.ToPsbString());
+                }
+                else
+                {
+                    var category = "Other";
+                    if (sLabel.StartsWith("face_"))
                     {
-                        var path = CombineMmoPath((PsbDictionary)mesh);
-                        if (objectChildren.FindByMmoPath(path) != null)
-                        {
-                            newMeshList.Add(mesh);
-                        }
+                        category = "Emotion"; //WARN: Category can not be named as `Expression`
                     }
-                    mmoDic["meshList"] = newMeshList;
-
-                    PsbCollection newPsdIconList = new PsbCollection();
-                    foreach (var iconItem in (PsbCollection)source["iconList"])
-                    {
-                        newPsdIconList.Add(new PsbDictionary
-                        {
-                            {"comment", PsbString.Empty },
-                            {"iconLabel", iconItem.Children("label") },
-                            {"psdLabel", iconItem.Children("label") },
-                        });
-                    }
-                    mmoDic["psdIconList"] = newPsdIconList;
-
-                    if (mmoDic.ContainsKey("remove"))
-                    {
-                        var removePath = CombineMmoPath((PsbDictionary)mmoDic["remove"]);
-                        if (objectChildren.FindByMmoPath(removePath) == null)
-                        {
-                            mmoDic.Remove("remove");
-                        }
-                    }
-
-                    textureDef.Add(mmoDic);
+                    texDefItem.Add("category", new PsbCollection(1) { category.ToPsbString() });
+                    texDefItem.Add("psdGroup", mmoItem["label"]);
+                    texDefItem.Add("psdFrameLabel", PsbString.Empty);
+                    texDefItem.Add("psdComment", PsbString.Empty);
+                    texDefItem.Add("label", mmoItem["label"]);
                 }
 
+                PsbCollection psdIconList = new PsbCollection();
+                foreach (var iconItem in (PsbCollection)mmoItem["iconList"])
+                {
+                    psdIconList.Add(new PsbDictionary
+                    {
+                        {"comment", PsbString.Empty },
+                        {"iconLabel", iconItem.Children("label") },
+                        {"psdLabel", iconItem.Children("label") },
+                    });
+                }
+                texDefItem.Add("psdIconList", psdIconList);
+                textureDef.Add(texDefItem);
             }
 
             string CombineMmoPath(PsbDictionary mmoPath)
@@ -859,7 +954,7 @@ namespace FreeMote.PsBuild
             return textureDef;
         }
 
-        private static void BuildVariableList(PsbCollection variableList, out PsbCollection variableAlias, out PsbCollection variableFrameAlias)
+        private void BuildVariableList(PsbCollection variableList, out PsbCollection variableAlias, out PsbCollection variableFrameAlias)
         {
             variableAlias = new PsbCollection();
             variableFrameAlias = new PsbCollection();
@@ -885,7 +980,7 @@ namespace FreeMote.PsBuild
             }
         }
 
-        private static IPsbValue BuildControlDefinition(PsbCollection control)
+        private IPsbValue BuildControlDefinition(PsbCollection control)
         {
             PsbCollection controlDefinition = new PsbCollection(control.Count);
             foreach (var psbValue in control)
@@ -908,7 +1003,7 @@ namespace FreeMote.PsBuild
             return controlDefinition;
         }
 
-        private static IPsbValue BuildCustomPartsBaseDefinition(PsbDictionary psbObjects)
+        private IPsbValue BuildCustomPartsBaseDefinition(PsbDictionary psbObjects)
         {
             return new PsbCollection();
         }
@@ -918,7 +1013,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        private static IPsbValue BuildCharaProfileDefinition(PsbDictionary metadata)
+        private IPsbValue BuildCharaProfileDefinition(PsbDictionary metadata)
         {
             return new PsbCollection();
         }
@@ -928,7 +1023,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildMetadata(PSB psb)
+        private IPsbValue BuildMetadata(PSB psb)
         {
             PsbDictionary metadata = new PsbDictionary(2)
             {
@@ -943,7 +1038,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildMaxTextureSize(PSB psb)
+        private IPsbValue BuildMaxTextureSize(PSB psb)
         {
             return 4096.ToPsbNumber();
         }
@@ -952,7 +1047,7 @@ namespace FreeMote.PsBuild
         /// Can be null
         /// </summary>
         /// <returns></returns>
-        private static IPsbValue BuildBackground()
+        private IPsbValue BuildBackground()
         {
             return new PsbCollection(0);
         }
@@ -1172,6 +1267,7 @@ namespace FreeMote.PsBuild
                 } }
             };
         }
+
         #endregion
     }
 }
