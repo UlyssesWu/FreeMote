@@ -301,7 +301,7 @@ namespace FreeMote.Psb
         {
             return new PsbNumber(i);
         }
-        
+
         /// <summary>
         /// If this spec uses RL
         /// </summary>
@@ -464,6 +464,57 @@ namespace FreeMote.Psb
             return null;
         }
 
+        public static IPsbValue FindByMmoPath(this IPsbCollection psbObj, string path)
+        {
+            if (psbObj == null)
+                return null;
+            if (path.StartsWith("/"))
+            {
+                path = new string(path.SkipWhile(c => c == '/').ToArray());
+            }
+
+            string current = null;
+            int pos = -1;
+            if (path.Contains("/"))
+            {
+                pos = path.IndexOf('/');
+                current = path.Substring(0, pos);
+            }
+            else
+            {
+                current = path;
+            }
+
+            IPsbValue currentObj = null;
+            if (psbObj is PsbCollection col)
+            {
+                currentObj = col.FirstOrDefault(c =>
+                    c is PsbDictionary d && d.ContainsKey("label") && d["label"] is PsbString s &&
+                    s.Value == current);
+            }
+            else if (psbObj is PsbDictionary dic)
+            {
+                var dd = dic.Value.FirstOrDefault();
+                var children =
+                    (PsbCollection)(dic.ContainsKey("layerChildren") ? dic["layerChildren"] : dic["children"]);
+                currentObj = children.FirstOrDefault(c =>
+                    c is PsbDictionary d && d.ContainsKey("label") && d["label"] is PsbString s &&
+                    s.Value == current);
+            }
+            if (pos == path.Length - 1 || pos < 0)
+            {
+                return currentObj;
+            }
+
+            if (currentObj is IPsbCollection psbCol)
+            {
+                path = path.Substring(pos);
+                return psbCol.FindByMmoPath(path);
+            }
+
+            return psbObj[path];
+        }
+
         public static IPsbValue Children(this IPsbValue col, string name)
         {
             while (true)
@@ -473,7 +524,23 @@ namespace FreeMote.Psb
                     case PsbDictionary dictionary:
                         return dictionary[name];
                     case PsbCollection collection:
-                        col = collection.FirstOrDefault(c => c is PsbDictionary);
+                        col = collection.FirstOrDefault(c => c is PsbDictionary d && d.ContainsKey(name));
+                        continue;
+                }
+                throw new ArgumentException($"{col} doesn't have children.");
+            }
+        }
+
+        public static IPsbValue Children(this IPsbValue col, int index)
+        {
+            while (true)
+            {
+                switch (col)
+                {
+                    case PsbDictionary dictionary:
+                        return dictionary.Values.ElementAt(index);
+                    case PsbCollection collection:
+                        col = collection[index];
                         continue;
                 }
                 throw new ArgumentException($"{col} doesn't have children.");

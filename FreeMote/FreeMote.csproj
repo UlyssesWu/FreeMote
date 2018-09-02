@@ -67,5 +67,10 @@
     <Compile Include="TlgImageConverter.cs" />
     <Compile Include="ZlibCompress.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="FreeMote.LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

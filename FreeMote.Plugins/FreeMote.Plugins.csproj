@@ -22,6 +22,7 @@
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.2</LangVersion>
     <PlatformTarget>x86</PlatformTarget>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

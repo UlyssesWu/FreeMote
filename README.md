@@ -1,7 +1,7 @@
 # FreeMote
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/UlyssesWu/FreeMote?branch=master&svg=true)](https://ci.appveyor.com/project/UlyssesWu/freemote/build/artifacts)
 
-Managed Emote tool libs.
+Managed Emote/PSB tool libs.
 
 ## Components
 ### FreeMote
@@ -15,8 +15,8 @@ Compile and decompile PSB files. Convert PSB among different platforms. Recover 
 ### FreeMote.Plugins
 External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMote/wiki) for usages.
 
-* TLG: Encoding/decoding support via [**FreeMote.Tlg**](https://github.com/Project-AZUSA/TlgLib) (by Ulysses).
-* LZ4: Compress/decompress support via [**LZ4.Frame**](https://github.com/UlyssesWu/LZ4.Frame) (by Ulysses).
+* Images: TLG encoding/decoding support via [**FreeMote.Tlg**](https://github.com/Project-AZUSA/TlgLib) (by Ulysses).
+* Shells: Compression/decompression support.
 
 ### FreeMote.Purify (Unreleased)
 Infer and calculate the key used by Emote PSB file just from the PSB file (rather than get from engine).
@@ -44,7 +44,7 @@ To install `FreeMote.Tlg` nuget package, switch your default project to FreeMote
 
 `PM> Install-Package FreeMote.Tlg -Source https://www.myget.org/F/monarchsolutions/api/v3/index.json`
 
-Or, you can add the nuget feed in your VS. (Recommended) 
+Or, you can add that nuget feed in your VS. (Recommended) 
 
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
@@ -58,7 +58,7 @@ FreeMote is licensed under **LGPL**. You can use FreeMote tools freely, but if y
 ## Thanks
 
 * @9chu for reverse engineering help.
-* @number201724 for PSB format.
+* @number201724 for PSB format references. LICENSE: MIT
 * @nalsas (awatm) for Emote Editor help.
 * @WcLyic for some PSB samples and Emote Editor help.
 * [MonoGame](https://github.com/MonoGame/MonoGame) for `DxtUtil` code. LICENSE: Ms-PL

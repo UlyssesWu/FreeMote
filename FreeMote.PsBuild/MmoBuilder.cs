@@ -164,7 +164,7 @@ namespace FreeMote.PsBuild
 
             mmo.Objects["objectChildren"] = BuildObjects(psb);
             mmo.Objects["sourceChildren"] = BuildSources(psb);
-            mmo.Objects["metaformat"] = BuildMetaFormat(psb);
+            mmo.Objects["metaformat"] = BuildMetaFormat(psb, mmo);
 
             return mmo;
         }
@@ -691,7 +691,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private static IPsbValue BuildMetaFormat(PSB psb)
+        private static IPsbValue BuildMetaFormat(PSB psb, PSB mmo)
         {
             var jsonConverter = new PsbJsonConverter();
             PsbDictionary mmoRef = null;
@@ -773,7 +773,7 @@ namespace FreeMote.PsBuild
             metaFormatContent["stereovisionDefinition"] = metadata["stereovisionControl"];
             metaFormatContent["subtype"] = "E-mote Meta Format".ToPsbString();
             metaFormatContent["testAnimationList"] = new PsbCollection();
-            metaFormatContent["textureDefinitionList"] = BuildTextureDefinition(); //Have to build for change texture
+            metaFormatContent["textureDefinitionList"] = FillDefaultTextureDefinition(mmo, (PsbCollection)mmoRef["textureDefinitionList"]); //Have to build for change texture
             metaFormatContent["transitionControlDefinitionList"] = metadata["transitionControl"];
             metaFormatContent["variableAliasFrameBind"] = new PsbDictionary();
             BuildVariableList((PsbCollection)metadata["variableList"], out var variableAlias, out var variableFrameAlias);
@@ -793,9 +793,70 @@ namespace FreeMote.PsBuild
             return new PsbCollection();
         }
 
-        private static IPsbValue BuildTextureDefinition()
+        private static IPsbValue FillDefaultTextureDefinition(PSB mmo, PsbCollection mmoRef)
         {
-            return new PsbCollection();
+            var objectChildren = (PsbCollection)mmo.Objects["objectChildren"];
+            var sourceChildren = (PsbCollection)mmo.Objects["sourceChildren"];
+            var textureDef = new PsbCollection();
+            //We couldn't get complete metadata for this so just try to add default
+            foreach (var mmoItem in mmoRef)
+            {
+                var mmoDic = (PsbDictionary)mmoItem;
+                var sourcePath = mmoDic["sourceLabel"].ToString();
+                var source = sourceChildren.FindByMmoPath(sourcePath) as PsbDictionary;
+                if (
+                    objectChildren.FindByMmoPath(CombineMmoPath((PsbDictionary)mmoDic["blendMode"])) != null &&
+                    objectChildren.FindByMmoPath(CombineMmoPath((PsbDictionary)mmoDic["layout"])) != null &&
+                    source != null
+                    )
+                {
+                    var meshList = (PsbCollection)mmoDic["meshList"];
+                    PsbCollection newMeshList = new PsbCollection();
+                    foreach (var mesh in meshList)
+                    {
+                        var path = CombineMmoPath((PsbDictionary)mesh);
+                        if (objectChildren.FindByMmoPath(path) != null)
+                        {
+                            newMeshList.Add(mesh);
+                        }
+                    }
+                    mmoDic["meshList"] = newMeshList;
+
+                    PsbCollection newPsdIconList = new PsbCollection();
+                    foreach (var iconItem in (PsbCollection)source["iconList"])
+                    {
+                        newPsdIconList.Add(new PsbDictionary
+                        {
+                            {"comment", PsbString.Empty },
+                            {"iconLabel", iconItem.Children("label") },
+                            {"psdLabel", iconItem.Children("label") },
+                        });
+                    }
+                    mmoDic["psdIconList"] = newPsdIconList;
+
+                    if (mmoDic.ContainsKey("remove"))
+                    {
+                        var removePath = CombineMmoPath((PsbDictionary)mmoDic["remove"]);
+                        if (objectChildren.FindByMmoPath(removePath) == null)
+                        {
+                            mmoDic.Remove("remove");
+                        }
+                    }
+
+                    textureDef.Add(mmoDic);
+                }
+
+            }
+
+            string CombineMmoPath(PsbDictionary mmoPath)
+            {
+                var chara = mmoPath["chara"].ToString();
+                var layer = mmoPath["layer"].ToString();
+                var motion = mmoPath["motion"].ToString();
+                return $"{chara}/{motion}/{layer}";
+            }
+
+            return textureDef;
         }
 
         private static void BuildVariableList(PsbCollection variableList, out PsbCollection variableAlias, out PsbCollection variableFrameAlias)

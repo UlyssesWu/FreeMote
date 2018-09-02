@@ -925,7 +925,7 @@ namespace FreeMote.Psb
             set => base[index] = value;
         }
 
-        IPsbValue IPsbCollection.this[string s] => int.TryParse(s, out int i) ? base[i] : null;
+        IPsbValue IPsbCollection.this[string s] => int.TryParse(s.Replace("[", "").Replace("]", ""), out int i) ? base[i] : null;
 
         public PsbObjType Type { get; } = PsbObjType.Collection;
 
