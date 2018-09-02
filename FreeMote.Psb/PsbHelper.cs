@@ -48,7 +48,7 @@ namespace FreeMote.Psb
         public static int GetSize(this uint i)
         {
             //FIXED: Treat uint as int to prevent overconfidence
-            if (i <= int.MaxValue)
+            if (i <= Int32.MaxValue)
             {
                 return GetSize((int)i);
             }
@@ -164,7 +164,7 @@ namespace FreeMote.Psb
         {
             return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
         }
-        
+
         /// <summary>
         /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
         /// </summary>
@@ -194,7 +194,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static PsbPixelFormat ToPsbPixelFormat(this string typeStr, PsbSpec spec)
         {
-            if (string.IsNullOrEmpty(typeStr))
+            if (String.IsNullOrEmpty(typeStr))
             {
                 return PsbPixelFormat.None;
             }
@@ -279,7 +279,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static bool IsFinite(this float num)
         {
-            return !float.IsNaN(num) && !float.IsInfinity(num);
+            return !Single.IsNaN(num) && !Single.IsInfinity(num);
         }
 
         /// <summary>
@@ -289,7 +289,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static bool IsFinite(this double num)
         {
-            return !double.IsNaN(num) && !double.IsInfinity(num);
+            return !Double.IsNaN(num) && !Double.IsInfinity(num);
         }
 
         public static PsbString ToPsbString(this string s)
@@ -301,6 +301,186 @@ namespace FreeMote.Psb
         {
             return new PsbNumber(i);
         }
+        
+        /// <summary>
+        /// If this spec uses RL
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static PsbCompressType CompressType(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.krkr:
+                    return PsbCompressType.RL;
+                case PsbSpec.ems:
+                case PsbSpec.common:
+                case PsbSpec.win:
+                case PsbSpec.other:
+                default:
+                    return PsbCompressType.None;
+            }
+        }
+
+        #region Object Finding
+
+        public static IEnumerable<IPsbValue> FindAllByPath(this PsbDictionary psbObj, string path)
+        {
+            if (psbObj == null)
+                yield break;
+            if (path.StartsWith("/"))
+            {
+                path = new string(path.SkipWhile(c => c == '/').ToArray());
+            }
+            if (path.Contains("/"))
+            {
+                var pos = path.IndexOf('/');
+                var current = path.Substring(0, pos);
+                if (current == "*")
+                {
+                    if (pos == path.Length - 1) //end
+                    {
+                        if (psbObj is PsbDictionary dic)
+                        {
+                            foreach (var dicValue in dic.Values)
+                            {
+                                yield return dicValue;
+                            }
+                        }
+                    }
+                    path = new string(path.SkipWhile(c => c == '*').ToArray());
+                    foreach (var val in psbObj.Values)
+                    {
+                        if (val is PsbDictionary dic)
+                        {
+                            foreach (var dicValue in dic.FindAllByPath(path))
+                            {
+                                yield return dicValue;
+                            }
+                        }
+                    }
+                }
+                if (pos == path.Length - 1 && psbObj[current] != null)
+                {
+                    yield return psbObj[current];
+                }
+                var currentObj = psbObj[current];
+                if (currentObj is PsbDictionary collection)
+                {
+                    path = path.Substring(pos);
+                    foreach (var dicValue in collection.FindAllByPath(path))
+                    {
+                        yield return dicValue;
+                    }
+                }
+            }
+            if (path == "*")
+            {
+                foreach (var value in psbObj.Values)
+                {
+                    yield return value;
+                }
+            }
+            else if (psbObj[path] != null)
+            {
+                yield return psbObj[path];
+            }
+        }
+
+        public static IPsbValue FindByPath(this PsbDictionary psbObj, string path)
+        {
+            if (psbObj == null)
+                return null;
+            if (path.StartsWith("/"))
+            {
+                path = new string(path.SkipWhile(c => c == '/').ToArray());
+            }
+
+            if (path.Contains("/"))
+            {
+                var pos = path.IndexOf('/');
+                var current = path.Substring(0, pos);
+                if (pos == path.Length - 1)
+                {
+                    return psbObj[current];
+                }
+                var currentObj = psbObj[current];
+                if (currentObj is PsbDictionary dictionary)
+                {
+                    path = path.Substring(pos);
+                    return dictionary.FindByPath(path);
+                }
+
+                if (currentObj is PsbCollection collection)
+                {
+                    path = path.Substring(pos);
+                    return collection.FindByPath(path);
+                }
+            }
+            return psbObj[path];
+        }
+
+        public static IPsbValue FindByPath(this PsbCollection psbObj, string path)
+        {
+            if (psbObj == null)
+                return null;
+            if (path.StartsWith("/"))
+            {
+                path = new string(path.SkipWhile(c => c == '/').ToArray());
+            }
+
+            if (path.Contains("/"))
+            {
+                var pos = path.IndexOf('/');
+                var current = path.Substring(0, pos);
+                IPsbValue currentObj = null;
+                if (current == "*")
+                {
+                    currentObj = psbObj.FirstOrDefault();
+                }
+
+                if (current.StartsWith("[") && current.EndsWith("]") && Int32.TryParse(current.Substring(1, current.Length - 2), out var id))
+                {
+                    currentObj = psbObj[id];
+                }
+
+                if (pos == path.Length - 1)
+                {
+                    return currentObj;
+                }
+
+                if (currentObj is PsbDictionary dictionary)
+                {
+                    path = path.Substring(pos);
+                    return dictionary.FindByPath(path);
+                }
+
+                if (currentObj is PsbCollection collection)
+                {
+                    path = path.Substring(pos);
+                    return collection.FindByPath(path);
+                }
+            }
+            return null;
+        }
+
+        public static IPsbValue Children(this IPsbValue col, string name)
+        {
+            while (true)
+            {
+                switch (col)
+                {
+                    case PsbDictionary dictionary:
+                        return dictionary[name];
+                    case PsbCollection collection:
+                        col = collection.FirstOrDefault(c => c is PsbDictionary);
+                        continue;
+                }
+                throw new ArgumentException($"{col} doesn't have children.");
+            }
+        }
+
+        #endregion
     }
 
     public class ByteListComparer : IComparer<IList<byte>>

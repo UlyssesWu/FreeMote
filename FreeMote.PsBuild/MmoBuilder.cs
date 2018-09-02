@@ -146,24 +146,25 @@ namespace FreeMote.PsBuild
             mmo.Objects["marker"] = PsbNumber.Zero;
             mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
             mmo.Objects["metadata"] = BuildMetadata(psb);
-            mmo.Objects["metaformat"] = BuildMetaFormat(psb);
             mmo.Objects["modelScale"] = 32.ToPsbNumber();
             mmo.Objects["newScrapbookCellHeight"] = 8.ToPsbNumber();
             mmo.Objects["newScrapbookCellWidth"] = 8.ToPsbNumber();
             mmo.Objects["newTextureCellHeight"] = 8.ToPsbNumber();
             mmo.Objects["newTextureCellWidth"] = 8.ToPsbNumber();
-            mmo.Objects["objectChildren"] = BuildObjects(psb);
             mmo.Objects["optimizeMargin"] = 1.ToPsbNumber();
             mmo.Objects["outputDepth"] = PsbNumber.Zero;
             mmo.Objects["previewSize"] = FillDefaultPreviewSize();
             mmo.Objects["projectType"] = PsbNumber.Zero;
             mmo.Objects["saveFormat"] = PsbNumber.Zero;
-            mmo.Objects["sourceChildren"] = BuildSources(psb);
             mmo.Objects["stereovisionProfile"] = psb.Objects["stereovisionProfile"];
             mmo.Objects["targetOwn"] = FillDefaultTargetOwn();
             mmo.Objects["unifyTexture"] = 1.ToPsbNumber();
             //mmo.Objects["uniqId"] = 114514.ToPsbNumber();
             mmo.Objects["version"] = new PsbNumber(3.12f);
+
+            mmo.Objects["objectChildren"] = BuildObjects(psb);
+            mmo.Objects["sourceChildren"] = BuildSources(psb);
+            mmo.Objects["metaformat"] = BuildMetaFormat(psb);
 
             return mmo;
         }
@@ -686,7 +687,7 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
-        /// Can be null?
+        /// Essential for normal Editor
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
@@ -694,7 +695,7 @@ namespace FreeMote.PsBuild
         {
             var jsonConverter = new PsbJsonConverter();
             PsbDictionary mmoRef = null;
-            if (DebugMode)
+            if (DebugMode && File.Exists("mmo.json"))
             {
                 mmoRef = JsonConvert.DeserializeObject<PsbDictionary>(File.ReadAllText("mmo.json"),
                    jsonConverter);
@@ -722,15 +723,12 @@ namespace FreeMote.PsBuild
             metaFormatContent["baseMotion"] = metadata["base"].Children("motion");
             metaFormatContent["bustControlDefinitionList"] = metadata["bustControl"];
             metaFormatContent["bustControlParameterDefinitionList"] = mmoRef["bustControlParameterDefinitionList"];
-            //metaFormatContent["bustControlParameterDefinitionList"] =
-            //    JsonConvert.DeserializeObject<PsbCollection>(File.ReadAllText(@"bust.txt"),
-            //        jsonConverter);
             metaFormatContent["captureList"] = new PsbCollection
             {
                 new PsbDictionary
                 {
                     {"chara", metaFormatContent["baseChara"] },
-                    { "height", 600.ToPsbNumber()},
+                    {"height", 600.ToPsbNumber()},
                     {"label", "FreeMote".ToPsbString() },
                     {"motion", metaFormatContent["baseMotion"] },
                     {"scale", new PsbNumber(0.5f) },
@@ -741,10 +739,10 @@ namespace FreeMote.PsBuild
             };
             metaFormatContent["charaProfileDefinitionList"] = BuildCharaProfileDefinition(metadata);
             metaFormatContent["clampControlDefinitionList"] = metadata["clampControl"];
-            metaFormatContent["customPartsBaseDefinitionList"] = mmoRef["customPartsBaseDefinitionList"]; //BuildCustomPartsBaseDefinition(psb.Objects);
-            metaFormatContent["customPartsCount"] = ((PsbCollection)metadata["customPartsOrder"]).Count.ToPsbNumber(); //PsbNumber.Zero;
+            metaFormatContent["customPartsBaseDefinitionList"] = new PsbCollection(); //mmoRef["customPartsBaseDefinitionList"]; //BuildCustomPartsBaseDefinition(psb.Objects);
+            metaFormatContent["customPartsCount"] = 99.ToPsbNumber();//((PsbCollection)metadata["customPartsOrder"]).Count.ToPsbNumber(); //PsbNumber.Zero;
             metaFormatContent["customPartsDefinitionList"] = new PsbCollection(); //new PsbCollection();
-            metaFormatContent["customPartsMountDefinitionList"] = mmoRef["customPartsMountDefinitionList"]; //new PsbCollection();
+            metaFormatContent["customPartsMountDefinitionList"] = new PsbCollection(); //mmoRef["customPartsMountDefinitionList"]; //new PsbCollection();
             metaFormatContent["eyeControlDefinitionList"] = metadata["eyeControl"];
             metaFormatContent["eyeControlParameterDefinitionList"] = mmoRef["eyeControlParameterDefinitionList"];
             metaFormatContent["eyebrowControlDefinitionList"] = metadata["eyebrowControl"];
@@ -769,13 +767,13 @@ namespace FreeMote.PsBuild
             metaFormatContent["partsList"] = new PsbCollection(); //can be null
             metaFormatContent["physicsMotionList"] = new PsbCollection();
             metaFormatContent["physicsVariableList"] = new PsbCollection();
-            metaFormatContent["scrapbookDefinitionList"] = new PsbCollection(); //Have to build for change scrapbook
+            metaFormatContent["scrapbookDefinitionList"] = BuildScrapbookDefinition(); //Have to build for change scrapbook
             metaFormatContent["selectorControlDefinitionList"] = metadata["selectorControl"];
             metaFormatContent["sourceDefinitionOrderList"] = new PsbCollection(); //can be null?
             metaFormatContent["stereovisionDefinition"] = metadata["stereovisionControl"];
             metaFormatContent["subtype"] = "E-mote Meta Format".ToPsbString();
             metaFormatContent["testAnimationList"] = new PsbCollection();
-            metaFormatContent["textureDefinitionList"] = new PsbCollection(); //Have to build for change texture
+            metaFormatContent["textureDefinitionList"] = BuildTextureDefinition(); //Have to build for change texture
             metaFormatContent["transitionControlDefinitionList"] = metadata["transitionControl"];
             metaFormatContent["variableAliasFrameBind"] = new PsbDictionary();
             BuildVariableList((PsbCollection)metadata["variableList"], out var variableAlias, out var variableFrameAlias);
@@ -788,6 +786,16 @@ namespace FreeMote.PsBuild
 
 
             return metaFormat;
+        }
+
+        private static IPsbValue BuildScrapbookDefinition()
+        {
+            return new PsbCollection();
+        }
+
+        private static IPsbValue BuildTextureDefinition()
+        {
+            return new PsbCollection();
         }
 
         private static void BuildVariableList(PsbCollection variableList, out PsbCollection variableAlias, out PsbCollection variableFrameAlias)

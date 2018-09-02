@@ -99,8 +99,8 @@ namespace FreeMote.Tests
         public void TestBuildMmo()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            //var path = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
-            var path = Path.Combine(resPath, "template39-krkr.json");
+            var path = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
+            //var path = Path.Combine(resPath, "template39-krkr.json");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             MmoBuilder.DebugMode = true;
             var psbMmo = MmoBuilder.Build(psb);
