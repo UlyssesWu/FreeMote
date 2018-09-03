@@ -867,13 +867,13 @@ namespace FreeMote.PsBuild
             metaFormatContent["partsList"] = new PsbCollection(); //Have to build for parameter feature
             metaFormatContent["physicsMotionList"] = new PsbCollection();
             metaFormatContent["physicsVariableList"] = new PsbCollection();
-            metaFormatContent["scrapbookDefinitionList"] = BuildScrapbookDefinition(); //Have to build for change scrapbook
+            metaFormatContent["scrapbookDefinitionList"] = BuildScrapbookDefinition(mmo); //Have to build for change scrapbook
             metaFormatContent["selectorControlDefinitionList"] = metadata["selectorControl"];
             metaFormatContent["sourceDefinitionOrderList"] = new PsbCollection(); //can be null?
             metaFormatContent["stereovisionDefinition"] = metadata["stereovisionControl"];
             metaFormatContent["subtype"] = "E-mote Meta Format".ToPsbString();
             metaFormatContent["testAnimationList"] = new PsbCollection();
-            metaFormatContent["textureDefinitionList"] = FillDefaultTextureDefinition(mmo); //Have to build for change texture
+            metaFormatContent["textureDefinitionList"] = BuildTextureDefinition(mmo); //Have to build for change texture
             metaFormatContent["transitionControlDefinitionList"] = metadata["transitionControl"];
             metaFormatContent["variableAliasFrameBind"] = new PsbDictionary();
             BuildVariableList((PsbCollection)metadata["variableList"], out var variableAlias, out var variableFrameAlias);
@@ -886,12 +886,83 @@ namespace FreeMote.PsBuild
             return metaFormat;
         }
 
-        private IPsbValue BuildScrapbookDefinition()
+        private IPsbValue BuildScrapbookDefinition(PSB mmo)
         {
-            return new PsbCollection();
+            //var objectChildren = (PsbCollection)mmo.Objects["objectChildren"];
+            var sourceChildren = (PsbCollection)mmo.Objects["sourceChildren"];
+            var scrapDef = new PsbCollection();
+            //We couldn't get complete metadata for this
+            var scrapSources =
+                sourceChildren.Where(s => s is PsbDictionary dic && dic["className"].ToString() == "ScrapbookItem").Cast<PsbDictionary>();
+            foreach (var mmoItem in scrapSources)
+            {
+                foreach (var iconItem in (PsbCollection)mmoItem["iconList"])
+                {
+                    var iconDic = (PsbDictionary)iconItem;
+                    PsbDictionary texDefItem = new PsbDictionary
+                    {
+                        {"sourceLabel", mmoItem["label"]},
+                        {"comment", mmoItem["comment"]},
+                        {"psdMargin", 5.ToPsbNumber()},
+                        {"psdRange", 1.ToPsbNumber()},
+                        {"iconLabel", iconDic["label"]},
+                        //{"layoutFlags", 3.ToPsbNumber()},
+                    };
+                    var sLabel = iconDic["label"].ToString();
+                    if (MmoPsdMetadatas.ContainsKey(sLabel))
+                    {
+                        var md = MmoPsdMetadatas[sLabel];
+                        texDefItem.Add("category", new PsbCollection(1) { md.Category.ToPsbString() });
+                        texDefItem.Add("psdGroup", md.PsdGroup.ToPsbString());
+                        texDefItem.Add("psdFrameLabel", md.PsdFrameLabel.ToPsbString());
+                        texDefItem.Add("psdComment", md.PsdComment.ToPsbString());
+                        texDefItem.Add("label", md.Label.ToPsbString());
+                    }
+                    else
+                    {
+                        var category = FillDefaultCategory(mmoItem["label"].ToString());
+                        texDefItem.Add("category", new PsbCollection(1) { category.ToPsbString() });
+                        texDefItem.Add("psdGroup", mmoItem["label"]);
+                        texDefItem.Add("psdFrameLabel", PsbString.Empty);
+                        texDefItem.Add("psdComment", PsbString.Empty);
+                        texDefItem.Add("label", iconDic["label"]);
+                    }
+
+                    scrapDef.Add(texDefItem);
+                }
+            }
+
+            return scrapDef;
         }
 
-        private IPsbValue FillDefaultTextureDefinition(PSB mmo)
+        /// <summary>
+        /// Infer default category from label
+        /// </summary>
+        /// <param name="label"></param>
+        /// <returns></returns>
+        private string FillDefaultCategory(string label)
+        {
+            //WARN: Category can not be named as `Expression`
+            if (label.StartsWith("all_"))
+            {
+                return DebugMode ? "All" : "All";
+            }
+            if (label.StartsWith("face_"))
+            {
+                return DebugMode ? "Emotion" : "Emotion";
+            }
+            if (label.StartsWith("head_"))
+            {
+                return DebugMode ? "Head" : "Head";
+            }
+            if (label.StartsWith("body_"))
+            {
+                return DebugMode ? "Body" : "Body";
+            }
+            return DebugMode ? "Other" : "Other";
+        }
+
+        private IPsbValue BuildTextureDefinition(PSB mmo)
         {
             //var objectChildren = (PsbCollection)mmo.Objects["objectChildren"];
             var sourceChildren = (PsbCollection)mmo.Objects["sourceChildren"];
@@ -921,11 +992,7 @@ namespace FreeMote.PsBuild
                 }
                 else
                 {
-                    var category = "Other";
-                    if (sLabel.StartsWith("face_"))
-                    {
-                        category = "Emotion"; //WARN: Category can not be named as `Expression`
-                    }
+                    var category = FillDefaultCategory(sLabel);
                     texDefItem.Add("category", new PsbCollection(1) { category.ToPsbString() });
                     texDefItem.Add("psdGroup", mmoItem["label"]);
                     texDefItem.Add("psdFrameLabel", PsbString.Empty);
@@ -947,15 +1014,15 @@ namespace FreeMote.PsBuild
                 textureDef.Add(texDefItem);
             }
 
-            string CombineMmoPath(PsbDictionary mmoPath)
-            {
-                var chara = mmoPath["chara"].ToString();
-                var layer = mmoPath["layer"].ToString();
-                var motion = mmoPath["motion"].ToString();
-                return $"{chara}/{motion}/{layer}";
-            }
-
             return textureDef;
+        }
+
+        private static string CombineMmoPath(PsbDictionary mmoPath)
+        {
+            var chara = mmoPath["chara"].ToString();
+            var layer = mmoPath["layer"].ToString();
+            var motion = mmoPath["motion"].ToString();
+            return $"{chara}/{motion}/{layer}";
         }
 
         private void BuildVariableList(PsbCollection variableList, out PsbCollection variableAlias, out PsbCollection variableFrameAlias)
