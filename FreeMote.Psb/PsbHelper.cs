@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace FreeMote.Psb
 {
@@ -387,6 +388,13 @@ namespace FreeMote.Psb
             }
         }
 
+        /// <summary>
+        /// Find object by path (use index [n] for collection)
+        /// <example>e.g. "/object/all_parts/motion/全体構造/layer/[0]"</example>
+        /// </summary>
+        /// <param name="psbObj"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static IPsbValue FindByPath(this PsbDictionary psbObj, string path)
         {
             if (psbObj == null)
@@ -420,6 +428,7 @@ namespace FreeMote.Psb
             return psbObj[path];
         }
 
+        /// <inheritdoc cref="FindByPath(FreeMote.Psb.PsbDictionary,string)"/>
         public static IPsbValue FindByPath(this PsbCollection psbObj, string path)
         {
             if (psbObj == null)
@@ -464,6 +473,13 @@ namespace FreeMote.Psb
             return null;
         }
 
+        /// <summary>
+        /// Find object by MMO style path (based on label)
+        /// <example>e.g. "all_parts/全体構造/■全体レイアウト"</example>
+        /// </summary> 
+        /// <param name="psbObj"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static IPsbValue FindByMmoPath(this IPsbCollection psbObj, string path)
         {
             if (psbObj == null)
@@ -513,6 +529,42 @@ namespace FreeMote.Psb
             }
 
             return psbObj[path];
+        }
+
+        /// <summary>
+        /// Get MMO style path (based on label)
+        /// </summary>
+        /// <param name="child"></param>
+        /// <returns></returns>
+        public static string GetMmoPath(this IPsbChild child)
+        {
+            if (child?.Parent == null)
+            {
+                if (child is PsbDictionary dic)
+                {
+                    return dic["label"].ToString();
+                }
+                return "";
+            }
+            List<string> paths = new List<string>();
+
+            while (child != null)
+            {
+                if (child is PsbDictionary current)
+                {
+                    if (current.ContainsKey("label"))
+                    {
+                        paths.Add(current["label"].ToString());
+                    }
+                    else
+                    {
+                        paths.Add(current.GetName());
+                    }
+                }
+                child = child.Parent;
+            }
+            paths.Reverse();
+            return string.Join("/", paths);
         }
 
         public static IPsbValue Children(this IPsbValue col, string name)

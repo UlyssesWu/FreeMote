@@ -139,11 +139,11 @@ namespace FreeMote.Tests
 
             var children = (PsbCollection)mmo.Objects["objectChildren"];
             var source = (PsbCollection)mmo.Objects["sourceChildren"];
-            var obj = children.FindByMmoPath(
+            var obj = (PsbDictionary)children.FindByMmoPath(
                 "all_parts/全体構造/■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□頭部調整_le/act_sp");
-            var realPath = ((PsbDictionary)obj).Path;
-
-            obj = source.FindByMmoPath("face_eye_mabuta_l");
+            var realPath = obj.Path;
+            var mmoPath = obj.GetMmoPath(); //"FreeMote/all_parts/全体構造/■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□頭部調整_le/act_sp"
+            //obj = source.FindByMmoPath("face_eye_mabuta_l");
         }
 
         [TestMethod]

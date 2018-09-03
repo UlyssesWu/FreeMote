@@ -713,7 +713,7 @@ namespace FreeMote.Psb
     public class PsbString : IPsbValue, IPsbIndexed, IPsbWrite
     {
         /// <summary>
-        /// new empty PsbString
+        /// new empty PsbString ""
         /// </summary>
         public static PsbString Empty => new PsbString();
 

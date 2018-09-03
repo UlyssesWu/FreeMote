@@ -12,107 +12,6 @@ using Newtonsoft.Json;
 
 namespace FreeMote.PsBuild
 {
-    public enum MmoMarkerColor
-    {
-        /// <summary>
-        /// なし
-        /// </summary>
-        None = 0,
-        /// <summary>
-        /// 赤
-        /// </summary>
-        Red = 1,
-        /// <summary>
-        /// 绿
-        /// </summary>
-        Green = 2,
-        /// <summary>
-        /// 青
-        /// </summary>
-        Blue = 3,
-        /// <summary>
-        /// 橙
-        /// </summary>
-        Orange = 4,
-        /// <summary>
-        /// 紫
-        /// </summary>
-        Purple = 5,
-        /// <summary>
-        /// 桃
-        /// </summary>
-        Pink = 6,
-        /// <summary>
-        /// 灰
-        /// </summary>
-        Gray = 7,
-    }
-    public enum MmoItemClass
-    {
-        ObjLayerItem = 0, //CharaItem, MotionItem
-        //"objClipping": 0,
-        //"objMaskThresholdOpacity": 64,
-        //"objTriPriority": 2,
-        //TextLayer is always hold by a ObjLayer with "#text00000" label and "src/#font00000/#text00000" frameList/content/src
-        ShapeLayerItem = 1,
-        //"shape": "point" (psb: 0) | "circle" (psb: 1) | "rect" (psb: 2) | "quad" (psb: 3)
-        LayoutLayerItem = 2,
-        MotionLayerItem = 3,
-        /*
-          "motionClipping": 0,
-          "motionIndependentLayerInherit": 0,
-          "motionMaskThresholdOpacity": 64,
-         */
-        ParticleLayerItem = 4,
-        //"particle": "point" (psb: 0) | "ellipse" (psb: 1) | "quad" (psb: 2) 
-        /*                                 
-          "particleAccelRatio": 1.0,
-          "particleApplyZoomToVelocity": 0,
-          "particleDeleteOutsideScreen": 0,
-          "particleFlyDirection": 0,
-          "particleInheritAngle": 0,
-          "particleInheritOpacity": 1,
-          "particleInheritVelocity": 0,
-          "particleMaxNum": 20,
-          "particleMotionList": [],
-          "particleTriVolume": 0,
-         */
-
-        CameraLayerItem = 5,
-        ClipLayerItem = 7, //nothing special
-        TextLayerItem = 8,
-        /*
-        "fontParams": {
-        "antiAlias": 1,
-        "bold": 0,
-        "brushColor1": -16777216,
-        "brushColor2": -16777216,
-        "depth": 1,
-        "name": "ＭＳ ゴシック",
-        "penColor": -16777216,
-        "penSize": 0,
-        "rev": 1,
-        "size": 16
-        },
-        "textParams": {
-        "alignment": 0,
-        "colSpace": 0,
-        "defaultVertexColor": -1,
-        "originAlignment": 1,
-        "rasterlize": 2,
-        "rowSpace": 0,
-        "text": "Built by FreeMote"
-        },
-         */
-        MeshLayerItem = 11, //nothing special, take care of meshXXX
-        StencilLayerItem = 12,
-        /*
-          "stencilCompositeMaskLayerList": [],
-          "stencilMaskThresholdOpacity": 64,
-          "stencilType": 1,
-         */
-    }
-
     /// <summary>
     /// Build MMO from Emote PSB
     /// <para>Current Ver: 3.12</para>
@@ -443,33 +342,37 @@ namespace FreeMote.PsBuild
         {
             var newPartsList = new PsbCollection();
             PsbCollection objectChildren = new PsbCollection();
+            objectChildren.Parent = Mmo.Objects;
             foreach (var motionItemKv in (PsbDictionary)psb.Objects["object"])
             {
                 PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
                 PsbDictionary objectChildrenItem = new PsbDictionary();
+                objectChildrenItem.Parent = objectChildren;
                 objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
                 objectChildrenItem["className"] = "CharaItem".ToPsbString();
                 objectChildrenItem["comment"] = PsbString.Empty;
                 objectChildrenItem["defaultCoordinate"] = PsbNumber.Zero;
                 objectChildrenItem["marker"] = PsbNumber.Zero;
                 objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"];
-                objectChildrenItem["children"] = BuildChildrenFromMotion((PsbDictionary)motionItem["motion"], motionItemKv.Key);
+                var motion = (PsbDictionary)motionItem["motion"];
+                objectChildrenItem["children"] = BuildChildrenFromMotion(motion, objectChildrenItem);
                 objectChildrenItem["templateReferenceChara"] = PsbString.Empty;
                 objectChildrenItem["templateSourceMap"] = new PsbDictionary(0);
                 //objectChildrenItem["uniqId"] = 4396;
 
                 objectChildren.Add(objectChildrenItem);
             }
-
             partsList = newPartsList;
 
-            PsbCollection BuildChildrenFromMotion(PsbDictionary dic, string chara)
+            PsbCollection BuildChildrenFromMotion(PsbDictionary dic, IPsbCollection parent)
             {
                 PsbCollection objectChildren_children = new PsbCollection();
+                objectChildren_children.Parent = parent;
                 foreach (var motionItemKv in dic)
                 {
                     PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
                     PsbDictionary objectChildrenItem = new PsbDictionary();
+                    objectChildrenItem.Parent = objectChildren_children;
                     objectChildrenItem["className"] = "MotionItem".ToPsbString();
                     objectChildrenItem["comment"] = PsbString.Empty;
                     objectChildrenItem["exportBounds"] = PsbNumber.Zero;
@@ -494,8 +397,9 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["tagFrameList"] = motionItem["tag"];
                     //objectChildrenItem["uniqId"] = 1551;
                     objectChildrenItem["variableChildren"] = motionItem["variable"];
-
-                    BuildLayerChildren((PsbCollection)motionItem["layer"], parameter, new List<string>{chara, motionItemKv.Key});
+                    var layer = (PsbCollection)motionItem["layer"];
+                    layer.Parent = objectChildrenItem;
+                    BuildLayerChildren(layer, parameter);
                     objectChildrenItem["layerChildren"] = motionItem["layer"];
 
                     objectChildren_children.Add(objectChildrenItem);
@@ -504,7 +408,7 @@ namespace FreeMote.PsBuild
                 return objectChildren_children;
             }
 
-            void BuildLayerChildren(IPsbCollection child, PsbCollection parameter, List<string> pathList)
+            void BuildLayerChildren(IPsbCollection child, PsbCollection parameter)
             {
                 if (child is PsbCollection col)
                 {
@@ -512,7 +416,7 @@ namespace FreeMote.PsBuild
                     {
                         if (c is IPsbCollection cchild)
                         {
-                            BuildLayerChildren(cchild, parameter, pathList);
+                            BuildLayerChildren(cchild, parameter);
                         }
                     }
                 }
@@ -529,16 +433,18 @@ namespace FreeMote.PsBuild
                     dic["className"] = classType.ToString().ToPsbString();
                     dic["comment"] = PsbString.Empty;
 
+                    //Build frameList
+                    bool hasSpecialFrame = false;
                     if (dic["frameList"] is PsbCollection frameList)
                     {
-                        BuildFrameList(frameList, classType);
+                        BuildFrameList(frameList, classType, out hasSpecialFrame);
                     }
 
                     //parameterize: find from psb table and expand
                     bool hasParam = false;
-                    if (dic["parameterize"] is PsbNumber parameterize && parameterize.IntValue >= 0)
+                    if (dic["parameterize"] is PsbNumber parameterizeId && parameterizeId.IntValue >= 0)
                     {
-                        dic["parameterize"] = parameter[parameterize.IntValue];
+                        dic["parameterize"] = parameter[parameterizeId.IntValue];
                         hasParam = true;
                     }
                     else
@@ -687,25 +593,128 @@ namespace FreeMote.PsBuild
 
                     //build PartsList
                     //[MenuPath, Desc, CharaItem, Motion, Layer, ""]
-                    if (classType == MmoItemClass.LayoutLayerItem)
+                    if (classType == MmoItemClass.ObjLayerItem || classType == MmoItemClass.MotionLayerItem || classType == MmoItemClass.LayoutLayerItem || classType == MmoItemClass.MeshLayerItem)
                     {
-                        //TODO:
-                        //newPartsList.Add(new PsbCollection(6)
-                        //{
-                            
-                        //});
+                        bool shouldAdd = true;
+                        var path = dic.GetMmoPath();
+                        var paths = path.Split('/');
+                        var menuPath1 = FillDefaultCategory(paths[1]);
+                        var menuPath2 = InferDefaultPart(path);
+                        var menuPath = string.IsNullOrEmpty(menuPath2) ? menuPath1 : $"{menuPath1}/{menuPath2}";
+                        //Infer 
+                        string param;
+                        if (hasParam)
+                        {
+                            var parameterize = (PsbDictionary)dic["parameterize"];
+                            param = parameterize["id"].ToString();
+                        }
+                        else if (classType == MmoItemClass.LayoutLayerItem)
+                        {
+                            param = "Layout";
+                            if (!hasSpecialFrame)
+                            {
+                                shouldAdd = false;
+                            }
+                        }
+                        else if (classType == MmoItemClass.MotionLayerItem || classType == MmoItemClass.ObjLayerItem)
+                        {
+                            param = "Display";
+                            if (!hasSpecialFrame)
+                            {
+                                shouldAdd = false;
+                            }
+                        }
+                        else
+                        {
+                            param = "Mesh";
+                        }
+
+                        if (shouldAdd)
+                        {
+                            newPartsList.Add(new PsbCollection(6)
+                            {
+                                menuPath.ToPsbString(),
+                                param.ToPsbString(),
+                                paths[1].ToPsbString(),
+                                paths[2].ToPsbString(),
+                                string.Join("/",paths.Skip(3)).ToPsbString(),
+                                PsbString.Empty
+                                //$"{FillDefaultCategory(pathList[0])}".ToPsbString()
+                            });
+                        }
                     }
 
                     //build children
                     if (dic["children"] is PsbCollection children)
                     {
-                        BuildLayerChildren(children, parameter, pathList);
+                        BuildLayerChildren(children, parameter);
                     }
                 }
 
             }
 
             return objectChildren;
+        }
+
+        private static string InferDefaultPart(string path)
+        {
+            if (path.Contains("目L") || path.Contains("瞳L"))
+            {
+                return "目L";
+            }
+            if (path.Contains("目R") || path.Contains("瞳R"))
+            {
+                return "目R";
+            }
+            if (path.Contains("眉L"))
+            {
+                return "眉L";
+            }
+            if (path.Contains("眉R"))
+            {
+                return "眉R";
+            }
+            if (path.Contains("口"))
+            {
+                return "口";
+            }
+            if (path.Contains("鼻"))
+            {
+                return "鼻";
+            }
+            if (path.Contains("前髪"))
+            {
+                return "前髪";
+            }
+            if (path.Contains("後髪"))
+            {
+                return "後髪";
+            }
+            if (path.Contains("胸"))
+            {
+                return "胸";
+            }
+            if (path.Contains("胴体回転中心") && path.Contains("胴体調整"))
+            {
+                return "胴体全体";
+            }
+            if (path.Contains("胴体"))
+            {
+                return "胴体";
+            }
+            if (path.Contains("頭部") && path.Contains("輪郭"))
+            {
+                return "輪郭";
+            }
+            if (path.Contains("胴体回転中心") && path.Contains("頭部調整"))
+            {
+                return "頭部全体";
+            }
+            if (path.EndsWith("背景") || path.EndsWith("背景_le"))
+            {
+                return "背景";
+            }
+            return "";
         }
 
         private static IPsbValue BuildLastTime(IPsbValue val)
@@ -748,8 +757,9 @@ namespace FreeMote.PsBuild
             return fl;
         }
 
-        private void BuildFrameList(PsbCollection frameList, MmoItemClass classType = MmoItemClass.ObjLayerItem)
+        private void BuildFrameList(PsbCollection frameList, MmoItemClass classType, out bool hasSpecialSetting)
         {
+            hasSpecialSetting = false;
             foreach (var fl in frameList)
             {
                 if (fl is PsbDictionary dic)
@@ -762,6 +772,10 @@ namespace FreeMote.PsBuild
                     {
                         if (content.ContainsKey("mask")) //Expand params from mask
                         {
+                            if (content["mask"] is PsbNumber num && num.IntValue > 1)
+                            {
+                                hasSpecialSetting = true; //TODO: motion/timeOffset is special or not?
+                            }
                             //Low to High:
                             //0: ox,oy
                             //1: coord
@@ -773,10 +787,17 @@ namespace FreeMote.PsBuild
                             //19: motion/timeOffset?
                             //25: mesh
 
-                            if (content["src"] is PsbString s && s.Value.StartsWith("shape/"))
+                            if (content["src"] is PsbString s)
                             {
-                                content.Remove("mask"); //necessary to prevent Member "point" does not exist error
+                                if (s.Value.StartsWith("src/") || s.Value.StartsWith("shape/"))
+                                {
+                                    hasSpecialSetting = true;
+                                }
                             }
+                            //if (content["src"] is PsbString s && s.Value.StartsWith("shape/"))
+                            //{
+                            //    content.Remove("mask"); //necessary to prevent Member "point" does not exist error
+                            //}
                         }
 
                         bool hasMotion = false;
