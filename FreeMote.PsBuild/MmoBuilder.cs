@@ -262,9 +262,10 @@ namespace FreeMote.PsBuild
             //mmo.Objects["uniqId"] = 114514.ToPsbNumber();
             Mmo.Objects["version"] = new PsbNumber(3.12f);
 
-            Mmo.Objects["objectChildren"] = BuildObjects(psb);
+            Mmo.Objects["objectChildren"] = BuildObjects(psb, out var partsList);
             Mmo.Objects["sourceChildren"] = BuildSources(psb);
-            Mmo.Objects["metaformat"] = BuildMetaFormat(psb, Mmo);
+            //put to last since it's using obj & src children
+            Mmo.Objects["metaformat"] = BuildMetaFormat(psb, Mmo, partsList);
 
             return Mmo;
         }
@@ -438,8 +439,9 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private IPsbValue BuildObjects(PSB psb)
+        private IPsbValue BuildObjects(PSB psb, out PsbCollection partsList)
         {
+            var newPartsList = new PsbCollection();
             PsbCollection objectChildren = new PsbCollection();
             foreach (var motionItemKv in (PsbDictionary)psb.Objects["object"])
             {
@@ -451,7 +453,7 @@ namespace FreeMote.PsBuild
                 objectChildrenItem["defaultCoordinate"] = PsbNumber.Zero;
                 objectChildrenItem["marker"] = PsbNumber.Zero;
                 objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"];
-                objectChildrenItem["children"] = BuildChildrenFromMotion((PsbDictionary)motionItem["motion"]);
+                objectChildrenItem["children"] = BuildChildrenFromMotion((PsbDictionary)motionItem["motion"], motionItemKv.Key);
                 objectChildrenItem["templateReferenceChara"] = PsbString.Empty;
                 objectChildrenItem["templateSourceMap"] = new PsbDictionary(0);
                 //objectChildrenItem["uniqId"] = 4396;
@@ -459,7 +461,9 @@ namespace FreeMote.PsBuild
                 objectChildren.Add(objectChildrenItem);
             }
 
-            PsbCollection BuildChildrenFromMotion(PsbDictionary dic)
+            partsList = newPartsList;
+
+            PsbCollection BuildChildrenFromMotion(PsbDictionary dic, string chara)
             {
                 PsbCollection objectChildren_children = new PsbCollection();
                 foreach (var motionItemKv in dic)
@@ -491,7 +495,7 @@ namespace FreeMote.PsBuild
                     //objectChildrenItem["uniqId"] = 1551;
                     objectChildrenItem["variableChildren"] = motionItem["variable"];
 
-                    BuildLayerChildren((PsbCollection)motionItem["layer"], parameter);
+                    BuildLayerChildren((PsbCollection)motionItem["layer"], parameter, new List<string>{chara, motionItemKv.Key});
                     objectChildrenItem["layerChildren"] = motionItem["layer"];
 
                     objectChildren_children.Add(objectChildrenItem);
@@ -500,7 +504,7 @@ namespace FreeMote.PsBuild
                 return objectChildren_children;
             }
 
-            void BuildLayerChildren(IPsbCollection child, PsbCollection parameter)
+            void BuildLayerChildren(IPsbCollection child, PsbCollection parameter, List<string> pathList)
             {
                 if (child is PsbCollection col)
                 {
@@ -508,7 +512,7 @@ namespace FreeMote.PsBuild
                     {
                         if (c is IPsbCollection cchild)
                         {
-                            BuildLayerChildren(cchild, parameter);
+                            BuildLayerChildren(cchild, parameter, pathList);
                         }
                     }
                 }
@@ -530,10 +534,12 @@ namespace FreeMote.PsBuild
                         BuildFrameList(frameList, classType);
                     }
 
-                    //parameterize: find from psb table amd expand
+                    //parameterize: find from psb table and expand
+                    bool hasParam = false;
                     if (dic["parameterize"] is PsbNumber parameterize && parameterize.IntValue >= 0)
                     {
                         dic["parameterize"] = parameter[parameterize.IntValue];
+                        hasParam = true;
                     }
                     else
                     {
@@ -548,11 +554,6 @@ namespace FreeMote.PsBuild
                         {
                             dic["stencilType"] = 1.ToPsbNumber();
                         }
-                    }
-
-                    if (dic["children"] is PsbCollection children)
-                    {
-                        BuildLayerChildren(children, parameter);
                     }
 
                     if (dic["metadata"] is PsbNull)
@@ -683,6 +684,23 @@ namespace FreeMote.PsBuild
 
                     //other
                     FillDefaultsIntoChildren(dic, classType);
+
+                    //build PartsList
+                    //[MenuPath, Desc, CharaItem, Motion, Layer, ""]
+                    if (classType == MmoItemClass.LayoutLayerItem)
+                    {
+                        //TODO:
+                        //newPartsList.Add(new PsbCollection(6)
+                        //{
+                            
+                        //});
+                    }
+
+                    //build children
+                    if (dic["children"] is PsbCollection children)
+                    {
+                        BuildLayerChildren(children, parameter, pathList);
+                    }
                 }
 
             }
@@ -791,7 +809,7 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        private IPsbValue BuildMetaFormat(PSB psb, PSB mmo)
+        private PsbDictionary BuildMetaFormat(PSB psb, PSB mmo, IPsbValue partList)
         {
             var jsonConverter = new PsbJsonConverter();
             PsbDictionary mmoRef = null;
@@ -864,7 +882,6 @@ namespace FreeMote.PsBuild
             metaFormatContent["partialExportDefinitionList"] = new PsbCollection();
             metaFormatContent["partsControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["partsControl"]);
             metaFormatContent["partsControlParameterDefinitionList"] = mmoRef["partsControlParameterDefinitionList"];
-            metaFormatContent["partsList"] = new PsbCollection(); //Have to build for parameter feature
             metaFormatContent["physicsMotionList"] = new PsbCollection();
             metaFormatContent["physicsVariableList"] = new PsbCollection();
             metaFormatContent["scrapbookDefinitionList"] = BuildScrapbookDefinition(mmo); //Have to build for change scrapbook
@@ -882,6 +899,10 @@ namespace FreeMote.PsBuild
             metaFormatContent["variableFrameAliasUniq"] = new PsbDictionary();
             metaFormatContent["version"] = new PsbNumber(1.08f);
             metaFormatContent["windDefinitionList"] = mmoRef["windDefinitionList"];
+            //put at last since it might use Variable list
+            //Exposed layers: LayoutLayer, MeshLayer, ObjectLayer (w or w/o parameters)
+            //[MenuPath, Desc, CharaItem, Motion, Layer, ""]
+            metaFormatContent["partsList"] = partList; //new PsbCollection(); //Have to build for parameter feature
 
             return metaFormat;
         }
