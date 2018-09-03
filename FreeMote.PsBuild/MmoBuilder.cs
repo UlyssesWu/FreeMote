@@ -124,11 +124,15 @@ namespace FreeMote.PsBuild
 
         public Dictionary<string, MmoPsdMetadata> MmoPsdMetadatas { get; set; }
 
-        public MmoBuilder()
+        public MmoBuilder() : this(false)
+        { }
+
+        internal MmoBuilder(bool debug = false)
         {
             #region Default Metadata
 
-            MmoPsdMetadatas = DebugMode
+            DebugMode = debug;
+            MmoPsdMetadatas = debug
             ? new Dictionary<string, MmoPsdMetadata>
             {
                     {
@@ -851,10 +855,10 @@ namespace FreeMote.PsBuild
             metaFormatContent["license"] = 5.ToPsbNumber();
             metaFormatContent["logo"] = metadata["logo"] ?? PsbNumber.Zero;
             metaFormatContent["loopControlDefinitionList"] = metadata["loopControl"];
-            metaFormatContent["loopControlParameterDefinitionList"] = new PsbCollection();
+            metaFormatContent["loopControlParameterDefinitionList"] = new PsbCollection(); //default is empty
             metaFormatContent["mirrorDefinition"] = metadata["mirrorControl"];
             metaFormatContent["mouthControlDefinitionList"] = metadata["mouthControl"];
-            metaFormatContent["orbitControlDefinitionList"] = metadata["orbitControl"]; //TODO: we don't have sample with orbit
+            metaFormatContent["orbitControlDefinitionList"] = metadata["orbitControl"] ?? new PsbCollection(); //TODO: we don't have sample with orbit
             metaFormatContent["orbitControlParameterDefinitionList"] = new PsbCollection();
             metaFormatContent["parameterEditDefinition"] = mmoRef["parameterEditDefinition"];
             metaFormatContent["partialExportDefinitionList"] = new PsbCollection();
@@ -876,7 +880,7 @@ namespace FreeMote.PsBuild
             metaFormatContent["variableAlias"] = variableAlias;
             metaFormatContent["variableFrameAlias"] = variableFrameAlias;
             metaFormatContent["variableFrameAliasUniq"] = new PsbDictionary();
-            metaFormatContent["vesion"] = new PsbNumber(1.08f);
+            metaFormatContent["version"] = new PsbNumber(1.08f);
             metaFormatContent["windDefinitionList"] = mmoRef["windDefinitionList"];
 
             return metaFormat;
@@ -889,7 +893,7 @@ namespace FreeMote.PsBuild
 
         private IPsbValue FillDefaultTextureDefinition(PSB mmo)
         {
-            var objectChildren = (PsbCollection)mmo.Objects["objectChildren"];
+            //var objectChildren = (PsbCollection)mmo.Objects["objectChildren"];
             var sourceChildren = (PsbCollection)mmo.Objects["sourceChildren"];
             var textureDef = new PsbCollection();
             //We couldn't get complete metadata for this

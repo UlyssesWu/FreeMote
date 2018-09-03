@@ -15,6 +15,8 @@ namespace FreeMote.Tests
         {
         }
 
+        //1:gif 2:trialable
+        //1:free 2:academy 3:indies 4:commercial 5:common
         private TestContext testContextInstance;
 
         public TestContext TestContext
@@ -67,11 +69,11 @@ namespace FreeMote.Tests
             var path2 = Path.Combine(resPath, "template39-krkr.json");
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
             var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
-            MmoBuilder mmoBuilder = new MmoBuilder() { DebugMode = true };
+            MmoBuilder mmoBuilder = new MmoBuilder(true);
             var psbMmo = mmoBuilder.Build(psb);
             //mmo.Objects["objectChildren"] = psbMmo.Objects["objectChildren"];
-            var data = (PsbDictionary) mmo.Objects["metaformat"].Children("data");
-            var data2 = (PsbDictionary) psbMmo.Objects["metaformat"].Children("data");
+            var data = (PsbDictionary)mmo.Objects["metaformat"].Children("data");
+            var data2 = (PsbDictionary)psbMmo.Objects["metaformat"].Children("data");
             data["bustControlDefinitionList"] = data2["bustControlDefinitionList"];
             mmo.Merge();
             mmo.SaveAsMdfFile(Path.Combine(resPath, "mmo", "temp.mmo"));
@@ -89,9 +91,27 @@ namespace FreeMote.Tests
             //var path2 = Path.Combine(resPath, "mmo", "e-mote38基本テンプレート(正面zバイナリ専用)-krkr.json");
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
             var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
-            MmoBuilder mmoBuilder = new MmoBuilder() { DebugMode = true };
+            MmoBuilder mmoBuilder = new MmoBuilder(true);
             var psbMmo = mmoBuilder.Build(psb);
+            var pMd = (PsbDictionary)psbMmo.Objects["metaformat"].Children("data");
+            var mMd = (PsbDictionary)mmo.Objects["metaformat"].Children("data");
+            ///*
+            pMd["textureDefinitionList"] = mMd["textureDefinitionList"];
+            pMd["scrapbookDefinitionList"] = mMd["scrapbookDefinitionList"];
+            pMd["partsList"] = mMd["partsList"];
+            pMd["layoutDefinitionList"] = mMd["layoutDefinitionList"];
+            pMd["customPartsBaseDefinitionList"] = mMd["customPartsBaseDefinitionList"];
+            pMd["customPartsMountDefinitionList"] = mMd["customPartsMountDefinitionList"];
+            pMd["customPartsCount"] = mMd["customPartsCount"];
+            pMd["sourceDefinitionOrderList"] = mMd["sourceDefinitionOrderList"];
+            pMd["charaProfileDefinitionList"] = mMd["charaProfileDefinitionList"];
+            //*/
+            //pMd["textureDefinitionList"] = new PsbCollection();
+            /*
             psbMmo.Objects["metaformat"] = mmo.Objects["metaformat"];
+            mMd["textureDefinitionList"] = pMd["textureDefinitionList"];
+            mMd["scrapbookDefinitionList"] = pMd["scrapbookDefinitionList"];
+            */
             psbMmo.Merge();
             File.WriteAllBytes(Path.Combine(resPath, "mmo", "crash-temp.mmo"), psbMmo.Build());
         }
@@ -103,7 +123,7 @@ namespace FreeMote.Tests
             var path = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
             //var path = Path.Combine(resPath, "template39-krkr.json");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
-            MmoBuilder mmoBuilder = new MmoBuilder(){DebugMode = true};
+            MmoBuilder mmoBuilder = new MmoBuilder(true);
             var psbMmo = mmoBuilder.Build(psb);
             psbMmo.Merge();
             File.WriteAllBytes(Path.Combine(resPath, "mmo", "NekoCrash.mmo"), psbMmo.Build());
@@ -114,14 +134,14 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "template39.json");
-            var path = Path.Combine(resPath,"mmo", "NekoCrash.json");
+            var path = Path.Combine(resPath, "mmo", "NekoCrash.json");
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
 
-            var children = (PsbCollection) mmo.Objects["objectChildren"];
-            var source = (PsbCollection) mmo.Objects["sourceChildren"];
+            var children = (PsbCollection)mmo.Objects["objectChildren"];
+            var source = (PsbCollection)mmo.Objects["sourceChildren"];
             var obj = children.FindByMmoPath(
                 "all_parts/全体構造/■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□頭部調整_le/act_sp");
-            var realPath = ((PsbDictionary) obj).Path;
+            var realPath = ((PsbDictionary)obj).Path;
 
             obj = source.FindByMmoPath("face_eye_mabuta_l");
         }
@@ -131,7 +151,7 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res\mmo");
             var path = Path.Combine(resPath, "template39.json");
-            var path2 = Path.Combine(resPath, "temp.mmo");
+            var path2 = Path.Combine(resPath, "crash-temp.mmo");
 
             var mmo1 = PsbCompiler.LoadPsbFromJsonFile(path);
             var allpart1 = FindPart((PsbCollection)mmo1.Objects["objectChildren"], "body_parts");
@@ -156,7 +176,8 @@ namespace FreeMote.Tests
 
                 return null;
             }
-            PsBuildTest.CompareValue(allpart1, allpart2);
+            //PsBuildTest.CompareValue(allpart1, allpart2);
+            PsBuildTest.CompareValue(mmo1.Objects["metaformat"].Children("data"), mmo2.Objects["metaformat"].Children("data"));
         }
     }
 }
