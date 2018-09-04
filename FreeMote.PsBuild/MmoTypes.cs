@@ -1,4 +1,5 @@
 ﻿using System;
+// ReSharper disable InconsistentNaming
 
 namespace FreeMote.PsBuild
 {
@@ -17,6 +18,14 @@ namespace FreeMote.PsBuild
                       "zmin": 6
                     },
      */
+
+    [Flags]
+    internal enum MmoFrameMaskEx
+    {
+        None = 0,
+        CoordXY = 0b1,
+        CoordZ = 0b10,
+    }
 
     // "///^(透過表示|ビュー|レイアウト|レイアウト角度|角度|XY座標|XY座標角度|Z座標|メッシュ|パーティクル|削除|ブレンドモード)\\((.+)\\)$"
     // "///^(Transparent|View|Layout|Layout角度|角度|XY座標|XY座標角度|Z座標|Mesh|Particle|Remove|BlendMode)\\((.+)\\)$"
@@ -42,6 +51,7 @@ namespace FreeMote.PsBuild
         //16: ???
         //17: bm
         //19: motion/timeOffset?
+        //20: particle
         //25: mesh
         None = 0,
         /// <summary>
@@ -100,6 +110,10 @@ namespace FreeMote.PsBuild
         /// motion
         /// </summary>
         Motion = 0b1000000000_0000000000,
+        /// <summary>
+        /// prt
+        /// </summary>
+        Particle = 0b1_0000000000_0000000000,
         /// <summary>
         /// mesh
         /// </summary>
