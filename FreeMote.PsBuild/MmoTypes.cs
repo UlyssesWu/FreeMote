@@ -43,6 +43,7 @@ namespace FreeMote.PsBuild
         //17: bm
         //19: motion/timeOffset?
         //25: mesh
+        None = 0,
         /// <summary>
         /// ox, oy
         /// </summary>

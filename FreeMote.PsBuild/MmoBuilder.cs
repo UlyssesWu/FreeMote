@@ -434,10 +434,10 @@ namespace FreeMote.PsBuild
                     dic["comment"] = PsbString.Empty;
 
                     //Build frameList
-                    bool hasSpecialFrame = false;
+                    MmoFrameMask frameMask = 0;
                     if (dic["frameList"] is PsbCollection frameList)
                     {
-                        BuildFrameList(frameList, classType, out hasSpecialFrame);
+                        BuildFrameList(frameList, classType, out frameMask);
                     }
 
                     //parameterize: find from psb table and expand
@@ -592,7 +592,7 @@ namespace FreeMote.PsBuild
                     FillDefaultsIntoChildren(dic, classType);
 
                     //build PartsList
-                    //[MenuPath, Desc, CharaItem, Motion, Layer, ""]
+                    //[MenuPath, Feature, CharaItem, Motion, Layer, ""]
                     if (classType == MmoItemClass.ObjLayerItem || classType == MmoItemClass.MotionLayerItem || classType == MmoItemClass.LayoutLayerItem || classType == MmoItemClass.MeshLayerItem)
                     {
                         bool shouldAdd = true;
@@ -601,7 +601,7 @@ namespace FreeMote.PsBuild
                         var menuPath1 = FillDefaultCategory(paths[1]);
                         var menuPath2 = InferDefaultPart(path);
                         var menuPath = string.IsNullOrEmpty(menuPath2) ? menuPath1 : $"{menuPath1}/{menuPath2}";
-                        //Infer 
+                        //Infer Feature //TODO:
                         string param;
                         if (hasParam)
                         {
@@ -611,7 +611,7 @@ namespace FreeMote.PsBuild
                         else if (classType == MmoItemClass.LayoutLayerItem)
                         {
                             param = "Layout";
-                            if (!hasSpecialFrame)
+                            //if (!hasSpecialFrame)
                             {
                                 shouldAdd = false;
                             }
@@ -619,7 +619,7 @@ namespace FreeMote.PsBuild
                         else if (classType == MmoItemClass.MotionLayerItem || classType == MmoItemClass.ObjLayerItem)
                         {
                             param = "Display";
-                            if (!hasSpecialFrame)
+                            //if (!hasSpecialFrame)
                             {
                                 shouldAdd = false;
                             }
@@ -757,9 +757,9 @@ namespace FreeMote.PsBuild
             return fl;
         }
 
-        private void BuildFrameList(PsbCollection frameList, MmoItemClass classType, out bool hasSpecialSetting)
+        private void BuildFrameList(PsbCollection frameList, MmoItemClass classType, out MmoFrameMask mask)
         {
-            hasSpecialSetting = false;
+            mask = 0;
             foreach (var fl in frameList)
             {
                 if (fl is PsbDictionary dic)
@@ -772,9 +772,9 @@ namespace FreeMote.PsBuild
                     {
                         if (content.ContainsKey("mask")) //Expand params from mask
                         {
-                            if (content["mask"] is PsbNumber num && num.IntValue > 1)
+                            if (content["mask"] is PsbNumber num)
                             {
-                                hasSpecialSetting = true; //TODO: motion/timeOffset is special or not?
+                                mask = (MmoFrameMask)num.IntValue; //TODO: motion/timeOffset is special or not?
                             }
                             //Low to High:
                             //0: ox,oy
@@ -787,13 +787,13 @@ namespace FreeMote.PsBuild
                             //19: motion/timeOffset?
                             //25: mesh
 
-                            if (content["src"] is PsbString s)
-                            {
-                                if (s.Value.StartsWith("src/") || s.Value.StartsWith("shape/"))
-                                {
-                                    hasSpecialSetting = true;
-                                }
-                            }
+                            //if (content["src"] is PsbString s)
+                            //{
+                            //    if (s.Value.StartsWith("src/") || s.Value.StartsWith("shape/"))
+                            //    {
+                            //    }
+                            //}
+
                             //if (content["src"] is PsbString s && s.Value.StartsWith("shape/"))
                             //{
                             //    content.Remove("mask"); //necessary to prevent Member "point" does not exist error

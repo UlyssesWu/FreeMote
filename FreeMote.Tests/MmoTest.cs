@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
@@ -15,6 +13,7 @@ namespace FreeMote.Tests
         {
         }
 
+        //nekomimi is binded to eyebrow
         //1:gif 2:trialable
         //1:free 2:academy 3:indies 4:commercial 5:common
         private TestContext testContextInstance;
