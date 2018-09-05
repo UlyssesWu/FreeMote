@@ -25,6 +25,10 @@ namespace FreeMote.PsBuild
         None = 0,
         CoordXY = 0b1,
         CoordZ = 0b10,
+        SrcSrc = 0b100,
+        SrcMotion = 0b1000,
+        SrcShape = 0b10000,
+        SrcParticle = 0b100000,
     }
 
     // "///^(透過表示|ビュー|レイアウト|レイアウト角度|角度|XY座標|XY座標角度|Z座標|メッシュ|パーティクル|削除|ブレンドモード)\\((.+)\\)$"
