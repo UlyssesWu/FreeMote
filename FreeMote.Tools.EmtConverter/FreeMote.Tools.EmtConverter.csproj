@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{44270712-4ACB-447D-835E-9982BD515DBB}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>FreeMote.Tools.EmotePsbConverter</RootNamespace>
-    <AssemblyName>EmoteConv</AssemblyName>
+    <RootNamespace>FreeMote.Tools.EmtConverter</RootNamespace>
+    <AssemblyName>EmtConv</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

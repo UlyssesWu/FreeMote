@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using FreeMote.Plugins;
 
-namespace FreeMote.Tools.EmotePsbConverter
+namespace FreeMote.Tools.EmtConverter
 {
     class Program
     {
@@ -192,10 +192,10 @@ namespace FreeMote.Tools.EmotePsbConverter
         {
             Console.WriteLine(@"Usage: .exe [mode] <PSB file path> <key> [new key]
 Mode: use `-c<shell type>` for first param to switch to shell compress/decompress mode.
-Example: EmoteConv emote_test.psb 123456789
-\t EmoteConv emote_test.psb 123456789 987654321
-\t EmoteConv -cLZ4 emote_test.psb (compress to LZ4)
-\t EmoteConv -c emote_test.psb.lz4 (decompress)
+Example: emtconv emote_test.psb 123456789
+\t emtconv emote_test.psb 123456789 987654321
+\t emtconv -cLZ4 emote_test.psb (compress to LZ4)
+\t emtconv -c emote_test.psb.lz4 (decompress)
 Hint: If ths tool can't decrypt your PSB, try PsbDecompile.
 ");
         }

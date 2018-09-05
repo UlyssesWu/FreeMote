@@ -9,7 +9,7 @@ using FreeMote.Psb.Textures;
 namespace FreeMote.Psb
 {
     /// <summary>
-    /// Emote PSB Painter
+    /// EMT PSB Painter
     /// </summary>
     public class PsbPainter
     {

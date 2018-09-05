@@ -11,13 +11,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tests", "FreeMote.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.PsBuild", "FreeMote.PsBuild\FreeMote.PsBuild.csproj", "{717A63DE-E599-4134-92AB-40A17C326DA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmotePsbConverter", "FreeMote.Tools.EmotePsbConverter\FreeMote.Tools.EmotePsbConverter.csproj", "{44270712-4ACB-447D-835E-9982BD515DBB}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.PsbDecompile", "FreeMote.Tools.PsbDecompile\FreeMote.Tools.PsbDecompile.csproj", "{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.PsBuild", "FreeMote.Tools.PsBuild\FreeMote.Tools.PsBuild.csproj", "{D877DBDB-41D7-4C6F-9A46-957CECDAEFA8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Plugins", "FreeMote.Plugins\FreeMote.Plugins.csproj", "{F37472B9-6501-440E-8898-7774304F7FEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtConverter", "FreeMote.Tools.EmtConverter\FreeMote.Tools.EmtConverter.csproj", "{44270712-4ACB-447D-835E-9982BD515DBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtMaker", "FreeMote.Tools.EmtMaker\FreeMote.Tools.EmtMaker.csproj", "{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +43,6 @@ Global
 		{717A63DE-E599-4134-92AB-40A17C326DA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{717A63DE-E599-4134-92AB-40A17C326DA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{717A63DE-E599-4134-92AB-40A17C326DA3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{44270712-4ACB-447D-835E-9982BD515DBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{44270712-4ACB-447D-835E-9982BD515DBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{44270712-4ACB-447D-835E-9982BD515DBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{44270712-4ACB-447D-835E-9982BD515DBB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{943FE440-32BB-4CAF-A1DA-5F38DE7F9B92}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -57,6 +55,14 @@ Global
 		{F37472B9-6501-440E-8898-7774304F7FEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F37472B9-6501-440E-8898-7774304F7FEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F37472B9-6501-440E-8898-7774304F7FEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44270712-4ACB-447D-835E-9982BD515DBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44270712-4ACB-447D-835E-9982BD515DBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44270712-4ACB-447D-835E-9982BD515DBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44270712-4ACB-447D-835E-9982BD515DBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
