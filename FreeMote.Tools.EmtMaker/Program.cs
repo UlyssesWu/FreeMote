@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FreeMote.Tools.EmotoMaker
+namespace FreeMote.Tools.EmtMaker
 {
     class Program
     {

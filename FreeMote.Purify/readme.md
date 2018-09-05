@@ -1,13 +1,13 @@
 # FreeMote.Purify
 
-A tool lib to *infer* the key of an Emote PSB file. It doesn't need any other file(e.g. DLL), and can do inference without brute force. It can get the key very fast and is universal for most Emote PSB files. It's NOT based on already known keys.
+A tool lib to *infer* the key of an EMT PSB file. It doesn't need any other file(e.g. DLL), and can do inference without brute force. It can get the key very fast and is universal for most EMT PSB files. It's NOT based on already known keys.
 
 # Feature
-* Support Emote PSB v2-v4 (only works with *Emote* PSB, not for normal PSB)
+* Support EMT PSB v2-v4 (only works with *EMT* PSB, not for normal PSB)
 * Very fast because it's all from inference rather than brute force
 * Can handle both header & body(string) encryption
 
-It's almost done but unreleased (in a standalone repo) since I have Emote projects myself.
+It's unreleased (in a standalone repo) for now. It implements `IPsbKeyProvider` and can be used as a FreeMote plugin.
 
 ---
 by Ulysses, wdwxy12345@gmail.com

@@ -363,6 +363,33 @@ namespace FreeMote.PsBuild
 
                 objectChildren.Add(objectChildrenItem);
             }
+
+            // Deduplication ver.3 - Failed
+            //var groups = from val in newPartsList
+            //             let col = (PsbCollection)val
+            //    group col by $"{col[0]}/{col[1]}"
+            //    into g
+            //    select g;
+            //var del = "#DEL".ToPsbString();
+            ////[MenuPath, Desc, CharaItem, Motion, Layer, ""]
+            //foreach (var g in groups)
+            //{
+            //    if (g.Count() > 1)
+            //    {
+            //        foreach (var gItem in g)
+            //        {
+            //            if (disableFeatures.ContainsKey(gItem[5].ToString()))
+            //            {
+            //                if (disableFeatures[gItem[5].ToString()].Contains($"{gItem[2]}/{gItem[3]}"))
+            //                {
+            //                    gItem[5] = del;
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+            //newPartsList.RemoveAll(item => item is PsbCollection col && (PsbString)col[5] == del);
+
             partsList = newPartsList;
 
             PsbCollection BuildChildrenFromMotion(PsbDictionary dic, IPsbCollection parent)
@@ -456,8 +483,12 @@ namespace FreeMote.PsBuild
                     }
 
                     //Disable features //TODO: remove duplicated features according to disableFeatures
-                    if (!string.IsNullOrEmpty(param) && motionRefs != null)
+                    if (!string.IsNullOrEmpty(param) && motionRefs != null && motionRefs.Count > 0)
                     {
+                        for (int i = 0; i < motionRefs.Count; i++)
+                        {
+                            motionRefs[i] = motionRefs[i].Substring(motionRefs[i].IndexOf('/') + 1);
+                        }
                         if (disableFeatures.ContainsKey(param))
                         {
                             if (disableFeatures[param] == null)
@@ -632,7 +663,7 @@ namespace FreeMote.PsBuild
                                 paths[1].ToPsbString(),
                                 paths[2].ToPsbString(),
                                 string.Join("/",paths.Skip(3)).ToPsbString(),
-                                PsbString.Empty
+                                string.IsNullOrEmpty(param)? PsbString.Empty : param.ToPsbString()
                                 //$"{FillDefaultCategory(pathList[0])}".ToPsbString()
                             });
                         }
