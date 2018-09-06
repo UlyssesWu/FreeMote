@@ -1897,5 +1897,69 @@
           ]
         }
       ],
-  
+        "orbitControlParameterDefinitionList": [
+        {
+          "comment": "60f間隔で0,30,60,90,120の順で周回する。",
+          "interval": 60,
+          "label": "12コマ順方向1秒",
+          "orbitFrameList": [30,60,90,120],
+          "tween": 1
+        },
+        {
+          "comment": "60f間隔で0,120,90,60,30の順で周回する。",
+          "interval": 60,
+          "label": "12コマ逆方向1秒",
+          "orbitFrameList": [120,90,60,30],
+          "tween": 1
+        },
+        {
+          "comment": "120f間隔で0,120,90,60,30の順で周回する。",
+          "interval": 120,
+          "label": "12コマ順方向2秒",
+          "orbitFrameList": [30,60,90,120],
+          "tween": 1
+        },
+        {
+          "comment": "120f間隔で0,120,90,60,30の順で周回する。",
+          "interval": 120,
+          "label": "12コマ逆方向2秒",
+          "orbitFrameList": [120,90,60,30],
+          "tween": 1
+        },
+        {
+          "comment": "240f間隔で0,30,60,90,120の順で周回する。",
+          "interval": 240,
+          "label": "12コマ順方向4秒",
+          "orbitFrameList": [30,60,90,120],
+          "tween": 1
+        },
+        {
+          "comment": "240f間隔で0,120,90,60,30の順で周回する。",
+          "interval": 240,
+          "label": "12コマ逆方向4秒",
+          "orbitFrameList": [120,90,60,30],
+          "tween": 1
+        },
+        {
+          "comment": "60f間隔で0-120-0で往復する",
+          "interval": 60,
+          "label": "12コマ往復1秒",
+          "orbitFrameList": [30,60,90,119,90,60,30,0],
+          "tween": 1
+        },
+        {
+          "comment": "120f間隔で0-120-0で往復する",
+          "interval": 120,
+          "label": "12コマ往復2秒",
+          "orbitFrameList": [30,60,90,119,90,60,30,0],
+          "tween": 1
+        },
+        {
+          "comment": "240f間隔で0-120-0で往復する",
+          "interval": 240,
+          "label": "12コマ往復4秒",
+          "orbitFrameList": [30,60,90,119,90,60,30,0],
+          "tween": 1
+        }
+      ]
 }

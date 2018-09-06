@@ -1120,9 +1120,13 @@ namespace FreeMote.Psb
                 //If this is wrong, try to align by EOF
                 var currentPos = (uint)br.BaseStream.Position;
                 var padding = 16 - currentPos % 16;
+                br.ReadBytes((int)padding);
                 if (padding < 16)
                 {
-                    padding += 16;
+                    if (br.ReadBytes(16).All(b => b == 0))
+                    {
+                        padding += 16;
+                    }
                 }
 
                 Header.OffsetChunkData = currentPos + padding;

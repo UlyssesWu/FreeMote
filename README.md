@@ -32,7 +32,7 @@ Decompile PSB files. A managed version of `decompiler`(by number201724).
 Compile PSB description json to PSB. A managed version of `pcc`(by number201724).
 ### EmtMake (FreeMote.Tools.EmtMake) (Preview)
 Decompile an EMT PSB to MMO project. **The output file is always licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
-### [FreeMoteViewer](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer) (FreeMote.Tools.Viewer)
+### [FreeMote Viewer](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer) (FreeMote.Tools.Viewer)
 Open and render EMT _pure_ PSB.
 ### [FreeMote Editor](https://github.com/UlyssesWu/FreeMote.Editor) (FreeMote.Editor) (In Dev)
 FreeMote GUI tool.

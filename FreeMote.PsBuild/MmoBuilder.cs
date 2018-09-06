@@ -16,7 +16,7 @@ namespace FreeMote.PsBuild
     /// Build MMO from Emote PSB
     /// <para>Current Ver: 3.12</para>
     /// </summary>
-    public class MmoBuilder
+    public partial class MmoBuilder
     {
         internal bool DebugMode { get; set; } = false;
         public PSB Mmo { get; private set; }
@@ -976,6 +976,15 @@ namespace FreeMote.PsBuild
                             //}
                         }
 
+                        if (content.ContainsKey("color"))
+                        {
+                            var colorObj = content["color"];
+                            if (colorObj is PsbNumber num) //Expand Color
+                            {
+                                content["color"] = new PsbCollection(4) { num, num, num, num };
+                            }
+                        }
+
                         bool hasMotion = false;
 
                         if (content.ContainsKey("motion"))
@@ -1073,8 +1082,9 @@ namespace FreeMote.PsBuild
             metaFormatContent["loopControlParameterDefinitionList"] = new PsbCollection(); //default is empty
             metaFormatContent["mirrorDefinition"] = metadata["mirrorControl"];
             metaFormatContent["mouthControlDefinitionList"] = metadata["mouthControl"];
-            metaFormatContent["orbitControlDefinitionList"] = metadata["orbitControl"] ?? new PsbCollection(); //TODO: we don't have sample with orbit
-            metaFormatContent["orbitControlParameterDefinitionList"] = new PsbCollection();
+            var orbit = BuildOrbitControlParameterDef(metadata["orbitControl"], (PsbCollection)mmoRef["orbitControlParameterDefinitionList"]);
+            metaFormatContent["orbitControlDefinitionList"] = orbit.orbitControl; //TODO: we don't have sample with orbit
+            metaFormatContent["orbitControlParameterDefinitionList"] = orbit.orbitParamDef;
             metaFormatContent["parameterEditDefinition"] = mmoRef["parameterEditDefinition"];
             metaFormatContent["partialExportDefinitionList"] = new PsbCollection();
             metaFormatContent["partsControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["partsControl"]);
@@ -1103,6 +1113,55 @@ namespace FreeMote.PsBuild
             metaFormatContent["partsList"] = partList; //Have to build for parameter feature
 
             return metaFormat;
+        }
+
+        private (PsbCollection orbitControl, PsbCollection orbitParamDef) BuildOrbitControlParameterDef(IPsbValue origin, PsbCollection refer)
+        {
+            if (origin == null || origin is PsbNull)
+            {
+                return (new PsbCollection(), refer);
+            }
+
+            var ori = (PsbCollection)origin;
+            PsbCollection newOrbitParamDef = new PsbCollection();
+            HashSet<string> labels = new HashSet<string>();
+            foreach (var o in ori)
+            {
+                //"comment": "60f間隔で0,30,60,90,120の順で周回する。",
+                //"interval": 60,
+                //"label": "12コマ順方向1秒",
+                //"orbitFrameList": [30,60,90,120],
+                //"tween": 1
+
+                //{
+                //    "comment": "",
+                //    "enabled": 1,
+                //    "label": "loop_b",
+                //    "parameter": ""
+                //}
+                var item = (PsbDictionary)o;
+                PsbDictionary dic = new PsbDictionary()
+                {
+                    {"comment", item["comment"] },
+                    {"interval", item["interval"] },
+                    {"label", item["label"] },
+                    {"orbitFrameList", item["orbitFrameList"] },
+                    {"tween", item["tween"] },
+                };
+                item.Remove("orbitFrameList");
+                item.Remove("tween");
+                newOrbitParamDef.Add(dic);
+                labels.Add(item["label"].ToString());
+            }
+
+            foreach (var r in refer)
+            {
+                if (r is PsbDictionary rDic && !labels.Contains(rDic["label"].ToString()))
+                {
+                    newOrbitParamDef.Add(r);
+                }
+            }
+            return (ori, newOrbitParamDef);
         }
 
         private IPsbValue BuildScrapbookDefinition(PSB mmo)

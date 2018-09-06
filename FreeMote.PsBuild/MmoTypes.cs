@@ -240,4 +240,9 @@ namespace FreeMote.PsBuild
         public string Category { get; set; }
         public string Label { get; set; }
     }
+
+    public partial class MmoBuilder
+    {
+
+    }
 }
