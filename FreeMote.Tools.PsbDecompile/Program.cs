@@ -142,7 +142,9 @@ Setting:
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");
 
+#if !DEBUG
             try
+#endif
             {
                 if (extractImage)
                 {
@@ -158,10 +160,12 @@ Setting:
                     PsbDecompiler.DecompileToFile(path, key: key);
                 }
             }
+#if !DEBUG
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
+#endif
         }
     }
 }
