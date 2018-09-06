@@ -24,7 +24,7 @@ namespace FreeMote.PsBuild
         public PsbType? PsbType { get; set; } = null;
 
         /// <summary>
-        /// PSB Spec (only for Emote)
+        /// PSB Spec (only for EMT)
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]
         public PsbSpec? Platform { get; set; } = null;

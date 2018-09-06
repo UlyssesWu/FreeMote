@@ -141,7 +141,7 @@ namespace FreeMote.Tools.PsBuild
     Warning: This setting may overwrite your original PSB files!
 ");
 //no-key : Ignore any key setting and output pure PSB.
-            Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr emote_sample.psb.json");
+            Console.WriteLine("Example: PsBuild /v4 /k123456789 /pkrkr sample.psb.json");
         }
     }
 }

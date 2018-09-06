@@ -133,8 +133,8 @@ Setting:
 /oom : Disable In-Memory Loading. (Lower memory usage but longer time for loading)
 /k<Key> : Set PSB key. use `/k` (without key specified) to reset.
 ");
-            Console.WriteLine("Example: PsbDecompile /ep Emote.pure.psb");
-            Console.WriteLine("\t PsbDecompile C:\\\\EmoteFolder");
+            Console.WriteLine("Example: PsbDecompile /ep emt.pure.psb");
+            Console.WriteLine("\t PsbDecompile C:\\\\EMTfolder");
         }
 
         static void Decompile(string path, bool extractImage = false, bool uncompress = false, bool usePng = false, uint? key = null)

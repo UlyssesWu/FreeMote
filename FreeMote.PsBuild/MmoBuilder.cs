@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 namespace FreeMote.PsBuild
 {
     /// <summary>
-    /// Build MMO from Emote PSB
+    /// Build MMO from EMT PSB
     /// <para>Current Ver: 3.12</para>
     /// </summary>
     public partial class MmoBuilder
