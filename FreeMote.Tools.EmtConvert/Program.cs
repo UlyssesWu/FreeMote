@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using FreeMote.Plugins;
 
-namespace FreeMote.Tools.EmtConverter
+namespace FreeMote.Tools.EmtConvert
 {
     class Program
     {

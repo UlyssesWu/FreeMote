@@ -17,9 +17,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.PsBuild", "F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Plugins", "FreeMote.Plugins\FreeMote.Plugins.csproj", "{F37472B9-6501-440E-8898-7774304F7FEC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtConverter", "FreeMote.Tools.EmtConverter\FreeMote.Tools.EmtConverter.csproj", "{44270712-4ACB-447D-835E-9982BD515DBB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtConvert", "FreeMote.Tools.EmtConvert\FreeMote.Tools.EmtConvert.csproj", "{44270712-4ACB-447D-835E-9982BD515DBB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtMaker", "FreeMote.Tools.EmtMaker\FreeMote.Tools.EmtMaker.csproj", "{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtMake", "FreeMote.Tools.EmtMake\FreeMote.Tools.EmtMake.csproj", "{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

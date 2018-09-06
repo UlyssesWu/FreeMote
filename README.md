@@ -24,13 +24,13 @@ Infer and calculate the key used by EMT PSB file just from the PSB file (rather 
 EMT <-> L2D Conversion
 
 ## Tools
-### EmtConv (FreeMote.Tools.EmtConverter)
+### EmtConvert (FreeMote.Tools.EmtConvert)
 Convert EMT PSB files. A managed version of `emote_conv`(by number201724).
 ### PsbDecompile (FreeMote.Tools.PsbDecompile)
 Decompile PSB files. A managed version of `decompiler`(by number201724).
 ### PsBuild (FreeMote.Tools.PsBuild)
 Compile PSB description json to PSB. A managed version of `pcc`(by number201724).
-### EmtMake (FreeMote.Tools.EmtMaker) (Preview)
+### EmtMake (FreeMote.Tools.EmtMake) (Preview)
 Decompile an EMT PSB to MMO project. **The output file is always licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
 ### [FreeMoteViewer](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer) (FreeMote.Tools.Viewer)
 Open and render EMT _pure_ PSB.

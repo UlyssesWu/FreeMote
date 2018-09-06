@@ -4,7 +4,7 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 
-namespace FreeMote.Tools.EmtMaker
+namespace FreeMote.Tools.EmtMake
 {
     class Program
     {

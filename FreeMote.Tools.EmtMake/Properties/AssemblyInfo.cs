@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("FreeMote.Tools.EmtConverter")]
-[assembly: AssemblyDescription("Convert/Compress/Decompress EMT PSB")]
+[assembly: AssemblyTitle("FreeMote.Tools.EmtMake")]
+[assembly: AssemblyDescription("MMO/Emtproj Maker")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("FreeMote")]
-[assembly: AssemblyCopyright("Copyright © Project AZUSA 2017-2018")]
+[assembly: AssemblyCopyright("Copyright © Project AZUSA 2018")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("44270712-4acb-447d-835e-9982bd515dbb")]
+[assembly: Guid("bd8855cf-0b99-43b2-8b92-4013e9a0c41c")]
 
 // 程序集的版本信息由下列四个值组成: 
 //
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // 可以指定所有值，也可以使用以下所示的 "*" 预置版本号和修订号
 // 方法是按如下所示使用“*”: :
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.5.0.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.5.0.0")]

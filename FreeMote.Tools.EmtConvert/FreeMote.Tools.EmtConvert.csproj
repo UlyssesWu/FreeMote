@@ -4,14 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}</ProjectGuid>
+    <ProjectGuid>{44270712-4ACB-447D-835E-9982BD515DBB}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>FreeMote.Tools.EmtMaker</RootNamespace>
-    <AssemblyName>EmtMake</AssemblyName>
+    <RootNamespace>FreeMote.Tools.EmtConvert</RootNamespace>
+    <AssemblyName>EmtConvert</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -50,16 +50,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FreeMote.PsBuild\FreeMote.PsBuild.csproj">
-      <Project>{717a63de-e599-4134-92ab-40a17c326da3}</Project>
-      <Name>FreeMote.PsBuild</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
-      <Project>{C0B2C2FF-D8F4-497E-8312-C2AF1BB6E7F7}</Project>
-      <Name>FreeMote.Psb</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FreeMote\FreeMote.csproj">
-      <Project>{D43CA425-6476-4AE3-A3D8-BBCAC0F0383C}</Project>
+      <Project>{d43ca425-6476-4ae3-a3d8-bbcac0f0383c}</Project>
       <Name>FreeMote</Name>
     </ProjectReference>
   </ItemGroup>
