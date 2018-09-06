@@ -1184,6 +1184,7 @@ namespace FreeMote.PsBuild
                         {"psdMargin", 5.ToPsbNumber()},
                         {"psdRange", 1.ToPsbNumber()},
                         {"iconLabel", iconDic["label"]},
+                        {"meshList", new PsbCollection()},
                         //{"layoutFlags", 3.ToPsbNumber()},
                     };
                     var sLabel = iconDic["label"].ToString();
@@ -1256,6 +1257,7 @@ namespace FreeMote.PsBuild
                     {"comment", mmoItem["comment"]},
                     {"psdMargin", 5.ToPsbNumber()},
                     {"psdRange", 1.ToPsbNumber()},
+                    {"meshList", new PsbCollection()},
                     //{"layoutFlags", 3.ToPsbNumber()},
                 };
                 var sLabel = mmoItem["label"].ToString();
