@@ -86,15 +86,16 @@ namespace FreeMote.PsBuild.Converters
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
                         icon.Remove("top");
-                        if (icon["attr"] is PsbNumber n && n.AsInt > 0)
-                        {
-                            icon["attr"] = PsbNull.Null;
-                        }
-                        else
-                        {
-                            icon.Remove("attr");
-                        }
-
+                        //There is no obvious match for attr?
+                        //if (icon["attr"] is PsbNumber n && n.AsInt > 0)
+                        //{
+                        //    icon["attr"] = PsbNull.Null;
+                        //}
+                        //else
+                        //{
+                        //    icon.Remove("attr");
+                        //}
+                        icon.Remove("attr");
                     }
 
                     texDic.Remove("texture");

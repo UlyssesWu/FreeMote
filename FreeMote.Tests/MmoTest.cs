@@ -130,6 +130,22 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestConvertAndBuildMmo()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "dx_e-moteショコラ小ex制服b.psb.json");
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            psb.SwitchSpec(PsbSpec.krkr);
+            psb.Merge();
+            //File.WriteAllBytes(Path.Combine(resPath, "neko-krkr.psb"), psb.Build());
+            //return;
+            MmoBuilder mmoBuilder = new MmoBuilder(true);
+            var psbMmo = mmoBuilder.Build(psb);
+            psbMmo.Merge();
+            File.WriteAllBytes(Path.Combine(resPath, "mmo", "DxNekoCrash.mmo"), psbMmo.Build());
+        }
+
+        [TestMethod]
         public void TestFindPath()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
