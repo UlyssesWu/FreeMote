@@ -36,9 +36,17 @@ namespace FreeMote.Tools.EmtMake
             {
                 if (psb.Platform != PsbSpec.krkr)
                 {
-                    Console.WriteLine(
-                        "This tool (Preview ver.) only supports krkr pure PSB. (Krkr PSBs converted from other platform are not supported either.)");
-                    goto END;
+                    if (psb.Platform == PsbSpec.common || psb.Platform == PsbSpec.win)
+                    {
+                        psb.SwitchSpec(PsbSpec.krkr);
+                        psb.Merge();
+                    }
+                    else
+                    {
+                        Console.WriteLine(
+                            $"EmtMake do not support {psb.Platform} PSB. Please use pure krkr PSB.");
+                        goto END;
+                    }
                 }
 #if !DEBUG
                 try

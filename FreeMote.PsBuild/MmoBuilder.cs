@@ -735,7 +735,7 @@ namespace FreeMote.PsBuild
                 features.Add("削除");
                 features.Add("ブレンドモード");
             }
-
+            
             if (frameMask == 0 || frameMask == (MmoFrameMask)1)
             {
                 return features;
@@ -795,6 +795,13 @@ namespace FreeMote.PsBuild
             {
                 features.Add("ブレンドモード");
             }
+
+            //won't happen
+            //if (classType == MmoItemClass.LayoutLayerItem && frameMaskEx.HasFlag(MmoFrameMaskEx.SrcSrc))
+            //{
+            //    features.Add("レイアウト角度");
+            //    features.Remove("レイアウト");
+            //}
 
             return features;
         }
