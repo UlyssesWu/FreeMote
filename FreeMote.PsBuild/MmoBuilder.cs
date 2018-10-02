@@ -23,6 +23,11 @@ namespace FreeMote.PsBuild
 
         public Dictionary<string, MmoPsdMetadata> MmoPsdMetadatas { get; set; }
 
+        /// <summary>
+        /// Key: keyword in object path; Value: if find that keyword in path, set a custom menu path (for Editor)
+        /// </summary>
+        public Dictionary<string, string> CustomPartMenuPaths { get; set; } = new Dictionary<string, string>();
+
         public MmoBuilder() : this(false)
         { }
 
@@ -735,7 +740,7 @@ namespace FreeMote.PsBuild
                 features.Add("削除");
                 features.Add("ブレンドモード");
             }
-            
+
             if (frameMask == 0 || frameMask == (MmoFrameMask)1)
             {
                 return features;
@@ -806,8 +811,16 @@ namespace FreeMote.PsBuild
             return features;
         }
 
-        private static string InferDefaultPart(string part, string path)
+        private string InferDefaultPart(string part, string path)
         {
+            foreach (var kv in CustomPartMenuPaths)
+            {
+                if (path.Contains(kv.Key))
+                {
+                    return kv.Value;
+                }
+            }
+
             if (path.Contains("追加パーツ"))
             {
                 return "追加パーツ";
@@ -843,6 +856,14 @@ namespace FreeMote.PsBuild
             if (path.Contains("後髪"))
             {
                 return "頭部/後髪";
+            }
+            if (path.Contains("腕L"))
+            {
+                return "胴体/腕L";
+            }
+            if (path.Contains("腕R"))
+            {
+                return "胴体/腕R";
             }
             if (path.Contains("胸"))
             {
