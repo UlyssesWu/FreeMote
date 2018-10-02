@@ -44,7 +44,7 @@ namespace FreeMote.Plugins
 
         public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } =
             new Dictionary<string, IPsbImageFormatter>();
-        
+
         private CompositionContainer _container;
         private Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new Dictionary<IPsbPlugin, IPsbPluginInfo>();
         private int _maxShellSigLength = 4;
@@ -129,7 +129,7 @@ namespace FreeMote.Plugins
             }
             UpdatePluginsCollection();
         }
-        
+
         private void UpdatePluginsCollection()
         {
             Shells = new Dictionary<string, IPsbShell>();
@@ -159,7 +159,7 @@ namespace FreeMote.Plugins
                 _plugins.Add(_keyProvider.Value, _keyProvider.Metadata);
             }
         }
-        
+
         private void AddCatalog(string path, AggregateCatalog catalog)
         {
             if (Directory.Exists(path))

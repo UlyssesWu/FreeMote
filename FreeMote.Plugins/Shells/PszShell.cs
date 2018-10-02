@@ -36,8 +36,8 @@ namespace FreeMote.Plugins.Shells
             using (var br = new BinaryReader(stream))
             {
                 br.ReadBytes(4); //PSZ
-                var zipLen = br.ReadInt32();
-                var oriLen = br.ReadInt32();
+                //var zipLen = br.ReadInt32();
+                //var oriLen = br.ReadInt32();
                 br.ReadInt32();
                 br.ReadByte(); //0x78
                 var config = br.ReadByte(); //0x9C: fast; 0xDA: compact

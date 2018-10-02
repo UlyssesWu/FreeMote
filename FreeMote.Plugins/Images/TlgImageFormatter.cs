@@ -97,7 +97,8 @@ namespace FreeMote.Plugins
 
         public byte[] ToBytes(Bitmap bitmap, Dictionary<string, object> context = null)
         {
-            return SaveTlg(bitmap, context != null && context[TlgVersion] is int v && v == 6);
+            return SaveTlg(bitmap,
+                context != null && context.ContainsKey(TlgVersion) && context[TlgVersion] is int v && v == 6);
         }
     }
 }
