@@ -125,7 +125,7 @@ namespace FreeMote.Tests
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             MmoBuilder mmoBuilder = new MmoBuilder(true);
             //Add custom menu paths
-            mmoBuilder.CustomPartMenuPaths.Add("スカート", "胴体/衣服");
+            mmoBuilder.CustomPartMenuPaths.Add("スカート", "胴体/スカート");
             mmoBuilder.CustomPartMenuPaths.Add("前髪_le1", "頭部/前髪1");
             mmoBuilder.CustomPartMenuPaths.Add("後髪_le4", "頭部/後髪4");
             mmoBuilder.CustomPartMenuPaths.Add("後髪_le5", "頭部/後髪5");

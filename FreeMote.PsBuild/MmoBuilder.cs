@@ -820,7 +820,10 @@ namespace FreeMote.PsBuild
                     return kv.Value;
                 }
             }
-
+            if (path.Contains("スカート"))
+            {
+                return "胴体/スカート";
+            }
             if (path.Contains("追加パーツ"))
             {
                 return "追加パーツ";

@@ -206,6 +206,10 @@ Hint: If ths tool can't decrypt your PSB, try PsbDecompile.
             {
                 Console.WriteLine("Please input key (uint, dec):");
                 string ans = Console.ReadLine();
+                if (string.IsNullOrEmpty(ans))
+                {
+                    return;
+                }
                 uint key;
                 if (uint.TryParse(ans, out key))
                 {
