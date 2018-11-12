@@ -713,6 +713,18 @@ namespace FreeMote.Psb
         /// <returns>Binary</returns>
         public byte[] Build()
         {
+            var ms = ToStream();
+            var bts = ms.ToArray();
+            ms.Dispose();
+            return bts;
+        }
+
+        /// <summary>
+        /// Build as <see cref="MemoryStream"/>
+        /// </summary>
+        /// <returns></returns>
+        public MemoryStream ToStream()
+        {
             /*
              * Header
              * --------------
@@ -825,7 +837,8 @@ namespace FreeMote.Psb
 
             #endregion
 
-            return ms.ToArray();
+            ms.Position = 0;
+            return ms;
         }
 
         private void Pack(BinaryWriter bw, IPsbValue obj)

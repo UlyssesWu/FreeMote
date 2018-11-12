@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using LZ4.Frame;
-//TODO: switch to CLI solution?
+using K4os.Compression.LZ4.Streams;
 
 namespace FreeMote.Plugins.Shells
 {
@@ -13,6 +12,11 @@ namespace FreeMote.Plugins.Shells
     [ExportMetadata("Comment", "LZ4 support via LZ4.Frame.")]
     class Lz4Shell : IPsbShell
     {
+        /// <summary>
+        /// LZ4 Frame Header Signature
+        /// </summary>
+        public const int MAGIC = 0x184D2204;
+
         public string Name => "LZ4";
         public bool IsInShell(Stream stream, Dictionary<string, object> context = null)
         {
@@ -20,7 +24,7 @@ namespace FreeMote.Plugins.Shells
             var pos = stream.Position;
             stream.Read(header, 0, 4);
             stream.Position = pos;
-            if (BitConverter.ToInt32(header,0) == LZ4Frame.MAGIC)
+            if (BitConverter.ToInt32(header, 0) == MAGIC)
             {
                 if (context != null)
                 {
@@ -34,14 +38,27 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToPsb(Stream stream, Dictionary<string, object> context = null)
         {
-            return new MemoryStream(LZ4Frame.Decompress(stream));
+            var ms = new MemoryStream();
+            using (var decode = LZ4Stream.Decode(stream, leaveOpen:true))
+            {
+                decode.CopyTo(ms);
+            }
+
+            ms.Position = 0;
+            return ms;
         }
 
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
-            return new MemoryStream(LZ4Frame.Compress(stream));
+            var ms = new MemoryStream();
+            using (var encode = LZ4Stream.Encode(ms, leaveOpen:true))
+            {
+                stream.CopyTo(encode);
+            }
+            ms.Position = 0;
+            return ms;
         }
 
-        public byte[] Signature => BitConverter.GetBytes(LZ4Frame.MAGIC);
+        public byte[] Signature => BitConverter.GetBytes(MAGIC);
     }
 }

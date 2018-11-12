@@ -404,7 +404,21 @@ namespace FreeMote.Tests
             var pszStream = pszShell.ToShell(psbStream, context) as MemoryStream;
             File.WriteAllBytes("test.psz", pszStream.ToArray());
         }
-        
+
+        [TestMethod]
+        public void TestLz4()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "dx_真闇_裸_lz4_linked.psb");
+            Lz4Shell shell = new Lz4Shell();
+            var context = new Dictionary<string, object>();
+            var oriStream = File.OpenRead(path);
+            var psbStream = shell.ToPsb(oriStream, context);
+            var psb = new PSB(psbStream);
+            var pszStream = shell.ToShell(psb.ToStream(), context) as MemoryStream;
+            File.WriteAllBytes("test.lz4", pszStream.ToArray());
+        }
+
         [TestMethod]
         public void TestCompareDecompile()
         {
