@@ -136,6 +136,7 @@ namespace FreeMote.PsBuild
 
             if (File.Exists(dirPath))
             {
+                name += "-resources";
                 dirPath += "-resources";
             }
             if (!Directory.Exists(dirPath)) //ensure no file with same name!
