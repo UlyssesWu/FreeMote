@@ -323,6 +323,31 @@ namespace FreeMote.Psb
             }
         }
 
+        /// <summary>
+        /// Try to measure PSB Canvas Size
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns>True: The canvas size can be measured; False: can not get canvas size</returns>
+        public static bool TryGetCanvasSize(this PSB psb, out int width, out int height)
+        {
+            //Get from CharProfile
+            if (psb.Objects["metadata"] is PsbDictionary md && md["charaProfile"] is PsbDictionary cp && cp["pixelMarker"] is PsbDictionary pm
+                && pm["boundsBottom"] is PsbNumber b && pm["boundsTop"] is PsbNumber t && pm["boundsLeft"] is PsbNumber l && pm["boundsRight"] is PsbNumber r)
+            {
+                height = (int)Math.Abs(b.AsFloat - t.AsFloat);
+                width = (int)Math.Abs(r.AsFloat - l.AsFloat);
+                return true;
+            }
+
+            //not really useful
+            var resList = psb.CollectResources();
+            width = resList.Max(data => data.Width);
+            height = resList.Max(data => data.Height);
+            return false;
+        }
+
         #region Object Finding
 
         public static IEnumerable<IPsbValue> FindAllByPath(this PsbDictionary psbObj, string path)

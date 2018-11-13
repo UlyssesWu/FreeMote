@@ -101,9 +101,13 @@ namespace FreeMote.Psb
         /// </summary>
         public float ZIndex { get; set; }
         /// <summary>
-        /// Additional Name
+        /// The Label which this resource belongs to
         /// </summary>
-        public string Description { get; set; }
+        public string Label { get; set; }
+        /// <summary>
+        /// Name under object/{part}/motion/
+        /// </summary>
+        public string MotionName { get; set; }
 
         public int Opacity { get; set; } = 10;
         public bool Visible { get; set; } = true;

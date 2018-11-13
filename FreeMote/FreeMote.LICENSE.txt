@@ -1,3 +1,4 @@
+Some FreeMote outputs are licensed under CC BY-NC-SA 4.0. Please read: https://github.com/UlyssesWu/FreeMote/wiki/License
 FreeMote is licensed under LGPLv3. AUTHOR: Ulysses Wu (wdwxy12345@gmail.com)
 
                    GNU LESSER GENERAL PUBLIC LICENSE

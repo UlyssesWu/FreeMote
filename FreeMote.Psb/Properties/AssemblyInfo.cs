@@ -23,7 +23,7 @@ using System.Runtime.InteropServices;
 [assembly: Guid("c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7")]
 [assembly: InternalsVisibleTo("FreeMote.PsBuild")]
 [assembly: InternalsVisibleTo("FreeMote.Purify")]
-[assembly: InternalsVisibleTo("FreeMote.Psd")]
+[assembly: InternalsVisibleTo("FreeMote.Plugins")]
 [assembly: InternalsVisibleTo("FreeMote.Tests")]
 [assembly: InternalsVisibleTo("FreeMote.Editor")]
 

@@ -92,7 +92,7 @@ namespace FreeMote.Psb
 
         }
 
-        private static ResourceMetadata GenerateMmoResMetadata(PsbDictionary d, string defaultPartname = "", PsbResource r = null)
+        private static ResourceMetadata GenerateMmoResMetadata(PsbDictionary d, string defaultPartName = "", PsbResource r = null)
         {
             if (r == null)
             {
@@ -102,7 +102,7 @@ namespace FreeMote.Psb
             var dd = d.Parent.Parent as PsbDictionary ?? d;
 
             string name = "";
-            string part = defaultPartname;
+            string part = defaultPartName;
             if ((dd["label"]) is PsbString lbl)
             {
                 name = lbl.Value;

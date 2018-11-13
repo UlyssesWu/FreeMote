@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using FreeMote.Plugins;
 using FreeMote.Plugins.Shells;
 using FreeMote.Psb;
@@ -11,6 +12,7 @@ using FreeMote.PsBuild;
 using FreeMote.PsBuild.Converters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using PhotoshopFile;
 
 namespace FreeMote.Tests
 {
@@ -94,7 +96,7 @@ namespace FreeMote.Tests
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             psb.Platform = PsbSpec.ems;
             psb.Merge();
-            File.WriteAllBytes(path + ".build.psb", psb.Build()); 
+            File.WriteAllBytes(path + ".build.psb", psb.Build());
             //PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 3, null, PsbSpec.ems);
         }
 
@@ -220,7 +222,7 @@ namespace FreeMote.Tests
 
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure");
             var savePath = Path.Combine(path, "packed");
-            Dictionary<string,Image> imgs = new Dictionary<string, Image>();
+            Dictionary<string, Image> imgs = new Dictionary<string, Image>();
             foreach (var file in Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories))
             {
                 imgs.Add(file, Image.FromFile(file));
@@ -303,7 +305,7 @@ namespace FreeMote.Tests
             psb.Merge();
             File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
             File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
-            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096,4096, PsbImageFormat.Png, PsbPixelFormat.WinRGBA8); 
+            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.WinRGBA8);
         }
 
         [TestMethod]
@@ -420,6 +422,17 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPsd()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "dx_れいなh1a1.freemote-krkr-pure.win.psb");
+            PsdShell shell = new PsdShell();
+            var stream = File.OpenRead(path);
+            var inShell = shell.IsInShell(stream);
+            File.WriteAllBytes("test.psd", shell.ToShell(stream).ToArray());
+        }
+
+        [TestMethod]
         public void TestCompareDecompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
@@ -451,7 +464,7 @@ namespace FreeMote.Tests
             //Console.WriteLine("============");
             //CompareValue(psbuildPsb.Objects, pccPsb.Objects);
 
-            
+
         }
 
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)

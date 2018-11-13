@@ -13,6 +13,7 @@ namespace FreeMote.Psb
     /// </summary>
     public class PsbPainter
     {
+        public string GroupMark { get; set; } = "■";
         public PSB Source { get; set; }
         public List<ResourceMetadata> Resources { get; private set; } = new List<ResourceMetadata>();
 
@@ -76,7 +77,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Collect paintable resources
+        /// Collect paint-able resources
         /// </summary>
         private void CollectResource()
         {
@@ -102,20 +103,21 @@ namespace FreeMote.Psb
                 {
                     if (layer is PsbDictionary o)
                     {
-                        Travel(o, null);
+                        Travel(o, motion.Key, null);
                     }
                 }
             }
 
-            Resources.Sort((md1, md2) => (int)((md1.ZIndex - md2.ZIndex) * 100));
+            Resources = Resources.OrderBy(metadata => metadata.ZIndex).ToList();
 
             //Travel
-            void Travel(IPsbCollection collection, (float x, float y, float z)? baseLocation, bool baseVisible = true)
+            void Travel(IPsbCollection collection, string motionName, (float x, float y, float z)? baseLocation, bool baseVisible = true)
             {
                 if (collection is PsbDictionary dic)
                 {
                     if (dic.ContainsKey("frameList") && dic["frameList"] is PsbCollection col)
                     {
+                        var labelName = dic["label"].ToString(); //part label, e.g. "涙R"
                         //Collect Locations
                         var coordObj = col
                             .Where(o => o is PsbDictionary d && d.ContainsKey("content") &&
@@ -171,6 +173,8 @@ namespace FreeMote.Psb
                                     if (baseLocation != null && res != null && !Resources.Contains(res))
                                     {
                                         var location = baseLocation.Value;
+                                        res.Label = labelName;
+                                        res.MotionName = motionName;
                                         //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
                                         res.OriginX = location.x;
                                         res.OriginY = location.y;
@@ -188,7 +192,7 @@ namespace FreeMote.Psb
                                             .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                                         Travel(
                                             (IPsbCollection)Source.Objects["object"].Children(ps[0]).Children("motion")
-                                                .Children(ps[1]).Children("layer"), baseLocation, suggestVisible);
+                                                .Children(ps[1]).Children("layer"), ps[1], baseLocation, suggestVisible);
                                     }
                                 }
                                 //win
@@ -200,6 +204,8 @@ namespace FreeMote.Psb
                                     if (baseLocation != null && res != null && !Resources.Contains(res))
                                     {
                                         var location = baseLocation.Value;
+                                        res.Label = labelName;
+                                        res.MotionName = motionName;
                                         //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
                                         res.OriginX = location.x;
                                         res.OriginY = location.y;
@@ -216,7 +222,7 @@ namespace FreeMote.Psb
                                     {
                                         Travel(
                                             (IPsbCollection)Source.Objects["object"].Children(s.Value).Children("motion")
-                                                .Children(icon).Children("layer"), baseLocation, suggestVisible);
+                                                .Children(icon).Children("layer"), icon, baseLocation, suggestVisible);
                                     }
                                 }
                             }
@@ -226,11 +232,11 @@ namespace FreeMote.Psb
 
                     if (dic.ContainsKey("children") && dic["children"] is PsbCollection ccol)
                     {
-                        Travel(ccol, baseLocation, baseVisible);
+                        Travel(ccol, motionName, baseLocation, baseVisible);
                     }
                     if (dic.ContainsKey("layer") && dic["layer"] is PsbCollection ccoll)
                     {
-                        Travel(ccoll, baseLocation, baseVisible);
+                        Travel(ccoll, motionName, baseLocation, baseVisible);
                     }
                 }
                 else if (collection is PsbCollection ccol)
@@ -239,7 +245,7 @@ namespace FreeMote.Psb
                     {
                         if (cc is IPsbCollection ccc)
                         {
-                            Travel(ccc, baseLocation, baseVisible);
+                            Travel(ccc, motionName, baseLocation, baseVisible);
                         }
                     }
                 }

@@ -117,7 +117,7 @@ namespace FreeMote.Tools.PsBuild
                     PSB psb = new PSB(s);
                     if (psb.Platform == _platform.Value)
                     {
-                        Console.WriteLine("Already at the same platform, Skip.");
+                        Console.WriteLine("Already on the same platform, Skip.");
                     }
                     else
                     {
