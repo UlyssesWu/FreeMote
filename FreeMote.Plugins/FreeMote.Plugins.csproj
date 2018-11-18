@@ -90,6 +90,7 @@
     <PostBuildEvent>xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsbDecompile\$(OutDir)" /D /E /Y
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsBuild\$(OutDir)" /D /E /Y
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtConvert\$(OutDir)" /D /E /Y
-xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtMake\$(OutDir)" /D /E /Y</PostBuildEvent>
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtMake\$(OutDir)" /D /E /Y
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.Viewer\$(OutDir)" /D /E /Y</PostBuildEvent>
   </PropertyGroup>
 </Project>

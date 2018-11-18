@@ -1,10 +1,80 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace FreeMote.Psb
 {
+    public static class PsbExtension
+    {
+        /// <summary>
+        /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static PsbPixelFormat DefaultPixelFormat(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.common:
+                case PsbSpec.ems:
+                    return PsbPixelFormat.CommonRGBA8;
+                case PsbSpec.krkr:
+                case PsbSpec.win:
+                    return PsbPixelFormat.WinRGBA8;
+                case PsbSpec.other:
+                default:
+                    return PsbPixelFormat.None;
+            }
+        }
+
+        /// <summary>
+        /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
+        /// </summary>
+        /// <param name="typeStr"></param>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static PsbPixelFormat ToPsbPixelFormat(this string typeStr, PsbSpec spec)
+        {
+            if (String.IsNullOrEmpty(typeStr))
+            {
+                return PsbPixelFormat.None;
+            }
+            switch (typeStr.ToUpperInvariant())
+            {
+                case "DXT5":
+                    return PsbPixelFormat.DXT5;
+                case "RGBA8":
+                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
+                        return PsbPixelFormat.CommonRGBA8;
+                    else
+                        return PsbPixelFormat.WinRGBA8;
+                case "RGBA4444":
+                    return PsbPixelFormat.WinRGBA4444;
+                default:
+                    return PsbPixelFormat.None;
+            }
+        }
+
+        /// <summary>
+        /// Get <see cref="PsbType"/>'s default extension
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static string DefaultExtension(this PsbType type)
+        {
+            switch (type)
+            {
+                case PsbType.Pimg:
+                    return "pimg";
+                case PsbType.Scn:
+                    return "scn";
+                case PsbType.Motion:
+                default:
+                    return "psb";
+            }
+        }
+    }
+
     internal static class PsbHelper
     {
         //WARN: GetSize should not return 0
@@ -165,75 +235,7 @@ namespace FreeMote.Psb
         {
             return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
         }
-
-        /// <summary>
-        /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
-        /// </summary>
-        /// <param name="spec"></param>
-        /// <returns></returns>
-        public static PsbPixelFormat DefaultPixelFormat(this PsbSpec spec)
-        {
-            switch (spec)
-            {
-                case PsbSpec.common:
-                case PsbSpec.ems:
-                    return PsbPixelFormat.CommonRGBA8;
-                case PsbSpec.krkr:
-                case PsbSpec.win:
-                    return PsbPixelFormat.WinRGBA8;
-                case PsbSpec.other:
-                default:
-                    return PsbPixelFormat.None;
-            }
-        }
-
-        /// <summary>
-        /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
-        /// </summary>
-        /// <param name="typeStr"></param>
-        /// <param name="spec"></param>
-        /// <returns></returns>
-        public static PsbPixelFormat ToPsbPixelFormat(this string typeStr, PsbSpec spec)
-        {
-            if (String.IsNullOrEmpty(typeStr))
-            {
-                return PsbPixelFormat.None;
-            }
-            switch (typeStr.ToUpperInvariant())
-            {
-                case "DXT5":
-                    return PsbPixelFormat.DXT5;
-                case "RGBA8":
-                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
-                        return PsbPixelFormat.CommonRGBA8;
-                    else
-                        return PsbPixelFormat.WinRGBA8;
-                case "RGBA4444":
-                    return PsbPixelFormat.WinRGBA4444;
-                default:
-                    return PsbPixelFormat.None;
-            }
-        }
-
-        /// <summary>
-        /// Get <see cref="PsbType"/>'s default extension
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static string DefaultExtension(this PsbType type)
-        {
-            switch (type)
-            {
-                case PsbType.Pimg:
-                    return "pimg";
-                case PsbType.Scn:
-                    return "scn";
-                case PsbType.Motion:
-                default:
-                    return "psb";
-            }
-        }
-
+        
         /// <summary>
         /// Get name in <see cref="PsbDictionary"/>
         /// </summary>

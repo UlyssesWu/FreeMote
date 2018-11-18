@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtConvert",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.EmtMake", "FreeMote.Tools.EmtMake\FreeMote.Tools.EmtMake.csproj", "{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMote.Tools.Viewer", "FreeMote.Tools.Viewer\FreeMote.Tools.Viewer.csproj", "{49ED6374-A267-4CD8-9708-8A900DCDC463}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD8855CF-0B99-43B2-8B92-4013E9A0C41C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49ED6374-A267-4CD8-9708-8A900DCDC463}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49ED6374-A267-4CD8-9708-8A900DCDC463}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49ED6374-A267-4CD8-9708-8A900DCDC463}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49ED6374-A267-4CD8-9708-8A900DCDC463}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

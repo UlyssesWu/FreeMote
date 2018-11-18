@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FreeMote.Plugins;
+
 // ReSharper disable InconsistentNaming
 
 namespace FreeMote.Psb
@@ -21,6 +23,8 @@ namespace FreeMote.Psb
         /// Header
         /// </summary>
         internal PsbHeader Header { get; set; }
+
+        public Encoding Encoding { get; set; } = Encoding.UTF8;
 
         private PsbArray Charset;
         private PsbArray NamesData;
@@ -170,7 +174,7 @@ namespace FreeMote.Psb
                 stream.Seek(-4, SeekOrigin.Current);
             }
 
-            BinaryReader sourceBr = new BinaryReader(stream, Encoding.UTF8);
+            BinaryReader sourceBr = new BinaryReader(stream, Encoding);
             BinaryReader br = sourceBr;
 
             //Load Header
@@ -185,7 +189,7 @@ namespace FreeMote.Psb
             if (memoryPreload)
             {
                 sourceBr.BaseStream.Position = 0;
-                br = new BinaryReader(new MemoryStream(sourceBr.ReadBytes((int)Header.OffsetChunkData)));
+                br = new BinaryReader(new MemoryStream(sourceBr.ReadBytes((int)Header.OffsetChunkData)), Encoding);
             }
 
             //Pre Load Strings
@@ -708,8 +712,9 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Build PSB
-        /// <para>Make sure you have called <see cref="Merge"/> or the output will be invalid</para>
+        /// <para>Make sure you have called <see cref="Merge"/> or the output can be invalid.</para>
         /// </summary>
+        /// <remarks>Why FreeMote do not call <see cref="Merge"/> by default? Because Merge is a strict string merge method which will merge any redundant string. If you have to keep two same strings from merged into one, you can write your own Merge method.</remarks>
         /// <returns>Binary</returns>
         public byte[] Build()
         {
@@ -720,7 +725,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Build as <see cref="MemoryStream"/>
+        /// Build as <see cref="MemoryStream"/>, make sure you have called <see cref="Merge"/> before.
         /// </summary>
         /// <returns></returns>
         public MemoryStream ToStream()
@@ -738,7 +743,7 @@ namespace FreeMote.Psb
              * --------------
              */
             MemoryStream ms = new MemoryStream();
-            BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8);
+            BinaryWriter bw = new BinaryWriter(ms, Encoding);
             bw.Pad((int)Header.GetHeaderLength());
             Header.HeaderLength = Header.GetHeaderLength();
 
@@ -770,7 +775,7 @@ namespace FreeMote.Psb
             using (var strMs = new MemoryStream())
             {
                 List<uint> offsets = new List<uint>(Strings.Count);
-                BinaryWriter strBw = new BinaryWriter(strMs);
+                BinaryWriter strBw = new BinaryWriter(strMs, Encoding);
                 //Collect Strings
                 for (var i = 0; i < Strings.Count; i++)
                 {
@@ -797,7 +802,7 @@ namespace FreeMote.Psb
                 List<uint> offsets = new List<uint>(Resources.Count);
                 List<uint> lengths = new List<uint>(Resources.Count);
 
-                BinaryWriter resBw = new BinaryWriter(resMs);
+                BinaryWriter resBw = new BinaryWriter(resMs, Encoding);
 
                 for (var i = 0; i < Resources.Count; i++)
                 {
@@ -884,7 +889,7 @@ namespace FreeMote.Psb
             var indexList = new List<uint>(pDic.Count);
             using (var ms = new MemoryStream())
             {
-                BinaryWriter mbw = new BinaryWriter(ms);
+                BinaryWriter mbw = new BinaryWriter(ms, Encoding);
                 foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
                     //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
@@ -918,7 +923,7 @@ namespace FreeMote.Psb
             var indexList = new List<uint>(pCol.Count);
             using (var ms = new MemoryStream())
             {
-                BinaryWriter mbw = new BinaryWriter(ms);
+                BinaryWriter mbw = new BinaryWriter(ms, Encoding);
 
                 foreach (var obj in pCol)
                 {
@@ -984,6 +989,16 @@ namespace FreeMote.Psb
 
         private void LoadFromDullahan(Stream stream, int detectSize = 1024)
         {
+            //var ctx = FreeMount.CreateContext();
+            //string currentType = null;
+            //var ms = ctx.OpenFromShell(stream, ref currentType);
+            //if (ms != null)
+            //{
+            //    var oldStream = stream;
+            //    stream = ms;
+            //    oldStream.Dispose();
+            //}
+
             byte[] wNumbers = { 1, 0, 0, 0 };
             byte[] nNumbers = { 1, 0 };
             var possibleHeader = new byte[detectSize];
@@ -1019,7 +1034,7 @@ namespace FreeMote.Psb
             }
 
             Header.Version = 3;
-            var br = new BinaryReader(stream);
+            var br = new BinaryReader(stream, Encoding);
             Strings = new List<PsbString>();
             Resources = new List<PsbResource>();
 
@@ -1061,7 +1076,7 @@ namespace FreeMote.Psb
                 br.BaseStream.Seek(-strsLength, SeekOrigin.Current);
 
                 using (var strMs = new MemoryStream(br.ReadBytes((int)strsLength)))
-                using (var strBr = new BinaryReader(strMs))
+                using (var strBr = new BinaryReader(strMs, Encoding))
                 {
                     for (var i = 0; i < Strings.Count; i++)
                     {
@@ -1129,20 +1144,36 @@ namespace FreeMote.Psb
             if (Resources.Count > 0)
             {
                 Resources.Sort((r1, r2) => (int)((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
+
+                #region Dullahan Resource Inference : Infer by align
+                //Failed on some no align PSB
+
                 //WARN: Didn't test very much, if your texture looks strange, FIX THIS
                 //If this is wrong, try to align by EOF
-                var currentPos = (uint)br.BaseStream.Position;
-                var padding = 16 - currentPos % 16;
-                br.ReadBytes((int)padding);
-                if (padding < 16)
-                {
-                    if (br.ReadBytes(16).All(b => b == 0))
-                    {
-                        padding += 16;
-                    }
-                }
+                //var currentPos = (uint)br.BaseStream.Position;
+                //var padding = 16 - currentPos % 16;
+                //br.ReadBytes((int)padding);
+                //if (padding < 16)
+                //{
+                //    if (br.ReadBytes(16).All(b => b == 0))
+                //    {
+                //        padding += 16;
+                //    }
+                //}
 
-                Header.OffsetChunkData = currentPos + padding;
+                #endregion
+
+                #region Dullahan Resource Inference : Infer by EOF
+                //This method works on all known PSB
+
+                var currentPos = br.BaseStream.Position;
+                var remainLength = br.BaseStream.Length - currentPos;
+                var shouldBeLength = ChunkOffsets.Value.Max() + ChunkLengths.Value.Max();
+                var padding = Math.Max((remainLength - shouldBeLength), 0);
+
+                #endregion
+
+                Header.OffsetChunkData = (uint)(currentPos + padding);
                 Header.OffsetResourceOffsets = Header.OffsetChunkData;
                 foreach (var res in Resources)
                 {

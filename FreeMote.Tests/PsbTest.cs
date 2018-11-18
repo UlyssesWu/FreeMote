@@ -201,26 +201,28 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb");
-            var path = Path.Combine(resPath, "HD愛子a_春服.psb");
-            var path2 = Path.Combine(resPath, "HD愛子a_春服-pure.psb");
+            //var path = Path.Combine(resPath, "HD愛子a_春服.psb");
+            //var path2 = Path.Combine(resPath, "HD愛子a_春服-pure.psb");
             //var path = Path.Combine(resPath, "akira_guide.psb");
             //var path2 = Path.Combine(resPath, "akira_guide-pure.psb");
+            var path = Path.Combine(resPath, "dx_真闇_裸_impure.psb");
+            var path2 = Path.Combine(resPath, "dx_真闇_裸-pure.psb");
 
             var psb = PSB.DullahanLoad(new FileStream(path, FileMode.Open), 64);
             var p2 = new PsbFile(path2);
 
             var offset1 = psb.Header.OffsetChunkData;
             var offset2 = p2.Header.OffsetChunkData;
-            //Assert.AreEqual(offset1, offset2);
+            Assert.AreEqual(offset1, offset2);
 
             var obj = psb.Objects.First();
-            if (psb.Platform == PsbSpec.krkr)
-            {
-                psb.SwitchSpec(PsbSpec.win);
-            }
-            psb.Merge();
-            var r = psb.Resources[0].Data.Length;
-            File.WriteAllBytes("Dullahan.psb", psb.Build());
+            //if (psb.Platform == PsbSpec.krkr)
+            //{
+            //    psb.SwitchSpec(PsbSpec.win);
+            //}
+            //psb.Merge();
+            //var r = psb.Resources[0].Data.Length;
+            //File.WriteAllBytes("Dullahan.psb", psb.Build());
         }
 
         [TestMethod]
