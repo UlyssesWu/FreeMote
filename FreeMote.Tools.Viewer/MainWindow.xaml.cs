@@ -74,6 +74,7 @@ namespace FreeMote.Tools.Viewer
             }
 
             bool quickLoad = args.Contains("-d");
+            bool removeTempFile = false;
 
             if (!File.Exists(_psbPath))
             {
@@ -98,7 +99,10 @@ namespace FreeMote.Tools.Viewer
                         psb.Merge();
                         _psbPath = Path.GetTempFileName();
                         File.WriteAllBytes(_psbPath, psb.Build());
+                        removeTempFile = true;
+                        ms?.Dispose();
                     }
+                    GC.Collect(); //Can save memory from 700MB to 400MB
                 }
                 catch (Exception e)
                 {
@@ -150,6 +154,12 @@ namespace FreeMote.Tools.Viewer
             _player.SetVariable("fade_z", 256);
             _player.SetSmoothing(true);
             _player.Show();
+
+            if (removeTempFile)
+            {
+                File.Delete(_psbPath);
+            }
+
             // begin rendering the custom D3D scene into the D3DImage
             BeginRenderingScene();
         }
