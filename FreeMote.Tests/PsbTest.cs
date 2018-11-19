@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
-using FreeMote.PsBuild;
 
 
 namespace FreeMote.Tests

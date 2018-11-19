@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using FreeMote.Plugins;
 using FreeMote.Plugins.Shells;
 using FreeMote.Psb;
@@ -12,7 +11,6 @@ using FreeMote.PsBuild;
 using FreeMote.PsBuild.Converters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using PhotoshopFile;
 
 namespace FreeMote.Tests
 {

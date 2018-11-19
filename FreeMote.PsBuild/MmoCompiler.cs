@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FreeMote.PsBuild
+﻿namespace FreeMote.PsBuild
 {
     /// <summary>
     /// TODO: Managed Open-Source MMO->PSB Compiler

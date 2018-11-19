@@ -1,7 +1,5 @@
 ﻿/*
- *  Project AZUSA © 2015-2017 ( https://github.com/Project-AZUSA )
- *  Emote.NET Sample for WPF
- *  LICENSE:CC BY-NC-SA 4.0
+ *  Project AZUSA © 2015-2018 ( https://github.com/Project-AZUSA )
  *  AUTHOR:	Ulysses (wdwxy12345@gmail.com)
  */
 
@@ -19,11 +17,6 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 
-/*      WindowStyle="None"
-        AllowsTransparency="True"
-        两者需要一起使用
-*/
-
 namespace FreeMote.Tools.Viewer
 {
     enum D3DResult : uint
@@ -35,9 +28,6 @@ namespace FreeMote.Tools.Viewer
         UNKNOWN_ERROR = 0xFFFFFFFF
     }
 
-    /// <summary>
-    ///     MainWindow.xaml 的交互逻辑
-    /// </summary>
     public partial class MainWindow : Window
     {
         const float RefreshRate = 1000.0f / 65.0f; // 1/n秒カウントをmsへ変換。
