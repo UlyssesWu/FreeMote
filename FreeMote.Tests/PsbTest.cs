@@ -204,8 +204,12 @@ namespace FreeMote.Tests
             //var path2 = Path.Combine(resPath, "HD愛子a_春服-pure.psb");
             //var path = Path.Combine(resPath, "akira_guide.psb");
             //var path2 = Path.Combine(resPath, "akira_guide-pure.psb");
-            var path = Path.Combine(resPath, "dx_真闇_裸_impure.psb");
-            var path2 = Path.Combine(resPath, "dx_真闇_裸-pure.psb");
+            //var path = Path.Combine(resPath, "dx_真闇_裸_impure.psb");
+            //var path2 = Path.Combine(resPath, "dx_真闇_裸-pure.psb");
+            //var path = Path.Combine(resPath, "emote396-win.psb");
+            //var path2 = Path.Combine(resPath, "emote396-win.pure.psb");
+            var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb");
+            var path2 = Path.Combine(resPath, "ca01_l_body_1-pure.psb");
 
             var psb = PSB.DullahanLoad(new FileStream(path, FileMode.Open), 64);
             var p2 = new PsbFile(path2);

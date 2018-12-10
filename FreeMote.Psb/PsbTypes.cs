@@ -706,6 +706,152 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
+    /// Detect if byte segment is a <see cref="PsbArray"/>
+    /// </summary>
+    public class PsbArrayDetector : IPsbValue
+    {
+        public static bool IsPsbArrayType(byte b)
+            => b >= (byte) PsbObjType.ArrayN1 && b <= (byte) PsbObjType.ArrayN1 + MaxIntSize;
+
+        private const int MaxIntSize = 4;
+        public bool IsArray { get; private set; }
+        public int N { get; }
+        public long Position { get; set; }
+        /// <summary>
+        /// First Element
+        /// </summary>
+        public uint First { get; set; }
+        public int Count { get; set; }
+        public int EntryLength { get; set; }
+
+        public PsbObjType Type { get; private set; }
+        public int Size => 1 + N + 1 + Count * EntryLength;
+        public PsbArrayDetector(BinaryReader br)
+        {
+            IsArray = false;
+            Position = br.BaseStream.Position;
+
+            //Parse Type
+            var type = br.ReadByte();
+            if (Enum.IsDefined(typeof(PsbObjType), type))
+            {
+                Type = (PsbObjType)type;
+            }
+            else
+            {
+                Type = PsbObjType.None;
+            }
+            if (type < (byte)PsbObjType.ArrayN1 || type > (byte)PsbObjType.ArrayN1 + MaxIntSize)
+            {
+                return;
+            }
+
+            //Parse N
+            N = type - (byte)PsbObjType.ArrayN1 + 1;
+            if (N < 0 || N > MaxIntSize)
+            {
+                return;
+            }
+
+            //Parse Count
+            var count = br.ReadBytes(N).UnzipUInt();
+            if (count > int.MaxValue)
+            {
+                return;
+            }
+
+            Count = (int)count;
+
+            //Parse EntryLength
+            EntryLength = (byte)(br.ReadByte() - PsbObjType.NumberN8);
+            if (EntryLength < 0 || EntryLength > MaxIntSize)
+            {
+                return;
+            }
+
+            if (Count > 0)
+            {
+                First = br.ReadBytes(EntryLength).UnzipUInt();
+            }
+
+            IsArray = true;
+        }
+
+        //public PsbArrayDetector(Span<byte> bts)
+        //{
+        //    IsArray = false;
+
+        //    //Parse Type
+        //    var type = bts[0];
+        //    if (Enum.IsDefined(typeof(PsbObjType), type))
+        //    {
+        //        Type = (PsbObjType)type;
+        //    }
+        //    else
+        //    {
+        //        Type = PsbObjType.None;
+        //    }
+        //    if (type < (byte)PsbObjType.ArrayN1 || type > (byte)PsbObjType.ArrayN1 + MaxIntSize)
+        //    {
+        //        return;
+        //    }
+
+        //    //Parse N
+        //    N = type - (byte)PsbObjType.ArrayN1 + 1;
+        //    if (N < 0 || N > MaxIntSize)
+        //    {
+        //        return;
+        //    }
+
+        //    //Parse Count
+        //    var count = bts.Slice(1, N).ToArray().UnzipUInt();
+        //    if (count > int.MaxValue)
+        //    {
+        //        return;
+        //    }
+
+        //    Count = (int)count;
+
+        //    //Parse EntryLength
+        //    EntryLength = (byte)(bts[1+N] - PsbObjType.NumberN8);
+        //    if (EntryLength < 0 || EntryLength > MaxIntSize)
+        //    {
+        //        return;
+        //    }
+
+        //    if (Count > 0)
+        //    {
+        //        First = bts.Slice(2+N, EntryLength).ToArray().UnzipUInt();
+        //    }
+
+        //    IsArray = true;
+        //}
+
+        public PsbArray ToPsbArray(BinaryReader br)
+        {
+            if (IsArray)
+            {
+                var p = Position;
+                var n = N;
+                br.BaseStream.Seek(Position + 1, SeekOrigin.Begin);
+                return new PsbArray(N, br);
+            }
+
+            return null;
+        }
+
+        public override string ToString()
+        {
+            if (IsArray)
+            {
+                return $"Array[{Count}]{{{First}...}}";
+            }
+
+            return Type.ToString();
+        }
+    }
+
+    /// <summary>
     /// String: Reference type
     /// </summary>
     [Serializable]
