@@ -164,8 +164,8 @@ namespace FreeMote
             }
             if (header.Version > 3)
             {
-                header.OffsetUnknown1 = br.ReadUInt32();
-                header.OffsetUnknown2 = br.ReadUInt32();
+                header.OffsetUnknownOffsets = br.ReadUInt32();
+                header.OffsetUnknownLengths = br.ReadUInt32();
                 header.OffsetUnknownData = br.ReadUInt32();
             }
             bw.Write(header.HeaderLength);
@@ -182,8 +182,8 @@ namespace FreeMote
             }
             if (header.Version > 3)
             {
-                bw.Write(header.OffsetUnknown1);
-                bw.Write(header.OffsetUnknown2);
+                bw.Write(header.OffsetUnknownOffsets);
+                bw.Write(header.OffsetUnknownLengths);
                 bw.Write(header.OffsetUnknownData);
             }
         }
@@ -210,8 +210,8 @@ namespace FreeMote
             }
             if (header.Version > 3)
             {
-                header.OffsetUnknown1 = context.ReadUInt32(br);
-                header.OffsetUnknown2 = context.ReadUInt32(br);
+                header.OffsetUnknownOffsets = context.ReadUInt32(br);
+                header.OffsetUnknownLengths = context.ReadUInt32(br);
                 header.OffsetUnknownData = context.ReadUInt32(br);
             }
 
@@ -241,14 +241,14 @@ namespace FreeMote
                 }
                 else //PSBv4
                 {
-                    checkBuffer = BitConverter.GetBytes(header.OffsetUnknown1)
-                        .Concat(BitConverter.GetBytes(header.OffsetUnknown2))
+                    checkBuffer = BitConverter.GetBytes(header.OffsetUnknownOffsets)
+                        .Concat(BitConverter.GetBytes(header.OffsetUnknownLengths))
                         .Concat(BitConverter.GetBytes(header.OffsetUnknownData)).ToArray();
                     adler32.Update(checkBuffer);
                     header.Checksum = (uint)adler32.Checksum;
                     bw.Write(header.Checksum);
-                    bw.Write(header.OffsetUnknown1);
-                    bw.Write(header.OffsetUnknown2);
+                    bw.Write(header.OffsetUnknownOffsets);
+                    bw.Write(header.OffsetUnknownLengths);
                     bw.Write(header.OffsetUnknownData);
                 }
             }
@@ -281,8 +281,8 @@ namespace FreeMote
             }
             if (header.Version > 3)
             {
-                header.OffsetUnknown1 = br.ReadUInt32();
-                header.OffsetUnknown2 = br.ReadUInt32();
+                header.OffsetUnknownOffsets = br.ReadUInt32();
+                header.OffsetUnknownLengths = br.ReadUInt32();
                 header.OffsetUnknownData = br.ReadUInt32();
             }
             var checksumEndPosition = br.BaseStream.Position;
@@ -312,14 +312,14 @@ namespace FreeMote
                 }
                 else //PSBv4
                 {
-                    checkBuffer = BitConverter.GetBytes(header.OffsetUnknown1)
-                                            .Concat(BitConverter.GetBytes(header.OffsetUnknown2))
+                    checkBuffer = BitConverter.GetBytes(header.OffsetUnknownOffsets)
+                                            .Concat(BitConverter.GetBytes(header.OffsetUnknownLengths))
                                             .Concat(BitConverter.GetBytes(header.OffsetUnknownData)).ToArray();
                     adler32.Update(checkBuffer);
                     header.Checksum = (uint)adler32.Checksum;
                     context.Write(header.Checksum, bw);
-                    context.Write(header.OffsetUnknown1, bw);
-                    context.Write(header.OffsetUnknown2, bw);
+                    context.Write(header.OffsetUnknownOffsets, bw);
+                    context.Write(header.OffsetUnknownLengths, bw);
                     context.Write(header.OffsetUnknownData, bw);
                 }
             }

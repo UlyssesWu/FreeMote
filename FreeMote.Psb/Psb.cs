@@ -264,9 +264,9 @@ namespace FreeMote.Psb
 
         private void LoadUnknown(BinaryReader br)
         {
-            br.BaseStream.Seek(Header.OffsetUnknown1, SeekOrigin.Begin);
+            br.BaseStream.Seek(Header.OffsetUnknownOffsets, SeekOrigin.Begin);
             UnknownOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
-            br.BaseStream.Seek(Header.OffsetUnknown2, SeekOrigin.Begin);
+            br.BaseStream.Seek(Header.OffsetUnknownLengths, SeekOrigin.Begin);
             UnknownLengths = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             if (UnknownOffsets.Value.Count > 0)
             {
@@ -831,10 +831,10 @@ namespace FreeMote.Psb
                     pos += len;
                 }
 
-                Header.OffsetUnknown1 = (uint)bw.BaseStream.Position;
+                Header.OffsetUnknownOffsets = (uint)bw.BaseStream.Position;
                 UnknownOffsets.WriteTo(bw);
 
-                Header.OffsetUnknown2 = (uint)bw.BaseStream.Position;
+                Header.OffsetUnknownLengths = (uint)bw.BaseStream.Position;
                 UnknownLengths.WriteTo(bw);
 
                 foreach (var bts in UnknownData)
@@ -875,10 +875,10 @@ namespace FreeMote.Psb
 
             if (Header.Version > 3)
             {
-                Header.OffsetUnknown1 = (uint)bw.BaseStream.Position;
+                Header.OffsetUnknownOffsets = (uint)bw.BaseStream.Position;
                 var emptyArray = new PsbArray();
                 emptyArray.WriteTo(bw);
-                Header.OffsetUnknown2 = (uint)bw.BaseStream.Position;
+                Header.OffsetUnknownLengths = (uint)bw.BaseStream.Position;
                 emptyArray.WriteTo(bw);
             }
 
@@ -1189,8 +1189,8 @@ namespace FreeMote.Psb
             ) //unknown1
             {
                 Header.Version = 4;
-                Header.OffsetUnknown1 = pos1;
-                Header.OffsetUnknown2 = pos2;
+                Header.OffsetUnknownOffsets = pos1;
+                Header.OffsetUnknownLengths = pos2;
                 UnknownOffsets = array1;
                 UnknownLengths = array2;
 

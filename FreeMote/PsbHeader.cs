@@ -81,14 +81,14 @@ namespace FreeMote
         /// <para><see cref="OffsetUnknownData"/> - 6</para>
         /// </summary>
         //[FieldOffset(44)]
-        public uint OffsetUnknown1;
+        public uint OffsetUnknownOffsets;
 
         /// <summary>
         /// [New in v4] Usually an empty array (3 bytes)
         /// <para><see cref="OffsetUnknownData"/> - 3</para>
         /// </summary>
         //[FieldOffset(48)]
-        public uint OffsetUnknown2;
+        public uint OffsetUnknownLengths;
 
         /// <summary>
         /// [New in v4] If there are no data, same as <see cref="OffsetChunkOffsets"/>
@@ -136,8 +136,8 @@ namespace FreeMote
                 }
                 if (header.Version > 3)
                 {
-                    header.OffsetUnknown1 = br.ReadUInt32();
-                    header.OffsetUnknown2 = br.ReadUInt32();
+                    header.OffsetUnknownOffsets = br.ReadUInt32();
+                    header.OffsetUnknownLengths = br.ReadUInt32();
                     header.OffsetUnknownData = br.ReadUInt32();
                 }
             }
@@ -178,8 +178,8 @@ namespace FreeMote
             }
             if (header.Version > 3)
             {
-                header.OffsetUnknown1 = context.ReadUInt32(br);
-                header.OffsetUnknown2 = context.ReadUInt32(br);
+                header.OffsetUnknownOffsets = context.ReadUInt32(br);
+                header.OffsetUnknownLengths = context.ReadUInt32(br);
                 header.OffsetUnknownData = context.ReadUInt32(br);
             }
             return header;
@@ -207,8 +207,8 @@ namespace FreeMote
                 Checksum = (uint)adler32.Checksum;
                 return Checksum;
             }
-            checkBuffer = BitConverter.GetBytes(OffsetUnknown1)
-                                           .Concat(BitConverter.GetBytes(OffsetUnknown2))
+            checkBuffer = BitConverter.GetBytes(OffsetUnknownOffsets)
+                                           .Concat(BitConverter.GetBytes(OffsetUnknownLengths))
                                            .Concat(BitConverter.GetBytes(OffsetUnknownData))
                                            .ToArray();
             adler32.Update(checkBuffer);
@@ -272,8 +272,8 @@ namespace FreeMote
                 OffsetChunkLengths = (uint)(OffsetChunkLengths + offset);
                 OffsetChunkData = (uint)(OffsetChunkData + offset);
                 OffsetEntries = (uint)(OffsetEntries + offset);
-                OffsetUnknown1 = OffsetChunkOffsets - 6;
-                OffsetUnknown2 = OffsetChunkOffsets - 3;
+                OffsetUnknownOffsets = OffsetChunkOffsets - 6;
+                OffsetUnknownLengths = OffsetChunkOffsets - 3;
                 OffsetUnknownData = OffsetChunkOffsets;
             }
             UpdateChecksum();
@@ -301,8 +301,8 @@ namespace FreeMote
                 }
                 if (Version > 3)
                 {
-                    bw.Write(OffsetUnknown1);
-                    bw.Write(OffsetUnknown2);
+                    bw.Write(OffsetUnknownOffsets);
+                    bw.Write(OffsetUnknownLengths);
                     bw.Write(OffsetUnknownData);
                 }
                 bw.Flush();
