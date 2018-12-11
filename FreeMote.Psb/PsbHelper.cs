@@ -49,7 +49,11 @@ namespace FreeMote.Psb
                     else
                         return PsbPixelFormat.WinRGBA8;
                 case "RGBA4444":
+                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
+                        return PsbPixelFormat.CommonRGBA4444;
                     return PsbPixelFormat.WinRGBA4444;
+                case "A8L8":
+                    return PsbPixelFormat.A8L8;
                 default:
                     return PsbPixelFormat.None;
             }
@@ -235,7 +239,7 @@ namespace FreeMote.Psb
         {
             return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
         }
-        
+
         /// <summary>
         /// Get name in <see cref="PsbDictionary"/>
         /// </summary>

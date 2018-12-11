@@ -119,6 +119,10 @@ namespace FreeMote
         /// </summary>
         WinRGBA4444,
         /// <summary>
+        /// Big Endian RGBA4444
+        /// </summary>
+        CommonRGBA4444,
+        /// <summary>
         /// Big Endian DXT5
         /// </summary>
         DXT5,

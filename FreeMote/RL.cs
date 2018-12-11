@@ -180,6 +180,10 @@ namespace FreeMote
             }
             switch (colorFormat)
             {
+                case PsbPixelFormat.CommonRGBA4444:
+                    data = Rgba428(data);
+                    Rgba2Argb(ref data); //BUG: incorrect
+                    break;
                 case PsbPixelFormat.WinRGBA4444:
                     data = Rgba428(data);
                     break;
