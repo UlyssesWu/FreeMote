@@ -123,7 +123,7 @@ namespace FreeMote
         /// </summary>
         DXT5,
         /// <summary>
-        /// Unsupport
+        /// A8L8
         /// </summary>
         A8L8,
         /// <summary>

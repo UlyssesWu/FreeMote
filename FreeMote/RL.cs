@@ -186,6 +186,9 @@ namespace FreeMote
                 case PsbPixelFormat.CommonRGBA8:
                     Rgba2Argb(ref data);
                     break;
+                case PsbPixelFormat.A8L8:
+                    data = ReadA8L8(data, width, height);
+                    break;
                 case PsbPixelFormat.DXT5: //MARK: RL seems compatible to DXT5 compress?
                     data = DxtUtil.DecompressDxt5(data, width, height);
                     Rgba2Argb(ref data); //DXT5(for win) need conversion
@@ -204,6 +207,28 @@ namespace FreeMote
                 return bmp;
             }
             throw new BadImageFormatException("data may not corresponding");
+        }
+
+        private static byte[] ReadA8L8(byte[] data, int height, int width)
+        {
+            byte[] output = new byte[height * width * 4];
+            int dst = 0;
+
+            for (int i = 0; i < width * height; i++)
+            {
+                if (2 * i + 1 > data.Length)
+                {
+                    break;
+                }
+                byte c = data[2 * i];
+                byte a = data[2 * i + 1];
+                output[dst++] = c;
+                output[dst++] = c;
+                output[dst++] = c;
+                output[dst++] = a;
+            }
+
+            return output;
         }
 
         public static void ConvertToImageFile(byte[] data, string path, int height, int width, PsbImageFormat format, PsbPixelFormat colorFormat = PsbPixelFormat.None)

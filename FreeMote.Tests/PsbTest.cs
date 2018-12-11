@@ -77,6 +77,15 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestEmtLoad396()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "emote396-a8l8.pure.psb");
+            PSB psb = new PSB(path);
+            psb.CollectResources()[0].ToImage().Save("a8l8.png");
+        }
+
+        [TestMethod]
         public void TestPsbLoadKrkr()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

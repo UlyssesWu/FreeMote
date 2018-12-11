@@ -122,7 +122,7 @@
         /// Skip some bytes
         /// </summary>
         /// <param name="byteLength"></param>
-        public void FastFoward(uint byteLength)
+        public void FastForward(uint byteLength)
         {
             for (int i = 0; i < byteLength; i++)
             {
