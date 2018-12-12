@@ -23,6 +23,11 @@ namespace FreeMote
         /// </summary>
         public const uint Key3 = 521288629;
 
+        /// <summary>
+        /// Perform 16 byte data align or not (when build)
+        /// </summary>
+        public static bool PsbDataStructureAlign { get; set; } = true;
+
         public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
 
         /// <summary>
@@ -45,9 +50,11 @@ namespace FreeMote
                 case PsbPixelFormat.DXT5:
                     return "DXT5";
                 case PsbPixelFormat.WinRGBA4444:
+                case PsbPixelFormat.CommonRGBA4444:
                     return "RGBA4444";
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
+                    return pixelFormat.ToString();
+                    //throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
             }
         }
 

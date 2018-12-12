@@ -837,6 +837,11 @@ namespace FreeMote.Psb
                 Header.OffsetUnknownLengths = (uint)bw.BaseStream.Position;
                 UnknownLengths.WriteTo(bw);
 
+                if (PsbConstants.PsbDataStructureAlign)
+                {
+                    DataAlign(bw);
+                }
+
                 Header.OffsetUnknownData = (uint)bw.BaseStream.Position;
                 foreach (var bts in UnknownData)
                 {
@@ -868,6 +873,10 @@ namespace FreeMote.Psb
                 Header.OffsetChunkLengths = (uint)bw.BaseStream.Position;
                 ChunkLengths = new PsbArray(lengths);
                 ChunkLengths.WriteTo(bw);
+                if (PsbConstants.PsbDataStructureAlign)
+                {
+                    DataAlign(bw);
+                }
                 Header.OffsetChunkData = (uint)bw.BaseStream.Position;
                 resMs.WriteTo(bw.BaseStream);
                 //bw.Write(resMs.ToArray());
@@ -883,6 +892,24 @@ namespace FreeMote.Psb
 
             ms.Position = 0;
             return ms;
+        }
+
+        /// <summary>
+        /// Perform (16) byte data align
+        /// </summary>
+        /// <param name="bw"></param>
+        /// <param name="align">by default it should be 16</param>
+        /// <returns>padded length</returns>
+        private int DataAlign(BinaryWriter bw, int align = 16)
+        {
+            var len = (int)bw.BaseStream.Position % align;
+            if (len != 0)
+            {
+                var pad = align - len;
+                bw.Pad(pad);
+                return pad;
+            }
+            return 0;
         }
 
         private void Pack(BinaryWriter bw, IPsbValue obj)

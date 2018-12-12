@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
 
@@ -80,13 +81,13 @@ namespace FreeMote.Tests
         public void TestEmtLoad396()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            //var path = Path.Combine(resPath, "emote396-a8l8.pure.psb");
+            var path = Path.Combine(resPath, "emote396-a8l8.pure.psb");
             //var path = Path.Combine(resPath, "common-rgba4444.psb");
-            var path = Path.Combine(resPath, "common-rgba4444.json.psbuild.pure.psb");
+            //var path = Path.Combine(resPath, "common-rgba4444.json.psbuild.pure.psb");
             PSB psb = new PSB(path);
-            var res = psb.CollectResources();
-            var t = res[0].PixelFormat;
-            res[0].ToImage().Save("a8l8.png");
+            var d = psb.UnknownData[0];
+            var dl = d.Length;
+            File.WriteAllBytes("p.bytes", d);
         }
 
         [TestMethod]

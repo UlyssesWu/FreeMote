@@ -90,7 +90,12 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "emote396-a8l8.pure.json");
-            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.common);
+            var path2 = Path.Combine(resPath, "emote396-a8l8.pure.psb");
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            var psb2 = new PSB(path2);
+            psb.UnknownData = psb2.UnknownData;
+            File.WriteAllBytes("396.psb", psb.Build());
+            //PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.common);
         }
 
         [TestMethod]
