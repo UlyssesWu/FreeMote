@@ -192,10 +192,10 @@ namespace FreeMote.Tools.EmtConvert
         {
             Console.WriteLine(@"Usage: .exe [mode] <PSB file path> <key> [new key]
 Mode: use `-c<shell type>` for first param to switch to shell compress/decompress mode.
-Example: emtconv test.psb 123456789
-\t emtconv test.psb 123456789 987654321
-\t emtconv -cLZ4 test.psb (compress to LZ4)
-\t emtconv -c test.psb.lz4 (decompress)
+Example: emtconvert test.psb 123456789
+\t emtconvert test.psb 123456789 987654321
+\t emtconvert -cLZ4 test.psb (compress to LZ4)
+\t emtconvert -c test.psb.lz4 (decompress)
 Hint: If ths tool can't decrypt your PSB, try PsbDecompile.
 ");
         }

@@ -1019,7 +1019,7 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Try skip header and load. May (not) work on any PSB only if body is not encrypted
-        /// <para><see cref="PsbConstants.InMemoryLoading"/> won't accelerate.</para>
+        /// <para>Can not use <see cref="PsbConstants.InMemoryLoading"/> so it will be slow.</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
         /// <param name="path"></param>
@@ -1256,6 +1256,10 @@ namespace FreeMote.Psb
                 else
                 {
                     Header.OffsetUnknownData = (uint)br.BaseStream.Position;
+                    while (!PsbArrayDetector.IsPsbArrayType((byte)br.PeekChar()))
+                    {
+                        br.ReadByte();
+                    }
                     //var pos3 = br.BaseStream.Position;
                     ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
                     Header.OffsetChunkLengths = (uint)br.BaseStream.Position;

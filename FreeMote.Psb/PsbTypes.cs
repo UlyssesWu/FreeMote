@@ -710,8 +710,14 @@ namespace FreeMote.Psb
     /// </summary>
     public class PsbArrayDetector : IPsbValue
     {
-        public static bool IsPsbArrayType(byte b)
-            => b >= (byte) PsbObjType.ArrayN1 && b <= (byte) PsbObjType.ArrayN1 + MaxIntSize;
+        /// <summary>
+        /// Check if this byte is a PsbArray type byte
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="maxSize">max ArrayN allowed</param>
+        /// <returns></returns>
+        public static bool IsPsbArrayType(byte b, int maxSize = 4)
+            => b >= (byte)PsbObjType.ArrayN1 && b <= (byte)PsbObjType.ArrayN1 + maxSize;
 
         private const int MaxIntSize = 4;
         public bool IsArray { get; private set; }
