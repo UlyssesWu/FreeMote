@@ -55,6 +55,10 @@ namespace FreeMote.Psb
                 case "A8L8":
                     return PsbPixelFormat.A8L8;
                 default:
+                    if (Enum.TryParse(typeStr, true, out PsbPixelFormat pixelFormat))
+                    {
+                        return pixelFormat;
+                    }
                     return PsbPixelFormat.None;
             }
         }

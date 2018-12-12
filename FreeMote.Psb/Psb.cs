@@ -818,7 +818,7 @@ namespace FreeMote.Psb
 
             #region Compile Unknown
 
-            if (Header.Version >= 4 && UnknownData.Count > 0)
+            if (Header.Version >= 4)
             {
                 UnknownOffsets = new PsbArray();
                 UnknownLengths = new PsbArray();
@@ -837,6 +837,7 @@ namespace FreeMote.Psb
                 Header.OffsetUnknownLengths = (uint)bw.BaseStream.Position;
                 UnknownLengths.WriteTo(bw);
 
+                Header.OffsetUnknownData = (uint)bw.BaseStream.Position;
                 foreach (var bts in UnknownData)
                 {
                     bw.Write(bts);
@@ -862,7 +863,6 @@ namespace FreeMote.Psb
                 }
                 resBw.Flush();
                 Header.OffsetChunkOffsets = (uint)bw.BaseStream.Position;
-                Header.OffsetUnknownData = Header.OffsetChunkOffsets;
                 ChunkOffsets = new PsbArray(offsets);
                 ChunkOffsets.WriteTo(bw);
                 Header.OffsetChunkLengths = (uint)bw.BaseStream.Position;
@@ -872,16 +872,6 @@ namespace FreeMote.Psb
                 resMs.WriteTo(bw.BaseStream);
                 //bw.Write(resMs.ToArray());
             }
-
-            if (Header.Version > 3)
-            {
-                Header.OffsetUnknownOffsets = (uint)bw.BaseStream.Position;
-                var emptyArray = new PsbArray();
-                emptyArray.WriteTo(bw);
-                Header.OffsetUnknownLengths = (uint)bw.BaseStream.Position;
-                emptyArray.WriteTo(bw);
-            }
-
             #endregion
 
             #region Compile Header

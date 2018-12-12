@@ -86,6 +86,14 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestCompileCommon()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "emote396-a8l8.pure.json");
+            PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.common);
+        }
+
+        [TestMethod]
         public void TestCompileEms()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

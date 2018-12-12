@@ -54,7 +54,7 @@ namespace FreeMote.PsBuild.Converters
                 }
                 else
                 {
-                    RL.Rgba2Argb(ref resourceData);
+                    RL.Abgr2Argb(ref resourceData);
                     if (UseRL)
                     {
                         resourceData = RL.Compress(resourceData);

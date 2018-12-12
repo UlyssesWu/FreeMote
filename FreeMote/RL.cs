@@ -11,12 +11,13 @@ namespace FreeMote
     public static class RL
     {
         /// <summary>
-        /// RGBA & ARGB conversion
+        /// RGBA(LE) -> ARGB(BE)
         /// </summary>
         /// <param name="bytes"></param>
-        public static unsafe void Rgba2Argb(ref byte[] bytes)
+        public static unsafe void Abgr2Argb(ref byte[] bytes)
         {
-            //ARGB actually is BGRA in little-endian
+            //RGBA in little endian is actually ABGR
+            //Actually abgr -> argb
             fixed (byte* ptr = bytes)
             {
                 int i = 0;
@@ -26,10 +27,48 @@ namespace FreeMote
                     uint* iPtr = (uint*)ptr + i;
                     if (*iPtr != 0)
                     {
-                        *iPtr = ((*iPtr & 0xFF000000) >> 24 << 24) |
-                            ((*iPtr & 0x000000FF) << 16) |
-                            ((*iPtr & 0x0000FF00) >> 8 << 8) |
-                            ((*iPtr & 0x00FF0000) >> 16);
+                        *iPtr = ((*iPtr & 0xFF000000)) |
+                                ((*iPtr & 0x000000FF) << 16) |
+                                ((*iPtr & 0x0000FF00)) |
+                                ((*iPtr & 0x00FF0000) >> 16);
+                    }
+                    i++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// ARGB(LE) -> RGBA(LE)
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="reverse"></param>
+        public static unsafe void Bgra2Abgr(ref byte[] bytes, bool reverse = false)
+        {
+            //Actually bgra -> abgr
+            fixed (byte* ptr = bytes)
+            {
+                int i = 0;
+                int len = bytes.Length / 4;
+                while (i < len)
+                {
+                    uint* iPtr = (uint*)ptr + i;
+                    if (*iPtr != 0)
+                    {
+                        if (reverse)
+                        {
+                            *iPtr = ((*iPtr & 0xFF000000) >> 24) |
+                                    ((*iPtr & 0x000000FF) << 8) |
+                                    ((*iPtr & 0x0000FF00) << 8) |
+                                    ((*iPtr & 0x00FF0000) << 8);
+                        }
+                        else
+                        {
+                            *iPtr = ((*iPtr & 0xFF000000) >> 8) |
+                                    ((*iPtr & 0x000000FF) << 24) |
+                                    ((*iPtr & 0x0000FF00) >> 8) |
+                                    ((*iPtr & 0x00FF0000) >> 8);
+                        }
+
                     }
                     i++;
                 }
@@ -73,6 +112,87 @@ namespace FreeMote
             }
         }
 
+
+        public static Bitmap ConvertToImage(byte[] data, int height, int width, PsbPixelFormat colorFormat = PsbPixelFormat.None)
+        {
+            var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            var bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
+                ImageLockMode.WriteOnly, bmp.PixelFormat);
+
+            switch (colorFormat)
+            {
+                case PsbPixelFormat.CommonRGBA4444:
+                    data = Rgba428(data);
+                    Bgra2Abgr(ref data);
+                    break;
+                case PsbPixelFormat.WinRGBA4444:
+                    data = Rgba428(data);
+                    break;
+                case PsbPixelFormat.CommonRGBA8:
+                    Abgr2Argb(ref data);
+                    break;
+                case PsbPixelFormat.A8L8:
+                    data = ReadA8L8(data, width, height);
+                    break;
+                case PsbPixelFormat.DXT5: //MARK: RL seems compatible to DXT5 compress?
+                    data = DxtUtil.DecompressDxt5(data, width, height);
+                    Abgr2Argb(ref data); //DXT5(for win) need conversion
+                    break;
+            }
+
+            int stride = bmpData.Stride; // 扫描线的宽度
+            int offset = stride - width; // 显示宽度与扫描线宽度的间隙
+            IntPtr iptr = bmpData.Scan0; // 获取bmpData的内存起始位置
+            int scanBytes = stride * height; // 用stride宽度，表示这是内存区域的大小
+
+            if (scanBytes >= data.Length)
+            {
+                System.Runtime.InteropServices.Marshal.Copy(data, 0, iptr, data.Length);
+                bmp.UnlockBits(bmpData); // 解锁内存区域
+                return bmp;
+            }
+
+            throw new BadImageFormatException("data may not corresponding");
+        }
+
+
+        private static byte[] PixelBytesFromImage(Bitmap bmp, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
+        {
+            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+                ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+            int stride = bmpData.Stride; // 扫描线的宽度
+            int offset = stride - bmp.Width; // 显示宽度与扫描线宽度的间隙
+            IntPtr iPtr = bmpData.Scan0; // 获取bmpData的内存起始位置
+            int scanBytes = stride * bmp.Height; // 用stride宽度，表示这是内存区域的大小
+
+            var result = new byte[scanBytes];
+            System.Runtime.InteropServices.Marshal.Copy(iPtr, result, 0, scanBytes);
+            bmp.UnlockBits(bmpData); // 解锁内存区域
+
+            switch (pixelFormat)
+            {
+                case PsbPixelFormat.WinRGBA4444:
+                    result = Rgba428(result, false);
+                    break;
+                case PsbPixelFormat.CommonRGBA4444:
+                    Bgra2Abgr(ref result, true);
+                    result = Rgba428(result, false);
+                    break;
+                case PsbPixelFormat.CommonRGBA8:
+                    Abgr2Argb(ref result);
+                    break;
+                case PsbPixelFormat.A8L8:
+                    result = Rgba2A8L8(result);
+                    break;
+                case PsbPixelFormat.DXT5:
+                    //Abgr2Argb(ref result);
+                    result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
+                    break;
+            }
+            return result;
+        }
+
         public static byte[] Compress(Stream stream, int align = 4)
         {
             return RleCompress.Compress(stream, align);
@@ -111,36 +231,6 @@ namespace FreeMote
             return PixelBytesFromImage(bmp, pixelFormat);
         }
 
-        private static byte[] PixelBytesFromImage(Bitmap bmp, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
-        {
-            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
-                ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-
-            int stride = bmpData.Stride; // 扫描线的宽度
-            int offset = stride - bmp.Width; // 显示宽度与扫描线宽度的间隙
-            IntPtr iptr = bmpData.Scan0; // 获取bmpData的内存起始位置
-            int scanBytes = stride * bmp.Height; // 用stride宽度，表示这是内存区域的大小
-
-            var result = new byte[scanBytes];
-            System.Runtime.InteropServices.Marshal.Copy(iptr, result, 0, scanBytes);
-            bmp.UnlockBits(bmpData); // 解锁内存区域
-
-            switch (pixelFormat)
-            {
-                case PsbPixelFormat.WinRGBA4444:
-                    result = Rgba428(result, false);
-                    break;
-                case PsbPixelFormat.CommonRGBA8:
-                    Rgba2Argb(ref result);
-                    break;
-                case PsbPixelFormat.DXT5:
-                    //Rgba2Argb(ref result);
-                    result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
-                    break;
-            }
-            return result;
-        }
-
         public static void UncompressToImageFile(byte[] data, string path, int height, int width, PsbImageFormat format = PsbImageFormat.Png, PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
         {
             byte[] bytes;
@@ -169,49 +259,6 @@ namespace FreeMote
             return ConvertToImage(bytes, height, width, colorFormat);
         }
 
-        public static Bitmap ConvertToImage(byte[] data, int height, int width, PsbPixelFormat colorFormat = PsbPixelFormat.None)
-        {
-            Bitmap bmp;
-            BitmapData bmpData;
-            {
-                bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-                bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
-                ImageLockMode.WriteOnly, bmp.PixelFormat);
-            }
-            switch (colorFormat)
-            {
-                case PsbPixelFormat.CommonRGBA4444:
-                    data = Rgba428(data);
-                    Rgba2Argb(ref data); //BUG: incorrect
-                    break;
-                case PsbPixelFormat.WinRGBA4444:
-                    data = Rgba428(data);
-                    break;
-                case PsbPixelFormat.CommonRGBA8:
-                    Rgba2Argb(ref data);
-                    break;
-                case PsbPixelFormat.A8L8:
-                    data = ReadA8L8(data, width, height);
-                    break;
-                case PsbPixelFormat.DXT5: //MARK: RL seems compatible to DXT5 compress?
-                    data = DxtUtil.DecompressDxt5(data, width, height);
-                    Rgba2Argb(ref data); //DXT5(for win) need conversion
-                    break;
-            }
-
-            int stride = bmpData.Stride; // 扫描线的宽度
-            int offset = stride - width; // 显示宽度与扫描线宽度的间隙
-            IntPtr iptr = bmpData.Scan0; // 获取bmpData的内存起始位置
-            int scanBytes = stride * height; // 用stride宽度，表示这是内存区域的大小
-
-            if (scanBytes >= data.Length)
-            {
-                System.Runtime.InteropServices.Marshal.Copy(data, 0, iptr, data.Length);
-                bmp.UnlockBits(bmpData); // 解锁内存区域
-                return bmp;
-            }
-            throw new BadImageFormatException("data may not corresponding");
-        }
 
         private static byte[] ReadA8L8(byte[] data, int height, int width)
         {
@@ -228,6 +275,22 @@ namespace FreeMote
                 byte a = data[2 * i + 1];
                 output[dst++] = c;
                 output[dst++] = c;
+                output[dst++] = c;
+                output[dst++] = a;
+            }
+
+            return output;
+        }
+
+        private static byte[] Rgba2A8L8(byte[] data)
+        {
+            byte[] output = new byte[data.Length / 2];
+            int dst = 0;
+
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                byte c = (byte)((data[i] + data[i + 1] + data[i + 2]) / 3);
+                byte a = data[i + 3];
                 output[dst++] = c;
                 output[dst++] = a;
             }
