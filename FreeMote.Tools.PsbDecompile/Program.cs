@@ -13,6 +13,7 @@ namespace FreeMote.Tools.PsbDecompile
         static bool _uncompressImage = false;
         static bool _png = true;
         private static uint? _key = null;
+
         static void Main(string[] args)
         {
             Console.WriteLine("FreeMote PSB Decompiler");
@@ -33,12 +34,14 @@ namespace FreeMote.Tools.PsbDecompile
             foreach (var s in args)
             {
                 // Convert resources to BMP
-                if (s.ToLowerInvariant() == "/eb" || s.ToLowerInvariant() == "/extract" || s.ToLowerInvariant() == "/bmp")
+                if (s.ToLowerInvariant() == "/eb" || s.ToLowerInvariant() == "/extract" ||
+                    s.ToLowerInvariant() == "/bmp")
                 {
                     _extractImage = true;
                     _png = false;
                     continue;
                 }
+
                 // Convert resources to PNG
                 if (s.ToLowerInvariant() == "/ep" || s.ToLowerInvariant() == "/png")
                 {
@@ -46,6 +49,7 @@ namespace FreeMote.Tools.PsbDecompile
                     _png = true;
                     continue;
                 }
+
                 // Convert resources to BIN
                 if (s.ToLowerInvariant() == "/er" || s.ToLowerInvariant() == "/uncompress")
                 {
@@ -53,6 +57,7 @@ namespace FreeMote.Tools.PsbDecompile
                     _uncompressImage = true;
                     continue;
                 }
+
                 // Keep Original
                 if (s.ToLowerInvariant() == "/ne" || s.ToLowerInvariant() == "/raw")
                 {
@@ -76,13 +81,14 @@ namespace FreeMote.Tools.PsbDecompile
                     continue;
                 }
 
-                
+
                 if (s.StartsWith("/k"))
                 {
                     if (s == "/k")
                     {
                         _key = null;
                     }
+
                     if (uint.TryParse(s.Replace("/k", ""), out var k))
                     {
                         _key = k;
@@ -105,6 +111,7 @@ namespace FreeMote.Tools.PsbDecompile
                         .Union(Directory.EnumerateFiles(s, "*.scn"))
                         .Union(Directory.EnumerateFiles(s, "*.dpak"))
                         .Union(Directory.EnumerateFiles(s, "*.psz"))
+                        .Union(Directory.EnumerateFiles(s, "*.psp"))
                     )
                     {
                         Decompile(file, _extractImage, _uncompressImage, _png, _key);
@@ -137,7 +144,8 @@ Setting:
             Console.WriteLine("\t PsbDecompile C:\\\\EMTfolder");
         }
 
-        static void Decompile(string path, bool extractImage = false, bool uncompress = false, bool usePng = false, uint? key = null)
+        static void Decompile(string path, bool extractImage = false, bool uncompress = false, bool usePng = false,
+            uint? key = null)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");
