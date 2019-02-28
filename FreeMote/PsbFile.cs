@@ -8,7 +8,7 @@ namespace FreeMote
     public class PsbFile
     {
         public string Path { get; private set; }
-        internal PsbHeader Header { get; set; }
+        public PsbHeader Header { get; set; }
 
         public ushort Version => Header.Version;
         public bool IsMdf { get; private set; } = false;

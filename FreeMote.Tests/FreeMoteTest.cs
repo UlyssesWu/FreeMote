@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -6,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FreeMote.Plugins;
+using FreeMote.Plugins.Shells;
+using FreeMote.Psb;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FreeMote.Tests
@@ -21,17 +24,12 @@ namespace FreeMote.Tests
 
         public TestContext TestContext
         {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
+            get { return testContextInstance; }
+            set { testContextInstance = value; }
         }
 
         #region 附加测试特性
+
         //
         // 编写测试时，可以使用以下附加特性: 
         //
@@ -51,6 +49,7 @@ namespace FreeMote.Tests
         // [TestCleanup()]
         // public void MyTestCleanup() { }
         //
+
         #endregion
 
         [TestMethod]
@@ -65,18 +64,38 @@ namespace FreeMote.Tests
                 {
                     continue;
                 }
-                var fileName = Path.GetFileNameWithoutExtension(file).Split(new[] { '-' }, 2); //rename your file as key-name.psb
+
+                var fileName =
+                    Path.GetFileNameWithoutExtension(file).Split(new[] {'-'}, 2); //rename your file as key-name.psb
                 if (fileName.Length < 2)
                 {
                     continue;
                 }
+
                 var key = UInt32.Parse(fileName[0]);
                 if (key != targetKey)
                 {
                     continue;
                 }
+
                 PsbFile psb = new PsbFile(file);
                 psb.EncodeToFile(targetKey, file + ".pure", EncodeMode.Encrypt, EncodePosition.Auto);
+            }
+        }
+
+        [TestMethod]
+        public void TestDecode()
+        {
+            //uint targetKey = 3803466536; //give your model key
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var psbPath = Path.Combine(resPath, "C2_EA.psp");
+            PspShell shell = new PspShell();
+            var stream = File.OpenRead(psbPath);
+            if (shell.IsInShell(stream, new Dictionary<string, object>()))
+            {
+                PSB psb = new PSB(shell.ToPsb(stream, null));
+                psb.Merge();
+                File.WriteAllBytes(psbPath + "-pure.psb", psb.Build());
             }
         }
 
@@ -84,10 +103,11 @@ namespace FreeMote.Tests
         public void TestChecksum()
         {
             byte[] arr1 =
-                {0x2C, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0xBD, 0x8C, 0x08, 0x00, 0x19, 0x31, 0x08, 0x00,
+            {
+                0x2C, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0xBD, 0x8C, 0x08, 0x00, 0x19, 0x31, 0x08, 0x00,
                 0xD1, 0xAF, 0x08, 0x00, 0x69, 0x0F, 0x08, 0x00, 0xF4, 0xAF, 0x08, 0x00, 0x66, 0x94, 0x00, 0x05
-                };
-            byte[] arr2 = { 0x1F, 0x0F, 0x08, 0x00, 0xD6, 0xAF, 0x08, 0x00, 0xC0, 0x82, 0x20, 0x00 };
+            };
+            byte[] arr2 = {0x1F, 0x0F, 0x08, 0x00, 0xD6, 0xAF, 0x08, 0x00, 0xC0, 0x82, 0x20, 0x00};
             Adler32 adler32 = new Adler32();
             adler32.Update(arr1);
             adler32.Update(arr2);
@@ -95,11 +115,12 @@ namespace FreeMote.Tests
             Assert.AreEqual(0xC02709D3, adler32.Checksum);
 
             arr1 = new byte[]
-               {0x2C, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0xBD, 0x8C, 0x08, 0x00, 0x19, 0x31, 0x08, 0x00,
+            {
+                0x2C, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0xBD, 0x8C, 0x08, 0x00, 0x19, 0x31, 0x08, 0x00,
                 0xD1, 0xAF, 0x08, 0x00, 0x69, 0x0F, 0x08, 0x00, 0xF4, 0xAF, 0x08, 0x00, 0x66, 0x94, 0x00, 0x00
-                };
+            };
             arr2 = new byte[]
-            { 0xAB, 0x0F, 0x08, 0x00, 0xD6, 0xAF, 0x08, 0x00, 0xC0, 0x82, 0x20, 0x00 };
+                {0xAB, 0x0F, 0x08, 0x00, 0xD6, 0xAF, 0x08, 0x00, 0xC0, 0x82, 0x20, 0x00};
             adler32.Reset();
             adler32.Update(arr1);
             adler32.Update(arr2);
@@ -112,7 +133,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var rawDxt = Path.Combine(resPath, "D愛子a_春服-pure", "0.raw");
             var rawBytes = File.ReadAllBytes(rawDxt);
-            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
+            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.Png,
+                PsbPixelFormat.DXT5);
         }
 
         [TestMethod]
@@ -122,7 +144,8 @@ namespace FreeMote.Tests
             var rawPng = Path.Combine(resPath, "D愛子a_春服-pure", "0.png");
             Bitmap bitmap = new Bitmap(rawPng);
             var bc3Bytes = DxtUtil.Dxt5Encode(bitmap);
-            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.DXT5);
+            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.Png,
+                PsbPixelFormat.DXT5);
         }
 
         [TestMethod]
@@ -234,6 +257,7 @@ namespace FreeMote.Tests
                 {
                     sb.Append(br.ReadChar());
                 }
+
                 br.ReadByte(); //skip \0 - fail if end without \0
                 return sb.ToString();
             }
@@ -246,6 +270,7 @@ namespace FreeMote.Tests
                 {
                     length++;
                 }
+
                 br.BaseStream.Position = pos;
                 var str = Encoding.UTF8.GetString(br.ReadBytes(length));
                 br.ReadByte(); //skip \0 - fail if end without \0
@@ -263,7 +288,8 @@ namespace FreeMote.Tests
                 {
                     bw.Write(bts);
                 }
-                bw.Write((byte)0);
+
+                bw.Write((byte) 0);
 
                 Console.WriteLine("Read 1 long string:");
                 ms.Position = 0;
@@ -284,9 +310,9 @@ namespace FreeMote.Tests
                 for (int i = 0; i < 100_0000; i++)
                 {
                     bw.Write(bts);
-                    bw.Write((byte)0);
+                    bw.Write((byte) 0);
                 }
-                
+
                 Console.WriteLine("Read 100_0000 short strings:");
                 ms.Position = 0;
                 sw.Restart();
@@ -294,6 +320,7 @@ namespace FreeMote.Tests
                 {
                     r = ReadPeekAndAppend(br);
                 }
+
                 sw.Stop();
                 time = sw.Elapsed;
                 Console.WriteLine($"Time of {nameof(ReadPeekAndAppend)}:\t{time}");
@@ -304,6 +331,7 @@ namespace FreeMote.Tests
                 {
                     r = ReadDetectAndSwallow(br);
                 }
+
                 sw.Stop();
                 time = sw.Elapsed;
                 Console.WriteLine($"Time of {nameof(ReadDetectAndSwallow)}:\t{time}");
@@ -316,6 +344,7 @@ namespace FreeMote.Tests
                 {
                     br.PeekChar();
                 }
+
                 sw.Stop();
                 time = sw.Elapsed;
                 Console.WriteLine($"Time of PeekChar: \t{time}");
@@ -326,6 +355,7 @@ namespace FreeMote.Tests
                 {
                     sb.Append('咕');
                 }
+
                 //r = sb.ToString();
                 sw.Stop();
                 time = sw.Elapsed;
@@ -344,12 +374,11 @@ namespace FreeMote.Tests
 
                 sw.Restart();
                 bw.Write(Encoding.UTF8.GetBytes(r));
-                bw.Write((byte)0);
+                bw.Write((byte) 0);
                 sw.Stop();
                 time = sw.Elapsed;
                 Console.WriteLine($"Time of GetBytes: \t{time}");
             }
-
         }
     }
 }

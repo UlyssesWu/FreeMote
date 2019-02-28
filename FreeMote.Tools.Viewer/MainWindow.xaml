@@ -19,7 +19,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="200"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Foreground="Silver" Opacity="0.5" FontSize="9" Tag="You are not allowed to remove this line according to License (BY)">Powered by FreeMote</TextBlock>
+            <TextBlock Margin="2,2,0,0" Foreground="Silver" Opacity="0.5" FontSize="11" Tag="You are not allowed to remove this line according to License (BY)">Powered by FreeMote</TextBlock>
             <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal">
                 <Button Width="60" HorizontalAlignment="Right" Content="Motion" Margin="0,5,5,5" Background="Transparent" Foreground="Green" BorderThickness="3" BorderBrush="DarkGreen" Click="GetTimelines"></Button>
                 <Button Width="60" HorizontalAlignment="Right" Content="Stop" Margin="0,5,5,5" Background="Transparent" Foreground="Green" BorderThickness="3" BorderBrush="DarkGreen" Click="Stop"></Button>
