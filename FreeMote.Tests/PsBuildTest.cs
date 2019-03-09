@@ -25,6 +25,7 @@ namespace FreeMote.Tests
         }
 
         #region 附加测试特性
+
         //
         // 编写测试时，可以使用以下附加特性:
         //
@@ -44,6 +45,7 @@ namespace FreeMote.Tests
         // [TestCleanup()]
         // public void MyTestCleanup() { }
         //
+
         #endregion
 
         [TestMethod]
@@ -127,7 +129,8 @@ namespace FreeMote.Tests
         {
             //var f = (111111111123L).ToString("X16");
             //var jj = JsonConvert.DeserializeObject("[0xDEADBEEF]");
-            List<float> floats = new List<float> { -0.00000001f, 1 / 3f, -0.000027f, 19.200079f, (float)Math.PI, float.MinValue };
+            List<float> floats = new List<float>
+                {-0.00000001f, 1 / 3f, -0.000027f, 19.200079f, (float) Math.PI, float.MinValue};
             string json = JsonConvert.SerializeObject(floats);
             Console.WriteLine(json);
             var result = JsonConvert.DeserializeObject<List<float>>(json);
@@ -136,7 +139,8 @@ namespace FreeMote.Tests
                 Assert.AreEqual(floats[i], result[i]);
             }
 
-            List<double> doubles = new List<double> { double.MinValue, double.MaxValue, 123456789.0, -0.00000001, 0.03, 0.4 };
+            List<double> doubles = new List<double>
+                {double.MinValue, double.MaxValue, 123456789.0, -0.00000001, 0.03, 0.4};
             json = JsonConvert.SerializeObject(doubles);
             Console.WriteLine(json);
             var result2 = JsonConvert.DeserializeObject<List<double>>(json);
@@ -170,6 +174,7 @@ namespace FreeMote.Tests
             {
                 headWin.Resource.Data = headKrkr.Resource.Data;
             }
+
             //foreach (var resourceMetadata in resWin)
             //{
             //    var sameRes = resKrkr.FirstOrDefault(r => r.Height == resourceMetadata.Height && r.Width == resourceMetadata.Width);
@@ -182,7 +187,6 @@ namespace FreeMote.Tests
             psbWin.Merge();
             File.WriteAllBytes("emote_win2krkr.psb", psbWin.Build());
             //File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb2));
-
         }
 
         [TestMethod]
@@ -238,6 +242,7 @@ namespace FreeMote.Tests
             {
                 imgs.Add(file, Image.FromFile(file));
             }
+
             TexturePacker packer = new TexturePacker
             {
                 FitHeuristic = BestFitHeuristic.MaxOneAxis,
@@ -247,6 +252,7 @@ namespace FreeMote.Tests
             {
                 Directory.Delete(savePath, true);
             }
+
             Directory.CreateDirectory(savePath);
             packer.SaveAtlasses(Path.Combine(savePath, "tex.txt"));
         }
@@ -260,7 +266,7 @@ namespace FreeMote.Tests
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
             var targetPath = "/object/all_parts/motion/タイムライン構造/bounds";
-            var obj = (PsbDictionary)psb.Objects.FindByPath(targetPath);
+            var obj = (PsbDictionary) psb.Objects.FindByPath(targetPath);
             var objPath = obj.Path;
             Assert.AreEqual(targetPath, objPath);
         }
@@ -316,7 +322,8 @@ namespace FreeMote.Tests
             psb.Merge();
             File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
             File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
-            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096, 4096, PsbImageFormat.Png, PsbPixelFormat.WinRGBA8);
+            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096, 4096, PsbImageFormat.Png,
+                PsbPixelFormat.WinRGBA8);
         }
 
         [TestMethod]
@@ -367,6 +374,15 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestDecompileDullahan()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "ap_bup_yu02_頭部.psb");
+            //var path = Path.Combine(resPath, "dx_真闇_裸_impure.psb");
+            var json = PsbDecompiler.Decompile(path, out var psb);
+        }
+
+        [TestMethod]
         public void TestCompileMenuPsb()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
@@ -397,7 +413,8 @@ namespace FreeMote.Tests
             var path = Path.Combine(resPath, "dx_れいなh1a1.psb.json");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             var o = psb.Objects.FindByPath(
-                "/object/head_parts/motion/頭部変形基礎/layer/[0]/children/[3]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[1]/children/[0]/children/[0]/children/[0]/children/[0]/frameList/[0]/content/coord") as PsbCollection;
+                    "/object/head_parts/motion/頭部変形基礎/layer/[0]/children/[3]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[1]/children/[0]/children/[0]/children/[0]/children/[0]/frameList/[0]/content/coord")
+                as PsbCollection;
             var num = o[0] as PsbNumber;
             var val = num.IntValue;
             var valNaN = num.FloatValue;
@@ -474,8 +491,6 @@ namespace FreeMote.Tests
             CompareValue(pccPsb.Objects, psbuildPsb.Objects);
             //Console.WriteLine("============");
             //CompareValue(psbuildPsb.Objects, pccPsb.Objects);
-
-
         }
 
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)
@@ -489,6 +504,7 @@ namespace FreeMote.Tests
                 Console.WriteLine($"p1 == {p1.ToString()} && p2 == null");
                 return false;
             }
+
             if (p1 == null && p2 != null)
             {
                 Console.WriteLine($"p1 == null && p2 == {p2.ToString()}");
@@ -505,78 +521,88 @@ namespace FreeMote.Tests
                 Console.WriteLine($"Type diff: {p1}({p1.GetType()}) vs {p2}({p2.GetType()})");
                 return false;
             }
+
             switch (p1)
             {
                 case PsbResource r1:
-                    var r2 = (PsbResource)p2;
+                    var r2 = (PsbResource) p2;
                     if (r1.Data.SequenceEqual(r2.Data))
                     {
                         return true;
                     }
+
                     Console.WriteLine($"Res Diff: {r1} vs {r2}");
                     return false;
                 case PsbNull _:
                     return true;
                 case PsbNumber n1:
-                    var n2 = (PsbNumber)p2;
+                    var n2 = (PsbNumber) p2;
                     if (n1.Type != n2.Type)
                     {
                         Console.WriteLine($"Wrong Number Type: {n1}({n1.Type}) vs {n2}({n2.Type})");
                         return false;
                     }
+
                     switch (n1.NumberType)
                     {
                         case PsbNumberType.Int:
-                            if ((int)n1 != (int)n2)
+                            if ((int) n1 != (int) n2)
                             {
                                 Console.WriteLine($"{n1} != {n2}");
                                 return false;
                             }
+
                             break;
                         case PsbNumberType.Float:
-                            if (Math.Abs((float)n1 - (float)n2) > float.Epsilon)
+                            if (Math.Abs((float) n1 - (float) n2) > float.Epsilon)
                             {
                                 Console.WriteLine($"{n1} != {n2}");
                                 return false;
                             }
+
                             break;
                         case PsbNumberType.Double:
-                            if (Math.Abs((double)n1 - (double)n2) > double.Epsilon)
+                            if (Math.Abs((double) n1 - (double) n2) > double.Epsilon)
                             {
                                 Console.WriteLine($"{n1} != {n2}");
                                 return false;
                             }
+
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
+
                     return true;
                 case PsbString s1:
-                    var s2 = (PsbString)p2;
+                    var s2 = (PsbString) p2;
                     if (s1.Value == s2.Value)
                     {
                         return true;
                     }
+
                     Console.WriteLine($"{s1} != {s2}");
                     return false;
                 case PsbBool b1:
-                    var b2 = (PsbBool)p2;
+                    var b2 = (PsbBool) p2;
                     if (b1.Value == b2.Value)
                     {
                         return true;
                     }
+
                     Console.WriteLine($"{b1} != {b2}");
                     return false;
                 case PsbArray a1:
-                    var a2 = (PsbArray)p2;
+                    var a2 = (PsbArray) p2;
                     if (a1.Value.SequenceEqual(a2.Value))
                     {
                         return true;
                     }
+
                     Console.WriteLine($"{a1} != {a2}");
                     return false;
                 case PsbCollection c1:
-                    var c2 = (PsbCollection)p2;
+                    var c2 = (PsbCollection) p2;
                     for (var i = 0; i < c1.Count; i++)
                     {
                         if (CompareValue(c1[i], c2[i]))
@@ -587,9 +613,10 @@ namespace FreeMote.Tests
                         Console.WriteLine(c1.Path);
                         //Console.WriteLine($"{c1.Value[i]} != {c2.Value[i]}");
                     }
+
                     return true;
                 case PsbDictionary d1:
-                    var d2 = (PsbDictionary)p2;
+                    var d2 = (PsbDictionary) p2;
                     foreach (var pair1 in d1)
                     {
                         if (!d2.ContainsKey(pair1.Key))
@@ -601,8 +628,10 @@ namespace FreeMote.Tests
                             CompareValue(pair1.Value, d2[pair1.Key]);
                         }
                     }
+
                     return true;
             }
+
             return true;
         }
     }

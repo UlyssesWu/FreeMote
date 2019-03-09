@@ -8,7 +8,7 @@ namespace FreeMote.Plugins.Shells
     [Export(typeof(IPsbShell))]
     [ExportMetadata("Name", "FreeMote.Psz")]
     [ExportMetadata("Author", "Ulysses")]
-    [ExportMetadata("Comment", "PSZ support.")]
+    [ExportMetadata("Comment", "PSZ (ZLIB) support.")]
     class PszShell : IPsbShell
     {
         public string Name => "PSZ";

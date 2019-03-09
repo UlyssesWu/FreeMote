@@ -44,6 +44,7 @@ namespace FreeMote.Tools.Viewer
         private EmotePlayer _player;
         private IntPtr _scene;
         private string _psbPath;
+        private string[] _extraPaths;
         private PreciseTimer _timer;
 
         private double _deltaX, _deltaY;
@@ -58,9 +59,15 @@ namespace FreeMote.Tools.Viewer
             {
                 _psbPath = "FreeMote.psb";
             }
-            else
+            else if (args.Length == 2)
             {
                 _psbPath = args.Last();
+                _extraPaths = null;
+            }
+            else
+            {
+                _psbPath = args[1];
+                _extraPaths = args.Skip(2).ToArray();
             }
 
             bool quickLoad = args.Contains("-d");
@@ -86,12 +93,14 @@ namespace FreeMote.Tools.Viewer
                         {
                             psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
                         }
+
                         psb.Merge();
                         _psbPath = Path.GetTempFileName();
                         File.WriteAllBytes(_psbPath, psb.Build());
                         removeTempFile = true;
                         ms?.Dispose();
                     }
+
                     GC.Collect(); //Can save memory from 700MB to 400MB
                 }
                 catch (Exception e)
@@ -135,10 +144,18 @@ namespace FreeMote.Tools.Viewer
             CenterMark.Visibility = Visibility.Hidden;
             CharaCenterMark.Visibility = Visibility.Hidden;
 
-            _emote = new Emote(_helper.EnsureHandle(), (int)Width, (int)Height, true);
+            _emote = new Emote(_helper.EnsureHandle(), (int) Width, (int) Height, true);
             _emote.EmoteInit();
 
-            _player = _emote.CreatePlayer("Chara1", _psbPath);
+            if (_extraPaths != null)
+            {
+                _player = _emote.CreatePlayer("CombinedChara1", new[] {_psbPath}.Concat(_extraPaths).ToArray());
+            }
+            else
+            {
+                _player = _emote.CreatePlayer("Chara1", _psbPath);
+            }
+
             _player.SetScale(1, 0, 0);
             _player.SetCoord(0, 0);
             _player.SetVariable("fade_z", 256);
@@ -166,14 +183,17 @@ namespace FreeMote.Tools.Viewer
             {
                 _player.OffsetCoord(0, Movement);
             }
+
             if (keyEventArgs.Key == Key.Down)
             {
                 _player.OffsetCoord(0, -Movement);
             }
+
             if (keyEventArgs.Key == Key.Left)
             {
                 _player.OffsetCoord(Movement, 0);
             }
+
             if (keyEventArgs.Key == Key.Right)
             {
                 _player.OffsetCoord(-Movement, 0);
@@ -185,6 +205,7 @@ namespace FreeMote.Tools.Viewer
                 {
                     _measureMode = !_measureMode;
                 }
+
                 if (_measureMode)
                 {
                     _player.SetScale(1);
@@ -220,7 +241,7 @@ namespace FreeMote.Tools.Viewer
             if (e.LeftButton == MouseButtonState.Pressed && e.GetPosition(MotionPanel).X < 0)
             {
                 var ex = e.GetPosition(this);
-                _player.OffsetCoord((int)(ex.X - _lastX), (int)(ex.Y - _lastY));
+                _player.OffsetCoord((int) (ex.X - _lastX), (int) (ex.Y - _lastY));
                 _lastX = ex.X;
                 _lastY = ex.Y;
             }
@@ -240,15 +261,16 @@ namespace FreeMote.Tools.Viewer
                         float frameCount = 0f;
                         //float frameCount = 50f;
                         float easing = 0f;
-                        _player.SetVariable("head_UD", (float)_deltaY, frameCount, easing);
-                        _player.SetVariable("head_LR", (float)_deltaX, frameCount, easing);
-                        _player.SetVariable("body_UD", (float)_deltaY, frameCount, easing);
-                        _player.SetVariable("body_LR", (float)_deltaX, frameCount, easing);
-                        _player.SetVariable("face_eye_UD", (float)_deltaY, frameCount, easing);
-                        _player.SetVariable("face_eye_LR", (float)_deltaX, frameCount, easing);
+                        _player.SetVariable("head_UD", (float) _deltaY, frameCount, easing);
+                        _player.SetVariable("head_LR", (float) _deltaX, frameCount, easing);
+                        _player.SetVariable("body_UD", (float) _deltaY, frameCount, easing);
+                        _player.SetVariable("body_LR", (float) _deltaX, frameCount, easing);
+                        _player.SetVariable("face_eye_UD", (float) _deltaY, frameCount, easing);
+                        _player.SetVariable("face_eye_LR", (float) _deltaX, frameCount, easing);
                     }
                 }
             }
+
             UpdatePosition();
         }
 
@@ -276,8 +298,8 @@ namespace FreeMote.Tools.Viewer
         {
             var centerX = Width / 2.0;
             var centerY = Height / 2.0;
-            float ex = (float)(x - centerX);
-            float ey = (float)(y - centerY);
+            float ex = (float) (x - centerX);
+            float ey = (float) (y - centerY);
             var scale = _player.GetScale();
             return (ex / scale, ey / scale);
         }
@@ -286,8 +308,8 @@ namespace FreeMote.Tools.Viewer
         {
             var centerX = Width / 2.0;
             var centerY = Height / 2.0;
-            float ex = (float)(x - centerX);
-            float ey = (float)(y - centerY);
+            float ex = (float) (x - centerX);
+            float ey = (float) (y - centerY);
             var scale = _player.GetScale();
             _player.GetCoord(out float cx, out float cy);
             return (-(cx - ex / scale), -(cy - ey / scale));
@@ -356,11 +378,12 @@ namespace FreeMote.Tools.Viewer
             _scene = IntPtr.Zero;
 
             _emote.OnDeviceLost();
-            while (_emote.D3DTestCooperativeLevel() == (uint)D3DResult.DEVICE_LOST)
+            while (_emote.D3DTestCooperativeLevel() == (uint) D3DResult.DEVICE_LOST)
             {
                 Thread.Sleep(5);
             }
-            if (_emote.D3DTestCooperativeLevel() == (uint)D3DResult.DEVICE_NOTRESET)
+
+            if (_emote.D3DTestCooperativeLevel() == (uint) D3DResult.DEVICE_NOTRESET)
             {
                 _emote.D3DReset();
                 _emote.OnDeviceReset();
@@ -393,7 +416,7 @@ namespace FreeMote.Tools.Viewer
         {
             if (_di.IsFrontBufferAvailable && _scene != IntPtr.Zero)
             {
-                _emote.Update((float)elasped);
+                _emote.Update((float) elasped);
                 // lock the D3DImage
                 _di.Lock();
                 // update the scene (via a call into our custom library)
@@ -419,8 +442,10 @@ namespace FreeMote.Tools.Viewer
                 {
                     MotionPanel.Visibility = Visibility.Visible;
                 }
+
                 return;
             }
+
             var count = _player.CountMainTimelines();
             for (uint i = 0; i < count; i++)
             {
@@ -465,8 +490,8 @@ namespace FreeMote.Tools.Viewer
 
         private void PlayTimeline(object sender, RoutedEventArgs e)
         {
-            _player.PlayTimeline(((Button)sender).Content.ToString(),
-                ((Button)sender).Tag.ToString() == "diff"
+            _player.PlayTimeline(((Button) sender).Content.ToString(),
+                ((Button) sender).Tag.ToString() == "diff"
                     ? TimelinePlayFlags.TIMELINE_PLAY_DIFFERENCE
                     : TimelinePlayFlags.NONE);
         }
@@ -484,6 +509,7 @@ namespace FreeMote.Tools.Viewer
             {
                 _player.SetVariable(_player.GetVariableLabelAt(i), 0);
             }
+
             _player.SetVariable("fade_z", 256);
         }
     }

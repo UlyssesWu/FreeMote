@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using FreeMote.Plugins;
@@ -89,13 +90,15 @@ namespace FreeMote.Tests
             //uint targetKey = 3803466536; //give your model key
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var psbPath = Path.Combine(resPath, "C2_EA.psp");
+
             PspShell shell = new PspShell();
             var stream = File.OpenRead(psbPath);
             if (shell.IsInShell(stream, new Dictionary<string, object>()))
             {
-                PSB psb = new PSB(shell.ToPsb(stream, null));
-                psb.Merge();
-                File.WriteAllBytes(psbPath + "-pure.psb", psb.Build());
+                var ms = shell.ToPsb(stream, null);
+                //PSB psb = new PSB(ms);
+                //psb.Merge();
+                //File.WriteAllBytes(psbPath + "-pure.psb", psb.Build());
             }
         }
 

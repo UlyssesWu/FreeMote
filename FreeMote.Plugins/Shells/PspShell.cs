@@ -1,4 +1,4 @@
-﻿// PSP decompression by morkt (https://github.com/morkt/GARbro) LICENSE: MIT
+﻿// LZSS decompression by morkt (https://github.com/morkt/GARbro) LICENSE: MIT
 
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ namespace FreeMote.Plugins.Shells
     [Export(typeof(IPsbShell))]
     [ExportMetadata("Name", "FreeMote.Psp")]
     [ExportMetadata("Author", "morkt & Ulysses")]
-    [ExportMetadata("Comment", "PSP support.")]
+    [ExportMetadata("Comment", "PSP (LZSS) support.")]
     class PspShell : IPsbShell
     {
         public string Name => "PSP";
@@ -80,6 +80,7 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
+            //TODO:
             Console.WriteLine("PSP compression is not supported.");
             return null;
             //throw new NotImplementedException("PSP compression is not supported.");

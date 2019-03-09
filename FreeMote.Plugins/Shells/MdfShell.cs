@@ -8,7 +8,7 @@ namespace FreeMote.Plugins
     [Export(typeof(IPsbShell))]
     [ExportMetadata("Name", "FreeMote.Mdf")]
     [ExportMetadata("Author", "Ulysses")]
-    [ExportMetadata("Comment", "MDF support.")]
+    [ExportMetadata("Comment", "MDF (ZLIB) support.")]
     class MdfShell : IPsbShell
     {
         public string Name => "MDF";
