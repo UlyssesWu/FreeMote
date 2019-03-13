@@ -21,15 +21,15 @@ External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMot
 ### FreeMote.Purify (Unreleased)
 Infer and calculate the key used by EMT PSB file just from the PSB file (rather than get from engine).
 ### FreeMote.FreeLive (Unrealistic)
-EMT <-> L2D Conversion
+EMT <-> L2D conversion with [FreeLive](https://github.com/UlyssesWu/FreeLive).
 
 ## Tools
 ### EmtConvert (FreeMote.Tools.EmtConvert)
-Convert EMT PSB files. A managed version of `emote_conv`(by number201724).
+Convert EMT PSB files.
 ### PsbDecompile (FreeMote.Tools.PsbDecompile)
-Decompile PSB files. A managed version of `decompiler`(by number201724).
+Decompile PSB files.
 ### PsBuild (FreeMote.Tools.PsBuild)
-Compile PSB description json to PSB. A managed version of `pcc`(by number201724).
+Compile PSB description json to PSB.
 ### EmtMake (FreeMote.Tools.EmtMake) (Preview)
 Decompile an EMT PSB to MMO project. **The output file is always licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
 ### FreeMote Viewer (FreeMote.Tools.Viewer)
@@ -62,12 +62,12 @@ Additional clauses: If the input is not made by yourself, you are NOT allowed to
 
 * @9chu for reverse engineering help.
 * @number201724 for PSB format references. LICENSE: MIT
+* @WcLyic for PSB samples and EMT Editor help.
 * @nalsas (awatm) for EMT Editor help.
-* @WcLyic for some PSB samples and EMT Editor help.
 * [MonoGame](https://github.com/MonoGame/MonoGame) for `DxtUtil` code. LICENSE: Ms-PL
 * Singyuen Yip for `Adler32` code.
 * @gdkchan for [DxtCodec](https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs) code.
 * @mfascia for [TexturePacker](https://github.com/mfascia/TexturePacker) code.
-* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs) code. LICENSE: MIT
+* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs) & [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs) code. LICENSE: MIT
 * @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/) as sponsor!
 * All nuget references used in this project.
