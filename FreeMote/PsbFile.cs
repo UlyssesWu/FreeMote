@@ -28,6 +28,7 @@ namespace FreeMote
             {
                 throw new FileNotFoundException("Can not load file.", Path);
             }
+
             using (var fs = File.OpenRead(Path))
             {
                 ParseHeader(fs);
@@ -58,6 +59,7 @@ namespace FreeMote
             {
                 throw new FileNotFoundException("Can not load file.", Path);
             }
+
             using (var fs = File.OpenRead(Path))
             {
                 BinaryReader br = new BinaryReader(fs);
@@ -79,14 +81,17 @@ namespace FreeMote
             {
                 return false;
             }
+
             return true;
         }
 
+        [Obsolete("Not Implemented")]
         private static bool TestKeyValidForHeader()
         {
             throw new NotImplementedException();
         }
 
+        [Obsolete("Not Implemented")]
         private static bool TestKeyValidForBody()
         {
             throw new NotImplementedException();
@@ -101,6 +106,7 @@ namespace FreeMote
             {
                 return false;
             }
+
             return true;
         }
 
@@ -115,6 +121,7 @@ namespace FreeMote
                 BinaryReader br = new BinaryReader(fs);
                 if (!TestBodyEncrypted(br, Header)) return false;
             }
+
             return true;
         }
 
@@ -134,16 +141,23 @@ namespace FreeMote
                     br.BaseStream.Seek(header.OffsetNames, SeekOrigin.Begin);
                     break;
             }
-            if (br.ReadByte() == 0x0E) //Type == ArrayN2
+
+            var arrayType = br.ReadByte();
+            const byte arrayN0 = 0x0C;
+            const byte arrayMaxSize = 4;
+            const byte entryMaxSize = 4;
+
+            if (arrayType > arrayN0 && arrayType <= arrayN0 + arrayMaxSize) //ArrayN4 >= Type >= ArrayN1
             {
-                br.ReadBytes(2); //Array Length
+                br.ReadBytes(arrayType - arrayN0); //Array Length
                 var entryLength = br.ReadByte(); //Entry Length
-                if (entryLength == 0x0E || entryLength == 0x0D) //EntryLength == 1 || 2
+                if (entryLength > arrayN0 && entryLength <= arrayN0 + entryMaxSize) //EntryLength == 1 || 2
                 {
                     br.BaseStream.Seek(pos, SeekOrigin.Begin);
                     return false;
                 }
             }
+
             br.BaseStream.Seek(pos, SeekOrigin.Begin);
             return true;
         }
@@ -162,12 +176,14 @@ namespace FreeMote
             {
                 header.Checksum = br.ReadUInt32();
             }
+
             if (header.Version > 3)
             {
                 header.OffsetUnknownOffsets = br.ReadUInt32();
                 header.OffsetUnknownLengths = br.ReadUInt32();
                 header.OffsetUnknownData = br.ReadUInt32();
             }
+
             bw.Write(header.HeaderLength);
             bw.Write(header.OffsetNames);
             bw.Write(header.OffsetStrings);
@@ -180,6 +196,7 @@ namespace FreeMote
             {
                 bw.Write(header.Checksum);
             }
+
             if (header.Version > 3)
             {
                 bw.Write(header.OffsetUnknownOffsets);
@@ -194,7 +211,9 @@ namespace FreeMote
         /// <param name="br"></param>
         /// <param name="bw"></param>
         /// <param name="context"></param>
-        private static void WriteDecryptPartialHeader(BinaryReader br, BinaryWriter bw, PsbStreamContext context, PsbHeader header)
+        /// <param name="header"></param>
+        private static void WriteDecryptPartialHeader(BinaryReader br, BinaryWriter bw, PsbStreamContext context,
+            PsbHeader header)
         {
             header.HeaderLength = context.ReadUInt32(br);
             header.OffsetNames = context.ReadUInt32(br);
@@ -208,6 +227,7 @@ namespace FreeMote
             {
                 header.Checksum = context.ReadUInt32(br);
             }
+
             if (header.Version > 3)
             {
                 header.OffsetUnknownOffsets = context.ReadUInt32(br);
@@ -234,7 +254,7 @@ namespace FreeMote
                 bw.BaseStream.Read(checkBuffer, 0, checkLength);
                 Adler32 adler32 = new Adler32();
                 adler32.Update(checkBuffer);
-                header.Checksum = (uint)adler32.Checksum;
+                header.Checksum = (uint) adler32.Checksum;
                 if (header.Version == 3)
                 {
                     bw.Write(header.Checksum);
@@ -245,7 +265,7 @@ namespace FreeMote
                         .Concat(BitConverter.GetBytes(header.OffsetUnknownLengths))
                         .Concat(BitConverter.GetBytes(header.OffsetUnknownData)).ToArray();
                     adler32.Update(checkBuffer);
-                    header.Checksum = (uint)adler32.Checksum;
+                    header.Checksum = (uint) adler32.Checksum;
                     bw.Write(header.Checksum);
                     bw.Write(header.OffsetUnknownOffsets);
                     bw.Write(header.OffsetUnknownLengths);
@@ -260,7 +280,9 @@ namespace FreeMote
         /// <param name="br"></param>
         /// <param name="bw"></param>
         /// <param name="context"></param>
-        private static void WriteEncryptPartialHeader(BinaryReader br, BinaryWriter bw, PsbStreamContext context, PsbHeader header)
+        /// <param name="header"></param>
+        private static void WriteEncryptPartialHeader(BinaryReader br, BinaryWriter bw, PsbStreamContext context,
+            PsbHeader header)
         {
             var checksumStartPosition = br.BaseStream.Position;
             header.HeaderLength = br.ReadUInt32();
@@ -269,6 +291,7 @@ namespace FreeMote
             {
                 header.HeaderLength = header.OffsetNames;
             }
+
             header.OffsetStrings = br.ReadUInt32();
             header.OffsetStringsData = br.ReadUInt32();
             header.OffsetChunkOffsets = br.ReadUInt32();
@@ -279,12 +302,14 @@ namespace FreeMote
             {
                 header.Checksum = br.ReadUInt32();
             }
+
             if (header.Version > 3)
             {
                 header.OffsetUnknownOffsets = br.ReadUInt32();
                 header.OffsetUnknownLengths = br.ReadUInt32();
                 header.OffsetUnknownData = br.ReadUInt32();
             }
+
             var checksumEndPosition = br.BaseStream.Position;
 
             context.Write(header.HeaderLength, bw);
@@ -305,7 +330,7 @@ namespace FreeMote
                 br.BaseStream.Seek(checksumEndPosition, SeekOrigin.Begin); //Jump back
                 Adler32 adler32 = new Adler32();
                 adler32.Update(checkBuffer);
-                header.Checksum = (uint)adler32.Checksum;
+                header.Checksum = (uint) adler32.Checksum;
                 if (header.Version == 3)
                 {
                     context.Write(header.Checksum, bw);
@@ -313,10 +338,10 @@ namespace FreeMote
                 else //PSBv4
                 {
                     checkBuffer = BitConverter.GetBytes(header.OffsetUnknownOffsets)
-                                            .Concat(BitConverter.GetBytes(header.OffsetUnknownLengths))
-                                            .Concat(BitConverter.GetBytes(header.OffsetUnknownData)).ToArray();
+                        .Concat(BitConverter.GetBytes(header.OffsetUnknownLengths))
+                        .Concat(BitConverter.GetBytes(header.OffsetUnknownData)).ToArray();
                     adler32.Update(checkBuffer);
-                    header.Checksum = (uint)adler32.Checksum;
+                    header.Checksum = (uint) adler32.Checksum;
                     context.Write(header.Checksum, bw);
                     context.Write(header.OffsetUnknownOffsets, bw);
                     context.Write(header.OffsetUnknownLengths, bw);
@@ -330,15 +355,16 @@ namespace FreeMote
             WriteToEnd(br, bw);
         }
 
-        private static void WriteEncodeBody(BinaryReader br, BinaryWriter bw, PsbStreamContext context, PsbHeader header)
+        private static void WriteEncodeBody(BinaryReader br, BinaryWriter bw, PsbStreamContext context,
+            PsbHeader header)
         {
             bw.Write
+            (
+                context.Encode
                 (
-                    context.Encode
-                    (
-                        br.ReadBytes((int)(header.OffsetChunkOffsets - header.OffsetNames))
-                    )
-                );
+                    br.ReadBytes((int) (header.OffsetChunkOffsets - header.OffsetNames))
+                )
+            );
             WriteToEnd(br, bw);
         }
 
@@ -346,7 +372,7 @@ namespace FreeMote
         {
             bw.Write
             (
-                br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position))
+                br.ReadBytes((int) (br.BaseStream.Length - br.BaseStream.Position))
             );
         }
 
@@ -357,7 +383,8 @@ namespace FreeMote
         /// <param name="savePath"></param>
         /// <param name="mode"></param>
         /// <param name="position"></param>
-        public void EncodeToFile(uint key, string savePath, EncodeMode mode = EncodeMode.Encrypt, EncodePosition position = EncodePosition.Auto)
+        public void EncodeToFile(uint key, string savePath, EncodeMode mode = EncodeMode.Encrypt,
+            EncodePosition position = EncodePosition.Auto)
         {
             using (var input = File.OpenRead(Path))
             {
@@ -382,7 +409,7 @@ namespace FreeMote
         public static byte[] Transfer(uint oldKey, uint newKey, byte[] inputBytes)
         {
             var input = new MemoryStream(inputBytes);
-            var output = new MemoryStream((int)input.Length);
+            var output = new MemoryStream((int) input.Length);
             Encode(oldKey, EncodeMode.Decrypt, EncodePosition.Auto, input, output);
             Encode(newKey, EncodeMode.Encrypt, EncodePosition.Auto, output, input);
             inputBytes = input.ToArray();
@@ -399,11 +426,12 @@ namespace FreeMote
         /// <param name="mode"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public static byte[] EncodeToBytes(uint key, byte[] inputBytes, EncodeMode mode = EncodeMode.Encrypt, EncodePosition position = EncodePosition.Auto)
+        public static byte[] EncodeToBytes(uint key, byte[] inputBytes, EncodeMode mode = EncodeMode.Encrypt,
+            EncodePosition position = EncodePosition.Auto)
         {
             using (var input = new MemoryStream(inputBytes))
             {
-                using (var output = new MemoryStream((int)input.Length))
+                using (var output = new MemoryStream((int) input.Length))
                 {
                     Encode(key, mode, position, input, output);
                     return output.ToArray();
@@ -453,29 +481,32 @@ namespace FreeMote
                     {
                         mode = EncodeMode.Decrypt;
                     }
+
                     if (!headerEnc && !bodyEnc)
                     {
                         mode = EncodeMode.Encrypt;
                     }
+
                     switch (mode)
                     {
                         case EncodeMode.Encrypt:
                             if (header.Version > 2) //Header Encrypted; Body Clean
                             {
-                                bw.Write((ushort)1);
+                                bw.Write((ushort) 1);
                                 if (headerEnc)
                                 {
                                     WriteOriginalPartialHeader(br, bw, header);
                                     WriteOriginalBody(br, bw);
                                     break;
                                 }
+
                                 WriteEncryptPartialHeader(br, bw, context, header);
                                 WriteOriginalBody(br, bw);
                                 break;
                             }
                             else //Header Clean; Body Encrpyted
                             {
-                                bw.Write((ushort)0); //
+                                bw.Write((ushort) 0); //
                                 if (headerEnc)
                                 {
                                     WriteDecryptPartialHeader(br, bw, context, header);
@@ -488,9 +519,10 @@ namespace FreeMote
                                     WriteEncodeBody(br, bw, context, header);
                                 }
                             }
+
                             break;
                         case EncodeMode.Decrypt:
-                            bw.Write((ushort)0); //
+                            bw.Write((ushort) 0); //
                             if (headerEnc)
                             {
                                 WriteDecryptPartialHeader(br, bw, context, header);
@@ -499,6 +531,7 @@ namespace FreeMote
                             {
                                 WriteOriginalPartialHeader(br, bw, header);
                             }
+
                             if (bodyEnc)
                             {
                                 WriteEncodeBody(br, bw, context, header);
@@ -507,11 +540,13 @@ namespace FreeMote
                             {
                                 WriteOriginalBody(br, bw);
                             }
+
                             break;
                         default:
                             WriteOriginal();
                             break;
                     }
+
                     break;
                 case EncodePosition.Body:
                     switch (mode)
@@ -527,17 +562,18 @@ namespace FreeMote
                             WriteOriginal();
                             break;
                     }
+
                     break;
                 case EncodePosition.Header:
                     switch (mode)
                     {
                         case EncodeMode.Encrypt:
-                            bw.Write((ushort)1);
+                            bw.Write((ushort) 1);
                             WriteEncryptPartialHeader(br, bw, context, header);
                             WriteOriginalBody(br, bw);
                             break;
                         case EncodeMode.Decrypt:
-                            bw.Write((ushort)0); //
+                            bw.Write((ushort) 0); //
                             WriteDecryptPartialHeader(br, bw, context, header);
                             WriteOriginalBody(br, bw);
                             break;
@@ -545,17 +581,18 @@ namespace FreeMote
                             WriteOriginal();
                             break;
                     }
+
                     break;
                 case EncodePosition.Full:
                     switch (mode)
                     {
                         case EncodeMode.Encrypt:
-                            bw.Write((ushort)1);
+                            bw.Write((ushort) 1);
                             WriteEncryptPartialHeader(br, bw, context, header);
                             WriteEncodeBody(br, bw, context, header);
                             break;
                         case EncodeMode.Decrypt:
-                            bw.Write((ushort)1); //
+                            bw.Write((ushort) 1); //
                             WriteDecryptPartialHeader(br, bw, context, header);
                             WriteEncodeBody(br, bw, context, header);
                             break;
@@ -563,11 +600,13 @@ namespace FreeMote
                             WriteOriginal();
                             break;
                     }
+
                     break;
                 default:
                     WriteOriginal();
                     break;
             }
+
             bw.Flush();
             output.Seek(0, SeekOrigin.Begin);
             return header;
@@ -583,9 +622,8 @@ namespace FreeMote
             {
                 return true;
             }
+
             return false;
         }
-
     }
 }
-
