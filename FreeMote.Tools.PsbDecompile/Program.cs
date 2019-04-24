@@ -25,7 +25,7 @@ namespace FreeMote.Tools.PsbDecompile
             PsbConstants.InMemoryLoading = true;
             Console.WriteLine();
 
-            if (args.Length <= 0 || args[0].ToLowerInvariant() == "/h" || args[0].ToLowerInvariant() == "?")
+            if (args.Length <= 0 || args[0].ToLowerInvariant() == "-h" || args[0].ToLowerInvariant() == "?")
             {
                 PrintHelp();
                 return;
@@ -34,8 +34,8 @@ namespace FreeMote.Tools.PsbDecompile
             foreach (var s in args)
             {
                 // Convert resources to BMP
-                if (s.ToLowerInvariant() == "/eb" || s.ToLowerInvariant() == "/extract" ||
-                    s.ToLowerInvariant() == "/bmp")
+                if (s.ToLowerInvariant() == "-eb" || s.ToLowerInvariant() == "-extract" ||
+                    s.ToLowerInvariant() == "-bmp")
                 {
                     _extractImage = true;
                     _png = false;
@@ -43,7 +43,7 @@ namespace FreeMote.Tools.PsbDecompile
                 }
 
                 // Convert resources to PNG
-                if (s.ToLowerInvariant() == "/ep" || s.ToLowerInvariant() == "/png")
+                if (s.ToLowerInvariant() == "-ep" || s.ToLowerInvariant() == "-png")
                 {
                     _extractImage = true;
                     _png = true;
@@ -51,7 +51,7 @@ namespace FreeMote.Tools.PsbDecompile
                 }
 
                 // Convert resources to BIN
-                if (s.ToLowerInvariant() == "/er" || s.ToLowerInvariant() == "/uncompress")
+                if (s.ToLowerInvariant() == "-er" || s.ToLowerInvariant() == "-uncompress")
                 {
                     _extractImage = false;
                     _uncompressImage = true;
@@ -59,7 +59,7 @@ namespace FreeMote.Tools.PsbDecompile
                 }
 
                 // Keep Original
-                if (s.ToLowerInvariant() == "/ne" || s.ToLowerInvariant() == "/raw")
+                if (s.ToLowerInvariant() == "-ne" || s.ToLowerInvariant() == "-raw")
                 {
                     _extractImage = false;
                     _uncompressImage = false;
@@ -68,28 +68,28 @@ namespace FreeMote.Tools.PsbDecompile
 
                 // Disable MM IO
                 //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
-                if (s.ToLowerInvariant() == "/oom" || s.ToLowerInvariant() == "/low-mem")
+                if (s.ToLowerInvariant() == "-oom" || s.ToLowerInvariant() == "-low-mem")
                 {
                     PsbConstants.InMemoryLoading = false;
                     continue;
                 }
 
                 //Enable MM IO
-                if (s.ToLowerInvariant() == "/mem" || s.ToLowerInvariant() == "/fast")
+                if (s.ToLowerInvariant() == "-mem" || s.ToLowerInvariant() == "-fast")
                 {
                     PsbConstants.InMemoryLoading = true;
                     continue;
                 }
 
 
-                if (s.StartsWith("/k"))
+                if (s.StartsWith("-k"))
                 {
-                    if (s == "/k")
+                    if (s == "-k")
                     {
                         _key = null;
                     }
 
-                    if (uint.TryParse(s.Replace("/k", ""), out var k))
+                    if (uint.TryParse(s.Replace("-k", ""), out var k))
                     {
                         _key = k;
                     }
@@ -132,15 +132,15 @@ namespace FreeMote.Tools.PsbDecompile
 
             Console.WriteLine("Usage: .exe [Mode] [Setting] <PSB path>");
             Console.WriteLine(@"Mode:
-/raw : Keep resource in original format.
-/er : Similar to raw mode but uncompress those compressed resources.
-/eb : Convert images to BMP format.
-/ep : [Default] Convert images to PNG format.
+-raw : Keep resource in original format.
+-er : Similar to raw mode but uncompress those compressed resources.
+-eb : Convert images to BMP format.
+-ep : [Default] Convert images to PNG format.
 Setting:
-/oom : Disable In-Memory Loading. (Lower memory usage but longer time for loading)
-/k<Key> : Set PSB key. use `/k` (without key specified) to reset.
+-oom : Disable In-Memory Loading. (Lower memory usage but longer time for loading)
+-k<Key> : Set PSB key. use `-k` (without key specified) to reset.
 ");
-            Console.WriteLine("Example: PsbDecompile /ep emt.pure.psb");
+            Console.WriteLine("Example: PsbDecompile -ep emt.pure.psb");
             Console.WriteLine("\t PsbDecompile C:\\\\EMTfolder");
         }
 

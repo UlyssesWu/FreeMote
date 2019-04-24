@@ -171,6 +171,11 @@ namespace FreeMote.Tools.Viewer
             BeginRenderingScene();
         }
 
+        private void LoadModel()
+        {
+            //TODO:
+        }
+
         private void MainWindow_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var p = e.GetPosition(this);

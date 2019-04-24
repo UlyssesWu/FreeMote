@@ -11,15 +11,18 @@ namespace FreeMote.Psb
         /// The string with this prefix will be convert to number when compile/decompile
         /// </summary>
         public const string NumberStringPrefix = "#0x";
+
         /// <summary>
         /// The string with this prefix (with ID followed) will be convert to resource when compile/decompile
         /// </summary>
         public const string ResourceIdentifier = "#resource#";
+
         public const string ResourceKey = "pixel";
         public const string MotionSourceKey = "source";
         public const string MmoSourceKey = "sourceChildren";
         public const string MmoBgSourceKey = "bgChildren";
         public const string PimgSourceKey = "layers";
+
         /// <summary>
         /// delimiter for output texture filename
         /// </summary>
@@ -29,11 +32,13 @@ namespace FreeMote.Psb
         /// Get all resources with necessary info
         /// </summary>
         /// <param name="psb"></param>
-        /// <param name="deDuplication">if true, We focus on Resource itself </param>
+        /// <param name="deDuplication">if true, we focus on Resource itself </param>
         /// <returns></returns>
         public static List<ResourceMetadata> CollectResources(this PSB psb, bool deDuplication = true)
         {
-            List<ResourceMetadata> resourceList = psb.Resources == null ? new List<ResourceMetadata>() : new List<ResourceMetadata>(psb.Resources.Count);
+            List<ResourceMetadata> resourceList = psb.Resources == null
+                ? new List<ResourceMetadata>()
+                : new List<ResourceMetadata>(psb.Resources.Count);
 
             switch (psb.Type)
             {
@@ -59,12 +64,29 @@ namespace FreeMote.Psb
                     resourceList.ForEach(r => r.Spec = psb.Platform);
                     break;
             }
-            resourceList.Sort((md1, md2) => (int)(md1.Index - md2.Index));
+
+            resourceList.Sort((md1, md2) => (int) (md1.Index - md2.Index));
 
             return resourceList;
         }
 
-        private static void FindMmoResources(List<ResourceMetadata> list, IPsbValue obj, in string defaultPartname = "", bool deDuplication = true)
+        /// <summary>
+        /// Add stub <see cref="PsbResource"/> to this PSB
+        /// </summary>
+        /// <param name="psb"></param>
+        internal static List<PsbResource> MotionResourceInstrument(this PSB psb)
+        {
+            if (!psb.Objects.ContainsKey(MotionSourceKey))
+            {
+                return null;
+            }
+            var resources = new List<PsbResource>();
+            GenerateMotionResourceStubs(resources, psb.Objects[MotionSourceKey]);
+            return resources;
+        }
+
+        private static void FindMmoResources(List<ResourceMetadata> list, IPsbValue obj, in string defaultPartname = "",
+            bool deDuplication = true)
         {
             switch (obj)
             {
@@ -83,16 +105,18 @@ namespace FreeMote.Psb
                             list.Add(GenerateMmoResMetadata(d, defaultPartname, r));
                         }
                     }
+
                     foreach (var o in d.Values)
                     {
                         FindMmoResources(list, o, defaultPartname, deDuplication);
                     }
+
                     break;
             }
-
         }
 
-        private static ResourceMetadata GenerateMmoResMetadata(PsbDictionary d, string defaultPartName = "", PsbResource r = null)
+        private static ResourceMetadata GenerateMmoResMetadata(PsbDictionary d, string defaultPartName = "",
+            PsbResource r = null)
         {
             if (r == null)
             {
@@ -123,28 +147,33 @@ namespace FreeMote.Psb
                     compress = PsbCompressType.RL;
                 }
             }
+
             int width = 1, height = 1;
             float originX = 0, originY = 0;
             if ((d["width"] ?? dd["width"]) is PsbNumber nw)
             {
                 is2D = true;
-                width = (int)nw;
+                width = (int) nw;
             }
+
             if ((d["height"] ?? dd["height"]) is PsbNumber nh)
             {
                 is2D = true;
-                height = (int)nh;
+                height = (int) nh;
             }
+
             if ((dd["originX"] ?? d["originX"]) is PsbNumber nx)
             {
                 is2D = true;
-                originX = (float)nx;
+                originX = (float) nx;
             }
+
             if ((dd["originY"] ?? d["originY"]) is PsbNumber ny)
             {
                 is2D = true;
-                originY = (float)ny;
+                originY = (float) ny;
             }
+
             var md = new ResourceMetadata()
             {
                 Is2D = is2D,
@@ -174,24 +203,28 @@ namespace FreeMote.Psb
                         {
                             continue;
                         }
+
                         if (uint.TryParse(layerId.Value, out var id))
                         {
                             res.Index = id;
                         }
+
                         if (dic["width"] is PsbNumber nw)
                         {
-                            res.Width = deDuplication ? Math.Max((int)nw, res.Width) : (int)nw;
+                            res.Width = deDuplication ? Math.Max((int) nw, res.Width) : (int) nw;
                         }
+
                         if (dic["height"] is PsbNumber nh)
                         {
-                            res.Height = deDuplication ? Math.Max((int)nh, res.Height) : (int)nh;
+                            res.Height = deDuplication ? Math.Max((int) nh, res.Height) : (int) nh;
                         }
                     }
                 }
             }
         }
 
-        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
+        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true,
+            bool findExternal = false)
         {
             switch (obj)
             {
@@ -210,10 +243,46 @@ namespace FreeMote.Psb
                             list.Add(GenerateMotionResMetadata(d, r));
                         }
                     }
+
                     foreach (var o in d.Values)
                     {
                         FindMotionResources(list, o, deDuplication);
                     }
+
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Add stubs (<see cref="PsbResource"/> with null Data) into a Motion PSB. A stub must be linked with a texture, or it will be null after <see cref="PSB.Build"/>
+        /// </summary>
+        /// <param name="resources"></param>
+        /// <param name="obj"></param>
+        private static void GenerateMotionResourceStubs(List<PsbResource> resources, IPsbValue obj)
+        {
+            switch (obj)
+            {
+                case PsbCollection c:
+                    c.ForEach(o => GenerateMotionResourceStubs(resources, o));
+                    break;
+                case PsbDictionary d:
+                    if (d.ContainsKey(ResourceKey) && (d[ResourceKey] == null || d[ResourceKey] is PsbNull))
+                    {
+                        if (d.ContainsKey("width") && d.ContainsKey("height"))
+                        {
+                            //confirmed, add stub
+                            PsbResource res = new PsbResource();
+                            resources.Add(res);
+                            res.Index = (uint) resources.IndexOf(res);
+                            d[ResourceKey] = res;
+                        }
+                    }
+
+                    foreach (var o in d.Values)
+                    {
+                        GenerateMotionResourceStubs(resources, o);
+                    }
+
                     break;
             }
         }
@@ -230,6 +299,7 @@ namespace FreeMote.Psb
             {
                 r = d.Values.FirstOrDefault(v => v is PsbResource) as PsbResource;
             }
+
             bool is2D = false;
             var part = d.GetPartName();
             var name = d.GetName();
@@ -239,12 +309,13 @@ namespace FreeMote.Psb
             {
                 is2D = true;
                 clip = RectangleF.FromLTRB(
-                    left: clipDic["left"] == null ? 0f : (float)(PsbNumber)clipDic["left"],
-                    top: clipDic["top"] == null ? 0f : (float)(PsbNumber)clipDic["top"],
-                    right: clipDic["right"] == null ? 1f : (float)(PsbNumber)clipDic["right"],
-                    bottom: clipDic["bottom"] == null ? 1f : (float)(PsbNumber)clipDic["bottom"]
+                    left: clipDic["left"] == null ? 0f : (float) (PsbNumber) clipDic["left"],
+                    top: clipDic["top"] == null ? 0f : (float) (PsbNumber) clipDic["top"],
+                    right: clipDic["right"] == null ? 1f : (float) (PsbNumber) clipDic["right"],
+                    bottom: clipDic["bottom"] == null ? 1f : (float) (PsbNumber) clipDic["bottom"]
                 );
             }
+
             var compress = PsbCompressType.None;
             if (d["compress"] is PsbString sc)
             {
@@ -254,27 +325,31 @@ namespace FreeMote.Psb
                     compress = PsbCompressType.RL;
                 }
             }
+
             int width = 1, height = 1;
             float originX = 0, originY = 0;
             if (d["width"] is PsbNumber nw)
             {
                 is2D = true;
-                width = (int)nw;
+                width = (int) nw;
             }
+
             if (d["height"] is PsbNumber nh)
             {
                 is2D = true;
-                height = (int)nh;
+                height = (int) nh;
             }
+
             if (d["originX"] is PsbNumber nx)
             {
                 is2D = true;
-                originX = (float)nx;
+                originX = (float) nx;
             }
+
             if (d["originY"] is PsbNumber ny)
             {
                 is2D = true;
-                originY = (float)ny;
+                originY = (float) ny;
             }
 
             PsbString typeString = null;
@@ -282,17 +357,20 @@ namespace FreeMote.Psb
             {
                 typeString = typeStr;
             }
+
             int top = 0, left = 0;
             if (d["top"] is PsbNumber nt)
             {
                 is2D = true;
-                top = (int)nt;
+                top = (int) nt;
             }
+
             if (d["left"] is PsbNumber nl)
             {
                 is2D = true;
-                left = (int)nl;
+                left = (int) nl;
             }
+
             var md = new ResourceMetadata()
             {
                 Index = r.Index ?? int.MaxValue,
@@ -326,8 +404,10 @@ namespace FreeMote.Psb
                 {
                     return c.GetName();
                 }
+
                 c = c.Parent;
             }
+
             return null;
         }
     }

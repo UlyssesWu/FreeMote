@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -139,7 +140,7 @@ namespace FreeMote.PsBuild
                 name += "-resources";
                 dirPath += "-resources";
             }
-            if (!Directory.Exists(dirPath)) //ensure no file with same name!
+            if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
             {
                 Directory.CreateDirectory(dirPath);
             }
@@ -297,6 +298,16 @@ namespace FreeMote.PsBuild
                 }
                 return rPath;
             }
+        }
+
+        // ReSharper disable once InvalidXmlDocComment
+        /// <summary>
+        /// Inlined PSB -> External Texture PSB. Inverse of <seealso cref="PsbCompiler.Link"/>
+        /// </summary>
+        /// <returns>Ordered textures</returns>
+        public static List<Bitmap> Unlink(this PSB psb)
+        {
+            throw new NotImplementedException();
         }
     }
 }

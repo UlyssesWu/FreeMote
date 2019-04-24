@@ -421,6 +421,19 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestInline()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "2001010400_00_mid.pure.psb");
+            var texPath = Path.Combine(resPath, "2001010400_00_mid_tex000.png");
+            PSB psb = new PSB(path);
+            psb.Link(new List<string> {texPath}, order: PsbLinkOrderBy.Order);
+            psb.Merge();
+            File.WriteAllBytes("inline.psb", psb.Build());
+            PSB p2 = new PSB("inline.psb");
+        }
+
+        [TestMethod]
         public void TestPsz()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

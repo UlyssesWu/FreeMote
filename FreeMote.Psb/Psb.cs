@@ -625,7 +625,9 @@ namespace FreeMote.Psb
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
-            var namesSet = new HashSet<string>();
+            var namesSet = new HashSet<string>(); //Keep names unique, HashSet is faster than List
+            //Strings can be unique to save space, but can also be redundant for some reasons like translation.
+            //We suggest users handle redundant strings before Merge, or in Json, or rewrite their own Merge. That's why PSB.Merge is not directly called in PSB.Build.
             var stringsDic = new Dictionary<string, PsbString>();
             var stringsIndexDic = new Dictionary<uint, PsbString>();
             uint strIdx = 0;
@@ -711,6 +713,7 @@ namespace FreeMote.Psb
                 }
             }
 
+            //[Obsolete]
             void UniqueString(IPsbValue obj)
             {
                 switch (obj)
@@ -720,10 +723,6 @@ namespace FreeMote.Psb
                     case PsbString s:
                         if (Strings.Contains(s))
                         {
-                            //if (s.Index == null)
-                            //{
-                            //    s.Index = Strings.First(str => str.Value == s.Value).Index;
-                            //}
                             s.Index = (uint) Strings.IndexOf(s);
                         }
                         else
@@ -759,7 +758,7 @@ namespace FreeMote.Psb
             {
                 Strings[i].Index = (uint) i;
             }
-
+            
             Resources.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
             for (int i = 0; i < Resources.Count; i++)
             {
@@ -901,8 +900,15 @@ namespace FreeMote.Psb
                 {
                     var psbResource = Resources[i];
                     offsets.Add((uint) resBw.BaseStream.Position);
-                    lengths.Add((uint) psbResource.Data.Length);
-                    resBw.Write(psbResource.Data);
+                    if (psbResource.Data == null)
+                    {
+                        lengths.Add((uint) 0);
+                    }
+                    else
+                    {
+                        lengths.Add((uint) psbResource.Data.Length);
+                        resBw.Write(psbResource.Data);
+                    }
                 }
 
                 resBw.Flush();
@@ -977,7 +983,15 @@ namespace FreeMote.Psb
                     pStr.WriteTo(bw);
                     return;
                 case PsbResource pRes:
-                    pRes.WriteTo(bw);
+                    if (pRes.Data == null) //MARK: null resource will be eliminated!
+                    {
+                        PsbNull.Null.WriteTo(bw);
+                    }
+                    else
+                    {
+                        pRes.WriteTo(bw);
+                    }
+
                     return;
                 case PsbCollection pCol:
                     SaveCollection(bw, pCol);

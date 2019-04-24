@@ -83,7 +83,7 @@ namespace FreeMote.Plugins
         /// Print Plugin infos
         /// </summary>
         /// <returns></returns>
-        public static string PrintPluginInfos()
+        public static string PrintPluginInfos(int indent = 0)
         {
             if (_ == null || _._plugins.Count == 0)
             {
@@ -92,6 +92,10 @@ namespace FreeMote.Plugins
             StringBuilder sb = new StringBuilder();
             foreach (var psbShell in _._plugins)
             {
+                if (indent > 0)
+                {
+                    sb.Append("".PadLeft(indent));
+                }
                 sb.AppendLine($"{psbShell.Value.Name} by {psbShell.Value.Author} : {psbShell.Value.Comment}");
             }
 

@@ -20,8 +20,8 @@ External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMot
 
 ### FreeMote.Purify (Unreleased)
 Infer and calculate the key used by EMT PSB file just from the PSB file (rather than get from engine).
-### FreeMote.FreeLive (Unrealistic)
-EMT <-> L2D conversion with [FreeLive](https://github.com/UlyssesWu/FreeLive).
+### DualVectorFoil (Unrealistic)
+EMT <-> L2D conversion with FreeMote and [FreeLive](https://github.com/UlyssesWu/FreeLive).
 
 ## Tools
 ### EmtConvert (FreeMote.Tools.EmtConvert)
@@ -34,11 +34,11 @@ Compile PSB description json to PSB.
 Decompile an EMT PSB to MMO project. **The output file is always licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
 ### FreeMote Viewer (FreeMote.Tools.Viewer)
 Open and render EMT _pure_ PSB. This tool requires [FreeMote.NET](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer).
-### [FreeMote Editor](https://github.com/UlyssesWu/FreeMote.Editor) (FreeMote.Editor) (In Dev)
+### [FreeMote Editor](https://github.com/UlyssesWu/FreeMote.Editor) (FreeMote.Editor) (Archived)
 FreeMote GUI tool.
 
 ## Build
-This project requires **VS 2017** and .NET 4.6-4.7 to build.
+This project requires **VS 2017** and .NET 4.6-4.7.2 to build.
 
 **FreeMote.Plugins** requires a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get Project AZUSA libs as reference. If you don't need FreeMote.Plugins, you can unload FreeMote.Plugins project and remove it from other projects' reference.
 

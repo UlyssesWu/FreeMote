@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb
@@ -15,18 +16,22 @@ namespace FreeMote.Psb
         /// Normal
         /// </summary>
         None,
+
         /// <summary>
         /// RLE
         /// </summary>
         RL,
+
         /// <summary>
         /// Raw Bitmap
         /// </summary>
         Bmp,
+
         /// <summary>
         /// KRKR TLG
         /// </summary>
         Tlg,
+
         /// <summary>
         /// By extension
         /// </summary>
@@ -43,11 +48,15 @@ namespace FreeMote.Psb
         /// Name 1
         /// </summary>
         public string Part { get; set; }
+
         /// <summary>
         /// Name 2
         /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Index is a value for tracking resource when compiling. For index appeared in texture name, see <seealso cref="TextureIndex"/>
+        /// </summary>
         public uint Index
         {
             get => Resource.Index ?? UInt32.MaxValue;
@@ -60,27 +69,66 @@ namespace FreeMote.Psb
             }
         }
 
+        /// <summary>
+        /// The texture index. e.g. "tex#001".TextureIndex = 1, "tex".Index = 0
+        /// </summary>
+        public uint? TextureIndex => GetTextureIndex(Part);
+
+        /// <summary>
+        /// The texture index. e.g.
+        /// <code>GetTextureIndex("tex#001") = 1</code>
+        /// </summary>
+        internal static uint? GetTextureIndex(string texName)
+        {
+            if (texName.EndsWith("tex") || texName.EndsWith("tex#000") || texName.EndsWith("tex000"))
+            {
+                return 0;
+            }
+
+            var texIdx = texName.LastIndexOf("tex", StringComparison.Ordinal);
+            if (texIdx < 0)
+            {
+                return null;
+            }
+
+            var isValid = uint.TryParse(
+                new string(texName.Skip(texIdx).SkipWhile(c => c < 48 || c > 57).TakeWhile(c => c > 48 || c < 57)
+                    .ToArray()), out var index);
+            if (!isValid)
+            {
+                return null;
+            }
+
+            return index;
+        }
+
         public PsbCompressType Compress { get; set; }
         public bool Is2D { get; set; } = true;
         public int Width { get; set; }
         public int Height { get; set; }
+
         /// <summary>
         /// [Type2]
         /// </summary>
         public int Top { get; set; }
+
         /// <summary>
         /// [Type2]
         /// </summary>
         public int Left { get; set; }
+
         public float OriginX { get; set; }
         public float OriginY { get; set; }
+
         /// <summary>
         /// Pixel Format Type
         /// </summary>
         public string Type => TypeString?.Value;
+
         public PsbString TypeString { get; set; }
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
+
         public byte[] Data
         {
             get => Resource?.Data;
@@ -100,10 +148,12 @@ namespace FreeMote.Psb
         /// Additional z-index info
         /// </summary>
         public float ZIndex { get; set; }
+
         /// <summary>
         /// The Label which this resource belongs to
         /// </summary>
         public string Label { get; set; }
+
         /// <summary>
         /// Name under object/{part}/motion/
         /// </summary>
@@ -134,6 +184,7 @@ namespace FreeMote.Psb
             {
                 throw new Exception("Resource data is null");
             }
+
             switch (Compress)
             {
                 case PsbCompressType.RL:

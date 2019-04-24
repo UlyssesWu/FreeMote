@@ -9,13 +9,33 @@ using Newtonsoft.Json;
 
 namespace FreeMote.PsBuild
 {
+    /// <summary>
+    /// Texture Link Order
+    /// </summary>
+    public enum PsbLinkOrderBy
+    {
+        /// <summary>
+        /// The image name should be FreeMote style: {part}-{name}.{ext}
+        /// </summary>
+        Convention = 0,
+
+        /// <summary>
+        /// The image name should be EMT Editor style: {name}_tex#{no:D3}.{ext}
+        /// </summary>
+        Name = 1,
+
+        /// <summary>
+        /// The order in list matters
+        /// </summary>
+        Order = 2,
+    }
 
     /// <summary>
     /// Compile PSB File
     /// </summary>
     public static class PsbCompiler
     {
-        private static readonly List<string> SupportedImageExt = new List<string> { ".png", ".bmp", ".jpg", ".jpeg" };
+        private static readonly List<string> SupportedImageExt = new List<string> {".png", ".bmp", ".jpg", ".jpeg"};
 
         /// <summary>
         /// Compile to file
@@ -28,7 +48,9 @@ namespace FreeMote.PsBuild
         /// <param name="platform">PSB Platform</param>
         /// <param name="renameOutput">If true, the output file extension is renamed by type</param>
         /// <param name="keepShell">If true, the output can be compressed PSB shell type (if specified)</param>
-        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null, ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true, bool keepShell = true)
+        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null,
+            ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true,
+            bool keepShell = true)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -75,7 +97,7 @@ namespace FreeMote.PsBuild
                                 break;
                         }
 
-                        if (resx.Context != null && resx.Context.ContainsKey(FreeMount.PsbShellType))
+                        if (resx.Context != null && resx.Context.ContainsKey(FreeMount.PsbShellType) && keepShell)
                         {
                             var shellType = resx.Context[FreeMount.PsbShellType] as string;
                             if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
@@ -110,7 +132,8 @@ namespace FreeMote.PsBuild
         /// <param name="spec">PSB Platform</param>
         /// <param name="keepShell">If true, try to compress PSB to shell type (MDF/LZ4 etc.) specified in resx.json; otherwise just output PSB</param>
         /// <returns></returns>
-        public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null, ushort? version = null, uint? cryptKey = null,
+        public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null,
+            ushort? version = null, uint? cryptKey = null,
             PsbSpec? spec = null, bool keepShell = true)
         {
             var context = FreeMount.CreateContext();
@@ -126,14 +149,17 @@ namespace FreeMote.PsBuild
                     {
                         psb.Type = resx.PsbType.Value;
                     }
+
                     if (resx.PsbVersion != null && version == null)
                     {
                         psb.Header.Version = resx.PsbVersion.Value;
                     }
+
                     if (resx.Platform != null && spec == null)
                     {
                         spec = resx.Platform;
                     }
+
                     if (resx.CryptKey != null & cryptKey == null)
                     {
                         cryptKey = resx.CryptKey;
@@ -156,6 +182,7 @@ namespace FreeMote.PsBuild
                     psb.Link(resources, baseDir);
                 }
             }
+
             //Build
             psb.Merge();
             if (spec != null && spec != psb.Platform)
@@ -163,6 +190,7 @@ namespace FreeMote.PsBuild
                 psb.SwitchSpec(spec.Value, spec.Value.DefaultPixelFormat());
                 psb.Merge();
             }
+
             var bytes = psb.Build();
             //Convert
 
@@ -222,6 +250,7 @@ namespace FreeMote.PsBuild
                     {
                         psb.Type = resx.PsbType.Value;
                     }
+
                     if (resx.PsbVersion != null && version == null)
                     {
                         psb.Header.Version = resx.PsbVersion.Value;
@@ -247,10 +276,12 @@ namespace FreeMote.PsBuild
                     psb.Link(resources, baseDir);
                 }
             }
+
             if (version != null)
             {
                 psb.Header.Version = version.Value;
             }
+
             psb.Merge();
             return psb;
         }
@@ -271,7 +302,8 @@ namespace FreeMote.PsBuild
             Bitmap image = null;
             var ext = Path.GetExtension(path)?.ToLowerInvariant();
 
-            if (metadata.Compress == PsbCompressType.ByName && ext != null && metadata.Name != null && metadata.Name.EndsWith(ext, true, null))
+            if (metadata.Compress == PsbCompressType.ByName && ext != null && metadata.Name != null &&
+                metadata.Name.EndsWith(ext, true, null))
             {
                 return File.ReadAllBytes(path);
             }
@@ -317,8 +349,11 @@ namespace FreeMote.PsBuild
                     }
                     else
                     {
-                        return File.ReadAllBytes(path);
+                        //MARK: No longer try to read files we don't know
+                        //return File.ReadAllBytes(path);
+                        return null;
                     }
+
                     break;
             }
 
@@ -343,6 +378,7 @@ namespace FreeMote.PsBuild
                             data = File.ReadAllBytes(path);
                         }
                     }
+
                     break;
                 case PsbCompressType.ByName:
                     var imgExt = Path.GetExtension(metadata.Name);
@@ -355,6 +391,7 @@ namespace FreeMote.PsBuild
                         Console.WriteLine($"[WARN] Unsupported image: {path}");
                         data = File.ReadAllBytes(path);
                     }
+
                     break;
                 case PsbCompressType.None:
                 default:
@@ -371,11 +408,43 @@ namespace FreeMote.PsBuild
         /// <param name="psb"></param>
         /// <param name="resPaths">resource paths</param>
         /// <param name="baseDir"></param>
-        internal static void Link(this PSB psb, List<string> resPaths, string baseDir = null)
+        /// <param name="order">how to arrange images</param>
+        /// <param name="isExternal">Whether this is an external texture PSB</param>
+        public static void Link(this PSB psb, IList<string> resPaths, string baseDir = null,
+            PsbLinkOrderBy order = PsbLinkOrderBy.Convention, bool isExternal = false)
         {
-            var resList = psb.CollectResources();
-            foreach (var resPath in resPaths)
+            if (isExternal)
             {
+                psb.MotionResourceInstrument();
+            }
+            var resList = psb.CollectResources();
+            var context = FreeMount.CreateContext();
+            if (order == PsbLinkOrderBy.Order)
+            {
+                for (int i = 0; i < resList.Count; i++)
+                {
+                    var resMd = resList[i];
+                    var fullPath = Path.Combine(baseDir ?? "", resPaths[i]);
+                    byte[] data = LoadImageBytes(fullPath, resMd, context);
+                    resMd.Resource.Data = data;
+                }
+                return;
+            }
+
+            if (order == PsbLinkOrderBy.Name)
+            {
+                if (psb.Platform == PsbSpec.krkr)
+                {
+                    throw new InvalidOperationException(
+                        $"Can not link by file name for krkr PSB. Please consider using {PsbLinkOrderBy.Convention}");
+                }
+
+                resList.Sort((md1, md2) => (int) (md1.TextureIndex ?? 0) - (int) (md2.TextureIndex ?? 0));
+            }
+
+            for (var i = 0; i < resPaths.Count; i++)
+            {
+                var resPath = resPaths[i];
                 var resName = Path.GetFileNameWithoutExtension(resPath);
                 //var resMd = uint.TryParse(resName, out uint rid)
                 //    ? resList.FirstOrDefault(r => r.Index == rid)
@@ -383,23 +452,62 @@ namespace FreeMote.PsBuild
                 //        resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
 
                 //Scan for Resource
-                var resMd = resList.FirstOrDefault(r =>
-                    resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
-                if (resMd == null && uint.TryParse(resName, out uint rid))
+                ResourceMetadata resMd = null;
+                if (order == PsbLinkOrderBy.Name)
                 {
-                    resMd = resList.FirstOrDefault(r => r.Index == rid);
+                    if (resName == null)
+                    {
+                        continue;
+                    }
+
+                    if (resList.Count == 1 && resPaths.Count == 1)
+                    {
+                        //If there is only one resource and one texture, we won't care about file name.
+                        resMd = resList[0];
+                    }
+                    else
+                    {
+                        var texIdx = ResourceMetadata.GetTextureIndex(resName);
+
+                        if (texIdx == null)
+                        {
+                            Console.WriteLine($"[WARN]{resPath} is not used since the file name cannot be recognized.");
+                            continue;
+                        }
+
+                        if (resList.Count <= texIdx.Value)
+                        {
+                            Console.WriteLine($"[WARN]{resPath} is not used since the tex No. is too large.");
+                            continue;
+                        }
+
+                        resMd = resList[(int)texIdx.Value];
+                    }
                 }
-                if (resMd == null && psb.Type == PsbType.Pimg)
+                else //if (order == PsbLinkOrderBy.Convention)
                 {
-                    resMd = resList.FirstOrDefault(r => resName == Path.GetFileNameWithoutExtension(r.Name));
+                    resMd = resList.FirstOrDefault(r =>
+                        resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
+                    if (resMd == null && uint.TryParse(resName, out uint rid))
+                    {
+                        resMd = resList.FirstOrDefault(r => r.Index == rid);
+                    }
+
+                    if (resMd == null && psb.Type == PsbType.Pimg)
+                    {
+                        resMd = resList.FirstOrDefault(r => resName == Path.GetFileNameWithoutExtension(r.Name));
+                    }
                 }
+
+
                 if (resMd == null)
                 {
                     Console.WriteLine($"[WARN]{resPath} is not used.");
                     continue;
                 }
+
                 var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd, FreeMount.CreateContext());
+                byte[] data = LoadImageBytes(fullPath, resMd, context);
                 resMd.Resource.Data = data;
             }
         }
@@ -423,6 +531,7 @@ namespace FreeMote.PsBuild
                 {
                     resMd = resList.FirstOrDefault(r => resxResource.Key == Path.GetFileNameWithoutExtension(r.Name));
                 }
+
                 if (resMd == null && uint.TryParse(resxResource.Key, out uint rid))
                 {
                     resMd = resList.FirstOrDefault(r => r.Index == rid);
