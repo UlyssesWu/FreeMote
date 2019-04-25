@@ -249,16 +249,24 @@ namespace FreeMote.Psb
                 throw;
             }
 #endif
-
-            if (Header.Version >= 4)
-            {
-                LoadUnknown(br);
-            }
-
             if (memoryPreload)
             {
                 br.Close();
                 br.Dispose();
+            }
+
+            //FIXED: must load with source BR!
+            //Load Unknown
+            if (Header.Version >= 4)
+            {
+                try
+                {
+                    LoadUnknown(sourceBr);
+                }
+                catch
+                {
+                    // ignored
+                }
             }
 
             //Load Resource

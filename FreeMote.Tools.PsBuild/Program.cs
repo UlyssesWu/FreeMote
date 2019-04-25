@@ -70,11 +70,42 @@ Example:
                 });
             });
 
+            //command: port
+            app.Command("port", portCmd =>
+            {
+                //help
+                portCmd.Description = "Recompile a PSB to another platform";
+                portCmd.HelpOption();
+                portCmd.ExtendedHelpText = @"
+Example:
+  PsBuild port -p win sample.psb 
+";
+                //options
+                var optPortSpec = portCmd.Option<PsbSpec>("-p|--spec <SPEC>",
+                    "Target PSB platform (krkr/common/win/ems)",
+                    CommandOptionType.SingleValue).IsRequired();
+                //args
+                var argPsbPath = portCmd.Argument("PSB", "PSB Path", multipleValues: true).IsRequired();
+
+                portCmd.OnExecute(() =>
+                {
+                    var portSpec = optPortSpec.ParsedValue;
+                    var psbPaths = argPsbPath.Values;
+                    foreach (var s in psbPaths)
+                    {
+                        if (File.Exists(s))
+                        {
+                            Port(s, portSpec);
+                        }
+                    }
+                });
+            });
+
             app.OnExecute(() =>
             {
-                ushort ver = optVer.HasValue() ? optVer.ParsedValue : (ushort)3;
-                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?)null;
-                PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : (PsbSpec?)null;
+                ushort ver = optVer.HasValue() ? optVer.ParsedValue : (ushort) 3;
+                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
+                PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : (PsbSpec?) null;
                 var canRename = !optNoRename.HasValue();
                 var canPack = !optNoShell.HasValue();
 
@@ -93,6 +124,25 @@ Example:
             app.Execute(args);
 
             Console.WriteLine("Done.");
+        }
+
+        private static void Port(string s, PsbSpec portSpec)
+        {
+            var name = Path.GetFileNameWithoutExtension(s);
+            var ext = Path.GetExtension(s);
+            Console.WriteLine($"Converting {name} to {portSpec} platform...");
+            PSB psb = new PSB(s);
+            if (psb.Platform == portSpec)
+            {
+                Console.WriteLine("Already at the same platform, Skip.");
+            }
+            else
+            {
+                psb.SwitchSpec(portSpec);
+                psb.Merge();
+                File.WriteAllBytes(Path.ChangeExtension(s, $".{portSpec}.psb"), psb.Build());
+                Console.WriteLine($"Convert {name} succeed.");
+            }
         }
 
         private static void Link(string psbPath, List<string> texPaths, PsbLinkOrderBy order)
