@@ -47,6 +47,7 @@ namespace FreeMote.Tools.PsBuild
             app.Command("link", linkCmd =>
             {
                 //help
+                linkCmd.Description = "Link textures into an external texture PSB";
                 linkCmd.HelpOption();
                 linkCmd.ExtendedHelpText = @"
 Example:
@@ -137,6 +138,7 @@ Example:
         {
             if (!File.Exists(s))
             {
+                //此処にいて何処にもいない　キミの面影はいつも朧 : https://soundcloud.com/yuhyuhyuhxibbd2/parallel-utau
                 return;
             }
 

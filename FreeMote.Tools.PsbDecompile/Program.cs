@@ -30,7 +30,8 @@ namespace FreeMote.Tools.PsbDecompile
 
             //options
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
-            var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>", "Convert textures to Png/Bmp. Default=Png", CommandOptionType.SingleValue);
+            var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
+                "Convert textures to Png/Bmp. Default=Png", CommandOptionType.SingleValue);
             var optRaw = app.Option("-raw|--raw", "Keep raw textures", CommandOptionType.NoValue);
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue);
@@ -72,9 +73,10 @@ Example:
                 {
                     PsbConstants.InMemoryLoading = false;
                 }
+
                 bool useRaw = optRaw.HasValue();
                 PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.Png;
-                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?)null;
+                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
 
                 foreach (var s in argPath.Values)
                 {
@@ -133,7 +135,8 @@ Example:
             //            Console.WriteLine("\t PsbDecompile C:\\\\EMTfolder");
         }
 
-        static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.Png, uint? key = null)
+        static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.Png,
+            uint? key = null)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");

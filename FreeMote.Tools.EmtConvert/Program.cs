@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using FreeMote.Plugins;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace FreeMote.Tools.EmtConvert
 {
@@ -9,94 +10,86 @@ namespace FreeMote.Tools.EmtConvert
     {
         private static uint? Key = null;
         private static uint? NewKey = null;
+
         static void Main(string[] args)
         {
-            FreeMount.Init();
-
-            if (args.Length > 1 && args[0].StartsWith("-c")) // compress mode
-            {
-                Console.WriteLine("FreeMote PSB Shell Converter");
-                Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
-                Console.WriteLine();
-                var type = args[0].Substring(2);
-                for (int i = 1; i < args.Length; i++)
-                {
-                    var path = args[i];
-                    if (Directory.Exists(path))
-                    {
-                        foreach (var file in Directory.EnumerateFiles(path, "*.psb"))
-                        {
-                            ShellConvert(file, type);
-                        }
-                    }
-                    if (!File.Exists(path))
-                    {
-                        continue;
-                    }
-
-                    ShellConvert(path, type);
-                }
-
-                Console.WriteLine("Done.");
-                return;
-            }
-
             Console.WriteLine("FreeMote PSB Converter");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+            FreeMount.Init();
+            Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
             Console.WriteLine();
 
-            if (args.Length >= 3)
+            var app = new CommandLineApplication();
+            app.OptionsComparison = StringComparison.OrdinalIgnoreCase;
+
+            //help
+            app.HelpOption();
+            app.ExtendedHelpText = PrintHelp();
+
+            //options
+            var optKey = app.Option<uint>("-k|--key <KEY>", "PSB key (uint, dec)", CommandOptionType.SingleValue);
+            var optNewKey = app.Option<uint>("-nk|--new-key <KEY>", "New PSB key for transfer (uint, dec)",
+                CommandOptionType.SingleValue);
+            //args
+            var argPath =
+                app.Argument("Files", "File paths", multipleValues: true);
+
+            //command: pack
+            app.Command("pack", packCmd =>
             {
-                if (!File.Exists(args[0]))
+                //help
+                packCmd.Description = "Packing/unpacking PSBs to/from shell.";
+                packCmd.HelpOption();
+                packCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert pack -s LZ4 sample.psb 
+";
+                //options
+                var optType = packCmd.Option("-s|--shell <SHELL>",
+                    "Set shell type. No need to specify if unpack",
+                    CommandOptionType.SingleValue);
+                //args
+                var argPsbPaths = packCmd.Argument("PSB", "PSB Paths", true);
+
+                packCmd.OnExecute(() =>
                 {
-                    Console.WriteLine("File not exists.");
-                    return;
-                }
-                uint key;
-                if (!uint.TryParse(args[1], out key))
-                {
-                    Console.WriteLine("Key is not valid.");
-                    return;
-                }
-                Key = key;
-                if (!uint.TryParse(args[2], out key))
-                {
-                    Console.WriteLine("New key is not valid.");
-                    return;
-                }
-                NewKey = key;
-                byte[] bytes = File.ReadAllBytes(args[0]);
-                File.WriteAllBytes(Path.ChangeExtension(args[0], ".converted.psb"), PsbFile.Transfer(Key.Value, NewKey.Value, bytes));
-            }
-            else if (args.Length == 2)
+                    string type = optType.HasValue() ? optType.Value() : null;
+                    foreach (var s in argPsbPaths.Values)
+                    {
+                        if (File.Exists(s))
+                        {
+                            ShellConvert(s, type);
+                        }
+                    }
+                });
+            });
+
+            app.OnExecute(() =>
             {
-                if (!File.Exists(args[0]))
+                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
+                uint? newKey = optNewKey.HasValue() ? optNewKey.ParsedValue : (uint?) null;
+
+                foreach (var s in argPath.Values)
                 {
-                    Console.WriteLine("File not exists.");
-                    return;
+                    if (File.Exists(s))
+                    {
+                        if (key != null && newKey != null) //Transfer
+                        {
+                            File.WriteAllBytes(Path.ChangeExtension(s, ".converted.psb"),
+                                PsbFile.Transfer(key.Value, newKey.Value, File.ReadAllBytes(s)));
+                        }
+                        else
+                        {
+                            Convert(key, s);
+                        }
+                    }
                 }
-                uint key;
-                if (!uint.TryParse(args[1], out key))
-                {
-                    //Console.WriteLine("Key is not valid.");
-                    //return;
-                }
-                Key = key;
-                Convert(Key, args[0]);
-            }
-            else if (args.Length == 1)
+            });
+
+            if (args.Length == 0)
             {
-                if (!File.Exists(args[0]))
-                {
-                    PrintHelp();
-                    return;
-                }
-                //AskForKey();
-                Convert(Key, args[0]);
-            }
-            else
-            {
-                PrintHelp();
+                app.ShowHelp();
+                Console.WriteLine("Convert all PSBs in current directory:");
                 AskForKey();
                 AskForNewKey();
 
@@ -126,10 +119,16 @@ namespace FreeMote.Tools.EmtConvert
                         }
                     }
                 }
+
                 Console.WriteLine($"Completed! {count} files processed in total.");
+                Console.WriteLine("Press ENTER to exit...");
+                Console.ReadLine();
+                return;
             }
-            Console.WriteLine("Done. Press ENTER to exit...");
-            Console.ReadLine();
+
+            app.Execute(args);
+
+            Console.WriteLine("Done.");
         }
 
         private static bool ShellConvert(string path, string type)
@@ -147,6 +146,7 @@ namespace FreeMote.Tools.EmtConvert
                         {
                             return false;
                         }
+
                         var mms = ctx.PackToShell(fs, type);
                         if (mms == null)
                         {
@@ -188,16 +188,25 @@ namespace FreeMote.Tools.EmtConvert
             return true;
         }
 
-        private static void PrintHelp()
+        private static string PrintHelp()
         {
-            Console.WriteLine(@"Usage: .exe [mode] <PSB file path> <key> [new key]
-Mode: use `-c<shell type>` as the first param to enable shell compress/decompress mode.
-Example: emtconvert test.psb 123456789 (encrypt or decrypt using key)
-\t emtconvert test.psb 123456789 987654321 (transfer an impure PSB to another key)
-\t emtconvert -cLZ4 test.psb (compress to LZ4)
-\t emtconvert -c test.psb.lz4 (decompress)
-Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.
-");
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine().AppendLine("Plugins:");
+            sb.AppendLine(FreeMount.PrintPluginInfos(2));
+            sb.AppendLine(@"Examples: 
+  EmtConvert sample.psb    //Unpack from shell, and decrypt if there is a KeyProvider plugin
+  EmtConvert -k 123456789 sample.psb    //Decrypt or encrypt using key
+  EmtConvert -k 123456789 -nk 987654321 sample.psb    //Transfer from old key to new key
+  Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.");
+            return sb.ToString();
+            //            Console.WriteLine(@"Usage: .exe [mode] <PSB file path> <key> [new key]
+            //Mode: use `-c<shell type>` as the first param to enable shell compress/decompress mode.
+            //Example: emtconvert test.psb 123456789 (encrypt or decrypt using key)
+            //\t emtconvert test.psb 123456789 987654321 (transfer an impure PSB to another key)
+            //\t emtconvert -cLZ4 test.psb (compress to LZ4)
+            //\t emtconvert -c test.psb.lz4 (decompress)
+            //Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.
+            //");
         }
 
         static void AskForKey()
@@ -210,6 +219,7 @@ Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.
                 {
                     return;
                 }
+
                 uint key;
                 if (uint.TryParse(ans, out key))
                 {
@@ -259,6 +269,7 @@ Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.
                         stream = ms;
                         hasShell = true;
                     }
+
                     BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
                     if (!key.HasValue)
                     {
@@ -282,7 +293,7 @@ Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.
 
                     var header = PsbHeader.Load(br);
 
-                    using (var outMs = new MemoryStream((int)stream.Length))
+                    using (var outMs = new MemoryStream((int) stream.Length))
                     {
                         if (header.Version > 2)
                         {
@@ -321,8 +332,8 @@ Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.
                 Console.WriteLine(e);
                 return false;
             }
+
             return true;
         }
     }
 }
-
