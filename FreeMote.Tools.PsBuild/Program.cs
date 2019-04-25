@@ -6,7 +6,6 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
-using McMaster.Extensions.CommandLineUtils.Validation;
 
 namespace FreeMote.Tools.PsBuild
 {
@@ -72,14 +71,14 @@ Example:
 
             app.OnExecute(() =>
             {
+                ushort ver = optVer.HasValue() ? optVer.ParsedValue : (ushort)3;
+                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?)null;
+                PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : (PsbSpec?)null;
+                var canRename = !optNoRename.HasValue();
+                var canPack = !optNoShell.HasValue();
+
                 foreach (var file in argPath.Values)
                 {
-                    ushort ver = optVer.HasValue() ? optVer.ParsedValue : (ushort) 3;
-                    uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
-                    PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : (PsbSpec?) null;
-                    var canRename = !optNoRename.HasValue();
-                    var canPack = !optNoShell.HasValue();
-                    // do something
                     Compile(file, ver, key, spec, canRename, canPack);
                 }
             });
@@ -158,35 +157,6 @@ Example:
             }
 
             Console.WriteLine($"Compile {name} succeed.");
-        }
-
-        private static void ChangeSpec(string s, PsbSpec spec)
-        {
-            if (!File.Exists(s))
-            {
-                return;
-            }
-
-            var name = Path.GetFileNameWithoutExtension(s);
-            var ext = Path.GetExtension(s);
-            if (!string.IsNullOrEmpty(ext) && (ext.EndsWith(".psb") || ext.EndsWith(".emtbytes")))
-            {
-                Console.WriteLine($"Converting {name} to {spec} platform...");
-                PSB psb = new PSB(s);
-                if (psb.Platform == spec)
-                {
-                    Console.WriteLine("Already on the same platform, Skip.");
-                }
-                else
-                {
-                    psb.SwitchSpec(spec);
-                    psb.Merge();
-                    File.WriteAllBytes(Path.ChangeExtension(s, $".{spec}.psb"), psb.Build());
-                    Console.WriteLine($"Convert {name} succeed.");
-                }
-
-                return;
-            }
         }
 
         private static string PrintHelp()
