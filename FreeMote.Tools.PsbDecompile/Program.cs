@@ -39,33 +39,46 @@ namespace FreeMote.Tools.PsbDecompile
             //args
             var argPath =
                 app.Argument("Files", "File paths", multipleValues: true);
-            /*
+            
             //command: unlink
             app.Command("unlink", linkCmd =>
             {
                 //help
+                linkCmd.Description = "Unlink textures from PSBs";
                 linkCmd.HelpOption();
                 linkCmd.ExtendedHelpText = @"
 Example:
   PsbDecompile unlink sample.psb
 ";
                 //options
-                //var optOrder = linkCmd.Option<PsbLinkOrderBy>("-o|--order <ORDER>",
-                //    "Set texture unlink order (ByName/ByOrder/Convention). Default=ByName",
-                //    CommandOptionType.SingleValue);
+                var optOrder = linkCmd.Option<PsbLinkOrderBy>("-o|--order <ORDER>",
+                    "Set texture unlink order (ByName/ByOrder/Convention). Default=ByName",
+                    CommandOptionType.SingleValue);
                 //args
-                var argPsbPath = linkCmd.Argument("PSB", "PSB Path").IsRequired().Accepts(v => v.ExistingFile());
+                var argPsbPath = linkCmd.Argument("PSB", "PSB Path").IsRequired();
                 //var argTexPath = linkCmd.Argument("Textures", "Texture Paths").IsRequired();
 
                 linkCmd.OnExecute(() =>
                 {
                     //var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
-                    var psbPath = argPsbPath.Value;
-                    //var texPaths = argTexPath.Values;
-                    //Link(psbPath, texPaths, order);
+                    var psbPaths = argPsbPath.Values;
+                    foreach (var psbPath in psbPaths)
+                    {
+                        if (File.Exists(psbPath))
+                        {
+                            try
+                            {
+                                PsbDecompiler.UnlinkToFile(psbPath);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                            }
+                        }
+                    }
                 });
             });
-            */
+            
 
             app.OnExecute(() =>
             {
