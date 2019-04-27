@@ -59,6 +59,14 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestDecompile2()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var psbPath = Path.Combine(resPath, "ako.pure.psb");
+            var json = PsbDecompiler.Decompile(psbPath);
+        }
+
+        [TestMethod]
         public void TestDirectCompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

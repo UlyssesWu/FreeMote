@@ -104,12 +104,13 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestPsbNumbers()
         {
-            var p1 = new PsbNumber(225);
+            var p1 = new PsbNumber(2.4f);
             using (var ms = new MemoryStream())
             {
                 BinaryWriter bw = new BinaryWriter(ms);
                 BinaryReader br = new BinaryReader(ms);
                 p1.WriteTo(bw);
+                var bts = ms.ToArray();
                 ms.Seek(0, SeekOrigin.Begin);
                 var p2 = new PsbNumber((PsbObjType)br.ReadByte(), br);
                 Assert.AreEqual(p1.IntValue, p2.IntValue);
