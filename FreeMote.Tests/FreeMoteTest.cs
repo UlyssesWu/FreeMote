@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using FastBitmapLib;
 using FreeMote.Plugins;
 using FreeMote.Plugins.Shells;
 using FreeMote.Psb;
@@ -155,7 +156,6 @@ namespace FreeMote.Tests
         public void TestRlUncompress()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "84.bin"); //輪郭00
             RL.UncompressToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
             path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
@@ -182,7 +182,7 @@ namespace FreeMote.Tests
             RL.UncompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 395, 411);
             Assert.IsTrue(bytes.SequenceEqual(File.ReadAllBytes(path)));
         }
-
+        
         [TestMethod]
         public void TestRlDirectCompress()
         {

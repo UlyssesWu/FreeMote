@@ -108,7 +108,7 @@ namespace FreeMote.Psb
                 }
                 catch (PsbBadFormatException e)
                 {
-                    if (e.Reason == PsbBadFormatReason.Header)
+                    if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array)
                     {
                         fs.Seek(0, SeekOrigin.Begin);
                         LoadFromDullahan(fs);
@@ -206,6 +206,7 @@ namespace FreeMote.Psb
             }
 
             //Pre Load Strings
+            var os = Header.OffsetChunkData;
             br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
             StringOffsets = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
             Strings = new List<PsbString>();
@@ -1119,7 +1120,7 @@ namespace FreeMote.Psb
             return psb;
         }
 
-        private void LoadFromDullahan(Stream stream, int detectSize = 1024)
+        private void LoadFromDullahan(Stream stream, int detectSize = 1024, int? namePosition = null)
         {
             //var ctx = FreeMount.CreateContext();
             //string currentType = null;
@@ -1137,36 +1138,46 @@ namespace FreeMote.Psb
             stream.Read(possibleHeader, 0, detectSize);
             var namePos = -1;
             var startPos = 0;
-            for (var i = 0; i < possibleHeader.Length - wNumbers.Length - 3; i++)
+            if (namePosition != null)
             {
-                //find 0x0E
-                if (possibleHeader[i] == (int) PsbObjType.ArrayN2)
+                namePos = namePosition.Value;
+                startPos = 0;
+            }
+            else
+            {
+                for (var i = 0; i < possibleHeader.Length - wNumbers.Length - 3; i++)
                 {
-                    if (possibleHeader[i + 3] == 0x0E)
+                    //find 0x0E / 0x0D
+                    if (possibleHeader[i] == (int)PsbObjType.ArrayN2 || possibleHeader[i] == (int)PsbObjType.ArrayN1)
                     {
-                        if (possibleHeader.Skip(i + 4).Take(wNumbers.Length).SequenceEqual(wNumbers))
+                        var offset1 = possibleHeader[i] - 0xB;
+                        if (possibleHeader[i + offset1] == 0x0E)
                         {
-                            namePos = i;
-                            break;
+                            if (possibleHeader.Skip(i + 4).Take(wNumbers.Length).SequenceEqual(wNumbers))
+                            {
+                                namePos = i;
+                                break;
+                            }
+                        }
+                        else if (possibleHeader[i + offset1] == 0x0D)
+                        {
+                            if (possibleHeader.Skip(i + offset1 + 1).Take(nNumbers.Length).SequenceEqual(nNumbers))
+                            {
+                                namePos = i;
+                                break;
+                            }
                         }
                     }
-                    else if (possibleHeader[i + 3] == 0x0D)
+                    else if (possibleHeader[i] == 'P')
                     {
-                        if (possibleHeader.Skip(i + 4).Take(nNumbers.Length).SequenceEqual(wNumbers))
+                        if (possibleHeader[i + 1] == 'S' && possibleHeader[i + 2] == 'B')
                         {
-                            namePos = i;
-                            break;
+                            startPos = i;
                         }
-                    }
-                }
-                else if (possibleHeader[i] == 'P')
-                {
-                    if (possibleHeader[i + 1] == 'S' && possibleHeader[i + 2] == 'B')
-                    {
-                        startPos = i;
                     }
                 }
             }
+            
 
             if (namePos < 0)
             {

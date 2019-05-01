@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Adler32 originally by Singyuen Yip
+using System;
 using System.IO;
 using System.Text;
 

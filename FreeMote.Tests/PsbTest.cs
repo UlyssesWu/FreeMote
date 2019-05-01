@@ -164,7 +164,7 @@ namespace FreeMote.Tests
 
             using (var mdfStream = File.OpenRead(path))
             {
-                using (var psbStream = MdfFile.UncompressToPsbStream(mdfStream))
+                using (var psbStream = MdfFile.DecompressToPsbStream(mdfStream))
                 {
                     //using (var pureStream = new MemoryStream((int)psbStream.Length))
                     {

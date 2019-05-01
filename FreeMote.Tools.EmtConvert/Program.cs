@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using FreeMote.Plugins;
@@ -59,6 +60,62 @@ Example:
                         if (File.Exists(s))
                         {
                             ShellConvert(s, type);
+                        }
+                    }
+                });
+            });
+
+            //mdf
+            app.Command("mdf", mdfCmd =>
+            {
+                //help
+                mdfCmd.Description = "Decrypt MT19937 encrypted MDF";
+                mdfCmd.HelpOption();
+                mdfCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert mdf -k 1234567890ab -l 129 sample.psb 
+  EmtConvert mdf -s 1234567890absample.psb -l 129 sample.psb 
+";
+                //options
+                var optMdfSeed = mdfCmd.Option("-s|--seed <SEED>",
+                    "Set complete seed (Key+FileName)",
+                    CommandOptionType.SingleValue);
+                var optMdfKey = mdfCmd.Option("-k|--key <KEY>",
+                    "Set key (Infer file name from path)",
+                    CommandOptionType.SingleValue);
+                var optMdfKeyLen = mdfCmd.Option<uint>("-l|--length <LEN>",
+                    "Set key length (not required if decrypt all bytes)",
+                    CommandOptionType.SingleValue);
+                //args
+                var argPsbPaths = mdfCmd.Argument("PSB", "PSB Paths", true);
+
+                mdfCmd.OnExecute(() =>
+                {
+                    string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
+                    string seed = optMdfSeed.HasValue() ? optMdfKey.Value() : null;
+                    if (string.IsNullOrEmpty(key) && string.IsNullOrEmpty(seed))
+                    {
+                        throw new ArgumentNullException("No key or seed specified.");
+                    }
+                    uint? len = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : (uint?)null;
+                    Dictionary<string, object> context = new Dictionary<string, object>();
+                    if (len.HasValue)
+                    {
+                        context["MdfKeyLength"] = len;
+                    }
+                    foreach (var s in argPsbPaths.Values)
+                    {
+                        if (File.Exists(s))
+                        {
+                            var fileName = Path.GetFileName(s);
+                            string finalSeed = seed;
+                            if (key != null)
+                            {
+                                finalSeed = key + fileName;
+                            }
+
+                            context["MdfKey"] = finalSeed;
+                            ShellConvert(s, "MDF", context);
                         }
                     }
                 });
@@ -131,13 +188,13 @@ Example:
             Console.WriteLine("Done.");
         }
 
-        private static bool ShellConvert(string path, string type)
+        private static bool ShellConvert(string path, string type, Dictionary<string, object> context = null)
         {
             try
             {
                 using (var fs = File.OpenRead(path))
                 {
-                    var ctx = FreeMount.CreateContext();
+                    var ctx = FreeMount.CreateContext(context);
                     string currentType = null;
                     var ms = ctx.OpenFromShell(fs, ref currentType);
                     if (ms == null) // no shell, compress

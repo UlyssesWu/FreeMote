@@ -26,33 +26,32 @@ namespace FreeMote
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        public static void UncompressToPsbFile(string inputPath, string outputPath)
+        public static void DecompressToPsbFile(string inputPath, string outputPath)
         {
-            using (var mfs = File.OpenRead(inputPath))
-            {
-                mfs.Seek(10, SeekOrigin.Begin);
-                File.WriteAllBytes(outputPath, ZlibCompress.Uncompress(mfs));
-            }
+            Stream mfs = File.OpenRead(inputPath);
+            mfs.Seek(10, SeekOrigin.Begin);
+            File.WriteAllBytes(outputPath, ZlibCompress.Uncompress(mfs));
+            mfs.Dispose();
         }
 
-        public static Stream UncompressToPsbStream(Stream input)
+        public static Stream DecompressToPsbStream(Stream input)
         {
             input.Seek(10, SeekOrigin.Begin);
             return ZlibCompress.UncompressToStream(input);
         }
-
+        
         public static Stream CompressPsbToMdfStream(Stream input, bool fast = true)
         {
             var pos = input.Position;
             Adler32 checksumer = new Adler32();
             checksumer.Update(input);
-            var checksum = (uint)checksumer.Checksum;
+            var checksum = (uint) checksumer.Checksum;
             checksumer = null;
             input.Position = pos;
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
             bw.WriteStringZeroTrim(Signature);
-            bw.Write((uint)input.Length);
+            bw.Write((uint) input.Length);
             bw.Write(ZlibCompress.Compress(input, fast));
             bw.WriteBE(checksum);
             bw.Flush();
@@ -66,14 +65,14 @@ namespace FreeMote
             var bytes = File.ReadAllBytes(psbFile.Path);
             Adler32 checksumer = new Adler32();
             checksumer.Update(bytes);
-            var checksum = (uint)checksumer.Checksum;
+            var checksum = (uint) checksumer.Checksum;
             checksumer = null;
             MemoryStream ms = new MemoryStream(bytes);
             using (FileStream fs = new FileStream(outputPath ?? psbFile.Path + ".mdf", FileMode.Create))
             {
                 BinaryWriter bw = new BinaryWriter(fs);
                 bw.WriteStringZeroTrim(Signature);
-                bw.Write((uint)ms.Length);
+                bw.Write((uint) ms.Length);
                 bw.Write(ZlibCompress.Compress(ms, fast));
                 bw.WriteBE(checksum);
                 ms.Dispose();
