@@ -22,6 +22,7 @@ namespace FreeMote.Psb
         public const string MmoSourceKey = "sourceChildren";
         public const string MmoBgSourceKey = "bgChildren";
         public const string PimgSourceKey = "layers";
+        public const string TachieSourceKey = "imageList";
 
         /// <summary>
         /// delimiter for output texture filename
@@ -42,6 +43,9 @@ namespace FreeMote.Psb
 
             switch (psb.Type)
             {
+                case PsbType.Tachie:
+                    FindTachieResources(resourceList, psb.Objects[TachieSourceKey]);
+                    break;
                 case PsbType.Pimg:
                 case PsbType.Scn:
                     resourceList.AddRange(psb.Objects.Where(k => k.Value is PsbResource).Select(k =>
@@ -68,6 +72,79 @@ namespace FreeMote.Psb
             resourceList.Sort((md1, md2) => (int) (md1.Index - md2.Index));
 
             return resourceList;
+        }
+
+        private static void FindTachieResources(List<ResourceMetadata> list, IPsbValue obj, string currentLabel = "")
+        {
+            switch (obj)
+            {
+                case PsbCollection c:
+                    c.ForEach(o => FindTachieResources(list, o));
+                    break;
+                case PsbDictionary d:
+                    if (d["label"] is PsbString label)
+                    {
+                        if (string.IsNullOrWhiteSpace(currentLabel))
+                        {
+                            currentLabel = label;
+                        }
+                        else
+                        {
+                            currentLabel = string.Join("-", currentLabel, label);
+                        }
+                        
+                    }
+                    if (d[ResourceKey] is PsbResource r)
+                    {
+                        list.Add(GenerateTachieResMetadata(d, r, currentLabel));
+                    }
+
+                    foreach (var o in d.Values)
+                    {
+                        FindTachieResources(list, o, currentLabel);
+                    }
+
+                    break;
+            }
+        }
+
+        private static ResourceMetadata GenerateTachieResMetadata(PsbDictionary d, PsbResource r, string label = "")
+        {
+            int width = 1, height = 1;
+            int top = 0, left = 0;
+            var dd = d.Parent as PsbDictionary?? d;
+            if ((d["width"] ?? d["truncated_width"] ?? dd["width"]) is PsbNumber nw)
+            {
+                width = (int)nw;
+            }
+
+            if ((d["height"] ?? d["truncated_height"] ?? dd["height"]) is PsbNumber nh)
+            {
+                height = (int)nh;
+            }
+
+            if ((dd["top"] ?? d["top"]) is PsbNumber nx)
+            {
+                top = nx.AsInt;
+            }
+
+            if ((dd["left"] ?? d["left"]) is PsbNumber ny)
+            {
+                left = ny.AsInt;
+            }
+
+            var md = new ResourceMetadata()
+            {
+                Top = top,
+                Left = left,
+                TypeString = d["type"] as PsbString,
+                Width = width,
+                Height = height,
+                Name = r.Index.ToString(),
+                Part = label,
+                Resource = r,
+            };
+            return md;
         }
 
         /// <summary>
@@ -223,8 +300,7 @@ namespace FreeMote.Psb
             }
         }
 
-        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true,
-            bool findExternal = false)
+        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
         {
             switch (obj)
             {

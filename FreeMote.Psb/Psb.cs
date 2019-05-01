@@ -165,6 +165,11 @@ namespace FreeMote.Psb
                 return PsbType.Mmo;
             }
 
+            if (Objects.ContainsKey("imageList") && Objects.ContainsKey("spec"))
+            {
+                return PsbType.Tachie;
+            }
+
             return PsbType.Motion;
         }
 
@@ -206,7 +211,6 @@ namespace FreeMote.Psb
             }
 
             //Pre Load Strings
-            var os = Header.OffsetChunkData;
             br.BaseStream.Seek(Header.OffsetStrings, SeekOrigin.Begin);
             StringOffsets = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
             Strings = new List<PsbString>();

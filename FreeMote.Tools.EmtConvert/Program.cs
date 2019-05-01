@@ -39,7 +39,7 @@ namespace FreeMote.Tools.EmtConvert
             app.Command("pack", packCmd =>
             {
                 //help
-                packCmd.Description = "Packing/unpacking PSBs to/from shell.";
+                packCmd.Description = "Packing/unpacking PSBs to/from shell (FreeMote.Plugins required)";
                 packCmd.HelpOption();
                 packCmd.ExtendedHelpText = @"
 Example:

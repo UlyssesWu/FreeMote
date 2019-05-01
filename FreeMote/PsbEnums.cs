@@ -47,6 +47,10 @@ namespace FreeMote
         /// EMT project - M2 MOtion (mmo, emtproj)
         /// </summary>
         Mmo = 3,
+        /// <summary>
+        /// Images for Character (temp name)
+        /// </summary>
+        Tachie = 4,
     }
 
     /// <summary>
@@ -131,9 +135,21 @@ namespace FreeMote
         /// </summary>
         A8L8,
         /// <summary>
-        /// Unsupport
+        /// L8
         /// </summary>
         L8,
+        /// <summary>
+        /// A8
+        /// </summary>
+        A8,
+        /// <summary>
+        /// RGBA8_SW
+        /// </summary>
+        RGBA8_SW,
+        /// <summary>
+        /// A8_SW
+        /// </summary>
+        A8_SW,
     }
 
     public enum EncodeMode

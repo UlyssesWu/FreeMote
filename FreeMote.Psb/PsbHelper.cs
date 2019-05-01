@@ -39,6 +39,7 @@ namespace FreeMote.Psb
             {
                 return PsbPixelFormat.None;
             }
+
             switch (typeStr.ToUpperInvariant())
             {
                 case "DXT5":
@@ -48,6 +49,10 @@ namespace FreeMote.Psb
                         return PsbPixelFormat.CommonRGBA8;
                     else
                         return PsbPixelFormat.WinRGBA8;
+                case "RGBA8_SW":
+                    return PsbPixelFormat.RGBA8_SW;
+                case "A8_SW":
+                    return PsbPixelFormat.A8_SW;
                 case "RGBA4444":
                     if (spec == PsbSpec.common || spec == PsbSpec.ems)
                         return PsbPixelFormat.CommonRGBA4444;
@@ -59,6 +64,7 @@ namespace FreeMote.Psb
                     {
                         return pixelFormat;
                     }
+
                     return PsbPixelFormat.None;
             }
         }
@@ -99,23 +105,29 @@ namespace FreeMote.Psb
                 neg = true;
                 i = Math.Abs(i);
             }
+
             var hex = i.ToString("X");
             var l = hex.Length;
-            bool firstBitOne = hex[0] >= '8' && hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
+            bool firstBitOne =
+                hex[0] >= '8' &&
+                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
 
             if (l % 2 != 0)
             {
                 l++;
             }
+
             l = l / 2;
             if (neg || firstBitOne)
             {
                 l++;
             }
+
             if (l > 4)
             {
                 l = 4;
             }
+
             return l;
         }
 
@@ -129,7 +141,7 @@ namespace FreeMote.Psb
             //FIXED: Treat uint as int to prevent overconfidence
             if (i <= Int32.MaxValue)
             {
-                return GetSize((int)i);
+                return GetSize((int) i);
             }
 
             var l = i.ToString("X").Length;
@@ -137,11 +149,13 @@ namespace FreeMote.Psb
             {
                 l++;
             }
+
             l = l / 2;
             if (l > 4)
             {
                 l = 4;
             }
+
             return l;
         }
 
@@ -158,23 +172,29 @@ namespace FreeMote.Psb
                 neg = true;
                 i = Math.Abs(i);
             }
+
             var hex = i.ToString("X");
             var l = hex.Length;
-            bool firstBitOne = hex[0] >= '8' && hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
+            bool firstBitOne =
+                hex[0] >= '8' &&
+                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
 
             if (l % 2 != 0)
             {
                 l++;
             }
+
             l = l / 2;
             if (neg || firstBitOne)
             {
                 l++;
             }
+
             if (l > 8)
             {
                 l = 8;
             }
+
             return l;
         }
 
@@ -225,12 +245,14 @@ namespace FreeMote.Psb
                 {
                     r[i] = 0xFF;
                 }
+
                 b.CopyTo(r, 0);
             }
             else
             {
                 b.CopyTo(r, 0);
             }
+
             return r;
         }
 
@@ -264,6 +286,7 @@ namespace FreeMote.Psb
                 {
                     return null;
                 }
+
                 return $"[{result}]";
             }
 
@@ -343,11 +366,13 @@ namespace FreeMote.Psb
         public static bool TryGetCanvasSize(this PSB psb, out int width, out int height)
         {
             //Get from CharProfile
-            if (psb.Objects["metadata"] is PsbDictionary md && md["charaProfile"] is PsbDictionary cp && cp["pixelMarker"] is PsbDictionary pm
-                && pm["boundsBottom"] is PsbNumber b && pm["boundsTop"] is PsbNumber t && pm["boundsLeft"] is PsbNumber l && pm["boundsRight"] is PsbNumber r)
+            if (psb.Objects["metadata"] is PsbDictionary md && md["charaProfile"] is PsbDictionary cp &&
+                cp["pixelMarker"] is PsbDictionary pm
+                && pm["boundsBottom"] is PsbNumber b && pm["boundsTop"] is PsbNumber t &&
+                pm["boundsLeft"] is PsbNumber l && pm["boundsRight"] is PsbNumber r)
             {
-                height = (int)Math.Abs(b.AsFloat - t.AsFloat);
-                width = (int)Math.Abs(r.AsFloat - l.AsFloat);
+                height = (int) Math.Abs(b.AsFloat - t.AsFloat);
+                width = (int) Math.Abs(r.AsFloat - l.AsFloat);
                 return true;
             }
 
@@ -368,6 +393,7 @@ namespace FreeMote.Psb
             {
                 path = new string(path.SkipWhile(c => c == '/').ToArray());
             }
+
             if (path.Contains("/"))
             {
                 var pos = path.IndexOf('/');
@@ -384,6 +410,7 @@ namespace FreeMote.Psb
                             }
                         }
                     }
+
                     path = new string(path.SkipWhile(c => c == '*').ToArray());
                     foreach (var val in psbObj.Values)
                     {
@@ -396,10 +423,12 @@ namespace FreeMote.Psb
                         }
                     }
                 }
+
                 if (pos == path.Length - 1 && psbObj[current] != null)
                 {
                     yield return psbObj[current];
                 }
+
                 var currentObj = psbObj[current];
                 if (currentObj is PsbDictionary collection)
                 {
@@ -410,6 +439,7 @@ namespace FreeMote.Psb
                     }
                 }
             }
+
             if (path == "*")
             {
                 foreach (var value in psbObj.Values)
@@ -447,6 +477,7 @@ namespace FreeMote.Psb
                 {
                     return psbObj[current];
                 }
+
                 var currentObj = psbObj[current];
                 if (currentObj is PsbDictionary dictionary)
                 {
@@ -460,6 +491,7 @@ namespace FreeMote.Psb
                     return collection.FindByPath(path);
                 }
             }
+
             return psbObj[path];
         }
 
@@ -483,7 +515,8 @@ namespace FreeMote.Psb
                     currentObj = psbObj.FirstOrDefault();
                 }
 
-                if (current.StartsWith("[") && current.EndsWith("]") && Int32.TryParse(current.Substring(1, current.Length - 2), out var id))
+                if (current.StartsWith("[") && current.EndsWith("]") &&
+                    Int32.TryParse(current.Substring(1, current.Length - 2), out var id))
                 {
                     currentObj = psbObj[id];
                 }
@@ -505,6 +538,7 @@ namespace FreeMote.Psb
                     return collection.FindByPath(path);
                 }
             }
+
             return null;
         }
 
@@ -547,11 +581,12 @@ namespace FreeMote.Psb
             {
                 var dd = dic.Value.FirstOrDefault();
                 var children =
-                    (PsbCollection)(dic.ContainsKey("layerChildren") ? dic["layerChildren"] : dic["children"]);
+                    (PsbCollection) (dic.ContainsKey("layerChildren") ? dic["layerChildren"] : dic["children"]);
                 currentObj = children.FirstOrDefault(c =>
                     c is PsbDictionary d && d.ContainsKey("label") && d["label"] is PsbString s &&
                     s.Value == current);
             }
+
             if (pos == path.Length - 1 || pos < 0)
             {
                 return currentObj;
@@ -579,8 +614,10 @@ namespace FreeMote.Psb
                 {
                     return dic["label"].ToString();
                 }
+
                 return "";
             }
+
             List<string> paths = new List<string>();
 
             while (child != null)
@@ -596,8 +633,10 @@ namespace FreeMote.Psb
                         paths.Add(current.GetName());
                     }
                 }
+
                 child = child.Parent;
             }
+
             paths.Reverse();
             return string.Join("/", paths);
         }
@@ -614,6 +653,7 @@ namespace FreeMote.Psb
                         col = collection.FirstOrDefault(c => c is PsbDictionary d && d.ContainsKey(name));
                         continue;
                 }
+
                 throw new ArgumentException($"{col} doesn't have children.");
             }
         }
@@ -630,6 +670,7 @@ namespace FreeMote.Psb
                         col = collection[index];
                         continue;
                 }
+
                 throw new ArgumentException($"{col} doesn't have children.");
             }
         }
@@ -648,6 +689,7 @@ namespace FreeMote.Psb
                 result = x[index].CompareTo(y[index]);
                 if (result != 0) return result;
             }
+
             return x.Count.CompareTo(y.Count);
         }
     }
@@ -663,6 +705,7 @@ namespace FreeMote.Psb
                 result = String.Compare(x[index], y[index], StringComparison.Ordinal);
                 if (result != 0) return result;
             }
+
             return x.Count.CompareTo(y.Count);
         }
     }
