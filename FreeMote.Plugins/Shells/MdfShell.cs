@@ -46,7 +46,7 @@ namespace FreeMote.Plugins
                 if (context.ContainsKey(MdfKey))
                 {
                     uint? keyLength = context.ContainsKey(MdfKeyLength) ? (uint) context[MdfKeyLength] : (uint?) null;
-                    stream = DecodeMdf(stream, (string)context[MdfKey], keyLength);
+                    stream = EncodeMdf(stream, (string)context[MdfKey], keyLength);
                 }
                
                 var pos = stream.Position;
@@ -58,15 +58,15 @@ namespace FreeMote.Plugins
             return MdfFile.DecompressToPsbStream(stream) as MemoryStream;
         }
 
-        private Stream DecodeMdf(Stream stream, string key, uint? keyLength)
+        private MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength)
         {
             //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
             var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
             uint[] seeds = new uint[4];
-            seeds[0] = (BitConverter.ToUInt32(bts, 0));
-            seeds[1] = (BitConverter.ToUInt32(bts, 1 * 4));
-            seeds[2] = (BitConverter.ToUInt32(bts, 2 * 4));
-            seeds[3] = (BitConverter.ToUInt32(bts, 3 * 4));
+            seeds[0] = BitConverter.ToUInt32(bts, 0);
+            seeds[1] = BitConverter.ToUInt32(bts, 1 * 4);
+            seeds[2] = BitConverter.ToUInt32(bts, 2 * 4);
+            seeds[3] = BitConverter.ToUInt32(bts, 3 * 4);
 
             MemoryStream ms = new MemoryStream((int) stream.Length);
             var gen = new MT19937Generator(seeds);
@@ -74,7 +74,7 @@ namespace FreeMote.Plugins
             BinaryReader br = new BinaryReader(stream);
             BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
             bw.Write(br.ReadBytes(8));
-            uint count = 0;
+            //uint count = 0;
             List<byte> keys = new List<byte>();
             if (keyLength != null)
             {
@@ -111,7 +111,7 @@ namespace FreeMote.Plugins
                 //}
                 bw.Write(current);
             }
-            //File.WriteAllBytes("test.mdf", ms.ToArray());
+
             return ms;
         }
 
@@ -123,7 +123,15 @@ namespace FreeMote.Plugins
                 fast = (bool) context[FreeMount.PsbZlibFastCompress];
             }
 
-            return MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
+            var ms = MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
+            
+            if (context != null && context.ContainsKey(MdfKey))
+            {
+                uint? keyLength = context.ContainsKey(MdfKeyLength) ? (uint)context[MdfKeyLength] : (uint?)null;
+                ms = EncodeMdf(ms, (string)context[MdfKey], keyLength);
+            }
+
+            return ms;
         }
 
         public byte[] Signature { get; } = {(byte) 'm', (byte) 'd', (byte) 'f', 0};

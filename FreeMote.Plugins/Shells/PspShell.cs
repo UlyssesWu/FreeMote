@@ -12,7 +12,7 @@ namespace FreeMote.Plugins.Shells
     [Export(typeof(IPsbShell))]
     [ExportMetadata("Name", "FreeMote.Psp")]
     [ExportMetadata("Author", "morkt & Ulysses")]
-    [ExportMetadata("Comment", "PSP (LZSS) support.")]
+    [ExportMetadata("Comment", "PSP (LZSS) unpack support.")]
     class PspShell : IPsbShell
     {
         public string Name => "PSP";

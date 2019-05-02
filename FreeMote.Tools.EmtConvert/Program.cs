@@ -39,7 +39,7 @@ namespace FreeMote.Tools.EmtConvert
             app.Command("pack", packCmd =>
             {
                 //help
-                packCmd.Description = "Packing/unpacking PSBs to/from shell (FreeMote.Plugins required)";
+                packCmd.Description = "Pack/Unpack PSBs to/from shell (FreeMote.Plugins required)";
                 packCmd.HelpOption();
                 packCmd.ExtendedHelpText = @"
 Example:
@@ -50,7 +50,7 @@ Example:
                     "Set shell type. No need to specify if unpack",
                     CommandOptionType.SingleValue);
                 //args
-                var argPsbPaths = packCmd.Argument("PSB", "PSB Paths", true);
+                var argPsbPaths = packCmd.Argument("PSB", "MDF/PSB Paths", true);
 
                 packCmd.OnExecute(() =>
                 {
@@ -69,14 +69,18 @@ Example:
             app.Command("mdf", mdfCmd =>
             {
                 //help
-                mdfCmd.Description = "Decrypt MT19937 encrypted MDF";
+                mdfCmd.Description = "Pack/Unpack MT19937 encrypted MDF (FreeMote.Plugins required)";
                 mdfCmd.HelpOption();
                 mdfCmd.ExtendedHelpText = @"
 Example:
-  EmtConvert mdf -k 1234567890ab -l 129 sample.psb 
-  EmtConvert mdf -s 1234567890absample.psb -l 129 sample.psb 
+  EmtConvert mdf -k 1234567890ab -l 131 sample.psb 
+  EmtConvert mdf -s 1234567890absample.psb -l 131 sample.psb 
+  Hint: To pack a normal MDF, use `EmtConvert pack -s MDF <MDF file>`
 ";
                 //options
+                //var optMdfPack = mdfCmd.Option("-p|--pack",
+                //    "Pack (Encrypt) a PSB to MT19937 MDF",
+                //    CommandOptionType.NoValue);
                 var optMdfSeed = mdfCmd.Option("-s|--seed <SEED>",
                     "Set complete seed (Key+FileName)",
                     CommandOptionType.SingleValue);
@@ -92,7 +96,7 @@ Example:
                 mdfCmd.OnExecute(() =>
                 {
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
-                    string seed = optMdfSeed.HasValue() ? optMdfKey.Value() : null;
+                    string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
                     if (string.IsNullOrEmpty(key) && string.IsNullOrEmpty(seed))
                     {
                         throw new ArgumentNullException("No key or seed specified.");

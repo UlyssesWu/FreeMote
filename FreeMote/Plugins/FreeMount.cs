@@ -27,6 +27,7 @@ namespace FreeMote.Plugins
         public const string CryptKey = "CryptKey";
         /// <summary>
         /// Type: bool
+        /// <para>Fast: 0x9C BestCompression: 0xDA NoCompression/Low: 0x01</para>
         /// </summary>
         public const string PsbZlibFastCompress = "PsbZlibFastCompress";
 
@@ -54,6 +55,7 @@ namespace FreeMote.Plugins
         public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
 
         public static IEnumerable<IPsbPluginInfo> PluginInfos => _._plugins.Values;
+
         /// <summary>
         /// Loaded Plugins count
         /// </summary>
