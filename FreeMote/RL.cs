@@ -206,10 +206,14 @@ namespace FreeMote
                     result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.RGBA8_SW:
-                    result = PostProcessing.UntileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.L8:
                     result = Rgba2L8(result);
+                    break;
+                case PsbPixelFormat.A8_SW:
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Rgba2A8(result);
                     break;
             }
 
@@ -380,9 +384,25 @@ namespace FreeMote
 
             for (int i = 0; i < data.Length; i += 4)
             {
-                byte c = (byte)((data[i] + data[i + 1] + data[i + 2]) / 3);
+                byte c = (byte) ((data[i] + data[i + 1] + data[i + 2]) / 3);
                 //byte a = 0xFF;
                 output[dst++] = c;
+                //output[dst++] = a;
+            }
+
+            return output;
+        }
+
+        private static byte[] Rgba2A8(byte[] data)
+        {
+            byte[] output = new byte[data.Length / 4];
+            int dst = 0;
+
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                //byte c = (byte)((data[i] + data[i + 1] + data[i + 2]) / 3);
+                byte a = data[i + 3];
+                output[dst++] = a;
                 //output[dst++] = a;
             }
 

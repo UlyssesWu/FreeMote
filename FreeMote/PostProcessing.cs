@@ -68,6 +68,27 @@ namespace FreeMote
             return untiled;
         }
 
+        public static byte[] TileTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        {
+            byte[] tiled = new byte[pixelData.Length];
+
+            int s = 0;
+            for (int y = 0; y < height; y += 8)
+            {
+                for (int x = 0; x < width; x += 8)
+                {
+                    for (int t = 0; t < (8 * 8); t++)
+                    {
+                        int pixelOffset = GetTilePixelOffset(t, x, y, width, pixelFormat);
+                        Buffer.BlockCopy(pixelData, pixelOffset, tiled, s, 4);
+                        s += 4;
+                    }
+                }
+            }
+
+            return tiled;
+        }
+
         #endregion
 
         #region Unswizzle (Morton)
