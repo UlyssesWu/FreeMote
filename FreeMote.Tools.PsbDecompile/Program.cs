@@ -31,7 +31,7 @@ namespace FreeMote.Tools.PsbDecompile
             //options
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
-                "Convert textures to Png/Bmp. Default=Png", CommandOptionType.SingleValue);
+                "Convert textures to Png/Bmp. Default=Png", CommandOptionType.SingleValue, true);
             var optRaw = app.Option("-raw|--raw", "Keep raw textures", CommandOptionType.NoValue);
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue);
@@ -63,6 +63,7 @@ Example:
 
                 linkCmd.OnExecute(() =>
                 {
+                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.Png;
                     //var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPaths = argPsbPath.Values;
                     foreach (var psbPath in psbPaths)
@@ -71,7 +72,7 @@ Example:
                         {
                             try
                             {
-                                PsbDecompiler.UnlinkToFile(psbPath);
+                                PsbDecompiler.UnlinkToFile(psbPath, format: format);
                             }
                             catch (Exception e)
                             {

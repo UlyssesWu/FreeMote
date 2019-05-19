@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using FreeMote.Plugins;
+using FreeMote.Psb;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace FreeMote.Tools.EmtConvert
@@ -60,6 +62,40 @@ Example:
                         if (File.Exists(s))
                         {
                             ShellConvert(s, type);
+                        }
+                    }
+                });
+            });
+
+            //command: print
+            app.Command("print", printCmd =>
+            {
+                //help
+                printCmd.Description = "Print an EMT PSB (for its initial state, don't expect it working)";
+                printCmd.HelpOption();
+                printCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert print -w 4096 -h 4096 sample.psb 
+";
+                //options
+                var optWidth = printCmd.Option<int>("-w|--width <INT>",
+                    "Set width. Default=4096",
+                    CommandOptionType.SingleValue);
+                var optHeight = printCmd.Option<int>("-h|--height <INT>",
+                    "Set height. Default=4096",
+                    CommandOptionType.SingleValue);
+                //args
+                var argPsbPaths = printCmd.Argument("PSB", "MDF/PSB Paths", true);
+
+                printCmd.OnExecute(() =>
+                {
+                    int width = optWidth.HasValue() ? optWidth.ParsedValue : 4096;
+                    int height = optHeight.HasValue() ? optHeight.ParsedValue : 4096;
+                    foreach (var s in argPsbPaths.Values)
+                    {
+                        if (File.Exists(s))
+                        {
+                            Draw(s, width, height);
                         }
                     }
                 });
@@ -190,6 +226,14 @@ Example:
             app.Execute(args);
 
             Console.WriteLine("Done.");
+        }
+
+        private static void Draw(string path, int width, int height)
+        {
+            var psb = new PSB(path);
+            var painter = new PsbPainter(psb);
+            var bmp = painter.Draw(width, height);
+            bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
         }
 
         private static bool ShellConvert(string path, string type, Dictionary<string, object> context = null)

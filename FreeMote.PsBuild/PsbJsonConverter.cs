@@ -159,9 +159,9 @@ namespace FreeMote.PsBuild
                     }
                     var f = token.Value<float>();
                     if (Math.Abs(f - d) < 1E-08) //float //pcc: 1E-05
-                    //if (Math.Abs(f - d) < float.Epsilon) //float //pcc: 1E-05
+                    //if (Math.Abs(f - d) < float.Epsilon)
                     {
-                        return new PsbNumber(token.Value<float>());
+                        return new PsbNumber(f);
                     }
                     //if (d < float.MaxValue && d > float.MinValue)
                     //{
