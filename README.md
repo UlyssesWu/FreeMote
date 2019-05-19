@@ -50,7 +50,7 @@ To install our own nuget packages, add this feed to VS:
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
-FreeMote is licensed under **LGPL**.
+FreeMote is licensed under **LGPL v3**. It's required to attach the `LICENSE` text with your release if you're using FreeMote libs.
 
 Additional clauses: If the input is not made by yourself, you are NOT allowed to use the output for any commercial purposes.
 

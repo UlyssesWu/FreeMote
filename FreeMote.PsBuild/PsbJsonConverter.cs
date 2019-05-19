@@ -21,6 +21,17 @@ namespace FreeMote.PsBuild
         //    typeof(PsbCollection),typeof(PsbDictionary),
         //};
 
+        public bool ArrayCollapse { get; set; }
+        public bool UseDoubleOnly { get; set; }
+        public bool UseHexNumber { get; set; }
+
+        public PsbJsonConverter(bool arrayCollapse = true, bool useDoubleOnly = false, bool useHexNumber = false)
+        {
+            ArrayCollapse = arrayCollapse;
+            UseDoubleOnly = useDoubleOnly;
+            UseHexNumber = useHexNumber;
+        }
+
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             switch (value)
@@ -38,7 +49,7 @@ namespace FreeMote.PsBuild
                             writer.WriteValue(num.IntValue);
                             break;
                         case PsbNumberType.Float:
-                            if (num.FloatValue.IsFinite())
+                            if (num.FloatValue.IsFinite() && !UseHexNumber)
                             {
                                 writer.WriteValue(num.FloatValue);
                             }
@@ -49,7 +60,7 @@ namespace FreeMote.PsBuild
                             //writer.WriteRawValue(num.FloatValue.ToString("R"));
                             break;
                         case PsbNumberType.Double:
-                            if (num.DoubleValue.IsFinite())
+                            if (num.DoubleValue.IsFinite() && !UseHexNumber)
                             {
                                 writer.WriteValue(num.DoubleValue);
                             }
@@ -74,17 +85,29 @@ namespace FreeMote.PsBuild
                     writer.WriteValue(array.Value);
                     break;
                 case PsbCollection collection:
-                    writer.WriteStartArray();
-                    if (collection.Count > 0 && !(collection[0] is IPsbCollection))
+                    if (ArrayCollapse)
                     {
-                        writer.Formatting = Formatting.None;
+                        writer.WriteStartArray();
+                        if (collection.Count > 0 && !(collection[0] is IPsbCollection))
+                        {
+                            writer.Formatting = Formatting.None;
+                        }
+                        foreach (var obj in collection)
+                        {
+                            WriteJson(writer, obj, serializer);
+                        }
+                        writer.WriteEndArray();
+                        writer.Formatting = Formatting.Indented;
                     }
-                    foreach (var obj in collection)
+                    else
                     {
-                        WriteJson(writer, obj, serializer);
+                        writer.WriteStartArray();
+                        foreach (var obj in collection)
+                        {
+                            WriteJson(writer, obj, serializer);
+                        }
+                        writer.WriteEndArray();
                     }
-                    writer.WriteEndArray();
-                    writer.Formatting = Formatting.Indented;
                     break;
                 case PsbDictionary dictionary:
                     writer.WriteStartObject();
@@ -130,8 +153,13 @@ namespace FreeMote.PsBuild
                     return new PsbNumber(token.Value<int>());
                 case JTokenType.Float:
                     var d = token.Value<double>();
+                    if (UseDoubleOnly)
+                    {
+                        return new PsbNumber(d);
+                    }
                     var f = token.Value<float>();
-                    if (Math.Abs(f - d) < 1E-05) //float //pcc: 1E-05
+                    if (Math.Abs(f - d) < 1E-08) //float //pcc: 1E-05
+                    //if (Math.Abs(f - d) < float.Epsilon) //float //pcc: 1E-05
                     {
                         return new PsbNumber(token.Value<float>());
                     }

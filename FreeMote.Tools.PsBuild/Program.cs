@@ -39,6 +39,8 @@ namespace FreeMote.Tools.PsBuild
             var optNoRename = app.Option("-no-rename",
                 "Prevent output file renaming, may overwrite your original PSB files", CommandOptionType.NoValue);
             var optNoShell = app.Option("-no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
+            var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only", CommandOptionType.NoValue, true);
+
             //args
             var argPath =
                 app.Argument("Files", "File paths", multipleValues: true);
@@ -103,6 +105,11 @@ Example:
 
             app.OnExecute(() =>
             {
+                if (optDouble.HasValue())
+                {
+                    PsbConstants.JsonUseDoubleOnly = true;
+                }
+
                 ushort ver = optVer.HasValue() ? optVer.ParsedValue : (ushort) 3;
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
                 PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : (PsbSpec?) null;

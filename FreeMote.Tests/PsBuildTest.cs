@@ -135,6 +135,14 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestJsonNumbers()
         {
+            string s = @"
+[1.000000, 1.0000001, 1.001, 1.0, 1, 1.51, 233.333328,233.33333333333337]";
+            var psbList = JsonConvert.DeserializeObject<PsbCollection>(s, new PsbJsonConverter());
+            foreach (var psbValue in psbList)
+            {
+                var v = psbValue;
+                var vt = psbValue.Type;
+            }
             //var f = (111111111123L).ToString("X16");
             //var jj = JsonConvert.DeserializeObject("[0xDEADBEEF]");
             List<float> floats = new List<float>
@@ -486,13 +494,13 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
 
-            var pccPsb = new PSB(Path.Combine(resPath, "dx_れいなh1a1.psb"));
+            var pccPsb = new PSB(Path.Combine(resPath, "c01c.txt.scn"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01.psb"));
 
             //var psbuildPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json.psbuild.psb"));
-            var psbuildPsb = new PSB(Path.Combine(resPath, "dx_れいなh1a1.psb.json-pure.psb"));
-
+            //var psbuildPsb = new PSB(Path.Combine(resPath, "dx_れいなh1a1.psb.json-pure.psb"));
+            var psbuildPsb = PsbCompiler.LoadPsbFromJsonFile(Path.Combine(resPath, "c01c.txt.json"));
             //foreach (var s in psbuildPsb.Strings)
             //{
             //    var pccStr = pccPsb.Strings.Find(ss => ss.Value == s.Value);

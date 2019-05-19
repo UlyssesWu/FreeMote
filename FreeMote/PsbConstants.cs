@@ -39,6 +39,22 @@ namespace FreeMote
         /// </summary>
         public static bool FastMode { get; set; } = true;
 
+        /// <summary>
+        /// Use hex numbers in json to keep all float numbers correct
+        /// </summary>
+        public static bool JsonUseHexNumber { get; set; } = false;
+
+        /// <summary>
+        /// Collapse arrays in json
+        /// </summary>
+        public static bool JsonArrayCollapse { get; set; } = true;
+
+        /// <summary>
+        /// Always use double instead of float
+        /// </summary>
+        public static bool JsonUseDoubleOnly { get; set; } = false;
+
+
         public static string ToStringForPsb(this PsbPixelFormat pixelFormat)
         {
             switch (pixelFormat)

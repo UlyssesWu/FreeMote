@@ -1,4 +1,4 @@
-﻿//PSB format is based on psbfile by number201724.
+﻿//Some PSB format code is based on psbfile by number201724. LICENSE: MIT
 //#define DEBUG_OBJECT_WRITE //Enable if you want to check how much bytes each object costs.
 
 using System;

@@ -25,9 +25,9 @@ namespace FreeMote.Tools.PsbDecompile
             app.OptionsComparison = StringComparison.OrdinalIgnoreCase;
 
             //help
-            app.HelpOption();
+            app.HelpOption(true);
             app.ExtendedHelpText = PrintHelp();
-
+            
             //options
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
@@ -35,6 +35,9 @@ namespace FreeMote.Tools.PsbDecompile
             var optRaw = app.Option("-raw|--raw", "Keep raw textures", CommandOptionType.NoValue);
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue);
+
+            var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
+            var optArray = app.Option("--array-indent", "(Json) Use indent array", CommandOptionType.NoValue, true);
 
             //args
             var argPath =
@@ -85,6 +88,16 @@ Example:
                 if (optOom.HasValue())
                 {
                     PsbConstants.InMemoryLoading = false;
+                }
+
+                if (optArray.HasValue())
+                {
+                    PsbConstants.JsonArrayCollapse = false;
+                }
+
+                if (optHex.HasValue())
+                {
+                    PsbConstants.JsonUseHexNumber = true;
                 }
 
                 bool useRaw = optRaw.HasValue();
