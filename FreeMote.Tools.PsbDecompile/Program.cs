@@ -37,7 +37,8 @@ namespace FreeMote.Tools.PsbDecompile
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue);
 
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
-            var optArray = app.Option("--array-indent", "(Json) Indent arrays", CommandOptionType.NoValue, true);
+            var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue, true);
+
 
             //args
             var argPath =

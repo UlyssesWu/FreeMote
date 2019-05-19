@@ -32,14 +32,14 @@ namespace FreeMote.Tools.PsBuild
             app.ExtendedHelpText = PrintHelp();
 
             //options
-            var optVer = app.Option<ushort>("-v|--ver <VER>", "Set PSB version [2,4]", CommandOptionType.SingleValue);
+            var optVer = app.Option<ushort>("-v|--ver <VER>", "Set PSB version [2,4]. Default=3", CommandOptionType.SingleValue);
             var optKey = app.Option<uint>("-k|--key <KEY>", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optSpec = app.Option<PsbSpec>("-p|--spec <SPEC>", "Set PSB platform (krkr/common/win/ems)",
                 CommandOptionType.SingleValue);
             var optNoRename = app.Option("-no-rename",
                 "Prevent output file renaming, may overwrite your original PSB files", CommandOptionType.NoValue);
             var optNoShell = app.Option("-no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
-            var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only", CommandOptionType.NoValue, true);
+            var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)", CommandOptionType.NoValue, true);
 
             //args
             var argPath =
@@ -76,7 +76,7 @@ Example:
             app.Command("port", portCmd =>
             {
                 //help
-                portCmd.Description = "Recompile a PSB to another platform";
+                portCmd.Description = "Re-compile a PSB to another platform";
                 portCmd.HelpOption();
                 portCmd.ExtendedHelpText = @"
 Example:
