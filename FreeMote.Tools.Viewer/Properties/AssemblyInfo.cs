@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 
 [assembly: AssemblyTitle("FreeMote Viewer")]
-[assembly: AssemblyDescription("View PSB models.")]
+[assembly: AssemblyDescription("View EMT PSB models.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("FreeMote")]

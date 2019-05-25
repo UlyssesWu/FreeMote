@@ -19,7 +19,7 @@ namespace FreeMote.Psb.Textures
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        public static List<ResourceMetadata> CollectSpiltedResources(this PSB psb)
+        public static List<ResourceMetadata> CollectSplitResources(this PSB psb)
         {
             List<ResourceMetadata> resList = new List<ResourceMetadata>();
             var source = (PsbDictionary)psb.Objects["source"];

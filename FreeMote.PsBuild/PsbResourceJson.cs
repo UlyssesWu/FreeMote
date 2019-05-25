@@ -38,14 +38,7 @@ namespace FreeMote.PsBuild
         /// Whether to use external textures
         /// </summary>
         public bool ExternalTextures { get; set; } = false;
-
-        ///// <summary>
-        ///// TLG Image Preferred Version
-        ///// </summary>
-        //[Obsolete("Should be set in Context")]
-        //[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        //public int? TlgVersion { get; set; } = 5;
-
+        
         /// <summary>
         /// Setting Context (mainly for plugins)
         /// </summary>

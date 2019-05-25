@@ -80,42 +80,6 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
-        public void TestMmoGraft2()
-        {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "template39.json");
-            var path2 = Path.Combine(resPath, "template39-krkr.json");
-            //var path = Path.Combine(resPath, "e-mote38基本テンプレート(正面zバイナリ専用)_free.json");
-            //var path2 = Path.Combine(resPath, "e-mote3.0ショコラパジャマa中-krkr.json");
-            //var path2 = Path.Combine(resPath, "mmo", "e-mote38基本テンプレート(正面zバイナリ専用)-krkr.json");
-            var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
-            var psb = PsbCompiler.LoadPsbFromJsonFile(path2);
-            MmoBuilder mmoBuilder = new MmoBuilder(true);
-            var psbMmo = mmoBuilder.Build(psb);
-            var pMd = (PsbDictionary)psbMmo.Objects["metaformat"].Children("data");
-            var mMd = (PsbDictionary)mmo.Objects["metaformat"].Children("data");
-            ///*
-            pMd["textureDefinitionList"] = mMd["textureDefinitionList"];
-            pMd["scrapbookDefinitionList"] = mMd["scrapbookDefinitionList"];
-            pMd["partsList"] = mMd["partsList"];
-            pMd["layoutDefinitionList"] = mMd["layoutDefinitionList"];
-            pMd["customPartsBaseDefinitionList"] = mMd["customPartsBaseDefinitionList"];
-            pMd["customPartsMountDefinitionList"] = mMd["customPartsMountDefinitionList"];
-            pMd["customPartsCount"] = mMd["customPartsCount"];
-            pMd["sourceDefinitionOrderList"] = mMd["sourceDefinitionOrderList"];
-            pMd["charaProfileDefinitionList"] = mMd["charaProfileDefinitionList"];
-            //*/
-            //pMd["textureDefinitionList"] = new PsbCollection();
-            /*
-            psbMmo.Objects["metaformat"] = mmo.Objects["metaformat"];
-            mMd["textureDefinitionList"] = pMd["textureDefinitionList"];
-            mMd["scrapbookDefinitionList"] = pMd["scrapbookDefinitionList"];
-            */
-            psbMmo.Merge();
-            File.WriteAllBytes(Path.Combine(resPath, "mmo", "crash-temp.mmo"), psbMmo.Build());
-        }
-
-        [TestMethod]
         public void TestBuildMmo()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

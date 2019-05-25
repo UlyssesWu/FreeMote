@@ -509,7 +509,6 @@ namespace FreeMote.Psb
                                 {
                                     return PsbObjType.NumberN0;
                                 }
-
                                 return PsbObjType.NumberN1;
                             case 2:
                                 return PsbObjType.NumberN2;
