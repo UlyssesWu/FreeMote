@@ -14,12 +14,12 @@ namespace FreeMote.Psb
         {
             psb.Merge();
             var bytes = psb.Build();
-            Adler32 checksumer = new Adler32();
+            Adler32 adler = new Adler32();
             uint checksum = 0;
             if (key == null)
             {
-                checksumer.Update(bytes);
-                checksum = (uint)checksumer.Checksum;
+                adler.Update(bytes);
+                checksum = (uint)adler.Checksum;
             }
             MemoryStream ms = new MemoryStream(bytes);
             using (Stream fs = new FileStream(path, FileMode.Create))
@@ -31,8 +31,8 @@ namespace FreeMote.Psb
                     ms.Dispose();
                     ms = nms;
                     var pos = ms.Position;
-                    checksumer.Update(ms);
-                    checksum = (uint)checksumer.Checksum;
+                    adler.Update(ms);
+                    checksum = (uint)adler.Checksum;
                     ms.Position = pos;
                 }
 
@@ -50,12 +50,12 @@ namespace FreeMote.Psb
         {
             psb.Merge();
             var bytes = psb.Build();
-            Adler32 checksumer = new Adler32();
+            Adler32 adler = new Adler32();
             uint checksum = 0;
             if (key == null)
             {
-                checksumer.Update(bytes);
-                checksum = (uint)checksumer.Checksum;
+                adler.Update(bytes);
+                checksum = (uint)adler.Checksum;
             }
             MemoryStream ms = new MemoryStream(bytes);
             using (MemoryStream fs = new MemoryStream())
@@ -67,8 +67,8 @@ namespace FreeMote.Psb
                     ms.Dispose();
                     ms = nms;
                     var pos = ms.Position;
-                    checksumer.Update(ms);
-                    checksum = (uint)checksumer.Checksum;
+                    adler.Update(ms);
+                    checksum = (uint)adler.Checksum;
                     ms.Position = pos;
                 }
 

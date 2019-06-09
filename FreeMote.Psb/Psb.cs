@@ -127,7 +127,8 @@ namespace FreeMote.Psb
             {
                 LoadFromStream(stream);
             }
-            catch (PsbBadFormatException e) when (tryDullahanLoading && e.Reason == PsbBadFormatReason.Header)
+            catch (PsbBadFormatException e) 
+                when (tryDullahanLoading && (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array))
             {
                 stream.Seek(0, SeekOrigin.Begin);
                 LoadFromDullahan(stream);
@@ -572,21 +573,10 @@ namespace FreeMote.Psb
                 throw new IndexOutOfRangeException("Resource Index invalid");
             }
 
-            ////No longer used
-            //var resIndex = res.Index;
-            //var re = Resources.Find(r => r.Index == resIndex);
-            //if (re != null)
-            //{
-            //    res = re;
-            //    return; //Already loaded!
-            //}
-            //var pos = br.BaseStream.Position;
             var offset = ChunkOffsets[(int) res.Index];
             var length = ChunkLengths[(int) res.Index];
             br.BaseStream.Seek(Header.OffsetChunkData + offset, SeekOrigin.Begin);
             res.Data = br.ReadBytes((int) length);
-            //br.BaseStream.Seek(pos, SeekOrigin.Begin);
-            //Resources.Add(res);
         }
 
         /// <summary>
@@ -708,15 +698,7 @@ namespace FreeMote.Psb
                             if (!namesSet.Contains(pair.Key))
                             {
                                 namesSet.Add(pair.Key);
-
                                 //Does Name appears in String Table? No.
-                                //var psbStr = new PsbString(pair.Name);
-                                //if (!Strings.ContainsValue(psbStr))
-                                //{
-                                //    psbStr.Index = count;
-                                //    Strings.Add(psbStr.Index, psbStr);
-                                //    count++;
-                                //}
                             }
 
                             Collect(pair.Value);

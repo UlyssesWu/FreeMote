@@ -79,18 +79,18 @@ Example:
 ";
                 //options
                 var optWidth = printCmd.Option<int>("-w|--width <INT>",
-                    "Set width. Default=4096",
+                    "Set width. Default=-1 (auto)",
                     CommandOptionType.SingleValue);
                 var optHeight = printCmd.Option<int>("-h|--height <INT>",
-                    "Set height. Default=4096",
+                    "Set height. Default=-1 (auto)",
                     CommandOptionType.SingleValue);
                 //args
                 var argPsbPaths = printCmd.Argument("PSB", "MDF/PSB Paths", true);
 
                 printCmd.OnExecute(() =>
                 {
-                    int width = optWidth.HasValue() ? optWidth.ParsedValue : 4096;
-                    int height = optHeight.HasValue() ? optHeight.ParsedValue : 4096;
+                    int width = optWidth.HasValue() ? optWidth.ParsedValue : -1;
+                    int height = optHeight.HasValue() ? optHeight.ParsedValue : -1;
                     foreach (var s in argPsbPaths.Values)
                     {
                         if (File.Exists(s))
@@ -137,12 +137,14 @@ Example:
                     {
                         throw new ArgumentNullException("No key or seed specified.");
                     }
-                    uint? len = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : (uint?)null;
+
+                    uint? len = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : (uint?) null;
                     Dictionary<string, object> context = new Dictionary<string, object>();
                     if (len.HasValue)
                     {
                         context["MdfKeyLength"] = len;
                     }
+
                     foreach (var s in argPsbPaths.Values)
                     {
                         if (File.Exists(s))
@@ -232,6 +234,20 @@ Example:
         {
             var psb = new PSB(path);
             var painter = new PsbPainter(psb);
+            if (width < 0 || height < 0)
+            {
+                psb.TryGetCanvasSize(out var cw, out var ch);
+                if (width < 0)
+                {
+                    width = cw;
+                }
+
+                if (height < 0)
+                {
+                    height = ch;
+                }
+            }
+
             var bmp = painter.Draw(width, height);
             bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
         }
