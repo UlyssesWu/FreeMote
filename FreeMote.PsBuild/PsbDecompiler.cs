@@ -346,7 +346,7 @@ namespace FreeMote.PsBuild
                         if (tId == null)
                         {
                             throw new FormatException(
-                                "Can not link with texture names since they can't be recognized.");
+                                "Unable to unlink with texture names since they can't be recognized.");
                         }
 
                         tex.Tag = $"tex{tId.Value:D3}";
@@ -369,9 +369,10 @@ namespace FreeMote.PsBuild
         /// Convert a PSB to External Texture PSB.
         /// </summary>
         /// <param name="inputPath"></param>
+        /// <param name="outputUnlinkedPsb">output unlinked PSB if you need</param>
         /// <param name="order"></param>
         /// <param name="format"></param>
-        public static void UnlinkToFile(string inputPath, PsbLinkOrderBy order = PsbLinkOrderBy.Name, PsbImageFormat format = PsbImageFormat.Png)
+        public static void UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name, PsbImageFormat format = PsbImageFormat.Png)
         {
             if (!File.Exists(inputPath))
             {
@@ -394,6 +395,13 @@ namespace FreeMote.PsBuild
 
             var psb = new PSB(inputPath);
             var texs = psb.Unlink();
+
+            if (outputUnlinkedPsb)
+            {
+                psb.Merge();
+                var psbSavePath = Path.ChangeExtension(inputPath, ".unlinked.psb");
+                File.WriteAllBytes(psbSavePath, psb.Build());
+            }
 
             var texExt = format == PsbImageFormat.Bmp ? ".bmp" :".png";
             var texFormat = format == PsbImageFormat.Bmp ? ImageFormat.Bmp : ImageFormat.Png;
