@@ -51,6 +51,10 @@ namespace FreeMote
         /// Images for Character (temp name)
         /// </summary>
         Tachie = 4,
+        /// <summary>
+        /// MDF Archive Index (_info.psb.m)
+        /// </summary>
+        ArchiveInfo = 5,
     }
 
     /// <summary>

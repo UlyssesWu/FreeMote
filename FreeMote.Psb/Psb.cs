@@ -127,8 +127,9 @@ namespace FreeMote.Psb
             {
                 LoadFromStream(stream);
             }
-            catch (PsbBadFormatException e) 
-                when (tryDullahanLoading && (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array))
+            catch (PsbBadFormatException e)
+                when (tryDullahanLoading &&
+                      (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array))
             {
                 stream.Seek(0, SeekOrigin.Begin);
                 LoadFromDullahan(stream);
@@ -169,6 +170,12 @@ namespace FreeMote.Psb
             if (Objects.ContainsKey("imageList") && Objects.ContainsKey("spec"))
             {
                 return PsbType.Tachie;
+            }
+
+            if (Objects.ContainsKey("file_info") && Objects.ContainsKey("id") && Objects["id"] is PsbString idStr &&
+                idStr == "archive")
+            {
+                return PsbType.ArchiveInfo;
             }
 
             return PsbType.Motion;
@@ -753,7 +760,7 @@ namespace FreeMote.Psb
             {
                 Strings[i].Index = (uint) i;
             }
-            
+
             Resources.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
             for (int i = 0; i < Resources.Count; i++)
             {
@@ -1134,7 +1141,7 @@ namespace FreeMote.Psb
                 for (var i = 0; i < possibleHeader.Length - wNumbers.Length - 3; i++)
                 {
                     //find 0x0E / 0x0D
-                    if (possibleHeader[i] == (int)PsbObjType.ArrayN2 || possibleHeader[i] == (int)PsbObjType.ArrayN1)
+                    if (possibleHeader[i] == (int) PsbObjType.ArrayN2 || possibleHeader[i] == (int) PsbObjType.ArrayN1)
                     {
                         var offset1 = possibleHeader[i] - 0xB;
                         if (possibleHeader[i + offset1] == 0x0E)
@@ -1163,7 +1170,7 @@ namespace FreeMote.Psb
                     }
                 }
             }
-            
+
 
             if (namePos < 0)
             {
