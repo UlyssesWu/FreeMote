@@ -257,7 +257,7 @@ Example:
                                     {
                                         context["MdfKey"] = key + pair.Key + suffix;
                                         var mms = MdfConvert(ms, context);
-                                        File.WriteAllBytes(Path.Combine(extractDir, pair.Key), mms.ToArray());
+                                        File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                     }
                                 }
                             }
