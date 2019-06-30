@@ -36,9 +36,10 @@ namespace FreeMote.Tools.PsbDecompile
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
                 "Convert textures to Png/Bmp. Default=Png", CommandOptionType.SingleValue, true);
-            var optRaw = app.Option("-raw|--raw", "Keep raw textures", CommandOptionType.NoValue);
+            var optRaw = app.Option("-raw|--raw", "Keep raw textures", CommandOptionType.NoValue, inherited: true);
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
-            var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue);
+            var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue,
+                inherited: true);
 
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
             var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue,
@@ -70,7 +71,7 @@ Example:
                 linkCmd.OnExecute(() =>
                 {
                     PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.Png;
-                    //var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
+                    var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPaths = argPsbPath.Values;
                     foreach (var psbPath in psbPaths)
                     {
@@ -78,7 +79,7 @@ Example:
                         {
                             try
                             {
-                                PsbDecompiler.UnlinkToFile(psbPath, format: format);
+                                PsbDecompiler.UnlinkToFile(psbPath, format: format, order:order);
                             }
                             catch (Exception e)
                             {
@@ -97,7 +98,7 @@ Example:
                 archiveCmd.HelpOption();
                 archiveCmd.ExtendedHelpText = @"
 Example:
-  PsbDecompile info-psb -k 1234567890ab -l 131 sample_info.psb.m
+  PsbDecompile info-psb -k 1234567890ab -l 131 -a sample_info.psb.m
   PsbDecompile info-psb -s 1234567890absample_info.psb.m -l 131 sample_info.psb
   Hint: The body.bin should exist in the same folder and keep both file names correct.
 ";
@@ -106,7 +107,7 @@ Example:
                 //    "Set complete seed (Key+FileName)",
                 //    CommandOptionType.SingleValue);
                 var optExtractAll = archiveCmd.Option("-a|--all",
-                    "Also decompile all contents if possible",
+                    "Decompile all contents in body.bin if possible (can be slow)",
                     CommandOptionType.NoValue);
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
                     "Set key (Infer file name from path)",
@@ -114,7 +115,8 @@ Example:
                 var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
-                var optInfoOom = archiveCmd.Option("-oom|--memory-limit", "Disable parallel processing", CommandOptionType.NoValue);
+                var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
+                    "Disable parallel processing when using `-a` (can be very slow)", CommandOptionType.NoValue);
 
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB Paths", true);
@@ -137,6 +139,7 @@ Example:
 
                     int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 0x83;
                     Dictionary<string, object> context = new Dictionary<string, object>();
+
                     if (keyLen >= 0)
                     {
                         context["MdfKeyLength"] = (uint) keyLen;
