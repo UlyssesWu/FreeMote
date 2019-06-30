@@ -111,7 +111,7 @@ namespace FreeMote.PsBuild
                     PsbConstants.JsonUseHexNumber));
         }
 
-        private static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbImageOption imageOption = PsbImageOption.Original,
+        internal static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbImageOption imageOption = PsbImageOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true)
         {
             var name = Path.GetFileNameWithoutExtension(filePath);
@@ -302,14 +302,15 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="psb">PSB</param>
         /// <param name="outputPath">Output json file name, should end with .json</param>
+        /// <param name="additionalContext">additional context used in decompilation</param>
         /// <param name="imageOption">whether to extract image to common format</param>
         /// <param name="extractFormat">if extract, what format do you want</param>
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
-        public static void DecompileToFile(PSB psb, string outputPath, PsbImageOption imageOption = PsbImageOption.Original,
+        public static void DecompileToFile(PSB psb, string outputPath, Dictionary<string, object> additionalContext = null, PsbImageOption imageOption = PsbImageOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
         {
-            var context = FreeMount.CreateContext();
+            var context = FreeMount.CreateContext(additionalContext);
             if (key != null)
             {
                 context.Context[FreeMount.CryptKey] = key;

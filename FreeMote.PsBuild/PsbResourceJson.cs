@@ -56,7 +56,7 @@ namespace FreeMote.PsBuild
         {
         }
 
-        public PsbResourceJson(PSB psb, IReadOnlyDictionary<string, object> context = null)
+        public PsbResourceJson(PSB psb, Dictionary<string, object> context = null)
         {
             PsbVersion = psb.Header.Version;
             PsbType = psb.Type;
@@ -68,6 +68,7 @@ namespace FreeMote.PsBuild
                 CryptKey = context.ContainsKey(FreeMount.CryptKey)
                     ? (uint?) context[FreeMount.CryptKey]
                     : null;
+                Context = context;
             }
         }
 

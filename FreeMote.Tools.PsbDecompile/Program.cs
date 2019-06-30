@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
@@ -29,7 +31,7 @@ namespace FreeMote.Tools.PsbDecompile
             //help
             app.HelpOption(); //do not inherit
             app.ExtendedHelpText = PrintHelp();
-            
+
             //options
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
@@ -39,13 +41,14 @@ namespace FreeMote.Tools.PsbDecompile
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue);
 
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
-            var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue, true);
+            var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue,
+                true);
 
 
             //args
             var argPath =
                 app.Argument("Files", "File paths", multipleValues: true);
-            
+
             //command: unlink
             app.Command("unlink", linkCmd =>
             {
@@ -111,12 +114,20 @@ Example:
                 var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
+                var optInfoOom = archiveCmd.Option("-oom|--memory-limit", "Disable parallel processing", CommandOptionType.NoValue);
+
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB Paths", true);
 
                 archiveCmd.OnExecute(() =>
                 {
                     bool extractAll = optExtractAll.HasValue();
+                    bool enableParallel = PsbConstants.FastMode;
+                    if (optInfoOom.HasValue())
+                    {
+                        enableParallel = false;
+                    }
+
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
                     if (string.IsNullOrEmpty(key))
@@ -128,7 +139,7 @@ Example:
                     Dictionary<string, object> context = new Dictionary<string, object>();
                     if (keyLen >= 0)
                     {
-                        context["MdfKeyLength"] = (uint)keyLen;
+                        context["MdfKeyLength"] = (uint) keyLen;
                     }
 
                     foreach (var s in argPsbPaths.Values)
@@ -157,10 +168,10 @@ Example:
 
                                 File.WriteAllText(Path.GetFullPath(s) + ".json", PsbDecompiler.Decompile(psb));
                                 PsbResourceJson resx = new PsbResourceJson(psb, context);
-                                File.WriteAllText(Path.GetFullPath(s) + "resx.json", resx.SerializeToJson());
+                                File.WriteAllText(Path.GetFullPath(s) + ".resx.json", resx.SerializeToJson());
 
                                 var dic = psb.Objects["file_info"] as PsbDictionary;
-                                var suffixList = ((PsbCollection)psb.Objects["expire_suffix_list"]);
+                                var suffixList = ((PsbCollection) psb.Objects["expire_suffix_list"]);
                                 var suffix = "";
                                 if (suffixList.Count > 0)
                                 {
@@ -176,36 +187,98 @@ Example:
                                     Directory.CreateDirectory(extractDir);
                                 }
 
-                                foreach (var pair in dic)
+#if DEBUG
+                                Stopwatch sw = Stopwatch.StartNew();
+#endif
+
+                                if (enableParallel) //parallel!
                                 {
-                                    Console.WriteLine($"{(extractAll? "Decompiling": "Extracting")} {pair.Key} ...");
-                                    var range = ((PsbCollection)pair.Value);
-                                    var start = ((PsbNumber)range[0]).IntValue;
-                                    var len = ((PsbNumber)range[1]).IntValue;
-
-                                    using (var ms = new MemoryStream(bodyBytes, start, len))
+                                    int count = 0;
+                                    Parallel.ForEach(dic, pair =>
                                     {
-                                        context["MdfKey"] = key + pair.Key + suffix;
-                                        var mms = MdfConvert(ms, context);
-                                        if (extractAll)
-                                        {
-                                            try
-                                            {
-                                                PSB bodyPsb = new PSB(mms);
+                                        count++;
+                                        //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
+                                        var range = ((PsbCollection) pair.Value);
+                                        var start = ((PsbNumber) range[0]).IntValue;
+                                        var len = ((PsbNumber) range[1]).IntValue;
 
-                                            }
-                                            catch (Exception e)
+                                        using (var ms = new MemoryStream(bodyBytes, start, len))
+                                        {
+                                            var bodyContext = new Dictionary<string, object>(context)
                                             {
-                                                Console.WriteLine($"Decompile failed: {pair.Key}");
-                                                File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
+                                                ["MdfKey"] = key + pair.Key + suffix
+                                            };
+                                            var mms = MdfConvert(ms, bodyContext);
+                                            if (extractAll)
+                                            {
+                                                try
+                                                {
+                                                    PSB bodyPsb = new PSB(mms);
+                                                    PsbDecompiler.DecompileToFile(bodyPsb,
+                                                        Path.Combine(extractDir, pair.Key + suffix + ".json"),
+                                                        bodyContext, PsbImageOption.Extract);
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    Console.WriteLine($"Decompile failed: {pair.Key}");
+                                                    File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
+                                                        mms.ToArray());
+                                                }
+                                            }
+                                            else
+                                            {
+                                                File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
+                                                    mms.ToArray());
                                             }
                                         }
-                                        else
+                                    });
+
+                                    Console.WriteLine($"{count} files {(extractAll ? "decompiled" : "extracted")}.");
+                                }
+                                else
+                                {
+                                    //no parallel
+                                    foreach (var pair in dic)
+                                    {
+                                        Console.WriteLine(
+                                            $"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
+                                        var range = ((PsbCollection) pair.Value);
+                                        var start = ((PsbNumber) range[0]).IntValue;
+                                        var len = ((PsbNumber) range[1]).IntValue;
+
+                                        using (var ms = new MemoryStream(bodyBytes, start, len))
                                         {
-                                            File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
+                                            context["MdfKey"] = key + pair.Key + suffix;
+                                            var mms = MdfConvert(ms, context);
+                                            if (extractAll)
+                                            {
+                                                try
+                                                {
+                                                    PSB bodyPsb = new PSB(mms);
+                                                    PsbDecompiler.DecompileToFile(bodyPsb,
+                                                        Path.Combine(extractDir, pair.Key + suffix + ".json"), context,
+                                                        PsbImageOption.Extract);
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    Console.WriteLine($"Decompile failed: {pair.Key}");
+                                                    File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
+                                                        mms.ToArray());
+                                                }
+                                            }
+                                            else
+                                            {
+                                                File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
+                                                    mms.ToArray());
+                                            }
                                         }
                                     }
                                 }
+
+#if DEBUG
+                                sw.Stop();
+                                Console.WriteLine($"Process time: {sw.Elapsed:g}");
+#endif
                             }
                             catch (Exception e)
                             {
@@ -293,6 +366,7 @@ Example:
             //            Console.WriteLine("Example: PsbDecompile -ep emt.pure.psb");
             //            Console.WriteLine("\t PsbDecompile C:\\\\EMTfolder");
         }
+
         private static MemoryStream MdfConvert(Stream stream, Dictionary<string, object> context = null)
         {
             var ctx = FreeMount.CreateContext(context);
