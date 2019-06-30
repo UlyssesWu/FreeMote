@@ -259,13 +259,13 @@ namespace FreeMote
             return PixelBytesFromImage(bmp, pixelFormat);
         }
 
-        public static void UncompressToImageFile(byte[] data, string path, int height, int width,
+        public static void DecompressToImageFile(byte[] data, string path, int height, int width,
             PsbImageFormat format = PsbImageFormat.Png, PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
         {
             byte[] bytes;
             try
             {
-                bytes = Uncompress(data, height, width, align);
+                bytes = Decompress(data, height, width, align);
             }
             catch (Exception e)
             {
@@ -275,13 +275,13 @@ namespace FreeMote
             ConvertToImageFile(bytes, path, height, width, format, colorFormat);
         }
 
-        public static Bitmap UncompressToImage(byte[] data, int height, int width,
+        public static Bitmap DecompressToImage(byte[] data, int height, int width,
             PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
         {
             byte[] bytes;
             try
             {
-                bytes = Uncompress(data, height, width, align);
+                bytes = Decompress(data, height, width, align);
             }
             catch (Exception e)
             {
@@ -424,25 +424,25 @@ namespace FreeMote
             }
         }
 
-        private static byte[] Uncompress(Stream stream, int height, int width, int align = 4)
+        private static byte[] Decompress(Stream stream, int height, int width, int align = 4)
         {
             var realLength = height * width * align;
-            return RleCompress.Uncompress(stream, align, realLength);
+            return RleCompress.Decompress(stream, align, realLength);
         }
 
-        public static byte[] Uncompress(byte[] data, int height, int width, int align = 4)
+        public static byte[] Decompress(byte[] data, int height, int width, int align = 4)
         {
             using (var stream = new MemoryStream(data))
             {
-                return Uncompress(stream, height, width, align);
+                return Decompress(stream, height, width, align);
             }
         }
 
-        public static byte[] Uncompress(byte[] data, int align = 4)
+        public static byte[] Decompress(byte[] data, int align = 4)
         {
             using (var stream = new MemoryStream(data))
             {
-                return RleCompress.Uncompress(stream, align);
+                return RleCompress.Decompress(stream, align);
             }
         }
     }

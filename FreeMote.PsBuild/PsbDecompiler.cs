@@ -104,45 +104,21 @@ namespace FreeMote.PsBuild
             }
         }
 
-        internal static string Decompile(PSB psb)
+        public static string Decompile(PSB psb)
         {
             return JsonConvert.SerializeObject(psb.Objects, Formatting.Indented,
                 new PsbJsonConverter(PsbConstants.JsonArrayCollapse, PsbConstants.JsonUseDoubleOnly,
                     PsbConstants.JsonUseHexNumber));
         }
 
-        /// <summary>
-        /// Decompile to files
-        /// </summary>
-        /// <param name="inputPath">PSB file path</param>
-        /// <param name="imageOption">whether to extract image to common format</param>
-        /// <param name="extractFormat">if extract, what format do you want</param>
-        /// <param name="useResx">if false, use array-based resource json (legacy)</param>
-        /// <param name="key">PSB CryptKey</param>
-        public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original,
-            PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
+        private static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbImageOption imageOption = PsbImageOption.Original,
+            PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true)
         {
-            var context = FreeMount.CreateContext();
-            if (key != null)
-            {
-                context.Context[FreeMount.CryptKey] = key;
-            }
+            var name = Path.GetFileNameWithoutExtension(filePath);
+            var dirPath = Path.Combine(Path.GetDirectoryName(filePath), name);
 
-            var name = Path.GetFileNameWithoutExtension(inputPath);
-            var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
-            File.WriteAllText(Path.ChangeExtension(inputPath, ".json"),
-                Decompile(inputPath, out var psb, context.Context)); //MARK: breaking change for json path
             var resources = psb.CollectResources();
-            PsbResourceJson resx = new PsbResourceJson
-            {
-                PsbVersion = psb.Header.Version,
-                PsbType = psb.Type,
-                Platform = psb.Platform,
-                CryptKey = context.Context.ContainsKey(FreeMount.CryptKey)
-                    ? (uint?) context.Context[FreeMount.CryptKey]
-                    : null,
-                ExternalTextures = psb.Type == PsbType.Motion && psb.Resources.Count <= 0,
-            };
+            PsbResourceJson resx = new PsbResourceJson(psb, context.Context);
 
             if (File.Exists(dirPath))
             {
@@ -152,7 +128,10 @@ namespace FreeMote.PsBuild
 
             if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
             {
-                Directory.CreateDirectory(dirPath);
+                if (psb.Resources.Count != 0 || resources.Count != 0)
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
             }
 
             Dictionary<string, string> resDictionary = new Dictionary<string, string>();
@@ -196,7 +175,7 @@ namespace FreeMote.PsBuild
                             relativePath = CheckPath(relativePath, i);
                             if (resource.Compress == PsbCompressType.RL)
                             {
-                                RL.UncompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
+                                RL.DecompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
                                     resource.Height, resource.Width, extractFormat, resource.PixelFormat);
                             }
                             else if (resource.Compress == PsbCompressType.Tlg ||
@@ -260,12 +239,12 @@ namespace FreeMote.PsBuild
                             }
 
                             break;
-                        case PsbImageOption.Uncompress:
+                        case PsbImageOption.Decompress:
                             relativePath += ".raw";
                             relativePath = CheckPath(relativePath, i);
                             File.WriteAllBytes(Path.Combine(dirPath, relativePath),
                                 resources[i].Compress == PsbCompressType.RL
-                                    ? RL.Uncompress(resource.Data)
+                                    ? RL.Decompress(resource.Data)
                                     : resource.Data);
                             break;
                         case PsbImageOption.Compress:
@@ -297,12 +276,12 @@ namespace FreeMote.PsBuild
             {
                 resx.Resources = resDictionary;
                 resx.Context = context.Context;
-                File.WriteAllText(Path.ChangeExtension(inputPath, ".resx.json"),
+                File.WriteAllText(Path.ChangeExtension(filePath, ".resx.json"),
                     JsonConvert.SerializeObject(resx, Formatting.Indented));
             }
             else
             {
-                File.WriteAllText(Path.ChangeExtension(inputPath, ".res.json"),
+                File.WriteAllText(Path.ChangeExtension(filePath, ".res.json"),
                     JsonConvert.SerializeObject(resDictionary.Values.ToList(), Formatting.Indented));
             }
 
@@ -316,6 +295,52 @@ namespace FreeMote.PsBuild
 
                 return rPath;
             }
+        }
+
+        /// <summary>
+        /// Decompile to files
+        /// </summary>
+        /// <param name="psb">PSB</param>
+        /// <param name="outputPath">Output json file name, should end with .json</param>
+        /// <param name="imageOption">whether to extract image to common format</param>
+        /// <param name="extractFormat">if extract, what format do you want</param>
+        /// <param name="useResx">if false, use array-based resource json (legacy)</param>
+        /// <param name="key">PSB CryptKey</param>
+        public static void DecompileToFile(PSB psb, string outputPath, PsbImageOption imageOption = PsbImageOption.Original,
+            PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
+        {
+            var context = FreeMount.CreateContext();
+            if (key != null)
+            {
+                context.Context[FreeMount.CryptKey] = key;
+            }
+
+            File.WriteAllText(outputPath, Decompile(psb)); //MARK: breaking change for json path
+
+            OutputResources(psb, context, outputPath, imageOption, extractFormat, useResx);
+        }
+
+        /// <summary>
+        /// Decompile to files
+        /// </summary>
+        /// <param name="inputPath">PSB file path</param>
+        /// <param name="imageOption">whether to extract image to common format</param>
+        /// <param name="extractFormat">if extract, what format do you want</param>
+        /// <param name="useResx">if false, use array-based resource json (legacy)</param>
+        /// <param name="key">PSB CryptKey</param>
+        public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original,
+            PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
+        {
+            var context = FreeMount.CreateContext();
+            if (key != null)
+            {
+                context.Context[FreeMount.CryptKey] = key;
+            }
+
+            File.WriteAllText(Path.ChangeExtension(inputPath, ".json"),
+                Decompile(inputPath, out var psb, context.Context)); //MARK: breaking change for json path
+
+            OutputResources(psb, context, inputPath, imageOption, extractFormat, useResx);
         }
 
         // ReSharper disable once InvalidXmlDocComment

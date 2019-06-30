@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using McMaster.Extensions.CommandLineUtils;
@@ -163,113 +162,7 @@ Example:
                     }
                 });
             });
-
-            //info-psb
-            app.Command("info-psb", archiveCmd =>
-            {
-                //help
-                archiveCmd.Description = "Extract files from info.psb.m & body.bin (FreeMote.Plugins required)";
-                archiveCmd.HelpOption();
-                archiveCmd.ExtendedHelpText = @"
-Example:
-  EmtConvert info-psb -k 1234567890ab -l 131 sample_info.psb.m
-  EmtConvert info-psb -s 1234567890absample_info.psb.m -l 131 sample_info.psb
-  Hint: The body.bin should exist in the same folder and keep both file names correct.
-";
-                //options
-                //var optMdfSeed = archiveCmd.Option("-s|--seed <SEED>",
-                //    "Set complete seed (Key+FileName)",
-                //    CommandOptionType.SingleValue);
-                var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
-                    "Set key (Infer file name from path)",
-                    CommandOptionType.SingleValue);
-                var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
-                    "Set key length. Default=131",
-                    CommandOptionType.SingleValue);
-                //args
-                var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB Paths", true);
-
-                archiveCmd.OnExecute(() =>
-                {
-                    string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
-                    //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
-                    if (string.IsNullOrEmpty(key))
-                    {
-                        throw new ArgumentNullException(nameof(key), "No key or seed specified.");
-                    }
-
-                    int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 0x83;
-                    Dictionary<string, object> context = new Dictionary<string, object>();
-                    if (keyLen >= 0)
-                    {
-                        context["MdfKeyLength"] = (uint) keyLen;
-                    }
-
-                    foreach (var s in argPsbPaths.Values)
-                    {
-                        if (File.Exists(s))
-                        {
-                            var fileName = Path.GetFileName(s);
-                            context["MdfKey"] = key + fileName;
-
-                            try
-                            {
-                                var dir = Path.GetDirectoryName(Path.GetFullPath(s));
-                                var name = fileName.Substring(0, fileName.IndexOf("_info."));
-                                var body = Path.Combine(dir, name + "_body.bin");
-                                if (!File.Exists(body))
-                                {
-                                    Console.WriteLine($"Can not find body: {body}");
-                                    continue;
-                                }
-
-                                PSB psb = null;
-                                using (var fs = File.OpenRead(s))
-                                {
-                                    psb = new PSB(MdfConvert(fs, context));
-                                }
-
-                                var dic = psb.Objects["file_info"] as PsbDictionary;
-                                var suffixList = ((PsbCollection) psb.Objects["expire_suffix_list"]);
-                                var suffix = "";
-                                if (suffixList.Count > 0)
-                                {
-                                    suffix = suffixList[0] as PsbString ?? "";
-                                }
-
-                                Console.WriteLine($"Extacting info from {fileName} ...");
-
-                                var bodyBytes = File.ReadAllBytes(body);
-                                var extractDir = Path.Combine(dir, name);
-                                if (!Directory.Exists(extractDir))
-                                {
-                                    Directory.CreateDirectory(extractDir);
-                                }
-
-                                foreach (var pair in dic)
-                                {
-                                    Console.WriteLine($"Extracting {pair.Key} ...");
-                                    var range = ((PsbCollection) pair.Value);
-                                    var start = ((PsbNumber) range[0]).IntValue;
-                                    var len = ((PsbNumber) range[1]).IntValue;
-
-                                    using (var ms = new MemoryStream(bodyBytes, start, len))
-                                    {
-                                        context["MdfKey"] = key + pair.Key + suffix;
-                                        var mms = MdfConvert(ms, context);
-                                        File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
-                                    }
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e);
-                            }
-                        }
-                    }
-                });
-            });
-
+            
             app.OnExecute(() =>
             {
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
@@ -358,15 +251,7 @@ Example:
             var bmp = painter.Draw(width, height);
             bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
         }
-
-        private static MemoryStream MdfConvert(Stream stream, Dictionary<string, object> context = null)
-        {
-            var ctx = FreeMount.CreateContext(context);
-            string currentType = "MDF";
-            var ms = ctx.OpenFromShell(stream, ref currentType);
-            return ms;
-        }
-
+        
         private static bool ShellConvert(string path, string type, Dictionary<string, object> context = null)
         {
             try

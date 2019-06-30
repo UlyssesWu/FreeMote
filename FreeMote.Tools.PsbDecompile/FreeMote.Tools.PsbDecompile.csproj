@@ -54,6 +54,10 @@
       <Project>{717a63de-e599-4134-92ab-40a17c326da3}</Project>
       <Name>FreeMote.PsBuild</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
+      <Project>{c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7}</Project>
+      <Name>FreeMote.Psb</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FreeMote\FreeMote.csproj">
       <Project>{D43CA425-6476-4AE3-A3D8-BBCAC0F0383C}</Project>
       <Name>FreeMote</Name>

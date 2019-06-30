@@ -46,7 +46,7 @@ namespace FreeMote.Plugins.Shells
                     context[FreeMount.PsbZlibFastCompress] = config == (byte)0x9C;
                 }
 
-                return ZlibCompress.UncompressToStream(stream) as MemoryStream;
+                return ZlibCompress.DecompressToStream(stream) as MemoryStream;
             }
         }
 

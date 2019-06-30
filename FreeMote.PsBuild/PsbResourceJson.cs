@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using FreeMote.Plugins;
+using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -10,7 +12,7 @@ namespace FreeMote.PsBuild
     /// </summary>
     /// JsonConvert.SerializeObject(MyObject, new Newtonsoft.Json.Converters.StringEnumConverter());
     [Serializable]
-    class PsbResourceJson
+    public class PsbResourceJson
     {
         /// <summary>
         /// PSB version
@@ -49,5 +51,29 @@ namespace FreeMote.PsBuild
         /// Resources
         /// </summary>
         public Dictionary<string, string> Resources { get; set; }
+
+        public PsbResourceJson()
+        {
+        }
+
+        public PsbResourceJson(PSB psb, IReadOnlyDictionary<string, object> context = null)
+        {
+            PsbVersion = psb.Header.Version;
+            PsbType = psb.Type;
+            Platform = psb.Platform;
+            ExternalTextures = psb.Type == FreeMote.PsbType.Motion && psb.Resources.Count <= 0;
+
+            if (context != null)
+            {
+                CryptKey = context.ContainsKey(FreeMount.CryptKey)
+                    ? (uint?) context[FreeMount.CryptKey]
+                    : null;
+            }
+        }
+
+        public string SerializeToJson()
+        {
+            return JsonConvert.SerializeObject(this, Formatting.Indented);
+        }
     }
 }

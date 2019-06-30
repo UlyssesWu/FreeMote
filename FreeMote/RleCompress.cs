@@ -14,13 +14,13 @@ namespace FreeMote
         public const int LzssLookAhead = 1 << LzssLookShift;
 
         /// <summary>
-        /// RLE Uncompress
+        /// RLE Decompress
         /// </summary>
         /// <param name="input"></param>
         /// <param name="actualSize"></param>
         /// <param name="align"></param>
         /// <returns></returns>
-        public static byte[] Uncompress(Stream input, int align = 4, int actualSize = 0)
+        public static byte[] Decompress(Stream input, int align = 4, int actualSize = 0)
         {
             MemoryStream output = actualSize > 0 ? new MemoryStream(actualSize) : new MemoryStream();
             //int currentIndex = 0;

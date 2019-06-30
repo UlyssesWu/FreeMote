@@ -188,7 +188,7 @@ namespace FreeMote.Psb
             switch (Compress)
             {
                 case PsbCompressType.RL:
-                    return RL.UncompressToImage(Resource.Data, Height, Width, PixelFormat);
+                    return RL.DecompressToImage(Resource.Data, Height, Width, PixelFormat);
                 case PsbCompressType.Tlg:
                     using (var ms = new MemoryStream(Resource.Data))
                     {

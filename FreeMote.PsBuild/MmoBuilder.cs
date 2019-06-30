@@ -236,7 +236,7 @@ namespace FreeMote.PsBuild
                         else
                         {
                             bmp = rl
-                                ? RL.UncompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
+                                ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
                                 : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
                             bitmaps.Add(res.Index.Value, bmp);
                         }
@@ -287,7 +287,7 @@ namespace FreeMote.PsBuild
                         bool rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
                         var res = (PsbResource)iconItem["pixel"];
                         var texture = rl
-                            ? RL.UncompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
+                            ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
                             : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
 
                         iconItem["image"] = BuildSourceImage(texture);

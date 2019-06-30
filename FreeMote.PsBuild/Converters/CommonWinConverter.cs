@@ -44,7 +44,7 @@ namespace FreeMote.PsBuild.Converters
                 }
                 if (resMd.Compress == PsbCompressType.RL)
                 {
-                    resourceData = RL.Uncompress(resourceData);
+                    resourceData = RL.Decompress(resourceData);
                 }
                 if (resMd.PixelFormat == PsbPixelFormat.DXT5)
                 {

@@ -320,9 +320,9 @@ namespace FreeMote.PsBuild
                 case ".rl" when metadata.Compress == PsbCompressType.RL:
                     return File.ReadAllBytes(path);
                 case ".rl" when metadata.Compress == PsbCompressType.None:
-                    return RL.Uncompress(File.ReadAllBytes(path));
+                    return RL.Decompress(File.ReadAllBytes(path));
                 case ".rl":
-                    image = RL.UncompressToImage(File.ReadAllBytes(path), metadata.Height, metadata.Width,
+                    image = RL.DecompressToImage(File.ReadAllBytes(path), metadata.Height, metadata.Width,
                         metadata.PixelFormat);
                     break;
                 //raw

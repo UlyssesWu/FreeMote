@@ -97,9 +97,9 @@ namespace FreeMote
         /// </summary>
         Original,
         /// <summary>
-        /// Uncompress if needed
+        /// Decompress if needed
         /// </summary>
-        Uncompress,
+        Decompress,
         /// <summary>
         /// Compress if needed
         /// </summary>

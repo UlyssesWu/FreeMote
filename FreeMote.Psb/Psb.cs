@@ -193,7 +193,7 @@ namespace FreeMote.Psb
             if (Encoding.ASCII.GetString(sig).ToUpperInvariant().StartsWith("MDF"))
             {
                 stream.Seek(6, SeekOrigin.Current); //Original Length (4 bytes) | Compression Header (78 9C||DA)
-                stream = ZlibCompress.UncompressToStream(stream);
+                stream = ZlibCompress.DecompressToStream(stream);
             }
             else
             {

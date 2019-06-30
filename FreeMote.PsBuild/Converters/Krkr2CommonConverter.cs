@@ -154,7 +154,7 @@ namespace FreeMote.PsBuild.Converters
                     var height = (int)(PsbNumber)info["height"];
                     var res = (PsbResource)info["pixel"];
                     var bmp = info["compress"]?.ToString().ToUpperInvariant() == "RL"
-                        ? RL.UncompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
+                        ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
                         : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
                     bmp.Tag = iconName;
                     textures.Add($"{texName}{Delimiter}{icon.Key}", bmp);

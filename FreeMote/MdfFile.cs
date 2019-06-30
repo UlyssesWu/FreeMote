@@ -30,14 +30,14 @@ namespace FreeMote
         {
             Stream mfs = File.OpenRead(inputPath);
             mfs.Seek(10, SeekOrigin.Begin);
-            File.WriteAllBytes(outputPath, ZlibCompress.Uncompress(mfs));
+            File.WriteAllBytes(outputPath, ZlibCompress.Decompress(mfs));
             mfs.Dispose();
         }
 
         public static Stream DecompressToPsbStream(Stream input)
         {
             input.Seek(10, SeekOrigin.Begin);
-            return ZlibCompress.UncompressToStream(input);
+            return ZlibCompress.DecompressToStream(input);
         }
         
         public static Stream CompressPsbToMdfStream(Stream input, bool fast = true)

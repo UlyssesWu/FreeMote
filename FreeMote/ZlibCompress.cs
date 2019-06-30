@@ -5,7 +5,7 @@ namespace FreeMote
 {
     public static class ZlibCompress
     {
-        public static byte[] Uncompress(Stream input)
+        public static byte[] Decompress(Stream input)
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -17,7 +17,7 @@ namespace FreeMote
             }
         }
 
-        public static Stream UncompressToStream(Stream input)
+        public static Stream DecompressToStream(Stream input)
         {
             MemoryStream ms = new MemoryStream();
             using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
