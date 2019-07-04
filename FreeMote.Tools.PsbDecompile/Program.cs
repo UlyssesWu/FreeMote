@@ -185,11 +185,17 @@ Example:
 
                                 var bodyBytes = File.ReadAllBytes(body);
                                 var extractDir = Path.Combine(dir, name);
+                                if (File.Exists(extractDir))
+                                {
+                                    extractDir += "-resources";
+                                }
                                 if (!Directory.Exists(extractDir))
                                 {
                                     Directory.CreateDirectory(extractDir);
                                 }
 
+                                resx.Context["ArchiveSource"] = new List<string> {Path.GetDirectoryName(extractDir)};
+                                
 #if DEBUG
                                 Stopwatch sw = Stopwatch.StartNew();
 #endif

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
@@ -99,6 +102,77 @@ Example:
                         {
                             Port(s, portSpec);
                         }
+                    }
+                });
+            });
+
+            //info-psb
+            app.Command("info-psb", archiveCmd =>
+            {
+                //help
+                archiveCmd.Description = "Pack files to info.psb.m & body.bin (FreeMote.Plugins required)";
+                archiveCmd.HelpOption();
+                archiveCmd.ExtendedHelpText = @"
+Example:
+  PsBuild info-psb sample_info.psb.m.json (Key specified in resx.json)
+  PsBuild info-psb -k 1234567890ab -l 131 sample_info.psb.m.json (Must keep every filename correct)
+  Hint: If there are `a.scn.m` and `a.scn.m.json` in the same position, `.json` will be selected (unless `-p`).
+";
+                //options
+                //var optMdfSeed = archiveCmd.Option("-s|--seed <SEED>",
+                //    "Set complete seed (Key+FileName)",
+                //    CommandOptionType.SingleValue);
+                var optIntersect = archiveCmd.Option("-i|--intersect",
+                    "Only pack files which existed in info.psb.m",
+                    CommandOptionType.NoValue);
+                var optPacked = archiveCmd.Option("-p|--packed",
+                    "Prefer PSB files rather than json files in folder",
+                    CommandOptionType.NoValue);
+                var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
+                    "Set key (Infer file name from path)",
+                    CommandOptionType.SingleValue);
+                var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
+                    "Set key length",
+                    CommandOptionType.SingleValue);
+                var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
+                    "Disable parallel processing when using `-a` (can be very slow)", CommandOptionType.NoValue);
+                
+                //args
+                var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB .json paths", true);
+
+                archiveCmd.OnExecute(() =>
+                {
+                    bool intersect = optIntersect.HasValue();
+                    bool preferPacked = optPacked.HasValue();
+                    bool enableParallel = PsbConstants.FastMode;
+                    if (optInfoOom.HasValue())
+                    {
+                        enableParallel = false;
+                    }
+                    
+                    string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
+                    //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
+
+                    int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : -1;
+                    Dictionary<string, object> context = new Dictionary<string, object>();
+
+                    if (keyLen >= 0)
+                    {
+                        context["MdfKeyLength"] = (uint)keyLen;
+                    }
+
+                    foreach (var s in argPsbPaths.Values)
+                    {
+                        if (!File.Exists(s)) continue;
+                        PSB infoPsb = PsbCompiler.LoadPsbFromJsonFile(s);
+                        if (infoPsb.Type != PsbType.ArchiveInfo)
+                        {
+                            continue;
+                        }
+                        //TODO: How to get context?
+
+                        var fileName = Path.GetFileName(s);
+                        throw new NotImplementedException("This feature is not finished.");
                     }
                 });
             });

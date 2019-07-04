@@ -1,7 +1,7 @@
 # FreeMote
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/UlyssesWu/FreeMote?branch=master&svg=true)](https://ci.appveyor.com/project/UlyssesWu/freemote/build/artifacts)
 
-Managed Emote/PSB tool libs.
+Managed EMT/PSB tool libs.
 
 ## Components
 ### FreeMote
@@ -40,7 +40,7 @@ FreeMote GUI tool.
 ## Build
 This project requires **VS 2017** and .NET 4.6-4.7.2 to build.
 
-**FreeMote.Plugins** requires a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get Project AZUSA libs as reference. If you don't need FreeMote.Plugins, you can unload FreeMote.Plugins project and remove it from other projects' reference.
+**FreeMote.Plugins** requires a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote.Plugins, you can unload FreeMote.Plugins project and remove it from other projects' reference.
 
 To install our own nuget packages, add this feed to VS:
 
@@ -50,7 +50,7 @@ To install our own nuget packages, add this feed to VS:
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
-FreeMote is licensed under **LGPL v3**. It's required to attach the `LICENSE` text with your release if you're using FreeMote libs.
+FreeMote is licensed under **LGPL v3**. It's required to attach the `FreeMote.LICENSE` text with your release if you're using FreeMote libs.
 
 Additional clauses: If the input is not made by yourself, you are NOT allowed to use the output for any commercial purposes.
 
