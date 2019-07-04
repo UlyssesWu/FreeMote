@@ -172,10 +172,16 @@ namespace FreeMote.Psb
                 return PsbType.Tachie;
             }
 
-            if (Objects.ContainsKey("file_info") && Objects.ContainsKey("id") && Objects["id"] is PsbString idStr &&
-                idStr == "archive")
+            if (Objects.ContainsKey("file_info") && Objects.ContainsKey("id") && Objects["id"] is PsbString archiveId &&
+                archiveId == "archive")
             {
                 return PsbType.ArchiveInfo;
+            }
+
+            if (Objects.ContainsKey("code") && Objects.ContainsKey("id") && Objects["id"] is PsbString fontId &&
+                fontId == "font")
+            {
+                return PsbType.BmpFont;
             }
 
             return PsbType.Motion;

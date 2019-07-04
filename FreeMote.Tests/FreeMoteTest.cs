@@ -132,6 +132,15 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestA8()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var imgPath = Path.Combine(resPath, "textfont24", "[0]-[0].png");
+            var bts = RL.GetPixelBytesFromImageFile(imgPath, PsbPixelFormat.A8);
+            RL.ConvertToImageFile(bts, imgPath + "output.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.A8);
+        }
+
+        [TestMethod]
         public void TestDxt5Decompress()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

@@ -55,6 +55,10 @@ namespace FreeMote
         /// MDF Archive Index (_info.psb.m)
         /// </summary>
         ArchiveInfo = 5,
+        /// <summary>
+        /// BMP Font (e.g. textfont24)
+        /// </summary>
+        BmpFont = 6,
     }
 
     /// <summary>

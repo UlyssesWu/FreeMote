@@ -215,6 +215,9 @@ namespace FreeMote
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Rgba2A8(result);
                     break;
+                case PsbPixelFormat.A8:
+                    result = Rgba2A8(result);
+                    break;
             }
 
             return result;
