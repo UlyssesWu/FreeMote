@@ -9,6 +9,7 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
+using static FreeMote.Consts;
 
 namespace FreeMote.Tools.PsBuild
 {
@@ -24,7 +25,7 @@ namespace FreeMote.Tools.PsBuild
             FreeMount.Init();
             Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
 
-            PsbConstants.InMemoryLoading = true;
+            InMemoryLoading = true;
             Console.WriteLine();
 
             var app = new CommandLineApplication();
@@ -144,7 +145,7 @@ Example:
                 {
                     bool intersect = optIntersect.HasValue();
                     bool preferPacked = optPacked.HasValue();
-                    bool enableParallel = PsbConstants.FastMode;
+                    bool enableParallel = FastMode;
                     if (optInfoOom.HasValue())
                     {
                         enableParallel = false;
@@ -154,12 +155,6 @@ Example:
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
 
                     int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : -1;
-                    Dictionary<string, object> context = new Dictionary<string, object>();
-
-                    if (keyLen >= 0)
-                    {
-                        context["MdfKeyLength"] = (uint)keyLen;
-                    }
 
                     foreach (var s in argPsbPaths.Values)
                     {
@@ -169,10 +164,19 @@ Example:
                         {
                             continue;
                         }
-                        //TODO: How to get context?
 
+                        var resx = PsbResourceJson.LoadByPsbJsonPath(s);
+                        if (!resx.Context.ContainsKey(Context_ArchiveSource))
+                        {
+                            continue;
+                        }
+                        if (keyLen > 0)
+                        {
+                            resx.Context[Context_MdfKeyLength] = keyLen;
+                        }
+                        
                         var fileName = Path.GetFileName(s);
-                        throw new NotImplementedException("This feature is not finished.");
+                        throw new NotImplementedException("This feature is unfinished.");
                     }
                 });
             });
@@ -181,7 +185,7 @@ Example:
             {
                 if (optDouble.HasValue())
                 {
-                    PsbConstants.JsonUseDoubleOnly = true;
+                    JsonUseDoubleOnly = true;
                 }
 
                 ushort ver = optVer.HasValue() ? optVer.ParsedValue : (ushort) 3;

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using FreeMote.Plugins;
+using System.IO;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -65,8 +65,8 @@ namespace FreeMote.PsBuild
 
             if (context != null)
             {
-                CryptKey = context.ContainsKey(FreeMount.CryptKey)
-                    ? (uint?) context[FreeMount.CryptKey]
+                CryptKey = context.ContainsKey(Consts.CryptKey)
+                    ? (uint?) context[Consts.CryptKey]
                     : null;
                 Context = context;
             }
@@ -75,6 +75,22 @@ namespace FreeMote.PsBuild
         public string SerializeToJson()
         {
             return JsonConvert.SerializeObject(this, Formatting.Indented);
+        }
+
+        /// <summary>
+        /// Load resx.json using psb.json path
+        /// </summary>
+        /// <param name="jsonPath">psb.json path</param>
+        /// <returns></returns>
+        public static PsbResourceJson LoadByPsbJsonPath(string jsonPath)
+        {
+            var inputResPath = Path.ChangeExtension(jsonPath, ".resx.json");
+            if (inputResPath != null && File.Exists(inputResPath))
+            {
+                return JsonConvert.DeserializeObject<PsbResourceJson>(File.ReadAllText(inputResPath));
+            }
+
+            throw new FileNotFoundException($"Can not find {inputResPath}");
         }
     }
 }

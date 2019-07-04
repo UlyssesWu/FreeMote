@@ -257,7 +257,7 @@ namespace FreeMote.Tests
             sw.Stop();
             var time = sw.Elapsed;
             //return;
-            PsbConstants.InMemoryLoading = false;
+            Consts.InMemoryLoading = false;
             fs.Position = 0;
             sw.Restart();
             //psb = PSB.DullahanLoad(fs, 64);

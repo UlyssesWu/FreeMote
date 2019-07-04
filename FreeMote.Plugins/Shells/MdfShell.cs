@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Troschuetz.Random.Generators;
+using static FreeMote.Consts;
 
 namespace FreeMote.Plugins
 {
@@ -16,10 +17,7 @@ namespace FreeMote.Plugins
     class MdfShell : IPsbShell
     {
         public string Name => "MDF";
-
-        public const string MdfKey = "MdfKey";
-        public const string MdfKeyLength = "MdfKeyLength";
-
+        
         public bool IsInShell(Stream stream, Dictionary<string, object> context = null)
         {
             var header = new byte[4];
@@ -30,7 +28,7 @@ namespace FreeMote.Plugins
             {
                 if (context != null)
                 {
-                    context[FreeMount.PsbShellType] = Name;
+                    context[PsbShellType] = Name;
                 }
 
                 return true;
@@ -43,15 +41,15 @@ namespace FreeMote.Plugins
         {
             if (context != null)
             {
-                if (context.ContainsKey(MdfKey))
+                if (context.ContainsKey(Context_MdfKey))
                 {
-                    uint? keyLength = context.ContainsKey(MdfKeyLength) ? (uint) context[MdfKeyLength] : (uint?) null;
-                    stream = EncodeMdf(stream, (string)context[MdfKey], keyLength);
+                    uint? keyLength = context.ContainsKey(Context_MdfKeyLength) ? (uint) context[Context_MdfKeyLength] : (uint?) null;
+                    stream = EncodeMdf(stream, (string)context[Context_MdfKey], keyLength);
                 }
-               
+                
                 var pos = stream.Position;
                 stream.Seek(9, SeekOrigin.Current);
-                context[FreeMount.PsbZlibFastCompress] = stream.ReadByte() == (byte) 0x9C;
+                context[PsbZlibFastCompress] = stream.ReadByte() == (byte) 0x9C;
                 stream.Position = pos;
             }
 
@@ -118,17 +116,17 @@ namespace FreeMote.Plugins
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             bool fast = true; //mdf use fast mode by default
-            if (context != null && context.ContainsKey(FreeMount.PsbZlibFastCompress))
+            if (context != null && context.ContainsKey(PsbZlibFastCompress))
             {
-                fast = (bool) context[FreeMount.PsbZlibFastCompress];
+                fast = (bool) context[PsbZlibFastCompress];
             }
 
             var ms = MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
             
-            if (context != null && context.ContainsKey(MdfKey))
+            if (context != null && context.ContainsKey(Context_MdfKey))
             {
-                uint? keyLength = context.ContainsKey(MdfKeyLength) ? (uint)context[MdfKeyLength] : (uint?)null;
-                ms = EncodeMdf(ms, (string)context[MdfKey], keyLength);
+                uint? keyLength = context.ContainsKey(Context_MdfKeyLength) ? (uint)context[Context_MdfKeyLength] : (uint?)null;
+                ms = EncodeMdf(ms, (string)context[Context_MdfKey], keyLength);
             }
 
             return ms;

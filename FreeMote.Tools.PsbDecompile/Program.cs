@@ -9,6 +9,7 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
+using static FreeMote.Consts;
 
 namespace FreeMote.Tools.PsbDecompile
 {
@@ -22,7 +23,7 @@ namespace FreeMote.Tools.PsbDecompile
             FreeMount.Init();
             Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
 
-            PsbConstants.InMemoryLoading = true;
+            InMemoryLoading = true;
             Console.WriteLine();
 
             var app = new CommandLineApplication();
@@ -124,7 +125,7 @@ Example:
                 archiveCmd.OnExecute(() =>
                 {
                     bool extractAll = optExtractAll.HasValue();
-                    bool enableParallel = PsbConstants.FastMode;
+                    bool enableParallel = FastMode;
                     if (optInfoOom.HasValue())
                     {
                         enableParallel = false;
@@ -142,7 +143,7 @@ Example:
 
                     if (keyLen >= 0)
                     {
-                        context["MdfKeyLength"] = (uint) keyLen;
+                        context[Context_MdfKeyLength] = (uint) keyLen;
                     }
 
                     foreach (var s in argPsbPaths.Values)
@@ -150,7 +151,7 @@ Example:
                         if (File.Exists(s))
                         {
                             var fileName = Path.GetFileName(s);
-                            context["MdfKey"] = key + fileName;
+                            context[Context_MdfKey] = key + fileName;
 
                             try
                             {
@@ -194,7 +195,7 @@ Example:
                                     Directory.CreateDirectory(extractDir);
                                 }
 
-                                resx.Context["ArchiveSource"] = new List<string> {Path.GetDirectoryName(extractDir)};
+                                resx.Context[Context_ArchiveSource] = new List<string> {Path.GetDirectoryName(extractDir)};
                                 
 #if DEBUG
                                 Stopwatch sw = Stopwatch.StartNew();
@@ -215,7 +216,7 @@ Example:
                                         {
                                             var bodyContext = new Dictionary<string, object>(context)
                                             {
-                                                ["MdfKey"] = key + pair.Key + suffix
+                                                [Context_MdfKey] = key + pair.Key + suffix
                                             };
                                             var mms = MdfConvert(ms, bodyContext);
                                             if (extractAll)
@@ -257,7 +258,7 @@ Example:
 
                                         using (var ms = new MemoryStream(bodyBytes, start, len))
                                         {
-                                            context["MdfKey"] = key + pair.Key + suffix;
+                                            context[Context_MdfKey] = key + pair.Key + suffix;
                                             var mms = MdfConvert(ms, context);
                                             if (extractAll)
                                             {
@@ -302,17 +303,17 @@ Example:
             {
                 if (optOom.HasValue())
                 {
-                    PsbConstants.InMemoryLoading = false;
+                    InMemoryLoading = false;
                 }
 
                 if (optArray.HasValue())
                 {
-                    PsbConstants.JsonArrayCollapse = false;
+                    JsonArrayCollapse = false;
                 }
 
                 if (optHex.HasValue())
                 {
-                    PsbConstants.JsonUseHexNumber = true;
+                    JsonUseHexNumber = true;
                 }
 
                 bool useRaw = optRaw.HasValue();

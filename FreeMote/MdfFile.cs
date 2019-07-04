@@ -7,7 +7,7 @@ namespace FreeMote
     /// <summary>
     /// MDF
     /// </summary> 
-    /// priMary Data File
+    /// Merged Data File
     /// Compressed PSB
     public static class MdfFile
     {

@@ -45,7 +45,7 @@ namespace FreeMote.PsBuild
                 var ms = ctx.OpenFromShell(fs, ref type);
                 if (ms != null)
                 {
-                    ctx.Context[FreeMount.PsbShellType] = type;
+                    ctx.Context[Consts.PsbShellType] = type;
                     fs.Dispose();
                     stream = ms;
                 }
@@ -60,9 +60,9 @@ namespace FreeMote.PsBuild
                 {
                     stream.Position = 0;
                     uint? key = null;
-                    if (ctx.Context.ContainsKey(FreeMount.CryptKey))
+                    if (ctx.Context.ContainsKey(Consts.CryptKey))
                     {
-                        key = ctx.Context[FreeMount.CryptKey] as uint?;
+                        key = ctx.Context[Consts.CryptKey] as uint?;
                     }
                     else
                     {
@@ -79,7 +79,7 @@ namespace FreeMote.PsBuild
                                 PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
                                 stream.Dispose();
                                 psb = new PSB(mms);
-                                ctx.Context[FreeMount.CryptKey] = key;
+                                ctx.Context[Consts.CryptKey] = key;
                             }
                         }
                         catch
@@ -107,8 +107,8 @@ namespace FreeMote.PsBuild
         public static string Decompile(PSB psb)
         {
             return JsonConvert.SerializeObject(psb.Objects, Formatting.Indented,
-                new PsbJsonConverter(PsbConstants.JsonArrayCollapse, PsbConstants.JsonUseDoubleOnly,
-                    PsbConstants.JsonUseHexNumber));
+                new PsbJsonConverter(Consts.JsonArrayCollapse, Consts.JsonUseDoubleOnly,
+                    Consts.JsonUseHexNumber));
         }
 
         internal static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbImageOption imageOption = PsbImageOption.Original,
@@ -313,7 +313,7 @@ namespace FreeMote.PsBuild
             var context = FreeMount.CreateContext(additionalContext);
             if (key != null)
             {
-                context.Context[FreeMount.CryptKey] = key;
+                context.Context[Consts.CryptKey] = key;
             }
 
             File.WriteAllText(outputPath, Decompile(psb)); //MARK: breaking change for json path
@@ -335,7 +335,7 @@ namespace FreeMote.PsBuild
             var context = FreeMount.CreateContext();
             if (key != null)
             {
-                context.Context[FreeMount.CryptKey] = key;
+                context.Context[Consts.CryptKey] = key;
             }
 
             File.WriteAllText(Path.ChangeExtension(inputPath, ".json"),

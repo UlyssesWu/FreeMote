@@ -217,7 +217,7 @@ namespace FreeMote.Psb
             }
 
             //Switch MemoryMapped IO
-            bool memoryPreload = PsbConstants.InMemoryLoading && !(stream is MemoryStream);
+            bool memoryPreload = Consts.InMemoryLoading && !(stream is MemoryStream);
             if (memoryPreload)
             {
                 sourceBr.BaseStream.Position = 0;
@@ -606,7 +606,7 @@ namespace FreeMote.Psb
             if (Strings.Contains(str))
             {
                 refStr = Strings.Find(s => s.Index == idx);
-                if (PsbConstants.FastMode)
+                if (Consts.FastMode)
                 {
                     str = refStr;
                     return;
@@ -881,7 +881,7 @@ namespace FreeMote.Psb
                 Header.OffsetUnknownLengths = (uint) bw.BaseStream.Position;
                 UnknownLengths.WriteTo(bw);
 
-                if (PsbConstants.PsbDataStructureAlign)
+                if (Consts.PsbDataStructureAlign)
                 {
                     DataAlign(bw);
                 }
@@ -926,7 +926,7 @@ namespace FreeMote.Psb
                 Header.OffsetChunkLengths = (uint) bw.BaseStream.Position;
                 ChunkLengths = new PsbArray(lengths);
                 ChunkLengths.WriteTo(bw);
-                if (PsbConstants.PsbDataStructureAlign)
+                if (Consts.PsbDataStructureAlign)
                 {
                     DataAlign(bw);
                 }
@@ -1085,7 +1085,7 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Try skip header and load. May (not) work on any PSB only if body is not encrypted
-        /// <para>Can not use <see cref="PsbConstants.InMemoryLoading"/> so it will be slow.</para>
+        /// <para>Can not use <see cref="Consts.InMemoryLoading"/> so it will be slow.</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
         /// <param name="path"></param>
@@ -1227,7 +1227,7 @@ namespace FreeMote.Psb
             Header.OffsetStringsData = (uint) br.BaseStream.Position;
             Strings.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
 
-            if (StringOffsets.Value.Count > 0 && PsbConstants.InMemoryLoading)
+            if (StringOffsets.Value.Count > 0 && Consts.InMemoryLoading)
             {
                 uint strsEndPos = StringOffsets.Value.Max();
                 br.BaseStream.Seek(strsEndPos, SeekOrigin.Current);

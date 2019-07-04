@@ -17,20 +17,6 @@ namespace FreeMote.Plugins
     /// </summary>
     public class FreeMount : IDisposable
     {
-        /// <summary>
-        /// Type: string
-        /// </summary>
-        public const string PsbShellType = "PsbShellType";
-        /// <summary>
-        /// Type: uint?
-        /// </summary>
-        public const string CryptKey = "CryptKey";
-        /// <summary>
-        /// Type: bool
-        /// <para>Fast: 0x9C BestCompression: 0xDA NoCompression/Low: 0x01</para>
-        /// </summary>
-        public const string PsbZlibFastCompress = "PsbZlibFastCompress";
-
         private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
         private const string PLUGIN_DIR = "Plugins";
 

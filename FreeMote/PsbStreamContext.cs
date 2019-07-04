@@ -54,9 +54,9 @@
         {
             Round = 0;
             ByteCount = 0;
-            Key1 = PsbConstants.Key1;
-            Key2 = PsbConstants.Key2;
-            Key3 = PsbConstants.Key3;
+            Key1 = Consts.Key1;
+            Key2 = Consts.Key2;
+            Key3 = Consts.Key3;
             CurrentKey = 0;
         }
 

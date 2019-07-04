@@ -6,6 +6,7 @@ using System.Text;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using McMaster.Extensions.CommandLineUtils;
+using static FreeMote.Consts;
 
 namespace FreeMote.Tools.EmtConvert
 {
@@ -142,7 +143,7 @@ Example:
                     Dictionary<string, object> context = new Dictionary<string, object>();
                     if (keyLen.HasValue)
                     {
-                        context["MdfKeyLength"] = keyLen;
+                        context[Context_MdfKeyLength] = keyLen;
                     }
 
                     foreach (var s in argPsbPaths.Values)
@@ -156,7 +157,7 @@ Example:
                                 finalSeed = key + fileName;
                             }
 
-                            context["MdfKey"] = finalSeed;
+                            context[Context_MdfKey] = finalSeed;
                             ShellConvert(s, "MDF", context);
                         }
                     }
