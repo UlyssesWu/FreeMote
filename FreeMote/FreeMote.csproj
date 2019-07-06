@@ -57,6 +57,7 @@
     <Compile Include="Plugins\IPsbImageFormatter.cs" />
     <Compile Include="Plugins\IPsbShell.cs" />
     <Compile Include="PostProcessing.cs" />
+    <Compile Include="PsbExtension.cs" />
     <Compile Include="RleCompress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Consts.cs" />

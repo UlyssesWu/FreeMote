@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace FreeMote.Psb
@@ -78,13 +79,17 @@ namespace FreeMote.Psb
         {
             switch (type)
             {
+                case PsbType.Mmo:
+                    return ".mmo";
                 case PsbType.Pimg:
-                    return "pimg";
+                    return ".pimg";
                 case PsbType.Scn:
-                    return "scn";
+                    return ".scn";
+                case PsbType.ArchiveInfo:
+                    return ".psb.m";
                 case PsbType.Motion:
                 default:
-                    return "psb";
+                    return ".psb";
             }
         }
 
@@ -114,6 +119,97 @@ namespace FreeMote.Psb
             height = resList.Max(data => data.Height);
             return false;
         }
+
+
+        #region MDF
+
+        /// <summary>
+        /// Save PSB as pure MDF file
+        /// </summary>
+        /// <remarks>can not save as impure MDF (such as MT19937 MDF)</remarks>
+        /// <param name="psb"></param>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        public static void SaveAsMdfFile(this PSB psb, string path, uint? key = null)
+        {
+            psb.Merge();
+            var bytes = psb.Build();
+            Adler32 adler = new Adler32();
+            uint checksum = 0;
+            if (key == null)
+            {
+                adler.Update(bytes);
+                checksum = (uint)adler.Checksum;
+            }
+            MemoryStream ms = new MemoryStream(bytes);
+            using (Stream fs = new FileStream(path, FileMode.Create))
+            {
+                if (key != null)
+                {
+                    MemoryStream nms = new MemoryStream((int)ms.Length);
+                    PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
+                    ms.Dispose();
+                    ms = nms;
+                    var pos = ms.Position;
+                    adler.Update(ms);
+                    checksum = (uint)adler.Checksum;
+                    ms.Position = pos;
+                }
+
+                BinaryWriter bw = new BinaryWriter(fs);
+                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.Write((uint)ms.Length);
+                bw.Write(ZlibCompress.Compress(ms));
+                bw.WriteBE(checksum);
+                ms.Dispose();
+                bw.Flush();
+            }
+        }
+
+        /// <summary>
+        /// Save as pure MDF
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] SaveAsMdf(this PSB psb, uint? key = null)
+        {
+            psb.Merge();
+            var bytes = psb.Build();
+            Adler32 adler = new Adler32();
+            uint checksum = 0;
+            if (key == null)
+            {
+                adler.Update(bytes);
+                checksum = (uint)adler.Checksum;
+            }
+            MemoryStream ms = new MemoryStream(bytes);
+            using (MemoryStream fs = new MemoryStream())
+            {
+                if (key != null)
+                {
+                    MemoryStream nms = new MemoryStream((int)ms.Length);
+                    PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
+                    ms.Dispose();
+                    ms = nms;
+                    var pos = ms.Position;
+                    adler.Update(ms);
+                    checksum = (uint)adler.Checksum;
+                    ms.Position = pos;
+                }
+
+                BinaryWriter bw = new BinaryWriter(fs);
+                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.Write((uint)ms.Length);
+                bw.Write(ZlibCompress.Compress(ms));
+                bw.WriteBE(checksum);
+                ms.Dispose();
+                bw.Flush();
+                return fs.ToArray();
+            }
+        }
+
+        #endregion
     }
 
     internal static class PsbHelper

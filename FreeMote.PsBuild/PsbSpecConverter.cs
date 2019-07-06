@@ -11,9 +11,10 @@ namespace FreeMote.PsBuild
         /// <param name="psb"></param>
         /// <param name="targetSpec"></param>
         /// <param name="pixelFormat"></param>
-        public static void SwitchSpec(this PSB psb, PsbSpec targetSpec, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
+        public static void SwitchSpec(this PSB psb, PsbSpec targetSpec,
+            PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
-            if (targetSpec == PsbSpec.other)
+            if (targetSpec == PsbSpec.other || targetSpec == PsbSpec.none)
             {
                 return;
             }
@@ -40,17 +41,19 @@ namespace FreeMote.PsBuild
                 switch (original)
                 {
                     case PsbSpec.win:
-                        {
-                            Common2KrkrConverter winKrkr = new Common2KrkrConverter();
-                            winKrkr.Convert(psb);
-                            break;
-                        }
+                    {
+                        Common2KrkrConverter winKrkr = new Common2KrkrConverter();
+                        winKrkr.Convert(psb);
+                        break;
+                    }
+
                     case PsbSpec.common:
-                        {
-                            Common2KrkrConverter commonKrkr = new Common2KrkrConverter();
-                            commonKrkr.Convert(psb);
-                            break;
-                        }
+                    {
+                        Common2KrkrConverter commonKrkr = new Common2KrkrConverter();
+                        commonKrkr.Convert(psb);
+                        break;
+                    }
+
                     default:
                         psb.Platform = targetSpec;
                         break;

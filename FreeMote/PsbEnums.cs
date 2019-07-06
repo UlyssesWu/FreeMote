@@ -67,6 +67,10 @@ namespace FreeMote
     public enum PsbSpec : byte
     {
         /// <summary>
+        /// Do not have spec
+        /// </summary>
+        none = Byte.MinValue, 
+        /// <summary>
         /// Unity & other
         /// </summary>
         common,

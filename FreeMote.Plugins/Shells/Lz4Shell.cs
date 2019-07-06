@@ -28,7 +28,7 @@ namespace FreeMote.Plugins.Shells
             {
                 if (context != null)
                 {
-                    context[Consts.PsbShellType] = Name;
+                    context[Consts.Context_PsbShellType] = Name;
                 }
                 return true;
             }

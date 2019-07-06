@@ -80,7 +80,7 @@ Example:
                         {
                             try
                             {
-                                PsbDecompiler.UnlinkToFile(psbPath, format: format, order:order);
+                                PsbDecompiler.UnlinkToFile(psbPath, format: format, order: order);
                             }
                             catch (Exception e)
                             {
@@ -99,8 +99,8 @@ Example:
                 archiveCmd.HelpOption();
                 archiveCmd.ExtendedHelpText = @"
 Example:
+  PsbDecompile info-psb -k 1234567890ab sample_info.psb.m
   PsbDecompile info-psb -k 1234567890ab -l 131 -a sample_info.psb.m
-  PsbDecompile info-psb -s 1234567890absample_info.psb.m -l 131 sample_info.psb
   Hint: The body.bin should exist in the same folder and keep both file names correct.
 ";
                 //options
@@ -110,14 +110,14 @@ Example:
                 var optExtractAll = archiveCmd.Option("-a|--all",
                     "Decompile all contents in body.bin if possible (can be slow)",
                     CommandOptionType.NoValue);
+                var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
+                    "Disable parallel processing when using `-a` (can be very slow)", CommandOptionType.NoValue);
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
                     "Set key (Infer file name from path)",
                     CommandOptionType.SingleValue);
                 var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
-                var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
-                    "Disable parallel processing when using `-a` (can be very slow)", CommandOptionType.NoValue);
 
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB Paths", true);
@@ -156,12 +156,19 @@ Example:
                             try
                             {
                                 var dir = Path.GetDirectoryName(Path.GetFullPath(s));
-                                var name = fileName.Substring(0, fileName.IndexOf("_info."));
+                                var name = PsbExtension.ArchiveInfoGetPackageName(fileName);
+                                if (name == null)
+                                {
+                                    Console.WriteLine($"File name incorrect: {fileName}");
+                                    name = fileName;
+                                }
+
                                 var body = Path.Combine(dir, name + "_body.bin");
+                                bool hasBody = true;
                                 if (!File.Exists(body))
                                 {
                                     Console.WriteLine($"Can not find body: {body}");
-                                    continue;
+                                    hasBody = false;
                                 }
 
                                 PSB psb = null;
@@ -172,7 +179,6 @@ Example:
 
                                 File.WriteAllText(Path.GetFullPath(s) + ".json", PsbDecompiler.Decompile(psb));
                                 PsbResourceJson resx = new PsbResourceJson(psb, context);
-                                File.WriteAllText(Path.GetFullPath(s) + ".resx.json", resx.SerializeToJson());
 
                                 var dic = psb.Objects["file_info"] as PsbDictionary;
                                 var suffixList = ((PsbCollection) psb.Objects["expire_suffix_list"]);
@@ -182,21 +188,29 @@ Example:
                                     suffix = suffixList[0] as PsbString ?? "";
                                 }
 
+                                if (!hasBody)
+                                {
+                                    //Write resx.json
+                                    resx.Context[Context_ArchiveSource] = new List<string> {name};
+                                    File.WriteAllText(Path.GetFullPath(s) + ".resx.json", resx.SerializeToJson());
+                                    continue;
+                                }
+
                                 Console.WriteLine($"Extracting info from {fileName} ...");
 
                                 var bodyBytes = File.ReadAllBytes(body);
                                 var extractDir = Path.Combine(dir, name);
                                 if (File.Exists(extractDir))
                                 {
+                                    name += "-resources";
                                     extractDir += "-resources";
                                 }
+
                                 if (!Directory.Exists(extractDir))
                                 {
                                     Directory.CreateDirectory(extractDir);
                                 }
 
-                                resx.Context[Context_ArchiveSource] = new List<string> {Path.GetDirectoryName(extractDir)};
-                                
 #if DEBUG
                                 Stopwatch sw = Stopwatch.StartNew();
 #endif
@@ -218,6 +232,7 @@ Example:
                                             {
                                                 [Context_MdfKey] = key + pair.Key + suffix
                                             };
+                                            bodyContext.Remove(Context_ArchiveSource);
                                             var mms = MdfConvert(ms, bodyContext);
                                             if (extractAll)
                                             {
@@ -285,6 +300,10 @@ Example:
                                     }
                                 }
 
+                                //Write resx.json
+                                resx.Context[Context_ArchiveSource] = new List<string> {name};
+                                resx.Context[Context_MdfMtKey] = key;
+                                File.WriteAllText(Path.GetFullPath(s) + ".resx.json", resx.SerializeToJson());
 #if DEBUG
                                 sw.Stop();
                                 Console.WriteLine($"Process time: {sw.Elapsed:g}");

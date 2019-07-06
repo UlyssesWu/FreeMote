@@ -97,9 +97,9 @@ namespace FreeMote.PsBuild
                                 break;
                         }
 
-                        if (resx.Context != null && resx.Context.ContainsKey(Consts.PsbShellType) && keepShell)
+                        if (resx.Context != null && resx.Context.ContainsKey(Consts.Context_PsbShellType) && keepShell)
                         {
-                            var shellType = resx.Context[Consts.PsbShellType] as string;
+                            var shellType = resx.Context[Consts.Context_PsbShellType] as string;
                             if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
                             {
                                 ext += $".{shellType.ToLowerInvariant()}";
@@ -169,7 +169,9 @@ namespace FreeMote.PsBuild
 
                     if (resx.ExternalTextures)
                     {
+#if DEBUG
                         Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
+#endif
                     }
                     else
                     {
@@ -192,8 +194,8 @@ namespace FreeMote.PsBuild
             }
 
             var bytes = psb.Build();
-            //Convert
 
+            //Convert
             if (cryptKey != null)
             {
                 return PsbFile.EncodeToBytes(cryptKey.Value, bytes, EncodeMode.Encrypt, EncodePosition.Auto);
@@ -208,13 +210,15 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
-        /// Load PSB From Json file
+        /// Load PSB and Context From Json file, use <see cref="LoadPsbFromJsonFile"/> if you don't need context
         /// </summary>
         /// <param name="inputPath">Json file path</param>
         /// <param name="inputResPath">Resource Json file</param>
         /// <param name="version">PSB version</param>
         /// <returns></returns>
-        public static PSB LoadPsbFromJsonFile(string inputPath, string inputResPath = null, ushort? version = null)
+        public static (PSB Psb, Dictionary<string, object> Context) LoadPsbAndContextFromJsonFile(string inputPath,
+            string inputResPath = null,
+            ushort? version = null)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -241,11 +245,13 @@ namespace FreeMote.PsBuild
             //Parse
             PSB psb = Parse(File.ReadAllText(inputPath), version ?? 3);
             //Link
+            Dictionary<string, object> context = null;
             if (!string.IsNullOrWhiteSpace(inputResJson))
             {
                 if (inputResJson.Trim().StartsWith("{")) //resx.json
                 {
                     PsbResourceJson resx = JsonConvert.DeserializeObject<PsbResourceJson>(inputResJson);
+                    context = resx.Context;
                     if (resx.PsbType != null)
                     {
                         psb.Type = resx.PsbType.Value;
@@ -258,7 +264,9 @@ namespace FreeMote.PsBuild
 
                     if (resx.ExternalTextures)
                     {
+#if DEBUG
                         Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
+#endif
                     }
                     else
                     {
@@ -283,7 +291,19 @@ namespace FreeMote.PsBuild
             }
 
             psb.Merge();
-            return psb;
+            return (psb, context);
+        }
+
+        /// <summary>
+        /// Load PSB From Json file
+        /// </summary>
+        /// <param name="inputPath">Json file path</param>
+        /// <param name="inputResPath">Resource Json file</param>
+        /// <param name="version">PSB version</param>
+        /// <returns></returns>
+        public static PSB LoadPsbFromJsonFile(string inputPath, string inputResPath = null, ushort? version = null)
+        {
+            return LoadPsbAndContextFromJsonFile(inputPath, inputResPath, version).Psb;
         }
 
         internal static PSB Parse(string json, ushort version)
@@ -417,6 +437,7 @@ namespace FreeMote.PsBuild
             {
                 psb.MotionResourceInstrument();
             }
+
             var resList = psb.CollectResources();
             var context = FreeMount.CreateContext();
             if (order == PsbLinkOrderBy.Order)
@@ -428,6 +449,7 @@ namespace FreeMote.PsBuild
                     byte[] data = LoadImageBytes(fullPath, resMd, context);
                     resMd.Resource.Data = data;
                 }
+
                 return;
             }
 
@@ -481,7 +503,7 @@ namespace FreeMote.PsBuild
                             continue;
                         }
 
-                        resMd = resList[(int)texIdx.Value];
+                        resMd = resList[(int) texIdx.Value];
                     }
                 }
                 else //if (order == PsbLinkOrderBy.Convention)

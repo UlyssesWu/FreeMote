@@ -65,10 +65,28 @@ namespace FreeMote.PsBuild
 
             if (context != null)
             {
-                CryptKey = context.ContainsKey(Consts.CryptKey)
-                    ? (uint?) context[Consts.CryptKey]
+                CryptKey = context.ContainsKey(Consts.Context_CryptKey)
+                    ? (uint?) context[Consts.Context_CryptKey]
                     : null;
                 Context = context;
+            }
+        }
+
+        public void AppliedToPsb(PSB psb)
+        {
+            if (PsbType != null)
+            {
+                psb.Type = PsbType.Value;
+            }
+
+            if (PsbVersion != null)
+            {
+                psb.Header.Version = PsbVersion.Value;
+            }
+
+            if (Platform != null && psb.Platform != PsbSpec.none)
+            {
+                psb.Platform = Platform.Value;
             }
         }
 

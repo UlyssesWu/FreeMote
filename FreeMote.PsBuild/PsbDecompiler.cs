@@ -45,7 +45,7 @@ namespace FreeMote.PsBuild
                 var ms = ctx.OpenFromShell(fs, ref type);
                 if (ms != null)
                 {
-                    ctx.Context[Consts.PsbShellType] = type;
+                    ctx.Context[Consts.Context_PsbShellType] = type;
                     fs.Dispose();
                     stream = ms;
                 }
@@ -60,9 +60,9 @@ namespace FreeMote.PsBuild
                 {
                     stream.Position = 0;
                     uint? key = null;
-                    if (ctx.Context.ContainsKey(Consts.CryptKey))
+                    if (ctx.Context.ContainsKey(Consts.Context_CryptKey))
                     {
-                        key = ctx.Context[Consts.CryptKey] as uint?;
+                        key = ctx.Context[Consts.Context_CryptKey] as uint?;
                     }
                     else
                     {
@@ -79,7 +79,7 @@ namespace FreeMote.PsBuild
                                 PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
                                 stream.Dispose();
                                 psb = new PSB(mms);
-                                ctx.Context[Consts.CryptKey] = key;
+                                ctx.Context[Consts.Context_CryptKey] = key;
                             }
                         }
                         catch
@@ -313,7 +313,7 @@ namespace FreeMote.PsBuild
             var context = FreeMount.CreateContext(additionalContext);
             if (key != null)
             {
-                context.Context[Consts.CryptKey] = key;
+                context.Context[Consts.Context_CryptKey] = key;
             }
 
             File.WriteAllText(outputPath, Decompile(psb)); //MARK: breaking change for json path
@@ -335,7 +335,7 @@ namespace FreeMote.PsBuild
             var context = FreeMount.CreateContext();
             if (key != null)
             {
-                context.Context[Consts.CryptKey] = key;
+                context.Context[Consts.Context_CryptKey] = key;
             }
 
             File.WriteAllText(Path.ChangeExtension(inputPath, ".json"),

@@ -16,6 +16,20 @@ namespace FreeMote
         /// </summary>
         public const string Signature = "mdf";
 
+        public static bool IsSignatureMdf(Stream stream)
+        {
+            var header = new byte[4];
+            var pos = stream.Position;
+            stream.Read(header, 0, 4);
+            stream.Position = pos;
+            if (header[0] == 'm' && header[1] == 'd' && header[2] == 'f' && header[3] == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public static int MdfGetOriginalLength(this Stream stream)
         {
             var pos = stream.Position;
@@ -39,7 +53,7 @@ namespace FreeMote
             input.Seek(10, SeekOrigin.Begin);
             return ZlibCompress.DecompressToStream(input);
         }
-        
+
         public static Stream CompressPsbToMdfStream(Stream input, bool fast = true)
         {
             var pos = input.Position;

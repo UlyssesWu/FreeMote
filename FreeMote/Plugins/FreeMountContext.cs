@@ -14,7 +14,7 @@ namespace FreeMote.Plugins
             Context = context;
         }
 
-        public bool HasShell => Context.ContainsKey(Consts.PsbShellType) && Context[Consts.PsbShellType] != null && !string.IsNullOrEmpty(Context[Consts.PsbShellType].ToString());
+        public bool HasShell => Context.ContainsKey(Consts.Context_PsbShellType) && Context[Consts.Context_PsbShellType] != null && !string.IsNullOrEmpty(Context[Consts.Context_PsbShellType].ToString());
 
         public bool SupportImageExt(string ext)
         {
@@ -62,7 +62,7 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public MemoryStream PackToShell(Stream input, string type = null)
         {
-            return FreeMount._.PackToShell(input, type ?? Context[Consts.PsbShellType] as string, Context);
+            return FreeMount._.PackToShell(input, type ?? Context[Consts.Context_PsbShellType] as string, Context);
         }
 
         /// <summary>

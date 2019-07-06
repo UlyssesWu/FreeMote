@@ -17,7 +17,7 @@ namespace FreeMote.Plugins
     class MdfShell : IPsbShell
     {
         public string Name => "MDF";
-        
+
         public bool IsInShell(Stream stream, Dictionary<string, object> context = null)
         {
             var header = new byte[4];
@@ -28,7 +28,7 @@ namespace FreeMote.Plugins
             {
                 if (context != null)
                 {
-                    context[PsbShellType] = Name;
+                    context[Context_PsbShellType] = Name;
                 }
 
                 return true;
@@ -43,13 +43,15 @@ namespace FreeMote.Plugins
             {
                 if (context.ContainsKey(Context_MdfKey))
                 {
-                    uint? keyLength = context.ContainsKey(Context_MdfKeyLength) ? (uint) context[Context_MdfKeyLength] : (uint?) null;
-                    stream = EncodeMdf(stream, (string)context[Context_MdfKey], keyLength);
+                    uint? keyLength = context.ContainsKey(Context_MdfKeyLength)
+                        ? Convert.ToUInt32(context[Context_MdfKeyLength])
+                        : (uint?) null;
+                    stream = EncodeMdf(stream, (string) context[Context_MdfKey], keyLength);
                 }
-                
+
                 var pos = stream.Position;
                 stream.Seek(9, SeekOrigin.Current);
-                context[PsbZlibFastCompress] = stream.ReadByte() == (byte) 0x9C;
+                context[Context_PsbZlibFastCompress] = stream.ReadByte() == (byte) 0x9C;
                 stream.Position = pos;
             }
 
@@ -76,10 +78,11 @@ namespace FreeMote.Plugins
             List<byte> keys = new List<byte>();
             if (keyLength != null)
             {
-                for (int i = 0; i < keyLength/4 + 1; i++)
+                for (int i = 0; i < keyLength / 4 + 1; i++)
                 {
                     keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
                 }
+
                 keys = keys.Take((int) keyLength.Value).ToList();
             }
             else
@@ -88,7 +91,6 @@ namespace FreeMote.Plugins
                 {
                     keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
                 }
-
             }
 
             int currentKey = 0;
@@ -116,17 +118,26 @@ namespace FreeMote.Plugins
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             bool fast = true; //mdf use fast mode by default
-            if (context != null && context.ContainsKey(PsbZlibFastCompress))
+            if (context != null && context.ContainsKey(Context_PsbZlibFastCompress))
             {
-                fast = (bool) context[PsbZlibFastCompress];
+                fast = (bool) context[Context_PsbZlibFastCompress];
             }
 
             var ms = MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
-            
+
             if (context != null && context.ContainsKey(Context_MdfKey))
             {
-                uint? keyLength = context.ContainsKey(Context_MdfKeyLength) ? (uint)context[Context_MdfKeyLength] : (uint?)null;
-                ms = EncodeMdf(ms, (string)context[Context_MdfKey], keyLength);
+                uint? keyLength;
+                if (context.ContainsKey(Context_MdfKeyLength))
+                {
+                    keyLength = Convert.ToUInt32(context[Context_MdfKeyLength]);
+                }
+                else
+                {
+                    keyLength = (uint?) null;
+                }
+
+                ms = EncodeMdf(ms, (string) context[Context_MdfKey], keyLength);
             }
 
             return ms;

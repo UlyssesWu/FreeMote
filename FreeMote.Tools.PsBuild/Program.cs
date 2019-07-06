@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,6 +16,13 @@ using static FreeMote.Consts;
 
 namespace FreeMote.Tools.PsBuild
 {
+    enum ProcessMethod
+    {
+        None = 0,
+        EncodeMdf = 1,
+        Compile = 2,
+    }
+
     class Program
     {
         //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
@@ -36,14 +46,16 @@ namespace FreeMote.Tools.PsBuild
             app.ExtendedHelpText = PrintHelp();
 
             //options
-            var optVer = app.Option<ushort>("-v|--ver <VER>", "Set PSB version [2,4]. Default=3", CommandOptionType.SingleValue);
+            var optVer = app.Option<ushort>("-v|--ver <VER>", "Set PSB version [2,4]. Default=3",
+                CommandOptionType.SingleValue);
             var optKey = app.Option<uint>("-k|--key <KEY>", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optSpec = app.Option<PsbSpec>("-p|--spec <SPEC>", "Set PSB platform (krkr/common/win/ems)",
                 CommandOptionType.SingleValue);
             var optNoRename = app.Option("-no-rename",
                 "Prevent output file renaming, may overwrite your original PSB files", CommandOptionType.NoValue);
             var optNoShell = app.Option("-no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
-            var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)", CommandOptionType.NoValue, true);
+            var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)",
+                CommandOptionType.NoValue, true);
 
             //args
             var argPath =
@@ -117,7 +129,8 @@ Example:
 Example:
   PsBuild info-psb sample_info.psb.m.json (Key specified in resx.json)
   PsBuild info-psb -k 1234567890ab -l 131 sample_info.psb.m.json (Must keep every filename correct)
-  Hint: If there are `a.scn.m` and `a.scn.m.json` in the same position, `.json` will be selected (unless `-p`).
+  Hint: Always keep file names correct.
+  If there are `a.scn.m` and `a.scn.m.json` in the same position, `.json` will be used (unless `-p`).
 ";
                 //options
                 //var optMdfSeed = archiveCmd.Option("-s|--seed <SEED>",
@@ -127,7 +140,7 @@ Example:
                     "Only pack files which existed in info.psb.m",
                     CommandOptionType.NoValue);
                 var optPacked = archiveCmd.Option("-p|--packed",
-                    "Prefer PSB files rather than json files in folder",
+                    "Prefer PSB files rather than json files in source folder",
                     CommandOptionType.NoValue);
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
                     "Set key (Infer file name from path)",
@@ -136,8 +149,8 @@ Example:
                     "Set key length",
                     CommandOptionType.SingleValue);
                 var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
-                    "Disable parallel processing when using `-a` (can be very slow)", CommandOptionType.NoValue);
-                
+                    "Disable parallel processing (can be slow but save a lot memory)", CommandOptionType.NoValue);
+
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB .json paths", true);
 
@@ -150,7 +163,7 @@ Example:
                     {
                         enableParallel = false;
                     }
-                    
+
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
 
@@ -162,21 +175,282 @@ Example:
                         PSB infoPsb = PsbCompiler.LoadPsbFromJsonFile(s);
                         if (infoPsb.Type != PsbType.ArchiveInfo)
                         {
+                            Console.WriteLine("Json is not an ArchiveInfo PSB.");
                             continue;
                         }
 
                         var resx = PsbResourceJson.LoadByPsbJsonPath(s);
-                        if (!resx.Context.ContainsKey(Context_ArchiveSource))
+                        if (!resx.Context.ContainsKey(Context_ArchiveSource) ||
+                            resx.Context[Context_ArchiveSource] == null)
                         {
+                            Console.WriteLine("ArchiveSource must be specified in resx.json Context.");
                             continue;
                         }
+
                         if (keyLen > 0)
                         {
                             resx.Context[Context_MdfKeyLength] = keyLen;
                         }
-                        
+
+                        string infoKey = null;
+                        if (resx.Context[Context_MdfKey] is string mdfKey)
+                        {
+                            infoKey = mdfKey;
+                        }
+
+                        List<string> sourceDirs = null;
+                        if (resx.Context[Context_ArchiveSource] is string path)
+                        {
+                            sourceDirs = new List<string> {path};
+                        }
+                        else if (resx.Context[Context_ArchiveSource] is IList paths)
+                        {
+                            sourceDirs = new List<string>(paths.Count);
+                            sourceDirs.AddRange(from object p in paths select p.ToString());
+                        }
+                        else
+                        {
+                            Console.WriteLine("ArchiveSource incorrect.");
+                            continue;
+                        }
+
+                        var baseDir = Path.GetDirectoryName(s);
+                        var files = new Dictionary<string, (string Path, ProcessMethod Method)>();
+                        var suffix = ArchiveInfoPsbGetSuffix(infoPsb);
+                        List<string> filter = null;
+                        if (intersect)
+                        {
+                            filter = ArchiveInfoPsbCollectFiles(infoPsb, suffix);
+                        }
+
+                        void CollectFiles(string targetDir)
+                        {
+                            if (!Directory.Exists(targetDir))
+                            {
+                                return;
+                            }
+
+                            foreach (var f in Directory.EnumerateFiles(targetDir))
+                            {
+                                if (f.EndsWith(".resx.json", true, CultureInfo.InvariantCulture))
+                                {
+                                    continue;
+                                }
+                                else if (f.EndsWith(".json", true, CultureInfo.InvariantCulture))
+                                {
+                                    var name = Path.GetFileNameWithoutExtension(f);
+                                    if (preferPacked && files.ContainsKey(name) &&
+                                        files[name].Method != ProcessMethod.Compile)
+                                    {
+                                        //ignore
+                                    }
+                                    else
+                                    {
+                                        if (intersect && filter != null && !filter.Contains(name))
+                                        {
+                                            //ignore
+                                        }
+                                        else
+                                        {
+                                            files[name] = (f, ProcessMethod.Compile);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    var name = Path.GetFileName(f);
+                                    if (!preferPacked && files.ContainsKey(name) &&
+                                        files[name].Method == ProcessMethod.Compile)
+                                    {
+                                        //ignore
+                                    }
+                                    else
+                                    {
+                                        if (intersect && filter != null && !filter.Contains(name))
+                                        {
+                                            //ignore
+                                        }
+                                        else
+                                        {
+                                            var fs = File.OpenRead(f);
+                                            if (!MdfFile.IsSignatureMdf(fs))
+                                            {
+                                                files[name] = (f, ProcessMethod.EncodeMdf);
+                                            }
+                                            else
+                                            {
+                                                files[name] = (f, ProcessMethod.None);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        //Collect files
+                        foreach (var sourceDir in sourceDirs)
+                        {
+                            CollectFiles(Path.IsPathRooted(sourceDir) ? sourceDir : Path.Combine(baseDir, sourceDir));
+                        }
+
+                        var fileInfoDic = new PsbDictionary(files.Count);
+                        var fmContext = FreeMount.CreateContext(resx.Context);
+                        byte[] bodyBin = null;
+                        if (enableParallel)
+                        {
+                            var contents = new ConcurrentBag<(string Name, Stream Content)>();
+                            Parallel.ForEach(files, (kv) =>
+                            {
+                                var fileNameWithoutSuffix = ArchiveInfoPsbGetFileName(kv.Key, suffix);
+                                if (kv.Value.Method == ProcessMethod.None)
+                                {
+                                    contents.Add((fileNameWithoutSuffix, File.OpenRead(kv.Value.Path)));
+                                    return;
+                                }
+
+                                var mdfContext = new Dictionary<string, object>(resx.Context);
+                                var context = FreeMount.CreateContext(mdfContext);
+                                if (!string.IsNullOrEmpty(key))
+                                {
+                                    mdfContext[Context_MdfKey] = key + fileNameWithoutSuffix + suffix;
+                                }
+                                else if (resx.Context[Context_MdfMtKey] is string mtKey)
+                                {
+                                    mdfContext[Context_MdfKey] =
+                                        mtKey + fileNameWithoutSuffix + suffix;
+                                }
+                                else
+                                {
+                                    mdfContext.Remove(Context_MdfKey);
+                                }
+
+                                mdfContext.Remove(Context_ArchiveSource);
+
+                                if (kv.Value.Method == ProcessMethod.EncodeMdf)
+                                {
+                                    contents.Add((fileNameWithoutSuffix, context.PackToShell(
+                                        File.OpenRead(kv.Value.Path), "MDF")));
+                                }
+                                else
+                                {
+                                    var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
+
+                                    var outputMdf = context.PackToShell(content.Psb.ToStream(), "MDF");
+                                    contents.Add((fileNameWithoutSuffix, outputMdf));
+                                }
+                            });
+
+                            Console.WriteLine($"{contents.Count} files collected.");
+                            using (var ms = new MemoryStream())
+                            {
+                                foreach (var item in contents.OrderBy(item => item.Name, StringComparer.Ordinal))
+                                {
+                                    fileInfoDic.Add(item.Name,
+                                        new PsbCollection
+                                            {new PsbNumber((int) ms.Position), new PsbNumber(item.Content.Length)});
+                                    if (item.Content is MemoryStream ims)
+                                    {
+                                        ims.WriteTo(ms);
+                                    }
+                                    else
+                                    {
+                                        item.Content.CopyTo(ms);
+                                    }
+
+                                    item.Content.Dispose();
+                                }
+
+                                bodyBin = ms.ToArray();
+                            }
+                        }
+                        else //non-parallel
+                        {
+                            using (var ms = new MemoryStream())
+                            {
+                                foreach (var kv in files.OrderBy(f => f.Key, StringComparer.Ordinal))
+                                {
+                                    var fileNameWithoutSuffix = ArchiveInfoPsbGetFileName(kv.Key, suffix);
+                                    if (kv.Value.Method == ProcessMethod.None)
+                                    {
+                                        using (var fs = File.OpenRead(kv.Value.Path))
+                                        {
+                                            fs.CopyTo(
+                                                ms); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
+                                            fileInfoDic.Add(fileNameWithoutSuffix, new PsbCollection
+                                                {new PsbNumber((int) ms.Position), new PsbNumber(fs.Length)});
+                                        }
+                                    }
+                                    else if (kv.Value.Method == ProcessMethod.EncodeMdf)
+                                    {
+                                        if (!string.IsNullOrEmpty(key))
+                                        {
+                                            fmContext.Context[Context_MdfKey] = key + fileNameWithoutSuffix + suffix;
+                                        }
+                                        else if (resx.Context[Context_MdfMtKey] is string mtKey)
+                                        {
+                                            fmContext.Context[Context_MdfKey] =
+                                                mtKey + fileNameWithoutSuffix + suffix;
+                                        }
+                                        else
+                                        {
+                                            fmContext.Context.Remove(Context_MdfKey);
+                                        }
+
+                                        var outputMdf = fmContext.PackToShell(File.OpenRead(kv.Value.Path), "MDF");
+                                        outputMdf.WriteTo(ms);
+                                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbCollection
+                                            {new PsbNumber((int) ms.Position), new PsbNumber(outputMdf.Length)});
+                                        outputMdf.Dispose();
+                                    }
+                                    else
+                                    {
+                                        var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
+                                        if (!string.IsNullOrEmpty(key))
+                                        {
+                                            fmContext.Context[Context_MdfKey] = key + fileNameWithoutSuffix + suffix;
+                                        }
+                                        else
+                                        {
+                                            fmContext.Context = content.Context;
+                                        }
+
+                                        var outputMdf = fmContext.PackToShell(content.Psb.ToStream(), "MDF");
+                                        outputMdf.WriteTo(ms);
+                                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbCollection
+                                            {new PsbNumber((int) ms.Position), new PsbNumber(outputMdf.Length)});
+                                        outputMdf.Dispose();
+                                    }
+                                }
+
+                                bodyBin = ms.ToArray();
+                            }
+                        }
+
+                        //Write
+                        infoPsb.Objects["file_info"] = fileInfoDic;
                         var fileName = Path.GetFileName(s);
-                        throw new NotImplementedException("This feature is unfinished.");
+                        var packageName = Path.GetFileNameWithoutExtension(fileName);
+
+                        infoPsb.Merge();
+                        if (key != null)
+                        {
+                            fmContext.Context[Context_MdfKey] = key + packageName;
+                        }
+                        else if (!string.IsNullOrEmpty(infoKey))
+                        {
+                            fmContext.Context[Context_MdfKey] = infoKey;
+                        }
+                        else
+                        {
+                            fmContext.Context.Remove(Context_MdfKey);
+                        }
+
+                        var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), "MDF");
+                        File.WriteAllBytes(packageName, infoMdf.ToArray());
+                        infoMdf.Dispose();
+                        var coreName = PsbExtension.ArchiveInfoGetPackageName(packageName);
+                        fileName = string.IsNullOrEmpty(coreName) ? packageName + "_body.bin" : coreName + "_body.bin";
+                        File.WriteAllBytes(fileName, bodyBin);
                     }
                 });
             });
@@ -209,6 +483,43 @@ Example:
             app.Execute(args);
 
             Console.WriteLine("Done.");
+        }
+
+        private static string ArchiveInfoPsbGetFileName(string fileName, string suffix)
+        {
+            if (string.IsNullOrEmpty(suffix))
+            {
+                return fileName;
+            }
+
+            if (fileName.EndsWith(suffix, true, CultureInfo.InvariantCulture))
+            {
+                return fileName.Remove(fileName.Length - suffix.Length, suffix.Length);
+            }
+
+            return fileName;
+        }
+
+        private static List<string> ArchiveInfoPsbCollectFiles(PSB psb, string suffix)
+        {
+            if (psb.Objects.ContainsKey("file_info") && psb.Objects["file_info"] is PsbDictionary fileInfo)
+            {
+                return fileInfo.Keys.Select(name => name + suffix).ToList();
+            }
+
+            return null;
+        }
+
+        private static string ArchiveInfoPsbGetSuffix(PSB psb)
+        {
+            var suffix = "";
+            if (psb.Objects.ContainsKey("expire_suffix_list") &&
+                psb.Objects["expire_suffix_list"] is PsbCollection col && col[0] is PsbString s)
+            {
+                suffix = s;
+            }
+
+            return suffix;
         }
 
         private static void Port(string s, PsbSpec portSpec)

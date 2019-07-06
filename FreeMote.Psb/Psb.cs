@@ -70,6 +70,7 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// PSB Target Platform (Spec)
+        /// <remarks>If there is no "spec" in Objects, setter is invalid</remarks>
         /// </summary>
         public PsbSpec Platform
         {
@@ -78,12 +79,18 @@ namespace FreeMote.Psb
                 var spec = Objects?["spec"]?.ToString();
                 if (string.IsNullOrEmpty(spec))
                 {
-                    return PsbSpec.other;
+                    return PsbSpec.none;
                 }
 
                 return Enum.TryParse(spec, out PsbSpec p) ? p : PsbSpec.other;
             }
-            set => Objects["spec"] = new PsbString(value.ToString());
+            set
+            {
+                if (Objects.ContainsKey("spec"))
+                {
+                    Objects["spec"] = new PsbString(value.ToString());
+                }
+            }
         }
 
         public PSB(ushort version = 3)
