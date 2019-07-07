@@ -367,11 +367,12 @@ namespace FreeMote.Psb
 #endif
 
             var typeByte = br.ReadByte();
-            if (!Enum.IsDefined(typeof(PsbObjType), typeByte))
-            {
-                return null;
-                //throw new ArgumentOutOfRangeException($"0x{type:X2} is not a known type.");
-            }
+            //There is no need to check this, and it's slow
+            //if (!Enum.IsDefined(typeof(PsbObjType), typeByte))
+            //{
+            //    return null;
+            //    //throw new ArgumentOutOfRangeException($"0x{type:X2} is not a known type.");
+            //}
 
             var type = (PsbObjType) typeByte;
 
@@ -481,18 +482,18 @@ namespace FreeMote.Psb
         /// <returns></returns>
         private PsbDictionary LoadObjects(BinaryReader br, bool lazyLoad = false)
         {
-            var names = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
-            var offsets = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            var names = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            var offsets = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
             var pos = br.BaseStream.Position;
-            PsbDictionary dictionary = new PsbDictionary(names.Value.Count);
+            PsbDictionary dictionary = new PsbDictionary(names.Count);
             uint? maxOffset = null;
             var endPos = pos;
-            if (lazyLoad && offsets.Value.Count > 0)
+            if (lazyLoad && offsets.Count > 0)
             {
-                maxOffset = offsets.Value.Max();
+                maxOffset = offsets.Max();
             }
 
-            for (int i = 0; i < names.Value.Count; i++)
+            for (int i = 0; i < names.Count; i++)
             {
                 //br.BaseStream.Seek(pos, SeekOrigin.Begin);
                 var name = Names[(int) names[i]];
@@ -537,17 +538,17 @@ namespace FreeMote.Psb
         /// <returns></returns>
         private PsbCollection LoadCollection(BinaryReader br, bool lazyLoad = false)
         {
-            var offsets = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            var offsets = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
             var pos = br.BaseStream.Position;
-            PsbCollection collection = new PsbCollection(offsets.Value.Count);
+            PsbCollection collection = new PsbCollection(offsets.Count);
             uint? maxOffset = null;
             var endPos = pos;
-            if (lazyLoad && offsets.Value.Count > 0)
+            if (lazyLoad && offsets.Count > 0)
             {
-                maxOffset = offsets.Value.Max();
+                maxOffset = offsets.Max();
             }
 
-            for (int i = 0; i < offsets.Value.Count; i++)
+            for (int i = 0; i < offsets.Count; i++)
             {
                 var offset = offsets[i];
                 br.BaseStream.Seek(pos + offset, SeekOrigin.Begin);

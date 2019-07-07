@@ -208,8 +208,31 @@ namespace FreeMote.Psb
 
         internal PsbNumber(PsbObjType objType, BinaryReader br)
         {
-            Data = new byte[8];
             NumberType = PsbNumberType.Int;
+
+            switch (objType)
+            {
+                case PsbObjType.NumberN0:
+                case PsbObjType.NumberN1:
+                case PsbObjType.NumberN2:
+                case PsbObjType.NumberN3:
+                case PsbObjType.NumberN4:
+                    Data = new byte[4];
+                    break;
+                case PsbObjType.NumberN5:
+                case PsbObjType.NumberN6:
+                case PsbObjType.NumberN7:
+                case PsbObjType.NumberN8:
+                    Data = new byte[8];
+                    break;
+                case PsbObjType.Float0:
+                case PsbObjType.Float:
+                case PsbObjType.Double:
+                    break;
+                default:
+                    break;
+                //throw new ArgumentOutOfRangeException(nameof(objType), objType, null);
+            }
 
             switch (objType)
             {
@@ -217,28 +240,28 @@ namespace FreeMote.Psb
                     IntValue = 0;
                     return;
                 case PsbObjType.NumberN1:
-                    Data = br.ReadBytes(1).UnzipNumberBytes();
+                    br.ReadBytes(1).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.NumberN2:
-                    Data = br.ReadBytes(2).UnzipNumberBytes();
+                    br.ReadBytes(2).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.NumberN3:
-                    Data = br.ReadBytes(3).UnzipNumberBytes();
+                    br.ReadBytes(3).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.NumberN4:
-                    Data = br.ReadBytes(4).UnzipNumberBytes();
+                    br.ReadBytes(4).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.NumberN5:
-                    Data = br.ReadBytes(5).UnzipNumberBytes();
+                    br.ReadBytes(5).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.NumberN6:
-                    Data = br.ReadBytes(6).UnzipNumberBytes();
+                    br.ReadBytes(6).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.NumberN7:
-                    Data = br.ReadBytes(7).UnzipNumberBytes();
+                    br.ReadBytes(7).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.NumberN8:
-                    Data = br.ReadBytes(8).UnzipNumberBytes();
+                    br.ReadBytes(8).UnzipNumberBytes(Data);
                     return;
                 case PsbObjType.Float0:
                     NumberType = PsbNumberType.Float;
@@ -509,6 +532,7 @@ namespace FreeMote.Psb
                                 {
                                     return PsbObjType.NumberN0;
                                 }
+
                                 return PsbObjType.NumberN1;
                             case 2:
                                 return PsbObjType.NumberN2;
@@ -527,6 +551,7 @@ namespace FreeMote.Psb
                             default:
                                 throw new ArgumentOutOfRangeException("Not a valid Integer");
                         }
+
                     case PsbNumberType.Float:
                         //TODO: Float0 or not
                         if (Math.Abs(FloatValue) < float.Epsilon) //should we just use 0?
@@ -608,6 +633,29 @@ namespace FreeMote.Psb
     [Serializable]
     public class PsbArray : IPsbValue, IPsbWrite
     {
+        internal static List<uint> LoadIntoList(int n, BinaryReader br)
+        {
+            if (n < 0 || n > 8)
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.Array);
+            }
+
+            uint count = br.ReadBytes(n).UnzipUInt();
+            if (count > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException("Long array is not supported yet");
+            }
+
+            var entryLength = (byte)(br.ReadByte() - PsbObjType.NumberN8);
+            var list = new List<uint>((int)count);
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(br.ReadBytes(entryLength).UnzipUInt());
+            }
+
+            return list;
+        }
+
         internal PsbArray(int n, BinaryReader br)
         {
             if (n < 0 || n > 8)

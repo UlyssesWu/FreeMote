@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace FreeMote.Psb
 {
@@ -108,8 +110,8 @@ namespace FreeMote.Psb
                 && pm["boundsBottom"] is PsbNumber b && pm["boundsTop"] is PsbNumber t &&
                 pm["boundsLeft"] is PsbNumber l && pm["boundsRight"] is PsbNumber r)
             {
-                height = (int)Math.Abs(b.AsFloat - t.AsFloat);
-                width = (int)Math.Abs(r.AsFloat - l.AsFloat);
+                height = (int) Math.Abs(b.AsFloat - t.AsFloat);
+                width = (int) Math.Abs(r.AsFloat - l.AsFloat);
                 return true;
             }
 
@@ -139,26 +141,27 @@ namespace FreeMote.Psb
             if (key == null)
             {
                 adler.Update(bytes);
-                checksum = (uint)adler.Checksum;
+                checksum = (uint) adler.Checksum;
             }
+
             MemoryStream ms = new MemoryStream(bytes);
             using (Stream fs = new FileStream(path, FileMode.Create))
             {
                 if (key != null)
                 {
-                    MemoryStream nms = new MemoryStream((int)ms.Length);
+                    MemoryStream nms = new MemoryStream((int) ms.Length);
                     PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
                     ms.Dispose();
                     ms = nms;
                     var pos = ms.Position;
                     adler.Update(ms);
-                    checksum = (uint)adler.Checksum;
+                    checksum = (uint) adler.Checksum;
                     ms.Position = pos;
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
                 bw.WriteStringZeroTrim(MdfFile.Signature);
-                bw.Write((uint)ms.Length);
+                bw.Write((uint) ms.Length);
                 bw.Write(ZlibCompress.Compress(ms));
                 bw.WriteBE(checksum);
                 ms.Dispose();
@@ -181,26 +184,27 @@ namespace FreeMote.Psb
             if (key == null)
             {
                 adler.Update(bytes);
-                checksum = (uint)adler.Checksum;
+                checksum = (uint) adler.Checksum;
             }
+
             MemoryStream ms = new MemoryStream(bytes);
             using (MemoryStream fs = new MemoryStream())
             {
                 if (key != null)
                 {
-                    MemoryStream nms = new MemoryStream((int)ms.Length);
+                    MemoryStream nms = new MemoryStream((int) ms.Length);
                     PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
                     ms.Dispose();
                     ms = nms;
                     var pos = ms.Position;
                     adler.Update(ms);
-                    checksum = (uint)adler.Checksum;
+                    checksum = (uint) adler.Checksum;
                     ms.Position = pos;
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
                 bw.WriteStringZeroTrim(MdfFile.Signature);
-                bw.Write((uint)ms.Length);
+                bw.Write((uint) ms.Length);
                 bw.Write(ZlibCompress.Compress(ms));
                 bw.WriteBE(checksum);
                 ms.Dispose();
@@ -356,27 +360,38 @@ namespace FreeMote.Psb
             //{
             //    return ZipNumberBytes((int) i, size);
             //}
-            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
+            var span = BitConverter.GetBytes(i);
+
+            return span.Take(size <= 0 ? i.GetSize() : size).ToArray();
         }
 
         public static byte[] UnzipNumberBytes(this byte[] b, int size = 8, bool unsigned = false)
         {
             byte[] r = new byte[size];
-            if (!unsigned && (b.Last() >= 0b10000000)) //negative
+            if (!unsigned && (b[b.Length - 1] >= 0b10000000)) //negative
             {
-                for (int i = 0; i < size; i++)
+                for (int i = 0; i < r.Length; i++)
                 {
-                    r[i] = 0xFF;
+                    r[i] = (0xFF);
                 }
+            }
 
-                b.CopyTo(r, 0);
-            }
-            else
-            {
-                b.CopyTo(r, 0);
-            }
+            b.CopyTo(r, 0);
 
             return r;
+        }
+
+        public static void UnzipNumberBytes(this byte[] b, byte[] data, bool unsigned = false)
+        {
+            if (!unsigned && (b[b.Length - 1] >= 0b10000000)) //negative
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    data[i] = (0xFF);
+                }
+            }
+
+            b.CopyTo(data, 0);
         }
 
         public static long UnzipNumber(this byte[] b)
@@ -386,7 +401,16 @@ namespace FreeMote.Psb
 
         public static uint UnzipUInt(this byte[] b)
         {
-            return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
+            //return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
+
+            //optimized with Span<T>
+            Span<byte> span = stackalloc byte[4];
+            for (int i = 0; i < Math.Min(b.Length, 4); i++)
+            {
+                span[i] = b[i];
+            }
+
+            return MemoryMarshal.Read<uint>(span);
         }
 
         /// <summary>
