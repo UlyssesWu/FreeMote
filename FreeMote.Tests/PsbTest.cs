@@ -118,6 +118,23 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPsbArrays()
+        {
+            var a1 = new PsbArray(new List<uint> {4, 3, 9, 6});
+            using (var ms = new MemoryStream())
+            {
+                BinaryWriter bw = new BinaryWriter(ms);
+                BinaryReader br = new BinaryReader(ms);
+                a1.WriteTo(bw);
+                var bts = ms.ToArray();
+                ms.Seek(0, SeekOrigin.Begin);
+                br.ReadByte();
+                var a2 = new PsbArray((int)1, br);
+                Assert.AreEqual(a1[0], a2[0]);
+            }
+        }
+
+        [TestMethod]
         public void TestPsbStrings()
         {
             var se1 = PsbString.Empty;

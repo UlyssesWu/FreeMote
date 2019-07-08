@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -240,32 +241,31 @@ namespace FreeMote.Psb
                     IntValue = 0;
                     return;
                 case PsbObjType.NumberN1:
-                    br.ReadBytes(1).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(1, Data);
                     return;
                 case PsbObjType.NumberN2:
-                    br.ReadBytes(2).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(2, Data);
                     return;
                 case PsbObjType.NumberN3:
-                    br.ReadBytes(3).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(3, Data);
                     return;
                 case PsbObjType.NumberN4:
-                    br.ReadBytes(4).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(4, Data);
                     return;
                 case PsbObjType.NumberN5:
-                    br.ReadBytes(5).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(5, Data);
                     return;
                 case PsbObjType.NumberN6:
-                    br.ReadBytes(6).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(6, Data);
                     return;
                 case PsbObjType.NumberN7:
-                    br.ReadBytes(7).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(7, Data);
                     return;
                 case PsbObjType.NumberN8:
-                    br.ReadBytes(8).UnzipNumberBytes(Data);
+                    br.ReadAndUnzip(8, Data);
                     return;
                 case PsbObjType.Float0:
                     NumberType = PsbNumberType.Float;
-                    //Data = br.ReadBytes(1);
                     Data = BitConverter.GetBytes(0.0f);
                     return;
                 case PsbObjType.Float:
@@ -648,10 +648,21 @@ namespace FreeMote.Psb
 
             var entryLength = (byte)(br.ReadByte() - PsbObjType.NumberN8);
             var list = new List<uint>((int)count);
+            //for (int i = 0; i < count; i++)
+            //{
+            //    list.Add(br.ReadBytes(entryLength).UnzipUInt());
+            //}
+
+            var shouldBeLength = entryLength * (int)count;
+            var buffer = ArrayPool<byte>.Shared.Rent(shouldBeLength);
+
+            br.Read(buffer, 0, shouldBeLength); //WARN: the actual buffer.Length >= shouldBeLength
             for (int i = 0; i < count; i++)
             {
-                list.Add(br.ReadBytes(entryLength).UnzipUInt());
+                list.Add(buffer.UnzipUInt(i * entryLength, entryLength));
             }
+
+            ArrayPool<byte>.Shared.Return(buffer);
 
             return list;
         }
@@ -671,10 +682,21 @@ namespace FreeMote.Psb
 
             EntryLength = (byte) (br.ReadByte() - PsbObjType.NumberN8);
             Value = new List<uint>((int) count);
+            //for (int i = 0; i < count; i++)
+            //{
+            //    Value.Add(br.ReadBytes(EntryLength).UnzipUInt());
+            //}
+
+            var shouldBeLength = EntryLength * (int) count;
+            var buffer = ArrayPool<byte>.Shared.Rent(shouldBeLength);
+
+            br.Read(buffer, 0, shouldBeLength); //WARN: the actual buffer.Length >= shouldBeLength
             for (int i = 0; i < count; i++)
             {
-                Value.Add(br.ReadBytes(EntryLength).UnzipUInt());
+                Value.Add(buffer.UnzipUInt(i * EntryLength, EntryLength));
             }
+
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         public PsbArray()
@@ -880,7 +902,7 @@ namespace FreeMote.Psb
 
         internal PsbString(int n, BinaryReader br)
         {
-            Index = br.ReadBytes(n).UnzipUInt();
+            Index = br.ReadCompactUInt((byte) n);
         }
 
         public PsbString(string value = "", uint? index = null)
@@ -1118,7 +1140,7 @@ namespace FreeMote.Psb
     {
         internal PsbResource(int n, BinaryReader br)
         {
-            Index = br.ReadBytes(n).UnzipUInt();
+            Index = br.ReadCompactUInt((byte) n);
         }
 
         public PsbResource(uint? index = null)

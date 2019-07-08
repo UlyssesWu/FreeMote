@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -324,6 +325,27 @@ namespace FreeMote.Psb
 
             return l;
         }
+        
+        public static uint ReadCompactUInt(this BinaryReader br, byte size)
+        {
+            return br.ReadBytes(size).UnzipUInt();
+        }
+
+        public static void ReadAndUnzip(this BinaryReader br, byte size, byte[] data, bool unsigned = false)
+        {
+            br.Read(data, 0, size);
+
+            byte fill = 0x0;
+            if (!unsigned && (data[size - 1] >= 0b10000000)) //negative
+            {
+                fill = 0xFF;
+            }
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = i < size ? data[i] : fill;
+            }
+        }
 
         /// <summary>
         /// Shorten number bytes
@@ -408,6 +430,20 @@ namespace FreeMote.Psb
             for (int i = 0; i < Math.Min(b.Length, 4); i++)
             {
                 span[i] = b[i];
+            }
+
+            return MemoryMarshal.Read<uint>(span);
+        }
+
+        public static uint UnzipUInt(this byte[] b, int start, byte size)
+        {
+            //return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
+
+            //optimized with Span<T>
+            Span<byte> span = stackalloc byte[4];
+            for (int i = 0; i < Math.Min(size, (byte) 4); i++)
+            {
+                span[i] = b[start + i];
             }
 
             return MemoryMarshal.Read<uint>(span);
@@ -758,7 +794,7 @@ namespace FreeMote.Psb
             }
 
             paths.Reverse();
-            return string.Join("/", paths);
+            return String.Join("/", paths);
         }
 
         public static IPsbValue Children(this IPsbValue col, string name)
