@@ -121,7 +121,52 @@ namespace FreeMote.Psb
             return false;
         }
 
+        /// <summary>
+        /// Quickly fetch children (use at your own risk)
+        /// </summary>
+        /// <param name="col"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static IPsbValue Children(this IPsbValue col, string name)
+        {
+            while (true)
+            {
+                switch (col)
+                {
+                    case PsbDictionary dictionary:
+                        return dictionary[name];
+                    case PsbCollection collection:
+                        col = collection.FirstOrDefault(c => c is PsbDictionary d && d.ContainsKey(name));
+                        continue;
+                }
 
+                throw new ArgumentException($"{col} doesn't have children.");
+            }
+        }
+
+        /// <summary>
+        /// Quickly fetch children (use at your own risk)
+        /// </summary>
+        /// <param name="col"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static IPsbValue Children(this IPsbValue col, int index)
+        {
+            while (true)
+            {
+                switch (col)
+                {
+                    case PsbDictionary dictionary:
+                        return dictionary.Values.ElementAt(index);
+                    case PsbCollection collection:
+                        col = collection[index];
+                        continue;
+                }
+
+                throw new ArgumentException($"{col} doesn't have children.");
+            }
+        }
+        
         #region MDF
 
         /// <summary>
@@ -793,40 +838,6 @@ namespace FreeMote.Psb
 
             paths.Reverse();
             return String.Join("/", paths);
-        }
-
-        public static IPsbValue Children(this IPsbValue col, string name)
-        {
-            while (true)
-            {
-                switch (col)
-                {
-                    case PsbDictionary dictionary:
-                        return dictionary[name];
-                    case PsbCollection collection:
-                        col = collection.FirstOrDefault(c => c is PsbDictionary d && d.ContainsKey(name));
-                        continue;
-                }
-
-                throw new ArgumentException($"{col} doesn't have children.");
-            }
-        }
-
-        public static IPsbValue Children(this IPsbValue col, int index)
-        {
-            while (true)
-            {
-                switch (col)
-                {
-                    case PsbDictionary dictionary:
-                        return dictionary.Values.ElementAt(index);
-                    case PsbCollection collection:
-                        col = collection[index];
-                        continue;
-                }
-
-                throw new ArgumentException($"{col} doesn't have children.");
-            }
         }
 
         #endregion
