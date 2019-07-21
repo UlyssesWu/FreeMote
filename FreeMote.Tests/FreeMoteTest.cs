@@ -55,6 +55,15 @@ namespace FreeMote.Tests
         #endregion
 
         [TestMethod]
+        public void TestBTree()
+        {
+            var list = new List<string> {"aabc", "deff", "acebdf"};
+            BTree bTree = new BTree(list);
+            BTree.Build(list, out var names, out var tree, out var offsets);
+
+        }
+
+        [TestMethod]
         public void TestEncode()
         {
             //Debug.WriteLine(Environment.CurrentDirectory);

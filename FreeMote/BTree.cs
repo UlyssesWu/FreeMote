@@ -24,7 +24,7 @@ namespace FreeMote
             public BNode Parent;
             public List<BNode> Childs = new List<BNode>();
 
-            public int BeginPostion = 0;
+            public int BeginPosition = 0;
             public int EndPosition = 0;
             public uint FirstChar = 0;
 
@@ -214,7 +214,7 @@ namespace FreeMote
                 return;
             }
 
-            node.BeginPostion = pos;
+            node.BeginPosition = pos;
             node.EndPosition = endPos;
             node.FirstChar = min;
         }
@@ -236,7 +236,7 @@ namespace FreeMote
             else
             {
                 //[current char] - [range char min] + start_pos
-                nodeId = (int)(node.Char - node.Parent.FirstChar + node.Parent.BeginPostion);
+                nodeId = (int)(node.Char - node.Parent.FirstChar + node.Parent.BeginPosition);
             }
 
             //set parent value
