@@ -52,7 +52,7 @@ by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
 It's required to attach the `FreeMote.LICENSE` text with your release if you're using FreeMote libs.
 
-The outputs (.mmo) of EmtMake (MmoBuilder) are transformed from FreeMote code and are considered as **Adapted Material**. Therefore they're always licensed under **CC-BY-NC-SA 4.0**.
+Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and are considered as **Adapted Material**. Therefore they're always licensed under **CC-BY-NC-SA 4.0**. [wiki](https://github.com/UlyssesWu/FreeMote/wiki/License)
 
 [Issue Report](https://github.com/UlyssesWu/FreeMote/issues) · [Pull Request](https://github.com/UlyssesWu/FreeMote/pulls) · [Wiki](https://github.com/UlyssesWu/FreeMote/wiki)
 
