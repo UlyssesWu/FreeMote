@@ -34,8 +34,6 @@ Compile PSB description json to PSB.
 Decompile an EMT PSB to MMO project. **The output file is always licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
 ### FreeMote Viewer (FreeMote.Tools.Viewer)
 Open and render EMT _pure_ PSB. This tool requires [FreeMote.NET](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer).
-### [FreeMote Editor](https://github.com/UlyssesWu/FreeMote.Editor) (FreeMote.Editor) (Archived)
-FreeMote GUI tool.
 
 ## Build
 This project requires **VS 2017** and .NET 4.6-4.7.2 to build.
@@ -50,9 +48,11 @@ To install our own nuget packages, add this feed to VS:
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
-FreeMote is licensed under **LGPL v3**. It's required to attach the `FreeMote.LICENSE` text with your release if you're using FreeMote libs.
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />FreeMote is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a> (CC-BY-NC-SA 4.0).
 
-Additional clauses: If the input is not made by yourself, you are NOT allowed to use the output for any commercial purposes.
+It's required to attach the `FreeMote.LICENSE` text with your release if you're using FreeMote libs.
+
+The outputs (.mmo) of EmtMake (MmoBuilder) are transformed from FreeMote code and are considered as **Adapted Material**. Therefore they're always licensed under **CC-BY-NC-SA 4.0**.
 
 [Issue Report](https://github.com/UlyssesWu/FreeMote/issues) · [Pull Request](https://github.com/UlyssesWu/FreeMote/pulls) · [Wiki](https://github.com/UlyssesWu/FreeMote/wiki)
 

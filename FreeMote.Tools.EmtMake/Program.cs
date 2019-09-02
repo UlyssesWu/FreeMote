@@ -15,7 +15,7 @@ namespace FreeMote.Tools.EmtMake
             FreeMount.Init();
             Console.WriteLine();
             Console.WriteLine("This is a preview version. If it crashes, send the PSB to me.");
-            Console.WriteLine("All output files from this tool should follow [CC BY-NC-SA 4.0] License. Agree this license by pressing Enter:");
+            Console.WriteLine("All output files from this tool should follow [CC BY-NC-SA 4.0] license. Agree this license by pressing Enter:");
             Console.ReadLine();
             if (args.Length < 1 || !File.Exists(args[0]))
             {
