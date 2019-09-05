@@ -646,14 +646,14 @@ namespace FreeMote.Psb
                 throw new ArgumentOutOfRangeException("Long array is not supported yet");
             }
 
-            var entryLength = (byte)(br.ReadByte() - PsbObjType.NumberN8);
-            var list = new List<uint>((int)count);
+            var entryLength = (byte) (br.ReadByte() - PsbObjType.NumberN8);
+            var list = new List<uint>((int) count);
             //for (int i = 0; i < count; i++)
             //{
             //    list.Add(br.ReadBytes(entryLength).UnzipUInt());
             //}
 
-            var shouldBeLength = entryLength * (int)count;
+            var shouldBeLength = entryLength * (int) count;
             var buffer = ArrayPool<byte>.Shared.Rent(shouldBeLength);
 
             br.Read(buffer, 0, shouldBeLength); //WARN: the actual buffer.Length >= shouldBeLength
@@ -995,19 +995,10 @@ namespace FreeMote.Psb
 
         public override bool Equals(object obj)
         {
-            if (obj is PsbString ps)
-            {
-                return Equals(ps);
-            }
-
-            if (obj is string s)
-            {
-                return this == s;
-            }
-
-            return false;
-            //var s = obj as PsbString;
-            //return s != null ? Equals(s) : base.Equals(obj);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((PsbString) obj);
         }
 
         protected bool Equals(PsbString other)
@@ -1017,18 +1008,15 @@ namespace FreeMote.Psb
                 return false;
             }
 
-            //WARN: PsbString is considered Equal once they have same Index, rather than Value!
-            if (this.Index != null && other.Index != null)
-            {
-                return this.Index == other.Index;
-            }
-
-            return string.Equals(Value, other.Value);
+            return Index == other.Index && string.Equals(Value, other.Value);
         }
 
         public override int GetHashCode()
         {
-            return Index != null ? (int) Index.Value : (Value != null ? Value.GetHashCode() : 0);
+            unchecked
+            {
+                return (Index.GetHashCode() * 397) ^ (Value != null ? Value.GetHashCode() : 0);
+            }
         }
 
         public void WriteTo(BinaryWriter bw)

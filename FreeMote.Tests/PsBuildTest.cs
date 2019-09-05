@@ -143,6 +143,7 @@ namespace FreeMote.Tests
                 var v = psbValue;
                 var vt = psbValue.Type;
             }
+
             //var f = (111111111123L).ToString("X16");
             //var jj = JsonConvert.DeserializeObject("[0xDEADBEEF]");
             List<float> floats = new List<float>
@@ -488,7 +489,7 @@ namespace FreeMote.Tests
             var inShell = shell.IsInShell(stream);
             File.WriteAllBytes("test.psd", shell.ToShell(stream).ToArray());
         }
-
+        
         [TestMethod]
         public void TestCompareDecompile()
         {

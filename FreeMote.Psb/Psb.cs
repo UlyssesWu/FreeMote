@@ -392,6 +392,7 @@ namespace FreeMote.Psb
                 case PsbObjType.True:
                     return new PsbBool(type == PsbObjType.True);
                 case PsbObjType.NumberN0:
+                    return PsbNumber.Zero; //PsbNumber is not comparable!
                 case PsbObjType.NumberN1:
                 case PsbObjType.NumberN2:
                 case PsbObjType.NumberN3:
@@ -645,7 +646,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Update fields based on <see cref="Objects"/>
         /// </summary>
-        public void Merge()
+        public void Merge(bool mergeString = false)
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
@@ -661,6 +662,7 @@ namespace FreeMote.Psb
             Names.Sort(String.CompareOrdinal); //FIXED: Compared by bytes
             Strings = new List<PsbString>(stringsDic.Values);
             UpdateIndexes();
+
             //UniqueString(Objects);
 
             uint NextIndex(Dictionary<uint, PsbString> dic, ref uint idx)
@@ -673,7 +675,7 @@ namespace FreeMote.Psb
                 return idx;
             }
 
-            void Collect(IPsbValue obj)
+            IPsbValue Collect(IPsbValue obj)
             {
                 switch (obj)
                 {
@@ -685,48 +687,82 @@ namespace FreeMote.Psb
 
                         break;
                     case PsbString s:
-                        if (!stringsDic.ContainsKey(s.Value))
+                        if (mergeString)
                         {
-                            stringsDic.Add(s.Value, s); //Ensure value is unique
-                            if (s.Index == null || stringsIndexDic.ContainsKey(s.Index.Value)
-                            ) //However index can be null or conflict
+                            if (stringsDic.ContainsKey(s.Value))
                             {
-                                var newIdx = NextIndex(stringsIndexDic,
-                                    ref strIdx); //at this time we assign a new index
-                                s.Index = newIdx;
+                                return stringsDic[s.Value];
                             }
+                            else //add new string
+                            {
+                                if (s.Index == null || stringsIndexDic.ContainsKey(s.Index.Value))
+                                {
+                                    var newIdx = NextIndex(stringsIndexDic, ref strIdx);
+                                    s.Index = newIdx;
+                                }
 
-                            stringsIndexDic.Add(s.Index.Value, s); //and record it for lookup
-                            //Strings.Add(s);
+                                stringsIndexDic.Add(s.Index.Value, s);
+                                stringsDic.Add(s.Value, s);
+                            }
                         }
-                        else if (s.Index != stringsDic[s.Value].Index
-                        ) //if value is same but has different index, should let them point to same object
+                        else
                         {
-                            s.Index = stringsDic[s.Value].Index; //set index
+                            if (!stringsDic.ContainsKey(s.Value))
+                            {
+                                stringsDic.Add(s.Value, s); //Ensure value is unique
+                                if (s.Index == null || stringsIndexDic.ContainsKey(s.Index.Value))
+                                    //However index can be null or conflict
+                                {
+                                    //at this time we assign a new index
+                                    var newIdx = NextIndex(stringsIndexDic, ref strIdx);
+                                    s.Index = newIdx;
+                                }
+
+                                stringsIndexDic.Add(s.Index.Value, s); //and record it for lookup
+                                //Strings.Add(s);
+                            }
+                            else if (s.Index != stringsDic[s.Value].Index)
+                                //if value is same but has different index, should let them point to same object
+                            {
+                                //s.Index = stringsDic[s.Value].Index; //set index
+                                return stringsDic[s.Value];
+                            }
                         }
 
                         break;
                     case PsbCollection c:
-                        foreach (var o in c)
+                        for (var i = 0; i < c.Count; i++)
                         {
-                            Collect(o);
+                            var o = c[i];
+                            var result = Collect(o);
+                            if (result != null)
+                            {
+                                c[i] = result;
+                            }
                         }
 
                         break;
                     case PsbDictionary d:
-                        foreach (var pair in d)
+
+                        foreach (var key in d.Keys.ToList())
                         {
-                            if (!namesSet.Contains(pair.Key))
+                            if (!namesSet.Contains(key))
                             {
-                                namesSet.Add(pair.Key);
+                                namesSet.Add(key);
                                 //Does Name appears in String Table? No.
                             }
 
-                            Collect(pair.Value);
+                            var result = Collect(d[key]);
+                            if (result != null)
+                            {
+                                d[key] = result;
+                            }
                         }
 
                         break;
                 }
+
+                return null;
             }
 
             //[Obsolete]

@@ -24,8 +24,8 @@ namespace FreeMote.PsBuild.Converters
 
         public PsbPixelFormat TargetPixelFormat { get; set; }
         public bool UseRL { get; set; } = false;
-        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> { PsbSpec.krkr };
-        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> { PsbSpec.win, PsbSpec.common };
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> {PsbSpec.krkr};
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.win, PsbSpec.common};
         public bool ToWin { get; set; }
 
         public int? TextureSideLength { get; set; } = null;
@@ -40,12 +40,14 @@ namespace FreeMote.PsBuild.Converters
             {
                 throw new FormatException("Can not convert Spec for this PSB");
             }
+
             if (ConvertOption == SpecConvertOption.Minimum)
             {
                 Remove(psb);
             }
+
             var iconInfo = TranslateResources(psb);
-            Travel((PsbDictionary)psb.Objects["object"], iconInfo);
+            Travel((PsbDictionary) psb.Objects["object"], iconInfo);
             Add(psb);
             psb.Platform = ToWin ? PsbSpec.win : PsbSpec.common;
         }
@@ -53,7 +55,7 @@ namespace FreeMote.PsBuild.Converters
         private void Remove(PSB psb)
         {
             //remove /metadata/attrcomp
-            var metadata = (PsbDictionary)psb.Objects["metadata"];
+            var metadata = (PsbDictionary) psb.Objects["metadata"];
             metadata.Remove("attrcomp");
         }
 
@@ -67,11 +69,11 @@ namespace FreeMote.PsBuild.Converters
 
             //add `/object/*/motion/*/bounds`
             //add `/object/*/motion/*/layerIndexMap`
-            var obj = (PsbDictionary)psb.Objects["object"];
+            var obj = (PsbDictionary) psb.Objects["object"];
             foreach (var o in obj)
             {
                 //var name = o.Key;
-                foreach (var m in (PsbDictionary)((PsbDictionary)o.Value)["motion"])
+                foreach (var m in (PsbDictionary) ((PsbDictionary) o.Value)["motion"])
                 {
                     if (m.Value is PsbDictionary mDic)
                     {
@@ -79,10 +81,10 @@ namespace FreeMote.PsBuild.Converters
                         {
                             var bounds = new PsbDictionary(4)
                             {
-                            {"top", PsbNumber.Zero},
-                            {"left", PsbNumber.Zero},
-                            {"right", PsbNumber.Zero},
-                            {"bottom", PsbNumber.Zero}
+                                {"top", PsbNumber.Zero},
+                                {"left", PsbNumber.Zero},
+                                {"right", PsbNumber.Zero},
+                                {"bottom", PsbNumber.Zero}
                             };
                             mDic.Add("bounds", bounds);
                         }
@@ -105,9 +107,11 @@ namespace FreeMote.PsBuild.Converters
                                 {
                                     continue;
                                 }
+
                                 layerIndexMap.Add(layerName, new PsbNumber(index));
                                 index++;
                             }
+
                             mDic.Add("layerIndexMap", layerIndexMap);
                         }
                     }
@@ -124,6 +128,7 @@ namespace FreeMote.PsBuild.Converters
                         {
                             indexList.Add(str.Value);
                         }
+
                         if (dic["children"] is PsbCollection childrenCollection)
                         {
                             LayerTravel(childrenCollection, indexList);
@@ -137,7 +142,7 @@ namespace FreeMote.PsBuild.Converters
         {
             Dictionary<string, (string Tex, string IconName)> iconInfos = new Dictionary<string, (string, string)>();
             Dictionary<string, Image> textures = new Dictionary<string, Image>();
-            var source = (PsbDictionary)psb.Objects["source"];
+            var source = (PsbDictionary) psb.Objects["source"];
             int maxSideLength = 2048;
             long area = 0;
 
@@ -145,14 +150,14 @@ namespace FreeMote.PsBuild.Converters
             foreach (var tex in source)
             {
                 var texName = tex.Key;
-                var icons = (PsbDictionary)((PsbDictionary)tex.Value)["icon"];
+                var icons = (PsbDictionary) ((PsbDictionary) tex.Value)["icon"];
                 foreach (var icon in icons)
                 {
                     var iconName = icon.Key;
-                    var info = (PsbDictionary)icon.Value;
-                    var width = (int)(PsbNumber)info["width"];
-                    var height = (int)(PsbNumber)info["height"];
-                    var res = (PsbResource)info["pixel"];
+                    var info = (PsbDictionary) icon.Value;
+                    var width = (int) (PsbNumber) info["width"];
+                    var height = (int) (PsbNumber) info["height"];
+                    var res = (PsbResource) info["pixel"];
                     var bmp = info["compress"]?.ToString().ToUpperInvariant() == "RL"
                         ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
                         : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
@@ -173,6 +178,7 @@ namespace FreeMote.PsBuild.Converters
             {
                 size = 4096;
             }
+
             int padding = TexturePadding >= 0 && TexturePadding <= 100 ? TexturePadding : 1;
 
             TexturePacker packer = new TexturePacker
@@ -187,7 +193,7 @@ namespace FreeMote.PsBuild.Converters
             {
                 var atlas = packer.Atlasses[i];
                 var data = UseRL
-                    ? RL.CompressImage((Bitmap)atlas.ToImage(), TargetPixelFormat)
+                    ? RL.CompressImage((Bitmap) atlas.ToImage(), TargetPixelFormat)
                     : RL.GetPixelBytesFromImage(atlas.ToImage(), TargetPixelFormat);
 
                 var texDic = new PsbDictionary(4);
@@ -204,8 +210,9 @@ namespace FreeMote.PsBuild.Converters
                     {
                         continue;
                     }
-                    var paths = node.Texture.Source.Split(new[] { Delimiter }, StringSplitOptions.RemoveEmptyEntries);
-                    var icon = (PsbDictionary)source[paths[0]].Children("icon").Children(paths[1]);
+
+                    var paths = node.Texture.Source.Split(new[] {Delimiter}, StringSplitOptions.RemoveEmptyEntries);
+                    var icon = (PsbDictionary) source[paths[0]].Children("icon").Children(paths[1]);
                     icon.Remove("compress");
                     icon.Remove("pixel");
                     icon["attr"] = PsbNumber.Zero;
@@ -217,6 +224,7 @@ namespace FreeMote.PsBuild.Converters
                     iconInfos.Add(node.Texture.Source, (texName, iconName));
                     id++;
                 }
+
                 //texture
                 //TODO: support truncated
                 var texture = new PsbDictionary(6)
@@ -227,7 +235,7 @@ namespace FreeMote.PsBuild.Converters
                     {"truncated_width", new PsbNumber(atlas.Width)},
                     {"type", new PsbString(TargetPixelFormat.ToStringForPsb())}
                 };
-                texture.Add("pixel", new PsbResource { Data = data, Parents = new List<IPsbCollection> { texture } });
+                texture.Add("pixel", new PsbResource {Data = data, Parents = new List<IPsbCollection> {texture}});
                 texDic.Add("texture", texture);
                 //type
                 texDic.Add("type", PsbNumber.Zero);
@@ -241,6 +249,7 @@ namespace FreeMote.PsBuild.Converters
                 source.Add($"tex#{t["metadata"]}", t);
                 t["metadata"] = PsbNull.Null;
             }
+
             return iconInfos;
         }
 
@@ -248,6 +257,22 @@ namespace FreeMote.PsBuild.Converters
         {
             if (collection is PsbDictionary dic)
             {
+                ////remove meshDivision
+                //if (dic.ContainsKey("meshDivision"))
+                //{
+                //    if (dic.ContainsKey("inheritMask") && dic["inheritMask"] is PsbNumber p && p.AsInt == 33556476)
+                //    {
+                //        //do nothing
+                //    }
+                //    else
+                //    {
+                //        if (dic["meshDivision"] is PsbNumber p2 && p2.AsInt == 10)
+                //        {
+                //            dic.Remove("meshDivision");
+                //        }
+                //    }
+                //}
+
                 if (dic.ContainsKey("mask") && dic.GetName() == "content")
                 {
                     if (dic["src"] is PsbString s)
@@ -285,6 +310,7 @@ namespace FreeMote.PsBuild.Converters
                         {
                             dic.Remove("src");
                         }
+
                         //wrong way↓
                         //var num = (PsbNumber)dic["mask"];
                         //if (num.IntValue == 1 || num.IntValue == 3 || num.IntValue == 19)
@@ -292,10 +318,10 @@ namespace FreeMote.PsBuild.Converters
                         //    dic.Remove("src");
                         //}
                     }
+
                     //mask -= 1
-                    var num = (PsbNumber)dic["mask"];
-                    if (dic["ox"] is PsbNumber ox && dic["oy"] is PsbNumber oy
-                        && (ox != PsbNumber.Zero || oy != PsbNumber.Zero))
+                    var num = (PsbNumber) dic["mask"];
+                    if (dic["ox"] is PsbNumber ox && dic["oy"] is PsbNumber oy && (ox != PsbNumber.Zero || oy != PsbNumber.Zero))
                     {
                         //keep ox,oy
                     }
@@ -316,6 +342,7 @@ namespace FreeMote.PsBuild.Converters
                     }
                 }
             }
+
             if (collection is PsbCollection col)
             {
                 foreach (var child in col)

@@ -41,7 +41,7 @@ namespace FreeMote.Plugins
         private static FreeMount _mount = null;
         internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
 
-        public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ??
+        public static string CurrentPath => Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ??
                                             Environment.CurrentDirectory;
 
         public static IEnumerable<IPsbPluginInfo> PluginInfos => _._plugins.Values;

@@ -82,6 +82,7 @@ namespace FreeMote.Tools.Viewer
             {
                 try
                 {
+                    //Consts.FastMode = false;
                     FreeMount.Init();
                     using (var fs = File.OpenRead(_psbPath))
                     {
@@ -89,12 +90,14 @@ namespace FreeMote.Tools.Viewer
                         string currentType = null;
                         var ms = ctx.OpenFromShell(fs, ref currentType);
                         var psb = ms != null ? new PSB(ms) : new PSB(fs);
+
                         if (psb.Platform == PsbSpec.krkr)
                         {
-                            psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
+                            psb.SwitchSpec(PsbSpec.win, PsbSpec.krkr.DefaultPixelFormat());
                         }
 
                         psb.Merge();
+                        //File.WriteAllText("output.json", PsbDecompiler.Decompile(psb));
                         _psbPath = Path.GetTempFileName();
                         File.WriteAllBytes(_psbPath, psb.Build());
                         removeTempFile = true;
