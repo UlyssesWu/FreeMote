@@ -7,6 +7,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using System.Text;
 
 namespace FreeMote.Plugins
@@ -19,6 +20,7 @@ namespace FreeMote.Plugins
     {
         private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
         private const string PLUGIN_DIR = "Plugins";
+        private const string LIB_DIR = "lib";
 
 
         [ImportMany] private IEnumerable<Lazy<IPsbShell, IPsbPluginInfo>> _shells;
@@ -38,7 +40,9 @@ namespace FreeMote.Plugins
 
         private static FreeMount _mount = null;
         internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
-        public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
+
+        public static string CurrentPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ??
+                                            Environment.CurrentDirectory;
 
         public static IEnumerable<IPsbPluginInfo> PluginInfos => _._plugins.Values;
 
@@ -77,6 +81,7 @@ namespace FreeMote.Plugins
             {
                 return "";
             }
+
             StringBuilder sb = new StringBuilder();
             foreach (var psbShell in _._plugins)
             {
@@ -84,6 +89,7 @@ namespace FreeMote.Plugins
                 {
                     sb.Append("".PadLeft(indent));
                 }
+
                 sb.AppendLine($"{psbShell.Value.Name} by {psbShell.Value.Author} : {psbShell.Value.Comment}");
             }
 
@@ -101,10 +107,12 @@ namespace FreeMote.Plugins
             {
                 path = Path.Combine(CurrentPath, PLUGIN_DIR);
             }
+
             //An aggregate catalog that combines multiple catalogs
             var catalog = new AggregateCatalog();
             //Adds all the parts found in the same assembly as the Program class
             AddCatalog(Path.Combine(CurrentPath, PLUGIN_DLL), catalog);
+            AddCatalog(Path.Combine(CurrentPath, LIB_DIR, PLUGIN_DLL), catalog); //Allow load in lib folder
             AddCatalog(path, catalog); //Plugins folder can override default plugin
 
             //Create the CompositionContainer with the parts in the catalog
@@ -119,6 +127,7 @@ namespace FreeMote.Plugins
             {
                 Debug.WriteLine(compositionException.ToString());
             }
+
             UpdatePluginsCollection();
         }
 
@@ -175,6 +184,7 @@ namespace FreeMote.Plugins
             {
                 f.Extensions.ForEach(ext => ImageFormatters.Remove(ext));
             }
+
             if (plugin is IPsbShell s)
             {
                 Shells.Remove(s.Name);
@@ -184,6 +194,7 @@ namespace FreeMote.Plugins
             {
                 _keyProvider = null;
             }
+
             _plugins.Remove(plugin);
         }
 
@@ -226,6 +237,7 @@ namespace FreeMote.Plugins
                 {
                     continue;
                 }
+
                 if (header.Take(psbShell.Signature.Length).SequenceEqual(psbShell.Signature))
                 {
                     type = psbShell.Name;
@@ -240,6 +252,7 @@ namespace FreeMote.Plugins
                 {
                     continue;
                 }
+
                 if (psbShell.IsInShell(stream))
                 {
                     type = psbShell.Name;
@@ -272,6 +285,3 @@ namespace FreeMote.Plugins
         }
     }
 }
-
-
-
