@@ -23,6 +23,7 @@ namespace FreeMote.Plugins.Shells
 
         public bool TryGetCanvasSize { get; set; } = true;
         public string Name => "PSD";
+
         public bool IsInShell(Stream stream, Dictionary<string, object> context = null)
         {
             var header = new byte[4];
@@ -35,6 +36,7 @@ namespace FreeMote.Plugins.Shells
                 {
                     context[Consts.Context_PsbShellType] = Name;
                 }
+
                 return true;
             }
 
@@ -53,12 +55,15 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
-            Console.WriteLine("[WARN] Exported PSD files should follow CC-BY-NC-SA 4.0. Please keep FreeMote information in PSD files.");
+            Console.WriteLine(
+                "[WARN] Exported PSD files should follow CC-BY-NC-SA 4.0. Please keep FreeMote information in PSD files.");
             var psb = new PSB(stream);
             if (psb == null)
             {
                 throw new BadImageFormatException("Not a valid PSB file.");
             }
+
+            PsbPainter painter = new PsbPainter(psb);
 
             if (TryGetCanvasSize)
             {
@@ -67,12 +72,25 @@ namespace FreeMote.Plugins.Shells
                     Width = (int)(cw * 1.8f);
                     Height = (int)(ch * 1.4f);
                 }
+                else
+                {
+                    //Try get from painter, not accurate if the PSB center is not (0,0)
+                    Width = (int)(painter.Resources.Max(r => r.OriginX + r.Width / 2.0f) -
+                                  painter.Resources.Min(r => r.OriginX - r.Width / 2.0f));
+                    Height = (int)(painter.Resources.Max(r => r.OriginY + r.Height / 2.0f) -
+                                   painter.Resources.Min(r => r.OriginY - r.Height / 2.0f));
+
+                    Width = (int)(Width * 1.4f);
+                    Height = (int)(Height * 1.4f);
+                }
+
                 if (context != null)
                 {
                     if (context.ContainsKey("Width") && context["Width"] is int width)
                     {
                         Width = width;
                     }
+
                     if (context.ContainsKey("Height") && context["Height"] is int height)
                     {
                         Height = height;
@@ -80,13 +98,13 @@ namespace FreeMote.Plugins.Shells
                 }
             }
 
-            var psd = ConvertToPsd(psb, Width, Height);
+            var psd = ConvertToPsd(painter, Width, Height);
             var ms = new MemoryStream();
             psd.Save(ms, Encoding.UTF8);
             return ms;
         }
 
-        private PsdFile ConvertToPsd(PSB source, int width, int height)
+        private PsdFile ConvertToPsd(PsbPainter painter, int width, int height)
         {
             PsdFile psd = new PsdFile
             {
@@ -104,11 +122,10 @@ namespace FreeMote.Plugins.Shells
                 ImageCompression = ImageCompression.Rle
             };
 
-            psd.ImageResources.Add(new XmpResource("") { XmpMetaString = Resources.Xmp });
+            psd.ImageResources.Add(new XmpResource("") {XmpMetaString = Resources.Xmp});
             psd.BaseLayer.SetBitmap(new Bitmap(width, height, PixelFormat.Format32bppArgb),
                 ImageReplaceOption.KeepCenter, psd.ImageCompression);
 
-            PsbPainter painter = new PsbPainter(source);
             string currentGroup = "";
             Layer beginSection = null;
             foreach (var resMd in painter.Resources)
@@ -117,15 +134,17 @@ namespace FreeMote.Plugins.Shells
                 {
                     resMd.Label = resMd.Label.Substring(1);
                 }
+
                 string name = $"{resMd.Label}-{resMd.Name}";
 
-                var layer = psd.MakeImageLayer(resMd.ToImage(), name, (int)(resMd.OriginX + width / 2f - resMd.Width / 2f),
-                    (int)(resMd.OriginY + height / 2f - resMd.Height / 2f));
+                var layer = psd.MakeImageLayer(resMd.ToImage(), name, (int) (resMd.OriginX + width / 2f - resMd.Width / 2f),
+                    (int) (resMd.OriginY + height / 2f - resMd.Height / 2f));
                 layer.Visible = resMd.Visible;
                 if (resMd.Opacity <= 0)
                 {
                     layer.Opacity = 0;
                 }
+
                 if (resMd.MotionName != currentGroup)
                 {
                     currentGroup = resMd.MotionName;
@@ -141,6 +160,7 @@ namespace FreeMote.Plugins.Shells
                         psd.Layers.Add(endLayer);
                     }
                 }
+
                 psd.Layers.Add(layer);
             }
 
@@ -148,6 +168,7 @@ namespace FreeMote.Plugins.Shells
             {
                 psd.Layers.Add(beginSection);
             }
+
             psd.Layers.Add(psd.MakeImageLayer(
                 GenerateMarkText("Generated by FreeMote, wdwxy12345@gmail.com ", width, 200), "FreeMote", 0, 0));
             return psd;
@@ -160,13 +181,13 @@ namespace FreeMote.Plugins.Shells
             Font drawFont = new Font(fontName, fontSize);
             StringFormat sf = StringFormat.GenericTypographic;
             SizeF labelBox = g.MeasureString(text, drawFont, new SizeF(bmp.Size), sf);
-            RectangleF rectBounds = new Rectangle(0, 0, (int)labelBox.Width, (int)labelBox.Height);
+            RectangleF rectBounds = new Rectangle(0, 0, (int) labelBox.Width, (int) labelBox.Height);
             g.FillRectangle(Brushes.Transparent, rectBounds);
             g.DrawString(text, drawFont, Brushes.Black, 1f, 1f);
             g.Dispose();
             return bmp;
         }
 
-        public byte[] Signature { get; } = { (byte)'8', (byte)'B', (byte)'P', (byte)'S' };
+        public byte[] Signature { get; } = {(byte) '8', (byte) 'B', (byte) 'P', (byte) 'S'};
     }
 }

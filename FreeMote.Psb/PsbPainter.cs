@@ -81,6 +81,7 @@ namespace FreeMote.Psb
         /// </summary>
         private void CollectResource()
         {
+            //TODO: selectorControl
             var resources = Source.Platform == PsbSpec.krkr ? Source.CollectResources() : Source.CollectSplitResources();
             //get base chara (in case of logo)
             var basePart = "all_parts";
