@@ -93,7 +93,7 @@ namespace FreeMote.Tools.Viewer
 
                         if (psb.Platform == PsbSpec.krkr)
                         {
-                            psb.SwitchSpec(PsbSpec.win, PsbSpec.krkr.DefaultPixelFormat());
+                            psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
                         }
 
                         psb.Merge();
