@@ -155,23 +155,7 @@ namespace FreeMote.PsBuild.Converters
                             {
                                 if (childrenArrayDic.ContainsKey("shape"))
                                 {
-                                    string shape;
-                                    switch (((PsbNumber) childrenArrayDic["shape"]).IntValue)
-                                    {
-                                        case 1:
-                                            shape = "circle";
-                                            break;
-                                        case 2:
-                                            shape = "rect";
-                                            break;
-                                        case 3:
-                                            shape = "quad";
-                                            break;
-                                        case 0:
-                                        default:
-                                            shape = "point";
-                                            break;
-                                    }
+                                    string shape = ((PsbNumber) childrenArrayDic["shape"]).ToShapeString();
 
                                     dic.Add("src", new PsbString($"shape/{shape}"));
                                     isLayout = false;

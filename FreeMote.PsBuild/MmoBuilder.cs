@@ -565,24 +565,7 @@ namespace FreeMote.PsBuild
                     {
                         if (dic["shape"] is PsbNumber shape)
                         {
-                            switch (shape.IntValue)
-                            {
-                                case 0:
-                                    dic["shape"] = "point".ToPsbString();
-                                    break;
-                                case 1:
-                                    dic["shape"] = "circle".ToPsbString();
-                                    break;
-                                case 2:
-                                    dic["shape"] = "rect".ToPsbString();
-                                    break;
-                                case 3:
-                                    dic["shape"] = "quad".ToPsbString();
-                                    break;
-                                default:
-                                    Console.WriteLine("[WARN] unknown shape!");
-                                    break;
-                            }
+                            dic["shape"] = shape.ToShapeString().ToPsbString();
                         }
 
                         dic.Remove("type"); //FIXED: the "type" here will be misunderstand for "point" type so must be removed

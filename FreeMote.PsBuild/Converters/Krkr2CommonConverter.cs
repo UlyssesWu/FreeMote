@@ -310,7 +310,7 @@ namespace FreeMote.PsBuild.Converters
                             dic["src"] = new PsbString(
                                 new string(s.Value.SkipWhile(c => c != '/').Skip(1).TakeWhile(c => c != '/').ToArray()));
                         }
-                        //remove src = layout || src = shape/point (0) ?
+                        //remove src = layout || src = shape/point (0) ? //TODO: convert shape id to shape string?
                         else if (s.Value == "layout" || s.Value.StartsWith("shape/"))
                         {
                             dic.Remove("src");

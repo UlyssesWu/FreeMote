@@ -1,10 +1,32 @@
 ﻿//This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 using System;
+using System.Diagnostics;
+using FreeMote.Psb;
+
 // ReSharper disable InconsistentNaming
 
 namespace FreeMote.PsBuild
 {
+    internal static class MmoExtensions
+    {
+        /// <summary>
+        /// Convert number to shape
+        /// </summary>
+        /// <param name="shape"></param>
+        /// <returns></returns>
+        public static string ToShapeString(this PsbNumber shape)
+        {
+            if (Enum.IsDefined(typeof(MmoShape), shape.IntValue))
+            {
+                return ((MmoShape) shape.IntValue).ToString();
+            }
+
+            Debug.WriteLine($"{shape.IntValue} is not a valid {nameof(MmoShape)}");
+            return MmoShape.point.ToString();
+        }
+    }
+
     /*particle in frameList/content
      *                "prt": {
                       "amax": 5,
@@ -20,6 +42,14 @@ namespace FreeMote.PsBuild
                       "zmin": 6
                     },
      */
+
+    internal enum MmoShape
+    {
+        point = 0,
+        circle = 1,
+        rect = 2,
+        quad = 3,
+    }
 
     [Flags]
     internal enum MmoFrameMaskEx
@@ -60,117 +90,145 @@ namespace FreeMote.PsBuild
         //20: particle
         //25: mesh
         None = 0,
+
         /// <summary>
         /// ox, oy
         /// </summary>
         Origin = 1,
+
         /// <summary>
         /// coord
         /// </summary>
         Coord = 0b10,
+
         /// <summary>
         /// angle
         /// </summary>
         Angle = 0b10000,
+
         /// <summary>
         /// zx
         /// </summary>
         ZoomX = 0b100000,
+
         /// <summary>
         /// zy
         /// </summary>
         ZoomY = 0b1000000,
+
         /// <summary>
         /// color
         /// </summary>
         Color = 0b1000000000,
+
         /// <summary>
         /// opa
         /// </summary>
         Opacity = 0b10000000000,
+
         /// <summary>
         /// ccc
         /// </summary>
         CoordCurve = 0b10_0000000000,
+
         /// <summary>
         /// acc
         /// </summary>
         AngleCurve = 0b100_0000000000,
+
         /// <summary>
         /// zcc
         /// </summary>
         ZoomCurve = 0b1000_0000000000,
+
         /// <summary>
         /// scc
         /// </summary>
         SlantCurve = 0b10000_0000000000,
+
         /// <summary>
         /// occ (color cc)
         /// </summary>
         OpacityCurve = 0b100000_0000000000,
+
         /// <summary>
         /// bm
         /// </summary>
         BlendMode = 0b10000000_0000000000,
+
         /// <summary>
         /// motion
         /// </summary>
         Motion = 0b1000000000_0000000000,
+
         /// <summary>
         /// prt
         /// </summary>
         Particle = 0b1_0000000000_0000000000,
+
         /// <summary>
         /// mesh
         /// </summary>
         Mesh = 0b100000_0000000000_0000000000,
     }
+
     public enum MmoMarkerColor
     {
         /// <summary>
         /// なし
         /// </summary>
         None = 0,
+
         /// <summary>
         /// 赤
         /// </summary>
         Red = 1,
+
         /// <summary>
         /// 绿
         /// </summary>
         Green = 2,
+
         /// <summary>
         /// 青
         /// </summary>
         Blue = 3,
+
         /// <summary>
         /// 橙
         /// </summary>
         Orange = 4,
+
         /// <summary>
         /// 紫
         /// </summary>
         Purple = 5,
+
         /// <summary>
         /// 桃
         /// </summary>
         Pink = 6,
+
         /// <summary>
         /// 灰
         /// </summary>
         Gray = 7,
     }
+
     public enum MmoItemClass
     {
         ObjLayerItem = 0, //CharaItem, MotionItem
+
         //"objClipping": 0,
         //"objMaskThresholdOpacity": 64,
         //"objTriPriority": 2,
         //TextLayer is always hold by a ObjLayer with "#text00000" label and "src/#font00000/#text00000" frameList/content/src
         ShapeLayerItem = 1,
+
         //"shape": "point" (psb: 0) | "circle" (psb: 1) | "rect" (psb: 2) | "quad" (psb: 3)
         LayoutLayerItem = 2,
         MotionLayerItem = 3,
+
         /*
           "motionClipping": 0,
           "motionIndependentLayerInherit": 0,
@@ -194,6 +252,7 @@ namespace FreeMote.PsBuild
         CameraLayerItem = 5,
         ClipLayerItem = 7, //nothing special
         TextLayerItem = 8,
+
         /*
         "fontParams": {
         "antiAlias": 1,
@@ -235,16 +294,17 @@ namespace FreeMote.PsBuild
         public string PsdComment { get; set; }
         public string PsdFrameLabel { get; set; }
         public string PsdGroup { get; set; }
+
         /// <summary>
         /// Category
         /// <para>WARNING: Category can not be set as `Expression`</para>
         /// </summary>
         public string Category { get; set; }
+
         public string Label { get; set; }
     }
 
     public partial class MmoBuilder
     {
-
     }
 }
