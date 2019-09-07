@@ -303,12 +303,7 @@ namespace FreeMote.Psb.Textures
         /// Toggle for Scrapbook mode - just paste all textures to same size
         /// </summary>
         public bool ScrapbookMode = false;
-
-        /// <summary>
-        /// Toggle for 1px edge expansion
-        /// </summary>
-        public bool EdgeExpand = false;
-
+        
         /// <summary>
         /// Which heuristic to use when doing the fit
         /// </summary>
