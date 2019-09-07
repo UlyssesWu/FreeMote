@@ -833,6 +833,13 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
+        /// Build PSB to file
+        /// <para>Make sure you have called <see cref="Merge"/> or the output can be invalid.</para>
+        /// </summary>
+        /// <param name="path"></param>
+        public void BuildToFile(string path) => File.WriteAllBytes(path, Build());
+
+        /// <summary>
         /// Build as <see cref="MemoryStream"/>, make sure you have called <see cref="Merge"/> before.
         /// </summary>
         /// <returns></returns>

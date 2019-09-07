@@ -33,6 +33,10 @@ namespace FreeMote.PsBuild.Converters
         public BestFitHeuristic FitHeuristic { get; set; } = BestFitHeuristic.MaxOneAxis;
 
         public bool UseMeaningfulName { get; set; } = true;
+        /// <summary>
+        /// Expand texture edge
+        /// </summary>
+        public TextureEdgeProcess EdgeProcess { get; set; } = TextureEdgeProcess.Expand1Px;
 
         public void Convert(PSB psb)
         {
@@ -192,9 +196,10 @@ namespace FreeMote.PsBuild.Converters
             for (var i = 0; i < packer.Atlasses.Count; i++)
             {
                 var atlas = packer.Atlasses[i];
+                var atlasImg = atlas.ToImage(edge: EdgeProcess);
                 var data = UseRL
-                    ? RL.CompressImage((Bitmap) atlas.ToImage(), TargetPixelFormat)
-                    : RL.GetPixelBytesFromImage(atlas.ToImage(), TargetPixelFormat);
+                    ? RL.CompressImage((Bitmap)atlasImg, TargetPixelFormat)
+                    : RL.GetPixelBytesFromImage(atlasImg, TargetPixelFormat);
 
                 var texDic = new PsbDictionary(4);
                 //metadata

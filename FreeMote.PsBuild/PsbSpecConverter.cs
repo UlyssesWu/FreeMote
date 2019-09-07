@@ -1,4 +1,5 @@
 ﻿using FreeMote.Psb;
+using FreeMote.Psb.Textures;
 using FreeMote.PsBuild.Converters;
 
 namespace FreeMote.PsBuild

@@ -14,10 +14,10 @@ namespace FreeMote.PsBuild.Converters
         /// krkr uses <see cref="PsbPixelFormat.WinRGBA8"/> on windows platform
         /// </summary>
         public PsbPixelFormat TargetPixelFormat { get; set; } = PsbPixelFormat.WinRGBA8;
-        public bool UseRL { get; set; } = true;
-        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> { PsbSpec.win, PsbSpec.common };
-        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> { PsbSpec.krkr };
 
+        public bool UseRL { get; set; } = true;
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> {PsbSpec.win, PsbSpec.common};
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.krkr};
 
         public void Convert(PSB psb)
         {
@@ -25,16 +25,19 @@ namespace FreeMote.PsBuild.Converters
             {
                 throw new FormatException("Can not convert Spec for this PSB");
             }
+
             if (ConvertOption == SpecConvertOption.Minimum)
             {
                 Remove(psb);
             }
+
             var iconInfo = TranslateResources(psb);
-            Travel((PsbDictionary)psb.Objects["object"], iconInfo);
+            Travel((PsbDictionary) psb.Objects["object"], iconInfo);
             if (ConvertOption == SpecConvertOption.Maximum)
             {
                 Add(psb);
             }
+
             psb.Platform = PsbSpec.krkr;
         }
 
@@ -47,11 +50,11 @@ namespace FreeMote.PsBuild.Converters
 
             //remove `/object/*/motion/*/bounds`
             //remove `/object/*/motion/*/layerIndexMap`
-            var obj = (PsbDictionary)psb.Objects["object"];
+            var obj = (PsbDictionary) psb.Objects["object"];
             foreach (var o in obj)
             {
                 //var name = o.Key;
-                foreach (var m in (PsbDictionary)((PsbDictionary)o.Value)["motion"])
+                foreach (var m in (PsbDictionary) ((PsbDictionary) o.Value)["motion"])
                 {
                     if (m.Value is PsbDictionary mDic)
                     {
@@ -65,7 +68,7 @@ namespace FreeMote.PsBuild.Converters
         private Dictionary<string, List<string>> TranslateResources(PSB psb)
         {
             Dictionary<string, List<string>> iconInfos = new Dictionary<string, List<string>>();
-            var source = (PsbDictionary)psb.Objects["source"];
+            var source = (PsbDictionary) psb.Objects["source"];
             foreach (var tex in source)
             {
                 if (tex.Value is PsbDictionary texDic)
@@ -73,16 +76,16 @@ namespace FreeMote.PsBuild.Converters
                     var iconList = new List<string>();
                     iconInfos.Add(tex.Key, iconList);
                     var bmps = TextureSpliter.SplitTexture(texDic, psb.Platform);
-                    var icons = (PsbDictionary)texDic["icon"];
+                    var icons = (PsbDictionary) texDic["icon"];
                     foreach (var iconPair in icons)
                     {
                         iconList.Add(iconPair.Key);
-                        var icon = (PsbDictionary)iconPair.Value;
+                        var icon = (PsbDictionary) iconPair.Value;
                         var data = UseRL
                             ? RL.CompressImage(bmps[iconPair.Key], TargetPixelFormat)
                             : RL.GetPixelBytesFromImage(bmps[iconPair.Key], TargetPixelFormat);
                         icon["pixel"] =
-                            new PsbResource { Data = data, Parents = new List<IPsbCollection> { icon } };
+                            new PsbResource {Data = data, Parents = new List<IPsbCollection> {icon}};
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
                         icon.Remove("top");
@@ -102,6 +105,7 @@ namespace FreeMote.PsBuild.Converters
                     texDic["type"] = new PsbNumber(1);
                 }
             }
+
             return iconInfos;
         }
 
@@ -137,7 +141,7 @@ namespace FreeMote.PsBuild.Converters
                         }
                     }
 
-                    var num = (PsbNumber)dic["mask"];
+                    var num = (PsbNumber) dic["mask"];
                     num.AsInt |= 1;
                     //num.IntValue = num.IntValue + 1;
                     //add src = layout || src = shape/point (0)
@@ -152,7 +156,7 @@ namespace FreeMote.PsBuild.Converters
                                 if (childrenArrayDic.ContainsKey("shape"))
                                 {
                                     string shape;
-                                    switch (((PsbNumber)childrenArrayDic["shape"]).IntValue)
+                                    switch (((PsbNumber) childrenArrayDic["shape"]).IntValue)
                                     {
                                         case 1:
                                             shape = "circle";
@@ -168,20 +172,24 @@ namespace FreeMote.PsBuild.Converters
                                             shape = "point";
                                             break;
                                     }
+
                                     dic.Add("src", new PsbString($"shape/{shape}"));
                                     isLayout = false;
                                 }
                             }
+
                             if (isLayout)
                             {
                                 dic.Add("src", new PsbString("layout"));
                             }
                         }
                     }
+
                     if (!dic.ContainsKey("ox"))
                     {
                         dic.Add("ox", PsbNumber.Zero);
                     }
+
                     if (!dic.ContainsKey("oy"))
                     {
                         dic.Add("oy", PsbNumber.Zero);
@@ -196,6 +204,7 @@ namespace FreeMote.PsBuild.Converters
                     }
                 }
             }
+
             if (collection is PsbCollection col)
             {
                 foreach (var child in col)
@@ -210,7 +219,7 @@ namespace FreeMote.PsBuild.Converters
 
         private void Add(PSB psb)
         {
-            var metadata = (PsbDictionary)psb.Objects["metadata"];
+            var metadata = (PsbDictionary) psb.Objects["metadata"];
             if (!metadata.ContainsKey("attrcomp"))
             {
                 metadata.Add("attrcomp", new PsbDictionary(1));

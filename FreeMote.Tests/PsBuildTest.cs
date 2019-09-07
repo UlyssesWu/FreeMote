@@ -489,7 +489,7 @@ namespace FreeMote.Tests
             var inShell = shell.IsInShell(stream);
             File.WriteAllBytes("test.psd", shell.ToShell(stream).ToArray());
         }
-        
+
         [TestMethod]
         public void TestCompareDecompile()
         {
@@ -521,6 +521,58 @@ namespace FreeMote.Tests
             CompareValue(pccPsb.Objects, psbuildPsb.Objects);
             //Console.WriteLine("============");
             //CompareValue(psbuildPsb.Objects, pccPsb.Objects);
+        }
+
+        [TestMethod]
+        public void TestGraft2()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var pathGood = Path.Combine(resPath, "goodstr.freemote.psb");
+            var pathBad = Path.Combine(resPath, "goodStr.psb");
+
+            var psbGood = new PSB(pathGood);
+            var psbBad = new PSB(pathBad);
+
+            dynamic texGood = (PsbDictionary) psbGood.Objects["source"].Children("tex");
+            dynamic texBad = (PsbDictionary) psbBad.Objects["source"].Children("tex#000");
+            var badIcon = texBad["icon"];
+
+            PsbDictionary newIcon = new PsbDictionary();
+            foreach (var part in texGood["icon"])
+            {
+                var content = part.Value;
+                var bi = ((PsbDictionary) badIcon).FirstOrDefault(i =>
+                    ((PsbNumber) i.Value.Children("width")).AsInt == content["width"].AsInt &&
+                    ((PsbNumber) i.Value.Children("height")).AsInt == content["height"].AsInt &&
+                    ((PsbNumber) i.Value.Children("originX")).AsFloat == content["originX"].AsFloat &&
+                    ((PsbNumber) i.Value.Children("originY")).AsFloat == content["originY"].AsFloat);
+
+                if (bi.Key != null)
+                {
+                    newIcon[bi.Key] = content;
+                }
+            }
+
+            texGood["icon"] = newIcon;
+
+            dynamic badSource = psbBad.Objects["source"];
+            badSource["tex#000"] = texGood;
+
+            psbBad.Merge();
+            psbBad.BuildToFile("graft.psb");
+        }
+
+        [TestMethod]
+        public void TestWin2Krkr2Win()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var pathGood = Path.Combine(resPath, "goodstr.freemote.psb");
+            var psb = new PSB(pathGood);
+            psb.SwitchSpec(PsbSpec.krkr, PsbSpec.krkr.DefaultPixelFormat());
+            psb.Merge();
+            psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
+            psb.Merge();
+            psb.BuildToFile("convert2.psb");
         }
 
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)

@@ -10,13 +10,25 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-
 #if USE_FASTBITMAP
 using FastBitmapLib;
+
 #endif
 
 namespace FreeMote.Psb.Textures
 {
+    public enum TextureEdgeProcess
+    {
+        None = 0,
+
+        /// <summary>
+        /// Expand for 1px
+        /// </summary>
+        ///TODO: Expand n px?
+        ///TODO: Since the packer starts from top-left, there is no padding space left for top & left, only down & right. Need more samples.
+        Expand1Px,
+    }
+
     /// <summary>
     /// Represents a Texture in an atlas
     /// </summary>
@@ -91,7 +103,7 @@ namespace FreeMote.Psb.Textures
         public TextureInfo Texture;
 
         /// <summary>
-        /// If this is an empty node, indicates how to split it when it will  be used
+        /// If this is an empty node, indicates how to split it when it will be used
         /// </summary>
         public SplitType SplitType;
     }
@@ -101,6 +113,14 @@ namespace FreeMote.Psb.Textures
     /// </summary>
     public class Atlas
     {
+        public Atlas(int width, int height)
+        {
+            Width = width;
+            Height = height;
+        }
+
+        public int Padding = 0;
+
         /// <summary>
         /// Width in pixels
         /// </summary>
@@ -116,7 +136,34 @@ namespace FreeMote.Psb.Textures
         /// </summary>
         public List<Node> Nodes;
 
-        public Image ToImage(bool debugMode = false, Color? background = null)
+#if USE_FASTBITMAP
+        private void ApplyEdgeProcessFast(TextureEdgeProcess edge, FastBitmap f, Bitmap s, Node n)
+        {
+            if (edge == TextureEdgeProcess.Expand1Px)
+            {
+                if (Padding < 2) // partL expand 1px to right, partR expand 1px to left, therefore 2px needed
+                {
+                    throw new ArgumentOutOfRangeException(nameof(edge), "Padding must > 2 when using Texture Edge Expand");
+                }
+
+                //source: pick a slice from part; dest: put slice to atlas
+                //top
+                f.CopyRegion(s, new Rectangle(0, 0, s.Width, 1),
+                    new Rectangle(n.Bounds.X, n.Bounds.Y - 1, s.Width, 1));
+                //down
+                f.CopyRegion(s, new Rectangle(0, s.Height - 1, s.Width, 1),
+                    new Rectangle(n.Bounds.X, n.Bounds.Y + n.Bounds.Height, s.Width, 1));
+                //left
+                f.CopyRegion(s, new Rectangle(0, 0, 1, s.Height),
+                    new Rectangle(n.Bounds.X - 1, n.Bounds.Y, 1, s.Height));
+                //right
+                f.CopyRegion(s, new Rectangle(s.Width - 1, 0, 1, s.Height),
+                    new Rectangle(n.Bounds.X + n.Bounds.Width, n.Bounds.Y, 1, s.Height));
+            }
+        }
+#endif
+
+        public Image ToImage(bool debugMode = false, TextureEdgeProcess edge = TextureEdgeProcess.None, Color? background = null)
         {
             var bgColor = background ?? Color.FromArgb(0, Color.Black);
             Bitmap img = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
@@ -130,6 +177,7 @@ namespace FreeMote.Psb.Textures
                     {
                         f.Clear(bgColor);
                     }
+
                     foreach (Node n in Nodes)
                     {
                         if (n.Texture != null)
@@ -139,10 +187,14 @@ namespace FreeMote.Psb.Textures
                             {
                                 s = new Bitmap(sourceImg);
                             }
+
                             f.CopyRegion(s, new Rectangle(0, 0, s.Width, s.Height), n.Bounds);
+
+                            ApplyEdgeProcessFast(edge, f, s, n);
                         }
                     }
                 }
+
                 //img.Save("tex.png", ImageFormat.Png);
                 return img;
             }
@@ -175,7 +227,10 @@ namespace FreeMote.Psb.Textures
                         {
                             s = new Bitmap(sourceImg);
                         }
+
                         f.CopyRegion(s, new Rectangle(0, 0, s.Width, s.Height), n.Bounds);
+
+                        ApplyEdgeProcessFast(edge, f, s, n);
                     }
 #else
                     g.DrawImage(sourceImg, n.Bounds);
@@ -186,7 +241,8 @@ namespace FreeMote.Psb.Textures
                     {
                         string label = Path.GetFileNameWithoutExtension(n.Texture.Source);
                         SizeF labelBox = g.MeasureString(label, SystemFonts.MenuFont, new SizeF(n.Bounds.Size));
-                        RectangleF rectBounds = new Rectangle(n.Bounds.Location, new Size((int)labelBox.Width, (int)labelBox.Height));
+                        RectangleF rectBounds = new Rectangle(n.Bounds.Location,
+                            new Size((int) labelBox.Width, (int) labelBox.Height));
                         g.FillRectangle(Brushes.Black, rectBounds);
                         g.DrawString(label, SystemFonts.MenuFont, Brushes.White, rectBounds);
                     }
@@ -199,7 +255,8 @@ namespace FreeMote.Psb.Textures
                     {
                         string label = n.Bounds.Width + "x" + n.Bounds.Height;
                         SizeF labelBox = g.MeasureString(label, SystemFonts.MenuFont, new SizeF(n.Bounds.Size));
-                        RectangleF rectBounds = new Rectangle(n.Bounds.Location, new Size((int)labelBox.Width, (int)labelBox.Height));
+                        RectangleF rectBounds = new Rectangle(n.Bounds.Location,
+                            new Size((int) labelBox.Width, (int) labelBox.Height));
                         g.FillRectangle(Brushes.Black, rectBounds);
                         g.DrawString(label, SystemFonts.MenuFont, Brushes.White, rectBounds);
                     }
@@ -209,6 +266,7 @@ namespace FreeMote.Psb.Textures
             return img;
         }
     }
+
     class TexturePacker
     {
         /// <summary>
@@ -245,6 +303,11 @@ namespace FreeMote.Psb.Textures
         /// Toggle for Scrapbook mode - just paste all textures to same size
         /// </summary>
         public bool ScrapbookMode = false;
+
+        /// <summary>
+        /// Toggle for 1px edge expansion
+        /// </summary>
+        public bool EdgeExpand = false;
 
         /// <summary>
         /// Which heuristic to use when doing the fit
@@ -294,7 +357,9 @@ namespace FreeMote.Psb.Textures
             Process();
         }
 
-        public Bitmap CellProcess(IDictionary<string, Image> images, Dictionary<string, (int oriX, int oriY, int width, int height)> origins, int paddingWidth, int paddingHeight, out int cellWidth, out int cellHeight, int mode = 0, bool debugMode = false)
+        public Bitmap CellProcess(IDictionary<string, Image> images,
+            Dictionary<string, (int oriX, int oriY, int width, int height)> origins, int paddingWidth, int paddingHeight,
+            out int cellWidth, out int cellHeight, int mode = 0, bool debugMode = false)
         {
             AtlasSize = 8192;
             LoadTexturesFromImages(images);
@@ -327,10 +392,9 @@ namespace FreeMote.Psb.Textures
             int posX = cellWidth;
             int posY = cellHeight;
             Atlasses = new List<Atlas>(1);
-            Atlas atlas = new Atlas
+            Atlas atlas = new Atlas(texWidth, texHeight)
             {
-                Height = texHeight,
-                Width = texWidth,
+                Padding = Math.Min(paddingWidth, paddingHeight),
                 Nodes = new List<Node>()
             };
             Atlasses.Add(atlas);
@@ -352,7 +416,7 @@ namespace FreeMote.Psb.Textures
                     n.Bounds = new Rectangle(posX, posY, cellWidth, cellHeight);
                     atlas.Nodes.Add(n);
                     f.ClearRegion(n.Bounds, Color.Transparent);
-                    var bmp = (Bitmap)image.Value;
+                    var bmp = (Bitmap) image.Value;
                     int centerX = posX + cellWidth / 2;
                     int centerY = posY + cellHeight / 2;
                     int leftTopX = centerX - origins[image.Key].oriX;
@@ -362,6 +426,7 @@ namespace FreeMote.Psb.Textures
                     posY += 2 * cellHeight;
                 }
             }
+
             //img.Save("tex.png", ImageFormat.Png);
             return img;
 
@@ -369,7 +434,6 @@ namespace FreeMote.Psb.Textures
 #else
             throw new NotImplementedException("This feature requires FastBitmapLib.");
 #endif
-
         }
 
         private void Process()
@@ -381,9 +445,7 @@ namespace FreeMote.Psb.Textures
             Atlasses = new List<Atlas>();
             while (textures.Count > 0)
             {
-                Atlas atlas = new Atlas();
-                atlas.Width = AtlasSize;
-                atlas.Height = AtlasSize;
+                Atlas atlas = new Atlas(AtlasSize, AtlasSize) {Padding = Padding};
 
                 List<TextureInfo> leftovers = LayoutAtlas(textures, atlas);
 
@@ -396,6 +458,7 @@ namespace FreeMote.Psb.Textures
                         atlas.Height /= 2;
                         leftovers = LayoutAtlas(textures, atlas);
                     }
+
                     // we need to go 1 step larger as we found the first size that is to small
                     atlas.Width *= 2;
                     atlas.Height *= 2;
@@ -422,7 +485,7 @@ namespace FreeMote.Psb.Textures
                 string atlasName = String.Format(prefix + "{0:000}" + ".png", atlasCount);
 
                 //1: Save images
-                Image img = atlas.ToImage(DebugMode);
+                Image img = atlas.ToImage(debugMode: DebugMode);
                 img.Save(atlasName, System.Drawing.Imaging.ImageFormat.Png);
 
                 //2: save description in file
@@ -432,15 +495,16 @@ namespace FreeMote.Psb.Textures
                     {
                         tw.Write(n.Texture.Source + ", ");
                         tw.Write(atlasName + ", ");
-                        tw.Write(((float)n.Bounds.X / atlas.Width) + ", ");
-                        tw.Write(((float)n.Bounds.Y / atlas.Height) + ", ");
-                        tw.Write(((float)n.Bounds.Width / atlas.Width) + ", ");
-                        tw.WriteLine(((float)n.Bounds.Height / atlas.Height).ToString(CultureInfo.InvariantCulture));
+                        tw.Write(((float) n.Bounds.X / atlas.Width) + ", ");
+                        tw.Write(((float) n.Bounds.Y / atlas.Height) + ", ");
+                        tw.Write(((float) n.Bounds.Width / atlas.Width) + ", ");
+                        tw.WriteLine(((float) n.Bounds.Height / atlas.Height).ToString(CultureInfo.InvariantCulture));
                     }
                 }
 
                 ++atlasCount;
             }
+
             tw.Close();
 
             tw = new StreamWriter(prefix + ".log");
@@ -515,6 +579,7 @@ namespace FreeMote.Psb.Textures
                     Error.WriteLine(fi.FullName + " load failed. Skipping! " + e.ToString());
                     continue;
                 }
+
                 if (img.Width <= AtlasSize && img.Height <= AtlasSize)
                 {
                     TextureInfo ti = new TextureInfo
@@ -614,8 +679,8 @@ namespace FreeMote.Psb.Textures
                     case BestFitHeuristic.MaxOneAxis:
                         if (ti.Width <= node.Bounds.Width && ti.Height <= node.Bounds.Height)
                         {
-                            float wRatio = (float)ti.Width / (float)node.Bounds.Width;
-                            float hRatio = (float)ti.Height / (float)node.Bounds.Height;
+                            float wRatio = (float) ti.Width / (float) node.Bounds.Width;
+                            float hRatio = (float) ti.Height / (float) node.Bounds.Height;
                             float ratio = wRatio > hRatio ? wRatio : hRatio;
                             if (ratio > maxCriteria)
                             {
@@ -623,6 +688,7 @@ namespace FreeMote.Psb.Textures
                                 bestFit = ti;
                             }
                         }
+
                         break;
 
                     // Maximize Area coverage
@@ -638,6 +704,7 @@ namespace FreeMote.Psb.Textures
                                 bestFit = ti;
                             }
                         }
+
                         break;
                 }
             }
@@ -737,6 +804,7 @@ namespace FreeMote.Psb.Textures
                             sourcePath = prms[ip + 1];
                             ++ip;
                         }
+
                         break;
 
                     case "-ft":
@@ -746,6 +814,7 @@ namespace FreeMote.Psb.Textures
                             searchPattern = prms[ip + 1];
                             ++ip;
                         }
+
                         break;
 
                     case "-o":
@@ -755,6 +824,7 @@ namespace FreeMote.Psb.Textures
                             outName = prms[ip + 1];
                             ++ip;
                         }
+
                         break;
 
                     case "-s":
@@ -764,6 +834,7 @@ namespace FreeMote.Psb.Textures
                             textureSize = int.Parse(prms[ip + 1]);
                             ++ip;
                         }
+
                         break;
 
                     case "-b":
@@ -773,6 +844,7 @@ namespace FreeMote.Psb.Textures
                             border = int.Parse(prms[ip + 1]);
                             ++ip;
                         }
+
                         break;
 
                     case "-d":
@@ -787,6 +859,7 @@ namespace FreeMote.Psb.Textures
                 DisplayInfo();
                 return;
             }
+
             Console.WriteLine("Processing, please wait");
 
             TexturePacker packer = new TexturePacker();
