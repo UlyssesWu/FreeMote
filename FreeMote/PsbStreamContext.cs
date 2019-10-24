@@ -1,7 +1,7 @@
 ﻿namespace FreeMote
 {
     /// <summary>
-    /// PSB Stream Cipher Context
+    /// PSB Stream Cipher Context (XorShift128)
     /// </summary>
     public class PsbStreamContext
     {

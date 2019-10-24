@@ -48,7 +48,7 @@ namespace FreeMote
         /// </summary>
         Mmo = 3,
         /// <summary>
-        /// Images for Character (temp name)
+        /// Images with Layouts (used in PS4, PSV)
         /// </summary>
         Tachie = 4,
         /// <summary>

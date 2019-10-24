@@ -70,7 +70,8 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// The texture index. e.g. "tex#001".TextureIndex = 1, "tex".Index = 0
+        /// The texture index
+        /// <code>"tex#001".TextureIndex = 1; "tex".Index = 0</code>
         /// </summary>
         public uint? TextureIndex => GetTextureIndex(Part);
 

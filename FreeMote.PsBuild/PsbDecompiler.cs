@@ -398,16 +398,17 @@ namespace FreeMote.PsBuild
         /// <param name="outputUnlinkedPsb">output unlinked PSB if you need</param>
         /// <param name="order"></param>
         /// <param name="format"></param>
-        public static void UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name, PsbImageFormat format = PsbImageFormat.Png)
+        /// <returns>The unlinked PSB path</returns>
+        public static string UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name, PsbImageFormat format = PsbImageFormat.Png)
         {
             if (!File.Exists(inputPath))
             {
-                return;
+                return null;
             }
 
             var name = Path.GetFileNameWithoutExtension(inputPath);
             var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
-
+            var psbSavePath = "";
             if (File.Exists(dirPath))
             {
                 name += "-resources";
@@ -425,7 +426,7 @@ namespace FreeMote.PsBuild
             if (outputUnlinkedPsb)
             {
                 psb.Merge();
-                var psbSavePath = Path.ChangeExtension(inputPath, ".unlinked.psb");
+                psbSavePath = Path.ChangeExtension(inputPath, ".unlinked.psb");
                 File.WriteAllBytes(psbSavePath, psb.Build());
             }
 
@@ -454,6 +455,8 @@ namespace FreeMote.PsBuild
                     }
                     break;
             }
+
+            return psbSavePath;
         }
     }
 }
