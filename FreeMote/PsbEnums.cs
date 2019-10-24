@@ -86,6 +86,14 @@ namespace FreeMote
         /// WebGL
         /// </summary>
         ems,
+        /// <summary>
+        /// PS Vita
+        /// </summary>
+        vita,
+        /// <summary>
+        /// PS4
+        /// </summary>
+        ps4,
         other = Byte.MaxValue,
     }
 
@@ -155,13 +163,21 @@ namespace FreeMote
         /// </summary>
         A8,
         /// <summary>
-        /// RGBA8_SW
+        /// RGBA8_SW (Swizzle) for vita
         /// </summary>
         RGBA8_SW,
         /// <summary>
-        /// A8_SW
+        /// RGBA8_SW (Tile) for PS4
+        /// </summary>
+        TileRGBA8_SW,
+        /// <summary>
+        /// A8_SW (Swizzle)
         /// </summary>
         A8_SW,
+        /// <summary>
+        /// A8_SW (Tile) for PS4
+        /// </summary>
+        TileA8_SW,
     }
 
     public enum EncodeMode

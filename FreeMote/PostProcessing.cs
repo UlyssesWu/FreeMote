@@ -6,6 +6,9 @@ using System.Drawing.Imaging;
 
 namespace FreeMote
 {
+    /// <summary>
+    /// PS Related Post Process
+    /// </summary>
     public static class PostProcessing
     {
         // Unswizzle logic by @FireyFly
@@ -168,5 +171,11 @@ namespace FreeMote
         }
 
         #endregion
+
+        public static byte[] SwizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        {
+            //TODO: swizzle
+            return pixelData;
+        }
     }
 }

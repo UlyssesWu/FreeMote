@@ -143,12 +143,19 @@ namespace FreeMote
                     Abgr2Argb(ref data); //DXT5(for win) need conversion
                     break;
                 case PsbPixelFormat.RGBA8_SW:
-                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.TileRGBA8_SW:
+                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.A8:
                     data = ReadA8(data, height, width);
                     break;
                 case PsbPixelFormat.A8_SW:
+                    data = ReadA8(data, height, width);
+                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    break;
+                case PsbPixelFormat.TileA8_SW:
                     data = ReadA8(data, height, width);
                     data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
@@ -206,12 +213,19 @@ namespace FreeMote
                     result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.RGBA8_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.TileRGBA8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.L8:
                     result = Rgba2L8(result);
                     break;
                 case PsbPixelFormat.A8_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Rgba2A8(result);
+                    break;
+                case PsbPixelFormat.TileA8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Rgba2A8(result);
                     break;

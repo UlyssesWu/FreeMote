@@ -52,9 +52,15 @@ namespace FreeMote.Psb
                     else
                         return PsbPixelFormat.WinRGBA8;
                 case "RGBA8_SW":
-                    return PsbPixelFormat.RGBA8_SW;
+                    if (spec == PsbSpec.ps4)
+                        return PsbPixelFormat.TileRGBA8_SW;
+                    else
+                        return PsbPixelFormat.RGBA8_SW;
                 case "A8_SW":
-                    return PsbPixelFormat.A8_SW;
+                    if (spec == PsbSpec.ps4)
+                        return PsbPixelFormat.TileA8_SW;
+                    else
+                        return PsbPixelFormat.A8_SW;
                 case "RGBA4444":
                     if (spec == PsbSpec.common || spec == PsbSpec.ems)
                         return PsbPixelFormat.CommonRGBA4444;
@@ -166,7 +172,7 @@ namespace FreeMote.Psb
                 throw new ArgumentException($"{col} doesn't have children.");
             }
         }
-        
+
         #region MDF
 
         /// <summary>
@@ -368,7 +374,7 @@ namespace FreeMote.Psb
 
             return l;
         }
-        
+
         public static uint ReadCompactUInt(this BinaryReader br, byte size)
         {
             return br.ReadBytes(size).UnzipUInt();

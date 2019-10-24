@@ -64,11 +64,11 @@ namespace FreeMote.Psb
                 case PsbType.Motion:
                 default:
                     FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
-                    //Set Spec
-                    resourceList.ForEach(r => r.Spec = psb.Platform);
                     break;
             }
 
+            //Set Spec
+            resourceList.ForEach(r => r.Spec = psb.Platform);
             resourceList.Sort((md1, md2) => (int) (md1.Index - md2.Index));
 
             return resourceList;
