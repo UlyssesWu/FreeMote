@@ -11,7 +11,7 @@ namespace FreeMote
     public static class RL
     {
         /// <summary>
-        /// RGBA(LE) -> ARGB(BE)
+        /// RGBA(LE) -> ARGB(BE) (switch B & R)
         /// </summary>
         /// <param name="bytes"></param>
         public static unsafe void Abgr2Argb(ref byte[] bytes)
@@ -39,7 +39,7 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// ARGB(LE) -> RGBA(LE)
+        /// ARGB(LE) -> RGBA(LE) (switch A)
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="reverse"></param>
@@ -144,6 +144,7 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.RGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    Abgr2Argb(ref data);
                     break;
                 case PsbPixelFormat.TileRGBA8_SW:
                     data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
@@ -214,6 +215,7 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.RGBA8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    Abgr2Argb(ref result);
                     break;
                 case PsbPixelFormat.TileRGBA8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
