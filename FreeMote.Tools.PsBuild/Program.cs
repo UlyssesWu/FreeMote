@@ -73,7 +73,7 @@ Example:
 ";
                 //options
                 var optOrder = linkCmd.Option<PsbLinkOrderBy>("-o|--order <ORDER>",
-                    "Set texture link order (ByName/ByOrder/Convention). Default=ByName",
+                    "Set texture link order (Name/Order/Convention). Default=Name",
                     CommandOptionType.SingleValue);
                 //args
                 var argPsbPath = linkCmd.Argument("PSB", "PSB Path").IsRequired().Accepts(v => v.ExistingFile());

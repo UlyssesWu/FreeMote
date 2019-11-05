@@ -112,7 +112,7 @@ Example:
 Example:
   EmtConvert mdf -k 1234567890ab -l 131 sample.psb 
   EmtConvert mdf -s 1234567890absample.psb -l 131 sample.psb 
-  Hint: To pack a normal MDF, use `EmtConvert pack -s MDF <MDF file>`
+  Hint: To pack a pure MDF, use `EmtConvert pack -s MDF <MDF file>`
 ";
                 //options
                 //var optMdfPack = mdfCmd.Option("-p|--pack",
@@ -136,11 +136,21 @@ Example:
                     string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
                     if (string.IsNullOrEmpty(key) && string.IsNullOrEmpty(seed))
                     {
-                        throw new ArgumentNullException(nameof(key), "No key or seed specified.");
+                        //throw new ArgumentNullException(nameof(key), "No key or seed specified.");
+                        Console.WriteLine("No key or seed specified. Packing to pure MDF.");
+
+                        foreach (var s in argPsbPaths.Values)
+                        {
+                            if (File.Exists(s))
+                            {
+                                ShellConvert(s, "MDF");
+                            }
+                        }
+                        return;
                     }
 
-                    uint? keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : (uint?) null;
                     Dictionary<string, object> context = new Dictionary<string, object>();
+                    uint? keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : (uint?) null;
                     if (keyLen.HasValue)
                     {
                         context[Context_MdfKeyLength] = keyLen;
