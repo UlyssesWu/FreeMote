@@ -426,7 +426,7 @@ namespace FreeMote.PsBuild
             if (outputUnlinkedPsb)
             {
                 psb.Merge();
-                psbSavePath = Path.ChangeExtension(inputPath, ".unlinked.psb");
+                psbSavePath = Path.ChangeExtension(inputPath, ".unlinked.psb"); //unlink only works with motion.psb so no need for ext rename
                 File.WriteAllBytes(psbSavePath, psb.Build());
             }
 

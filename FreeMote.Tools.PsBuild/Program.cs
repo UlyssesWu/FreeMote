@@ -77,13 +77,13 @@ Example:
                     CommandOptionType.SingleValue);
                 //args
                 var argPsbPath = linkCmd.Argument("PSB", "PSB Path").IsRequired().Accepts(v => v.ExistingFile());
-                var argTexPath = linkCmd.Argument("Textures", "Texture Paths").IsRequired();
+                var argTexPaths = linkCmd.Argument("Textures", "Texture Paths", true).IsRequired();
 
                 linkCmd.OnExecute(() =>
                 {
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPath = argPsbPath.Value;
-                    var texPaths = argTexPath.Values;
+                    var texPaths = argTexPaths.Values;
                     Link(psbPath, texPaths, order);
                 });
             });
@@ -536,7 +536,7 @@ Example:
             {
                 psb.SwitchSpec(portSpec);
                 psb.Merge();
-                File.WriteAllBytes(Path.ChangeExtension(s, $".{portSpec}.psb"), psb.Build());
+                File.WriteAllBytes(Path.ChangeExtension(s, $".{portSpec}{psb.Type.DefaultExtension()}"), psb.Build());
                 Console.WriteLine($"Convert {name} succeed.");
             }
         }
@@ -595,7 +595,7 @@ Example:
             try
             {
                 //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
-                var filename = name + ".psb";
+                var filename = name + ".psb"; //rename later
                 PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename,
                     canPackShell);
             }

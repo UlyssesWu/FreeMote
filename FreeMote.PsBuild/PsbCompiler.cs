@@ -79,23 +79,7 @@ namespace FreeMote.PsBuild
                         PsbResourceJson resx = JsonConvert.DeserializeObject<PsbResourceJson>(resJson);
                         bool pure = cryptKey == null && resx.CryptKey == null;
                         string ext = pure ? ".pure" : ".impure";
-                        switch (resx.PsbType)
-                        {
-                            case PsbType.Pimg:
-                                ext += ".pimg";
-                                break;
-                            case PsbType.Scn:
-                                ext += ".scn";
-                                break;
-                            case PsbType.Mmo:
-                                ext += ".mmo";
-                                break;
-                            case PsbType.Motion:
-                            case null:
-                            default:
-                                ext += ".psb";
-                                break;
-                        }
+                        ext += resx.PsbType.HasValue ? resx.PsbType.Value.DefaultExtension() : ".psb";
 
                         if (resx.Context != null && resx.Context.ContainsKey(Consts.Context_PsbShellType) && keepShell)
                         {
