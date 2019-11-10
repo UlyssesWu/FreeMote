@@ -1,5 +1,5 @@
 ﻿// Untile/Unswizzle by xdaniel. Copyright(c) 2016 xdaniel(Daniel R.) / DigitalZero Domain. License: The MIT License (MIT) 
-// Tile//Swizzle by Ulysses (wdwxy12345@gmail.com). License: same as FreeMote
+// Tile/Swizzle by Ulysses (wdwxy12345@gmail.com). License: same as FreeMote
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
