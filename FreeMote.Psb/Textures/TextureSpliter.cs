@@ -57,7 +57,14 @@ namespace FreeMote.Psb.Textures
             //var mipmap = (PsbDictionary)texture["mipMap"]; //TODO: Mipmap?
             Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>(icon.Count);
 
-            var md = PsbResCollector.GenerateMotionResMetadata(texture, (PsbResource)texture["pixel"]);
+            var pixel = texture[PsbResCollector.ResourceKey];
+            if (pixel == null || !(pixel is PsbResource pixelRes))
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.Resources, "External Texture PSB is not supported. Please Link textures into PSB.");
+                return textures;
+            }
+
+            var md = PsbResCollector.GenerateMotionResMetadata(texture, pixelRes);
             md.Spec = spec; //Important
             Bitmap bmp = md.ToImage();
             foreach (var iconPair in icon)
@@ -118,7 +125,14 @@ namespace FreeMote.Psb.Textures
 
                 //var mipmap = (PsbDictionary)texture["mipMap"]; //TODO: Mipmap?
 
-                var md = PsbResCollector.GenerateMotionResMetadata(texture, (PsbResource)texture["pixel"]);
+                var pixel = texture[PsbResCollector.ResourceKey];
+                if (pixel == null || !(pixel is PsbResource pixelRes))
+                {
+                    throw new PsbBadFormatException(PsbBadFormatReason.Resources, "External Texture PSB is not supported. Please Link textures into PSB.");
+                    return;
+                }
+
+                var md = PsbResCollector.GenerateMotionResMetadata(texture, pixelRes);
                 md.Spec = psb.Platform; //Important
                 Bitmap bmp = md.ToImage();
 

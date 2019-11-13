@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using FreeMote.Psb;
@@ -161,7 +162,12 @@ namespace FreeMote.PsBuild.Converters
                     var info = (PsbDictionary) icon.Value;
                     var width = (int) (PsbNumber) info["width"];
                     var height = (int) (PsbNumber) info["height"];
-                    var res = (PsbResource) info["pixel"];
+                    var res = info[PsbResCollector.ResourceKey] as PsbResource;
+                    if (res == null)
+                    {
+                        Debug.WriteLine("pixel is null! Maybe External Texture."); //TODO: throw Exception
+                        continue;
+                    }
                     var bmp = info["compress"]?.ToString().ToUpperInvariant() == "RL"
                         ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
                         : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
@@ -219,7 +225,7 @@ namespace FreeMote.PsBuild.Converters
                     var paths = node.Texture.Source.Split(new[] {Delimiter}, StringSplitOptions.RemoveEmptyEntries);
                     var icon = (PsbDictionary) source[paths[0]].Children("icon").Children(paths[1]);
                     icon.Remove("compress");
-                    icon.Remove("pixel");
+                    icon.Remove(PsbResCollector.ResourceKey);
                     icon["attr"] = PsbNumber.Zero;
                     icon["left"] = new PsbNumber(node.Bounds.Left);
                     icon["top"] = new PsbNumber(node.Bounds.Top);
@@ -240,7 +246,7 @@ namespace FreeMote.PsBuild.Converters
                     {"truncated_width", new PsbNumber(atlas.Width)},
                     {"type", new PsbString(TargetPixelFormat.ToStringForPsb())}
                 };
-                texture.Add("pixel", new PsbResource {Data = data, Parents = new List<IPsbCollection> {texture}});
+                texture.Add(PsbResCollector.ResourceKey, new PsbResource {Data = data, Parents = new List<IPsbCollection> {texture}});
                 texDic.Add("texture", texture);
                 //type
                 texDic.Add("type", PsbNumber.Zero);

@@ -84,7 +84,7 @@ namespace FreeMote.PsBuild.Converters
                         var data = UseRL
                             ? RL.CompressImage(bmps[iconPair.Key], TargetPixelFormat)
                             : RL.GetPixelBytesFromImage(bmps[iconPair.Key], TargetPixelFormat);
-                        icon["pixel"] =
+                        icon[PsbResCollector.ResourceKey] =
                             new PsbResource {Data = data, Parents = new List<IPsbCollection> {icon}};
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
