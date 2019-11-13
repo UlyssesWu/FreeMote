@@ -9,7 +9,7 @@ using FreeMote.Psb;
 using FreeMote.Psb.Textures;
 using FreeMote.PsBuild.Properties;
 using Newtonsoft.Json;
-
+// ReSharper disable StringLiteralTypo
 // ReSharper disable InconsistentNaming
 
 namespace FreeMote.PsBuild
@@ -136,42 +136,44 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         public PSB Build(PSB psb)
         {
-            Mmo = new PSB();
-            Mmo.Type = PsbType.Mmo;
+            Mmo = new PSB {Type = PsbType.Mmo};
 
-            Mmo.Objects = new PsbDictionary();
-            Mmo.Objects["bgChildren"] = BuildBackground();
-            Mmo.Objects["comment"] = psb.Objects["comment"] ?? "Built by FreeMote, wdwxy12345@gmail.com".ToPsbString();
-            Mmo.Objects["defaultFPS"] = 60.ToPsbNumber();
-            Mmo.Objects["fontInfoIdCount"] = PsbNull.Null;
-            Mmo.Objects["fontInfoList"] = new PsbCollection(0);
-            Mmo.Objects["forceRepack"] = 1.ToPsbNumber();
-            Mmo.Objects["ignoreMotionPanel"] = PsbNumber.Zero;
-            Mmo.Objects["keepSourceIconName"] = PsbNumber.Zero; //1.ToPsbNumber();
-            Mmo.Objects["label"] = "FreeMote".ToPsbString();
-            Mmo.Objects["marker"] = PsbNumber.Zero;
-            Mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
-            Mmo.Objects["metadata"] = BuildMetadata(psb);
-            Mmo.Objects["modelScale"] = 32.ToPsbNumber();
-            Mmo.Objects["newScrapbookCellHeight"] = 8.ToPsbNumber();
-            Mmo.Objects["newScrapbookCellWidth"] = 8.ToPsbNumber();
-            Mmo.Objects["newTextureCellHeight"] = 8.ToPsbNumber();
-            Mmo.Objects["newTextureCellWidth"] = 8.ToPsbNumber();
-            Mmo.Objects["optimizeMargin"] = 1.ToPsbNumber();
-            Mmo.Objects["outputDepth"] = PsbNumber.Zero;
-            Mmo.Objects["previewSize"] = FillDefaultPreviewSize();
-            Mmo.Objects["projectType"] = PsbNumber.Zero;
-            Mmo.Objects["saveFormat"] = PsbNumber.Zero;
-            Mmo.Objects["stereovisionProfile"] = psb.Objects["stereovisionProfile"];
-            Mmo.Objects["targetOwn"] = FillDefaultTargetOwn();
-            Mmo.Objects["unifyTexture"] = 1.ToPsbNumber();
+            Mmo.Objects = new PsbDictionary
+            {
+                ["bgChildren"] = BuildBackground(),
+                ["comment"] = psb.Objects["comment"] ?? "Built by FreeMote, wdwxy12345@gmail.com".ToPsbString(),
+                ["defaultFPS"] = 60.ToPsbNumber(),
+                ["fontInfoIdCount"] = PsbNull.Null,
+                ["fontInfoList"] = new PsbCollection(0),
+                ["forceRepack"] = 1.ToPsbNumber(),
+                ["ignoreMotionPanel"] = PsbNumber.Zero,
+                ["keepSourceIconName"] = PsbNumber.Zero,
+                ["label"] = "FreeMote".ToPsbString(),
+                ["marker"] = PsbNumber.Zero,
+                ["maxTextureSize"] = BuildMaxTextureSize(psb),
+                ["metadata"] = BuildMetadata(psb),
+                ["modelScale"] = 32.ToPsbNumber(),
+                ["newScrapbookCellHeight"] = 8.ToPsbNumber(),
+                ["newScrapbookCellWidth"] = 8.ToPsbNumber(),
+                ["newTextureCellHeight"] = 8.ToPsbNumber(),
+                ["newTextureCellWidth"] = 8.ToPsbNumber(),
+                ["optimizeMargin"] = 1.ToPsbNumber(),
+                ["outputDepth"] = PsbNumber.Zero,
+                ["previewSize"] = FillDefaultPreviewSize(),
+                ["projectType"] = PsbNumber.Zero,
+                ["saveFormat"] = PsbNumber.Zero,
+                ["stereovisionProfile"] = psb.Objects["stereovisionProfile"],
+                ["targetOwn"] = FillDefaultTargetOwn(),
+                ["unifyTexture"] = 1.ToPsbNumber(),
+                ["version"] = new PsbNumber(3.12f),
+                ["objectChildren"] = BuildObjects(psb, out var rawPartsList, out var charaProfileList),
+                ["sourceChildren"] = BuildSources(psb),
+                ["metaformat"] = BuildMetaFormat(psb, Mmo, rawPartsList, charaProfileList)
+            };
+            //1.ToPsbNumber();
             //mmo.Objects["uniqId"] = 114514.ToPsbNumber();
-            Mmo.Objects["version"] = new PsbNumber(3.12f);
 
-            Mmo.Objects["objectChildren"] = BuildObjects(psb, out var rawPartsList, out var charaProfileList);
-            Mmo.Objects["sourceChildren"] = BuildSources(psb);
             //put to last since it's using obj & src children
-            Mmo.Objects["metaformat"] = BuildMetaFormat(psb, Mmo, rawPartsList, charaProfileList);
 
             return Mmo;
         }
@@ -185,14 +187,14 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         private IPsbValue BuildSources(PSB psb, int widthPadding = 10, int heightPadding = 10)
         {
-            Dictionary<uint, Bitmap> bitmaps = new Dictionary<uint, Bitmap>();
-            PsbCollection sourceChildren = new PsbCollection();
+            var bitmaps = new Dictionary<uint, Bitmap>();
+            var sourceChildren = new PsbCollection();
             foreach (var motionItemKv in (PsbDictionary)psb.Objects["source"])
             {
-                PsbDictionary motionItem = new PsbDictionary();
-                PsbDictionary item = (PsbDictionary)motionItemKv.Value;
-                PsbDictionary icon = (PsbDictionary)item["icon"];
-                bool isTexture = icon.Values.Any(d => d is PsbDictionary dic && dic.ContainsKey("attr"));
+                var motionItem = new PsbDictionary();
+                var item = (PsbDictionary)motionItemKv.Value;
+                var icon = (PsbDictionary)item["icon"];
+                var isTexture = icon.Values.Any(d => d is PsbDictionary dic && dic.ContainsKey("attr"));
                 motionItem["label"] = motionItemKv.Key.ToPsbString();
                 motionItem["comment"] = PsbString.Empty;
                 motionItem["metadata"] = FillDefaultMetadata();
@@ -205,8 +207,8 @@ namespace FreeMote.PsBuild
                     motionItem["className"] = "TextureItem".ToPsbString();
                     var iconList = new PsbCollection(icon.Count);
                     motionItem["iconList"] = iconList;
-                    Dictionary<string, Image> texs = new Dictionary<string, Image>(icon.Count);
-                    Dictionary<string, (int oriX, int oriY, int width, int height)> texsOrigin = new Dictionary<string, (int oriX, int oriY, int width, int height)>(icon.Count);
+                    var texs = new Dictionary<string, Image>(icon.Count);
+                    var texsOrigin = new Dictionary<string, (int oriX, int oriY, int width, int height)>(icon.Count);
                     foreach (var iconKv in icon)
                     {
                         var iconItem = (PsbDictionary)iconKv.Value;
@@ -224,7 +226,7 @@ namespace FreeMote.PsBuild
                         var (realWidth, realHeight) =
                             ExpandClipArea((PsbDictionary)iconItem["clip"], width, height);
                         texsOrigin.Add(iconKv.Key, (originX, originY, realWidth, realHeight));
-                        bool rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
+                        var rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
                         var res = (PsbResource)iconItem["pixel"];
                         Bitmap bmp = null;
                         if (res.Index == null)
@@ -247,9 +249,9 @@ namespace FreeMote.PsBuild
                         iconItem.Remove("attr");
                         iconList.Add(iconItem);
                     }
-                    TexturePacker packer = new TexturePacker();
-                    var texture = packer.CellProcess(texs, texsOrigin, widthPadding, heightPadding, out int cellWidth,
-                        out int cellHeight);
+                    var packer = new TexturePacker();
+                    var texture = packer.CellProcess(texs, texsOrigin, widthPadding, heightPadding, out var cellWidth,
+                        out var cellHeight);
                     motionItem["image"] = BuildSourceImage(texture);
                     foreach (var iconKv in icon)
                     {
@@ -286,7 +288,7 @@ namespace FreeMote.PsBuild
                         }
                         var height = ((PsbNumber)iconItem["height"]).AsInt;
                         var width = ((PsbNumber)iconItem["width"]).AsInt;
-                        bool rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
+                        var rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
                         var res = (PsbResource)iconItem["pixel"];
                         var texture = rl
                             ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
@@ -316,10 +318,10 @@ namespace FreeMote.PsBuild
             {
                 return (width, height);
             }
-            double top = ((PsbNumber)clip["top"]).AsDouble;
-            double bottom = ((PsbNumber)clip["bottom"]).AsDouble;
-            double left = ((PsbNumber)clip["left"]).AsDouble;
-            double right = ((PsbNumber)clip["right"]).AsDouble;
+            var top = ((PsbNumber)clip["top"]).AsDouble;
+            var bottom = ((PsbNumber)clip["bottom"]).AsDouble;
+            var left = ((PsbNumber)clip["left"]).AsDouble;
+            var right = ((PsbNumber)clip["right"]).AsDouble;
 
             return ((int)(width / (bottom - top)), (int)(height / (right - left)));
         }
@@ -352,16 +354,15 @@ namespace FreeMote.PsBuild
         private IPsbValue BuildObjects(PSB psb, out PsbCollection partsList, out PsbCollection charaProfileList)
         {
             //Dictionary<string, List<string>> disableFeatures = new Dictionary<string, List<string>>();
-            Dictionary<string, string> enableFeatures = new Dictionary<string, string>();
+            var enableFeatures = new Dictionary<string, string>();
             var newPartsList = new PsbCollection();
             var newCharaProfileList = new PsbCollection();
 
-            PsbCollection objectChildren = new PsbCollection();
-            objectChildren.Parent = Mmo.Objects;
+            var objectChildren = new PsbCollection {Parent = Mmo.Objects};
             foreach (var motionItemKv in (PsbDictionary)psb.Objects["object"])
             {
-                PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
-                PsbDictionary objectChildrenItem = new PsbDictionary();
+                var motionItem = (PsbDictionary)motionItemKv.Value;
+                var objectChildrenItem = new PsbDictionary();
                 objectChildrenItem.Parent = objectChildren;
                 objectChildrenItem["label"] = motionItemKv.Key.ToPsbString();
                 objectChildrenItem["className"] = "CharaItem".ToPsbString();
@@ -385,12 +386,11 @@ namespace FreeMote.PsBuild
 
             PsbCollection BuildChildrenFromMotion(PsbDictionary dic, IPsbCollection parent)
             {
-                PsbCollection objectChildren_children = new PsbCollection();
-                objectChildren_children.Parent = parent;
+                var objectChildren_children = new PsbCollection {Parent = parent};
                 foreach (var motionItemKv in dic)
                 {
-                    PsbDictionary motionItem = (PsbDictionary)motionItemKv.Value;
-                    PsbDictionary objectChildrenItem = new PsbDictionary();
+                    var motionItem = (PsbDictionary)motionItemKv.Value;
+                    var objectChildrenItem = new PsbDictionary();
                     objectChildrenItem.Parent = objectChildren_children;
                     objectChildrenItem["className"] = "MotionItem".ToPsbString();
                     objectChildrenItem["comment"] = PsbString.Empty;
@@ -405,7 +405,7 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["loopEndTime"] = motionItem["loopTime"]; //currently begin = end = -1
                     objectChildrenItem["marker"] = PsbNumber.Zero;
                     objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"]; //TODO: should we set all to default?
-                    PsbCollection parameter = (PsbCollection)motionItem["parameter"];
+                    var parameter = (PsbCollection)motionItem["parameter"];
                     objectChildrenItem["parameterize"] = motionItem["parameterize"] is PsbNull
                         ? FillDefaultParameterize()
                         : parameter[((PsbNumber)motionItem["parameterize"]).IntValue];
@@ -443,7 +443,7 @@ namespace FreeMote.PsBuild
                 {
                     //ClassName
                     var typeNum = dic["type"] as PsbNumber;
-                    MmoItemClass classType = MmoItemClass.ObjLayerItem;
+                    var classType = MmoItemClass.ObjLayerItem;
                     if (typeNum != null)
                     {
                         classType = (MmoItemClass)typeNum.IntValue;
@@ -476,7 +476,7 @@ namespace FreeMote.PsBuild
                     //Disable features
                     if (!string.IsNullOrEmpty(param) && motionRefs != null && motionRefs.Count > 0)
                     {
-                        for (int i = 0; i < motionRefs.Count; i++)
+                        for (var i = 0; i < motionRefs.Count; i++)
                         {
                             motionRefs[i] = motionRefs[i].Substring(motionRefs[i].IndexOf('/') + 1);
                         }
@@ -638,7 +638,7 @@ namespace FreeMote.PsBuild
                         var paths = path.Split('/');
                         var menuPath = InferDefaultPart(paths[0], path);
                         //Infer Feature
-                        HashSet<string> features = InferFeatures(frameMask, frameMaskEx, classType);
+                        var features = InferFeatures(frameMask, frameMaskEx, classType);
 
                         if (!string.IsNullOrEmpty(param))
                         {
@@ -694,7 +694,7 @@ namespace FreeMote.PsBuild
             PsbDictionary BuildCharaProfileItem(string id, string label, string path)
             {
                 var paths = path.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-                PsbDictionary l = new PsbDictionary(3)
+                var l = new PsbDictionary(3)
                 {
                     {"chara", paths[1].ToPsbString()},
                     {"motion", paths[2].ToPsbString()},
@@ -717,7 +717,7 @@ namespace FreeMote.PsBuild
         {
             // "///^(透過表示|ビュー|レイアウト|レイアウト角度|角度|XY座標|XY座標角度|Z座標|メッシュ|パーティクル|削除|ブレンドモード)\\((.+)\\)$"
             // "///^(Transparent|View|Layout|Layout角度|角度|XY座標|XY座標角度|Z座標|Mesh|Particle|Remove|BlendMode)\\((.+)\\)$"
-            HashSet<string> features = new HashSet<string>();
+            var features = new HashSet<string>();
 
             //削除 impossible to get?
             if (classType == MmoItemClass.ObjLayerItem && frameMaskEx.HasFlag(MmoFrameMaskEx.SrcSrc))
@@ -751,14 +751,7 @@ namespace FreeMote.PsBuild
             {
                 if (frameMaskEx.HasFlag(MmoFrameMaskEx.CoordXY))
                 {
-                    if (frameMask.HasFlag(MmoFrameMask.Angle))
-                    {
-                        features.Add("XY座標角度");
-                    }
-                    else
-                    {
-                        features.Add("XY座標");
-                    }
+                    features.Add(frameMask.HasFlag(MmoFrameMask.Angle) ? "XY座標角度" : "XY座標");
                 }
                 if (frameMaskEx.HasFlag(MmoFrameMaskEx.CoordZ))
                 {
@@ -898,7 +891,7 @@ namespace FreeMote.PsBuild
 
         private PsbCollection BuildPriorityFrameList(PsbCollection fl)
         {
-            for (int i = 0; i < fl.Count; i++)
+            for (var i = 0; i < fl.Count; i++)
             {
                 var flItem = fl[i];
                 if (flItem is PsbDictionary dic)
@@ -1001,7 +994,7 @@ namespace FreeMote.PsBuild
                             }
                         }
 
-                        bool hasMotion = false;
+                        var hasMotion = false;
 
                         if (content.ContainsKey("motion"))
                         {
@@ -1019,7 +1012,7 @@ namespace FreeMote.PsBuild
                             content["mcc"] = content["mesh"].Children("cc");
                         }
 
-                        bool hasStencil = classType == MmoItemClass.StencilLayerItem;
+                        var hasStencil = classType == MmoItemClass.StencilLayerItem;
                         FillDefaultsIntoFrameListContent(content, hasMotion, hasStencil);
                     }
                 }
@@ -1030,6 +1023,9 @@ namespace FreeMote.PsBuild
         /// Essential for normal Editor
         /// </summary>
         /// <param name="psb"></param>
+        /// <param name="mmo"></param>
+        /// <param name="partList"></param>
+        /// <param name="charaProfileList"></param>
         /// <returns></returns>
         private PsbDictionary BuildMetaFormat(PSB psb, PSB mmo, PsbCollection partList, PsbCollection charaProfileList)
         {
@@ -1046,8 +1042,8 @@ namespace FreeMote.PsBuild
                     jsonConverter);
             }
 
-            PsbDictionary metaFormatContent = new PsbDictionary();
-            PsbDictionary metaFormat = new PsbDictionary()
+            var metaFormatContent = new PsbDictionary();
+            var metaFormat = new PsbDictionary()
             {
                 {"data", metaFormatContent },
                 {"type", 1.ToPsbNumber() }
@@ -1098,9 +1094,9 @@ namespace FreeMote.PsBuild
             metaFormatContent["loopControlParameterDefinitionList"] = new PsbCollection(); //default is empty
             metaFormatContent["mirrorDefinition"] = metadata["mirrorControl"];
             metaFormatContent["mouthControlDefinitionList"] = metadata["mouthControl"];
-            var orbit = BuildOrbitControlParameterDef(metadata["orbitControl"], (PsbCollection)mmoRef["orbitControlParameterDefinitionList"]);
-            metaFormatContent["orbitControlDefinitionList"] = orbit.orbitControl; //TODO: we don't have sample with orbit
-            metaFormatContent["orbitControlParameterDefinitionList"] = orbit.orbitParamDef;
+            var (orbitControl, orbitParamDef) = BuildOrbitControlParameterDef(metadata["orbitControl"], (PsbCollection)mmoRef["orbitControlParameterDefinitionList"]);
+            metaFormatContent["orbitControlDefinitionList"] = orbitControl; //TODO: we don't have sample with orbit
+            metaFormatContent["orbitControlParameterDefinitionList"] = orbitParamDef;
             metaFormatContent["parameterEditDefinition"] = mmoRef["parameterEditDefinition"];
             metaFormatContent["partialExportDefinitionList"] = new PsbCollection();
             metaFormatContent["partsControlDefinitionList"] = BuildControlDefinition((PsbCollection)metadata["partsControl"]);
@@ -1139,8 +1135,8 @@ namespace FreeMote.PsBuild
             }
 
             var ori = (PsbCollection)origin;
-            PsbCollection newOrbitParamDef = new PsbCollection();
-            HashSet<string> labels = new HashSet<string>();
+            var newOrbitParamDef = new PsbCollection();
+            var labels = new HashSet<string>();
             foreach (var o in ori)
             {
                 //"comment": "60f間隔で0,30,60,90,120の順で周回する。",
@@ -1156,7 +1152,7 @@ namespace FreeMote.PsBuild
                 //    "parameter": ""
                 //}
                 var item = (PsbDictionary)o;
-                PsbDictionary dic = new PsbDictionary()
+                var dic = new PsbDictionary()
                 {
                     {"comment", item["comment"] },
                     {"interval", item["interval"] },
@@ -1193,7 +1189,7 @@ namespace FreeMote.PsBuild
                 foreach (var iconItem in (PsbCollection)mmoItem["iconList"])
                 {
                     var iconDic = (PsbDictionary)iconItem;
-                    PsbDictionary texDefItem = new PsbDictionary
+                    var texDefItem = new PsbDictionary
                     {
                         {"sourceLabel", mmoItem["label"]},
                         {"comment", mmoItem["comment"]},
@@ -1267,7 +1263,7 @@ namespace FreeMote.PsBuild
                 sourceChildren.Where(s => s is PsbDictionary dic && dic["className"].ToString() == "TextureItem").Cast<PsbDictionary>();
             foreach (var mmoItem in textureSources)
             {
-                PsbDictionary texDefItem = new PsbDictionary
+                var texDefItem = new PsbDictionary
                 {
                     {"sourceLabel", mmoItem["label"]},
                     {"comment", mmoItem["comment"]},
@@ -1296,7 +1292,7 @@ namespace FreeMote.PsBuild
                     texDefItem.Add("label", mmoItem["label"]);
                 }
 
-                PsbCollection psdIconList = new PsbCollection();
+                var psdIconList = new PsbCollection();
                 foreach (var iconItem in (PsbCollection)mmoItem["iconList"])
                 {
                     psdIconList.Add(new PsbDictionary
@@ -1324,7 +1320,7 @@ namespace FreeMote.PsBuild
         private static PsbDictionary AssemblyMmoPath(string mmoPath)
         {
             var paths = mmoPath.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-            PsbDictionary dic = new PsbDictionary(3)
+            var dic = new PsbDictionary(3)
             {
                 {"chara", paths[1].ToPsbString()},
                 {"motion", paths[2].ToPsbString()},
@@ -1340,7 +1336,7 @@ namespace FreeMote.PsBuild
 
             foreach (var val in variableList)
             {
-                PsbDictionary item = (PsbDictionary)val;
+                var item = (PsbDictionary)val;
 
                 variableAlias.Add(new PsbDictionary
                 {
@@ -1361,11 +1357,11 @@ namespace FreeMote.PsBuild
 
         private IPsbValue BuildControlDefinition(PsbCollection control)
         {
-            PsbCollection controlDefinition = new PsbCollection(control.Count);
+            var controlDefinition = new PsbCollection(control.Count);
             foreach (var psbValue in control)
             {
                 var item = (PsbDictionary)psbValue;
-                PsbDictionary defItem = new PsbDictionary()
+                var defItem = new PsbDictionary()
                 {
                     {"baseLayer", item["baseLayer"] },
                     {"comment", PsbString.Empty },
@@ -1394,7 +1390,7 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         private IPsbValue BuildMetadata(PSB psb)
         {
-            PsbDictionary metadata = new PsbDictionary(2)
+            var metadata = new PsbDictionary(2)
             {
                 ["type"] = 1.ToPsbNumber(),
                 ["data"] = psb.Objects["metadata"]
