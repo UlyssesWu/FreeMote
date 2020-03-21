@@ -462,7 +462,7 @@ Example:
                     JsonUseDoubleOnly = true;
                 }
 
-                ushort ver = optVer.HasValue() ? optVer.ParsedValue : (ushort) 3;
+                ushort? ver = optVer.HasValue() ? optVer.ParsedValue : (ushort?) null;
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
                 PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : (PsbSpec?) null;
                 var canRename = !optNoRename.HasValue();
@@ -579,7 +579,7 @@ Example:
             Console.WriteLine($"Link {name} succeed.");
         }
 
-        private static void Compile(string s, ushort version, uint? key, PsbSpec? spec, bool canRename,
+        private static void Compile(string s, ushort? version, uint? key, PsbSpec? spec, bool canRename,
             bool canPackShell)
         {
             if (!File.Exists(s))
