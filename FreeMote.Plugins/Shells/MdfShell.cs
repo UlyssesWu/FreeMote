@@ -58,7 +58,7 @@ namespace FreeMote.Plugins
             return MdfFile.DecompressToPsbStream(stream) as MemoryStream;
         }
 
-        private MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength)
+        internal MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength)
         {
             //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
             var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));

@@ -612,7 +612,12 @@ namespace FreeMote
             return header;
         }
 
-        public static bool IsSignaturePsb(Stream stream)
+        /// <summary>
+        /// Test if the first 4 bytes are correct
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static bool CheckSignature(Stream stream)
         {
             var header = new byte[4];
             var pos = stream.Position;

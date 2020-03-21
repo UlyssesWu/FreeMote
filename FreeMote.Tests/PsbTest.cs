@@ -4,7 +4,8 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
+using FreeMote.Plugins;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
 
@@ -34,6 +35,7 @@ namespace FreeMote.Tests
         }
 
         #region 附加测试特性
+
         //
         // 编写测试时，可以使用以下附加特性:
         //
@@ -53,6 +55,7 @@ namespace FreeMote.Tests
         // [TestCleanup()]
         // public void MyTestCleanup() { }
         //
+
         #endregion
 
         [TestMethod]
@@ -112,7 +115,7 @@ namespace FreeMote.Tests
                 p1.WriteTo(bw);
                 var bts = ms.ToArray();
                 ms.Seek(0, SeekOrigin.Begin);
-                var p2 = new PsbNumber((PsbObjType)br.ReadByte(), br);
+                var p2 = new PsbNumber((PsbObjType) br.ReadByte(), br);
                 Assert.AreEqual(p1.IntValue, p2.IntValue);
             }
         }
@@ -129,7 +132,7 @@ namespace FreeMote.Tests
                 var bts = ms.ToArray();
                 ms.Seek(0, SeekOrigin.Begin);
                 br.ReadByte();
-                var a2 = new PsbArray((int)1, br);
+                var a2 = new PsbArray((int) 1, br);
                 Assert.AreEqual(a1[0], a2[0]);
             }
         }
@@ -166,8 +169,25 @@ namespace FreeMote.Tests
             r = dic.ContainsKey(p4);
             r = dic.ContainsKey(p2);
             r = dic.ContainsKey(p1);
-            
         }
+
+        [TestMethod]
+        public void TestInfoPsb()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "scenario_info.psb.m");
+
+            var ctx = FreeMount.CreateContext();
+            ctx.Context[Consts.Context_MdfKey] = "38757621acf82scenario_info.psb.m";
+            ctx.Context[Consts.Context_MdfKeyLength] = 131;
+
+            var mdfShell = new MdfShell();
+            //var ms = mdfShell.ToPsb(File.OpenRead(path), ctx.Context);
+            //MARK: brute get info-psb key is nearly impossible, don't waste your time on it and just find the key by yourself
+            var ms = mdfShell.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131);
+            File.WriteAllBytes(path + ".raw", ms.ToArray());
+        }
+
 
         [TestMethod]
         public void TestMdf()

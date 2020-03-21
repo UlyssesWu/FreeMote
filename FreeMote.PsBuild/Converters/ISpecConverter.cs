@@ -9,7 +9,7 @@ namespace FreeMote.PsBuild.Converters
     public enum SpecConvertOption
     {
         /// <summary>
-        /// Best sucess rate
+        /// Best success rate
         /// </summary>
         Default,
         /// <summary>

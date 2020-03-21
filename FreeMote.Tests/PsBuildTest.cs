@@ -14,9 +14,6 @@ using Newtonsoft.Json;
 
 namespace FreeMote.Tests
 {
-    /// <summary>
-    /// PsBuildTest 的摘要说明
-    /// </summary>
     [TestClass]
     public class PsBuildTest
     {
@@ -47,6 +44,7 @@ namespace FreeMote.Tests
         //
 
         #endregion
+
 
         [TestMethod]
         public void TestDecompile()
