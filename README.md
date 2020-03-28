@@ -3,6 +3,8 @@
 
 Managed EMT/PSB tool libs.
 
+[Download FreeMote Toolkit](https://github.com/UlyssesWu/FreeMote/releases)
+
 ## Components
 ### FreeMote
 Basic functions. Decrypt or encrypt EMT PSB files.
