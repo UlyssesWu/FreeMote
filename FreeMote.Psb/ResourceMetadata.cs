@@ -130,6 +130,17 @@ namespace FreeMote.Psb
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
 
+        /// <summary>
+        /// Pal
+        /// </summary>
+        public PsbResource Palette { get; set; }
+        public PsbString PaletteTypeString { get; set; }
+        /// <summary>
+        /// Palette Pixel Format Type
+        /// </summary>
+        public string PalType => PaletteTypeString?.Value;
+        public PsbPixelFormat PalettePixelFormat { get; set; }
+
         public byte[] Data
         {
             get => Resource?.Data;

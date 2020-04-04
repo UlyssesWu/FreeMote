@@ -9,94 +9,22 @@ namespace FreeMote.Psb
     public static class PsbExtension
     {
         /// <summary>
-        /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
+        /// If this spec uses RL
         /// </summary>
         /// <param name="spec"></param>
         /// <returns></returns>
-        public static PsbPixelFormat DefaultPixelFormat(this PsbSpec spec)
+        public static PsbCompressType CompressType(this PsbSpec spec)
         {
             switch (spec)
             {
-                case PsbSpec.common:
-                case PsbSpec.ems:
-                    return PsbPixelFormat.CommonRGBA8;
                 case PsbSpec.krkr:
+                    return PsbCompressType.RL;
+                case PsbSpec.ems:
+                case PsbSpec.common:
                 case PsbSpec.win:
-                    return PsbPixelFormat.WinRGBA8;
                 case PsbSpec.other:
                 default:
-                    return PsbPixelFormat.None;
-            }
-        }
-
-        /// <summary>
-        /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
-        /// </summary>
-        /// <param name="typeStr"></param>
-        /// <param name="spec"></param>
-        /// <returns></returns>
-        public static PsbPixelFormat ToPsbPixelFormat(this string typeStr, PsbSpec spec)
-        {
-            if (String.IsNullOrEmpty(typeStr))
-            {
-                return PsbPixelFormat.None;
-            }
-
-            switch (typeStr.ToUpperInvariant())
-            {
-                case "DXT5":
-                    return PsbPixelFormat.DXT5;
-                case "RGBA8":
-                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
-                        return PsbPixelFormat.CommonRGBA8;
-                    else
-                        return PsbPixelFormat.WinRGBA8;
-                case "RGBA8_SW":
-                    if (spec == PsbSpec.ps4)
-                        return PsbPixelFormat.TileRGBA8_SW;
-                    else
-                        return PsbPixelFormat.RGBA8_SW;
-                case "A8_SW":
-                    if (spec == PsbSpec.ps4)
-                        return PsbPixelFormat.TileA8_SW;
-                    else
-                        return PsbPixelFormat.A8_SW;
-                case "RGBA4444":
-                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
-                        return PsbPixelFormat.CommonRGBA4444;
-                    return PsbPixelFormat.WinRGBA4444;
-                case "A8L8":
-                    return PsbPixelFormat.A8L8;
-                default:
-                    if (Enum.TryParse(typeStr, true, out PsbPixelFormat pixelFormat))
-                    {
-                        return pixelFormat;
-                    }
-
-                    return PsbPixelFormat.None;
-            }
-        }
-
-        /// <summary>
-        /// Get <see cref="PsbType"/>'s default extension
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static string DefaultExtension(this PsbType type)
-        {
-            switch (type)
-            {
-                case PsbType.Mmo:
-                    return ".mmo";
-                case PsbType.Pimg:
-                    return ".pimg";
-                case PsbType.Scn:
-                    return ".scn";
-                case PsbType.ArchiveInfo:
-                    return ".psb.m";
-                case PsbType.Motion:
-                default:
-                    return ".psb";
+                    return PsbCompressType.None;
             }
         }
 
@@ -126,6 +54,58 @@ namespace FreeMote.Psb
             height = resList.Max(data => data.Height);
             return false;
         }
+
+        /// <summary>
+        /// Get name in <see cref="PsbDictionary"/>
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static string GetName(this IPsbChild c)
+        {
+            if (c?.Parent is PsbDictionary dic)
+            {
+                var result = dic.FirstOrDefault(pair => Equals(pair.Value, c));
+                return result.Value == null ? null : result.Key;
+            }
+
+            if (c?.Parent is PsbCollection col)
+            {
+                var result = col.Value.IndexOf(c);
+                if (result < 0)
+                {
+                    return null;
+                }
+
+                return $"[{result}]";
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Get name
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="parent"></param>
+        /// <returns></returns>
+        public static string GetName(this IPsbSingleton c, PsbDictionary parent = null)
+        {
+            var source = parent ?? c?.Parents.FirstOrDefault(p => p is PsbDictionary) as PsbDictionary;
+            var result = source?.FirstOrDefault(pair => Equals(pair.Value, c));
+            return result?.Value == null ? null : result.Value.Key;
+        }
+
+        public static PsbString ToPsbString(this string s)
+        {
+            return s == null ? PsbString.Empty : new PsbString(s);
+        }
+
+        public static PsbNumber ToPsbNumber(this int i)
+        {
+            return new PsbNumber(i);
+        }
+
+        #region Object Finding
 
         /// <summary>
         /// Quickly fetch children (use at your own risk)
@@ -172,423 +152,6 @@ namespace FreeMote.Psb
                 throw new ArgumentException($"{col} doesn't have children.");
             }
         }
-
-        #region MDF
-
-        /// <summary>
-        /// Save PSB as pure MDF file
-        /// </summary>
-        /// <remarks>can not save as impure MDF (such as MT19937 MDF)</remarks>
-        /// <param name="psb"></param>
-        /// <param name="path"></param>
-        /// <param name="key"></param>
-        public static void SaveAsMdfFile(this PSB psb, string path, uint? key = null)
-        {
-            psb.Merge();
-            var bytes = psb.Build();
-            Adler32 adler = new Adler32();
-            uint checksum = 0;
-            if (key == null)
-            {
-                adler.Update(bytes);
-                checksum = (uint) adler.Checksum;
-            }
-
-            MemoryStream ms = new MemoryStream(bytes);
-            using (Stream fs = new FileStream(path, FileMode.Create))
-            {
-                if (key != null)
-                {
-                    MemoryStream nms = new MemoryStream((int) ms.Length);
-                    PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
-                    ms.Dispose();
-                    ms = nms;
-                    var pos = ms.Position;
-                    adler.Update(ms);
-                    checksum = (uint) adler.Checksum;
-                    ms.Position = pos;
-                }
-
-                BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(MdfFile.Signature);
-                bw.Write((uint) ms.Length);
-                bw.Write(ZlibCompress.Compress(ms));
-                bw.WriteBE(checksum);
-                ms.Dispose();
-                bw.Flush();
-            }
-        }
-
-        /// <summary>
-        /// Save as pure MDF
-        /// </summary>
-        /// <param name="psb"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static byte[] SaveAsMdf(this PSB psb, uint? key = null)
-        {
-            psb.Merge();
-            var bytes = psb.Build();
-            Adler32 adler = new Adler32();
-            uint checksum = 0;
-            if (key == null)
-            {
-                adler.Update(bytes);
-                checksum = (uint) adler.Checksum;
-            }
-
-            MemoryStream ms = new MemoryStream(bytes);
-            using (MemoryStream fs = new MemoryStream())
-            {
-                if (key != null)
-                {
-                    MemoryStream nms = new MemoryStream((int) ms.Length);
-                    PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
-                    ms.Dispose();
-                    ms = nms;
-                    var pos = ms.Position;
-                    adler.Update(ms);
-                    checksum = (uint) adler.Checksum;
-                    ms.Position = pos;
-                }
-
-                BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(MdfFile.Signature);
-                bw.Write((uint) ms.Length);
-                bw.Write(ZlibCompress.Compress(ms));
-                bw.WriteBE(checksum);
-                ms.Dispose();
-                bw.Flush();
-                return fs.ToArray();
-            }
-        }
-
-        #endregion
-    }
-
-    internal static class PsbHelper
-    {
-        //WARN: GetSize should not return 0
-        /// <summary>
-        /// Black magic to get size hehehe...
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        public static int GetSize(this int i)
-        {
-            bool neg = false;
-            if (i < 0)
-            {
-                neg = true;
-                i = Math.Abs(i);
-            }
-
-            var hex = i.ToString("X");
-            var l = hex.Length;
-            bool firstBitOne =
-                hex[0] >= '8' &&
-                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
-
-            if (l % 2 != 0)
-            {
-                l++;
-            }
-
-            l = l / 2;
-            if (neg || firstBitOne)
-            {
-                l++;
-            }
-
-            if (l > 4)
-            {
-                l = 4;
-            }
-
-            return l;
-        }
-
-        /// <summary>
-        /// Black magic to get size hehehe...
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        public static int GetSize(this uint i)
-        {
-            //FIXED: Treat uint as int to prevent overconfidence
-            if (i <= Int32.MaxValue)
-            {
-                return GetSize((int) i);
-            }
-
-            var l = i.ToString("X").Length;
-            if (l % 2 != 0)
-            {
-                l++;
-            }
-
-            l = l / 2;
-            if (l > 4)
-            {
-                l = 4;
-            }
-
-            return l;
-        }
-
-        /// <summary>
-        /// Black magic... hehehe...
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        public static int GetSize(this long i)
-        {
-            bool neg = false;
-            if (i < 0)
-            {
-                neg = true;
-                i = Math.Abs(i);
-            }
-
-            var hex = i.ToString("X");
-            var l = hex.Length;
-            bool firstBitOne =
-                hex[0] >= '8' &&
-                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
-
-            if (l % 2 != 0)
-            {
-                l++;
-            }
-
-            l = l / 2;
-            if (neg || firstBitOne)
-            {
-                l++;
-            }
-
-            if (l > 8)
-            {
-                l = 8;
-            }
-
-            return l;
-        }
-
-        public static uint ReadCompactUInt(this BinaryReader br, byte size)
-        {
-            return br.ReadBytes(size).UnzipUInt();
-        }
-
-        public static void ReadAndUnzip(this BinaryReader br, byte size, byte[] data, bool unsigned = false)
-        {
-            br.Read(data, 0, size);
-
-            byte fill = 0x0;
-            if (!unsigned && (data[size - 1] >= 0b10000000)) //negative
-            {
-                fill = 0xFF;
-            }
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                data[i] = i < size ? data[i] : fill;
-            }
-        }
-
-        /// <summary>
-        /// Shorten number bytes
-        /// </summary>
-        /// <param name="i"></param>
-        /// <param name="size">Fix size</param>
-        /// <returns></returns>
-        public static byte[] ZipNumberBytes(this int i, int size = 0)
-        {
-            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
-        }
-
-        /// <summary>
-        /// Shorten number bytes
-        /// </summary>
-        /// <param name="i"></param>
-        /// <param name="size">Fix size</param>
-        /// <returns></returns>
-        public static byte[] ZipNumberBytes(this long i, int size = 0)
-        {
-            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
-        }
-
-        /// <summary>
-        /// Shorten number bytes
-        /// </summary>
-        /// <param name="i"></param>
-        /// <param name="size">Fix size</param>
-        /// <returns></returns>
-        public static byte[] ZipNumberBytes(this uint i, int size = 0)
-        {
-            //FIXED: Treat uint as int to prevent overconfidence
-            //if (i <= int.MaxValue)
-            //{
-            //    return ZipNumberBytes((int) i, size);
-            //}
-            var span = BitConverter.GetBytes(i);
-
-            return span.Take(size <= 0 ? i.GetSize() : size).ToArray();
-        }
-
-        public static byte[] UnzipNumberBytes(this byte[] b, int size = 8, bool unsigned = false)
-        {
-            byte[] r = new byte[size];
-            if (!unsigned && (b[b.Length - 1] >= 0b10000000)) //negative
-            {
-                for (int i = 0; i < r.Length; i++)
-                {
-                    r[i] = (0xFF);
-                }
-            }
-
-            b.CopyTo(r, 0);
-
-            return r;
-        }
-
-        public static void UnzipNumberBytes(this byte[] b, byte[] data, bool unsigned = false)
-        {
-            if (!unsigned && (b[b.Length - 1] >= 0b10000000)) //negative
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    data[i] = (0xFF);
-                }
-            }
-
-            b.CopyTo(data, 0);
-        }
-
-        public static long UnzipNumber(this byte[] b)
-        {
-            return BitConverter.ToInt64(b.UnzipNumberBytes(), 0);
-        }
-
-        public static uint UnzipUInt(this byte[] b)
-        {
-            //return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
-
-            //optimized with Span<T>
-            Span<byte> span = stackalloc byte[4];
-            for (int i = 0; i < Math.Min(b.Length, 4); i++)
-            {
-                span[i] = b[i];
-            }
-
-            return MemoryMarshal.Read<uint>(span);
-        }
-
-        public static uint UnzipUInt(this byte[] b, int start, byte size)
-        {
-            //return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
-
-            //optimized with Span<T>
-            Span<byte> span = stackalloc byte[4];
-            for (int i = 0; i < Math.Min(size, (byte) 4); i++)
-            {
-                span[i] = b[start + i];
-            }
-
-            return MemoryMarshal.Read<uint>(span);
-        }
-
-        /// <summary>
-        /// Get name in <see cref="PsbDictionary"/>
-        /// </summary>
-        /// <param name="c"></param>
-        /// <returns></returns>
-        public static string GetName(this IPsbChild c)
-        {
-            if (c?.Parent is PsbDictionary dic)
-            {
-                var result = dic.FirstOrDefault(pair => Equals(pair.Value, c));
-                return result.Value == null ? null : result.Key;
-            }
-
-            if (c?.Parent is PsbCollection col)
-            {
-                var result = col.Value.IndexOf(c);
-                if (result < 0)
-                {
-                    return null;
-                }
-
-                return $"[{result}]";
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Get name
-        /// </summary>
-        /// <param name="c"></param>
-        /// <param name="parent"></param>
-        /// <returns></returns>
-        public static string GetName(this IPsbSingleton c, PsbDictionary parent = null)
-        {
-            var source = parent ?? c?.Parents.FirstOrDefault(p => p is PsbDictionary) as PsbDictionary;
-            var result = source?.FirstOrDefault(pair => Equals(pair.Value, c));
-            return result?.Value == null ? null : result.Value.Key;
-        }
-
-        /// <summary>
-        /// Check if number is not NaN
-        /// </summary>
-        /// <param name="num"></param>
-        /// <returns></returns>
-        public static bool IsFinite(this float num)
-        {
-            return !Single.IsNaN(num) && !Single.IsInfinity(num);
-        }
-
-        /// <summary>
-        /// Check if number is not NaN
-        /// </summary>
-        /// <param name="num"></param>
-        /// <returns></returns>
-        public static bool IsFinite(this double num)
-        {
-            return !Double.IsNaN(num) && !Double.IsInfinity(num);
-        }
-
-        public static PsbString ToPsbString(this string s)
-        {
-            return s == null ? PsbString.Empty : new PsbString(s);
-        }
-
-        public static PsbNumber ToPsbNumber(this int i)
-        {
-            return new PsbNumber(i);
-        }
-
-        /// <summary>
-        /// If this spec uses RL
-        /// </summary>
-        /// <param name="spec"></param>
-        /// <returns></returns>
-        public static PsbCompressType CompressType(this PsbSpec spec)
-        {
-            switch (spec)
-            {
-                case PsbSpec.krkr:
-                    return PsbCompressType.RL;
-                case PsbSpec.ems:
-                case PsbSpec.common:
-                case PsbSpec.win:
-                case PsbSpec.other:
-                default:
-                    return PsbCompressType.None;
-            }
-        }
-
-        #region Object Finding
 
         public static IEnumerable<IPsbValue> FindAllByPath(this PsbDictionary psbObj, string path)
         {
@@ -843,7 +406,353 @@ namespace FreeMote.Psb
             }
 
             paths.Reverse();
-            return String.Join("/", paths);
+            return string.Join("/", paths);
+        }
+
+        #endregion
+
+        #region MDF
+
+        /// <summary>
+        /// Save PSB as pure MDF file
+        /// </summary>
+        /// <remarks>can not save as impure MDF (such as MT19937 MDF)</remarks>
+        /// <param name="psb"></param>
+        /// <param name="path"></param>
+        /// <param name="key"></param>
+        public static void SaveAsMdfFile(this PSB psb, string path, uint? key = null)
+        {
+            psb.Merge();
+            var bytes = psb.Build();
+            Adler32 adler = new Adler32();
+            uint checksum = 0;
+            if (key == null)
+            {
+                adler.Update(bytes);
+                checksum = (uint) adler.Checksum;
+            }
+
+            MemoryStream ms = new MemoryStream(bytes);
+            using (Stream fs = new FileStream(path, FileMode.Create))
+            {
+                if (key != null)
+                {
+                    MemoryStream nms = new MemoryStream((int) ms.Length);
+                    PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
+                    ms.Dispose();
+                    ms = nms;
+                    var pos = ms.Position;
+                    adler.Update(ms);
+                    checksum = (uint) adler.Checksum;
+                    ms.Position = pos;
+                }
+
+                BinaryWriter bw = new BinaryWriter(fs);
+                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.Write((uint) ms.Length);
+                bw.Write(ZlibCompress.Compress(ms));
+                bw.WriteBE(checksum);
+                ms.Dispose();
+                bw.Flush();
+            }
+        }
+
+        /// <summary>
+        /// Save as pure MDF
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] SaveAsMdf(this PSB psb, uint? key = null)
+        {
+            psb.Merge();
+            var bytes = psb.Build();
+            Adler32 adler = new Adler32();
+            uint checksum = 0;
+            if (key == null)
+            {
+                adler.Update(bytes);
+                checksum = (uint) adler.Checksum;
+            }
+
+            MemoryStream ms = new MemoryStream(bytes);
+            using (MemoryStream fs = new MemoryStream())
+            {
+                if (key != null)
+                {
+                    MemoryStream nms = new MemoryStream((int) ms.Length);
+                    PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
+                    ms.Dispose();
+                    ms = nms;
+                    var pos = ms.Position;
+                    adler.Update(ms);
+                    checksum = (uint) adler.Checksum;
+                    ms.Position = pos;
+                }
+
+                BinaryWriter bw = new BinaryWriter(fs);
+                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.Write((uint) ms.Length);
+                bw.Write(ZlibCompress.Compress(ms));
+                bw.WriteBE(checksum);
+                ms.Dispose();
+                bw.Flush();
+                return fs.ToArray();
+            }
+        }
+
+        #endregion
+
+        #region PSB Parser
+
+        /// <summary>
+        /// Check if number is not NaN
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        public static bool IsFinite(this float num)
+        {
+            return !Single.IsNaN(num) && !Single.IsInfinity(num);
+        }
+
+        /// <summary>
+        /// Check if number is not NaN
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        public static bool IsFinite(this double num)
+        {
+            return !Double.IsNaN(num) && !Double.IsInfinity(num);
+        }
+
+        //WARN: GetSize should not return 0
+        /// <summary>
+        /// Black magic to get size hehehe...
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static int GetSize(this int i)
+        {
+            bool neg = false;
+            if (i < 0)
+            {
+                neg = true;
+                i = Math.Abs(i);
+            }
+
+            var hex = i.ToString("X");
+            var l = hex.Length;
+            bool firstBitOne =
+                hex[0] >= '8' &&
+                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
+
+            if (l % 2 != 0)
+            {
+                l++;
+            }
+
+            l = l / 2;
+            if (neg || firstBitOne)
+            {
+                l++;
+            }
+
+            if (l > 4)
+            {
+                l = 4;
+            }
+
+            return l;
+        }
+
+        /// <summary>
+        /// Black magic to get size hehehe...
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static int GetSize(this uint i)
+        {
+            //FIXED: Treat uint as int to prevent overconfidence
+            if (i <= Int32.MaxValue)
+            {
+                return GetSize((int) i);
+            }
+
+            var l = i.ToString("X").Length;
+            if (l % 2 != 0)
+            {
+                l++;
+            }
+
+            l = l / 2;
+            if (l > 4)
+            {
+                l = 4;
+            }
+
+            return l;
+        }
+
+        /// <summary>
+        /// Black magic... hehehe...
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static int GetSize(this long i)
+        {
+            bool neg = false;
+            if (i < 0)
+            {
+                neg = true;
+                i = Math.Abs(i);
+            }
+
+            var hex = i.ToString("X");
+            var l = hex.Length;
+            bool firstBitOne =
+                hex[0] >= '8' &&
+                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
+
+            if (l % 2 != 0)
+            {
+                l++;
+            }
+
+            l = l / 2;
+            if (neg || firstBitOne)
+            {
+                l++;
+            }
+
+            if (l > 8)
+            {
+                l = 8;
+            }
+
+            return l;
+        }
+
+        public static uint ReadCompactUInt(this BinaryReader br, byte size)
+        {
+            return br.ReadBytes(size).UnzipUInt();
+        }
+
+        public static void ReadAndUnzip(this BinaryReader br, byte size, byte[] data, bool unsigned = false)
+        {
+            br.Read(data, 0, size);
+
+            byte fill = 0x0;
+            if (!unsigned && (data[size - 1] >= 0b10000000)) //negative
+            {
+                fill = 0xFF;
+            }
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = i < size ? data[i] : fill;
+            }
+        }
+
+        /// <summary>
+        /// Shorten number bytes
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="size">Fix size</param>
+        /// <returns></returns>
+        public static byte[] ZipNumberBytes(this int i, int size = 0)
+        {
+            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
+        }
+
+        /// <summary>
+        /// Shorten number bytes
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="size">Fix size</param>
+        /// <returns></returns>
+        public static byte[] ZipNumberBytes(this long i, int size = 0)
+        {
+            return BitConverter.GetBytes(i).Take(size <= 0 ? i.GetSize() : size).ToArray();
+        }
+
+        /// <summary>
+        /// Shorten number bytes
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="size">Fix size</param>
+        /// <returns></returns>
+        public static byte[] ZipNumberBytes(this uint i, int size = 0)
+        {
+            //FIXED: Treat uint as int to prevent overconfidence
+            //if (i <= int.MaxValue)
+            //{
+            //    return ZipNumberBytes((int) i, size);
+            //}
+            var span = BitConverter.GetBytes(i);
+
+            return span.Take(size <= 0 ? i.GetSize() : size).ToArray();
+        }
+
+        public static byte[] UnzipNumberBytes(this byte[] b, int size = 8, bool unsigned = false)
+        {
+            byte[] r = new byte[size];
+            if (!unsigned && (b[b.Length - 1] >= 0b10000000)) //negative
+            {
+                for (int i = 0; i < r.Length; i++)
+                {
+                    r[i] = (0xFF);
+                }
+            }
+
+            b.CopyTo(r, 0);
+
+            return r;
+        }
+
+        public static void UnzipNumberBytes(this byte[] b, byte[] data, bool unsigned = false)
+        {
+            if (!unsigned && (b[b.Length - 1] >= 0b10000000)) //negative
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    data[i] = (0xFF);
+                }
+            }
+
+            b.CopyTo(data, 0);
+        }
+
+        public static long UnzipNumber(this byte[] b)
+        {
+            return BitConverter.ToInt64(b.UnzipNumberBytes(), 0);
+        }
+
+        public static uint UnzipUInt(this byte[] b)
+        {
+            //return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
+
+            //optimized with Span<T>
+            Span<byte> span = stackalloc byte[4];
+            for (int i = 0; i < Math.Min(b.Length, 4); i++)
+            {
+                span[i] = b[i];
+            }
+
+            return MemoryMarshal.Read<uint>(span);
+        }
+
+        public static uint UnzipUInt(this byte[] b, int start, byte size)
+        {
+            //return BitConverter.ToUInt32(b.UnzipNumberBytes(4, true), 0);
+
+            //optimized with Span<T>
+            Span<byte> span = stackalloc byte[4];
+            for (int i = 0; i < Math.Min(size, (byte) 4); i++)
+            {
+                span[i] = b[start + i];
+            }
+
+            return MemoryMarshal.Read<uint>(span);
         }
 
         #endregion

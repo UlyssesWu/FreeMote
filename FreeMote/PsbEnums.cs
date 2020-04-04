@@ -178,6 +178,10 @@ namespace FreeMote
         /// A8_SW (Tile) for PS4
         /// </summary>
         TileA8_SW,
+        /// <summary>
+        /// CI8 (C8) with Swizzle for vita
+        /// </summary>
+        CI8_SW,
     }
 
     public enum EncodeMode

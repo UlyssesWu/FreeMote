@@ -6,6 +6,95 @@ namespace FreeMote
 {
     public static class PsbExtension
     {
+        /// <summary>
+        /// Get <see cref="PsbType"/>'s default extension
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static string DefaultExtension(this PsbType type)
+        {
+            switch (type)
+            {
+                case PsbType.Mmo:
+                    return ".mmo";
+                case PsbType.Pimg:
+                    return ".pimg";
+                case PsbType.Scn:
+                    return ".scn";
+                case PsbType.ArchiveInfo:
+                    return ".psb.m";
+                case PsbType.Motion:
+                default:
+                    return ".psb";
+            }
+        }
+
+        /// <summary>
+        /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static PsbPixelFormat DefaultPixelFormat(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.common:
+                case PsbSpec.ems:
+                    return PsbPixelFormat.CommonRGBA8;
+                case PsbSpec.krkr:
+                case PsbSpec.win:
+                    return PsbPixelFormat.WinRGBA8;
+                case PsbSpec.other:
+                default:
+                    return PsbPixelFormat.None;
+            }
+        }
+
+        /// <summary>
+        /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
+        /// </summary>
+        /// <param name="typeStr"></param>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static PsbPixelFormat ToPsbPixelFormat(this string typeStr, PsbSpec spec)
+        {
+            if (string.IsNullOrEmpty(typeStr))
+            {
+                return PsbPixelFormat.None;
+            }
+
+            switch (typeStr.ToUpperInvariant())
+            {
+                case "CI8_SW":
+                    return PsbPixelFormat.CI8_SW;
+                case "DXT5":
+                    return PsbPixelFormat.DXT5;
+                case "RGBA8":
+                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
+                        return PsbPixelFormat.CommonRGBA8;
+                    else
+                        return PsbPixelFormat.WinRGBA8;
+                case "RGBA8_SW":
+                    if (spec == PsbSpec.ps4)
+                        return PsbPixelFormat.TileRGBA8_SW;
+                    else
+                        return PsbPixelFormat.RGBA8_SW;
+                case "A8_SW":
+                    if (spec == PsbSpec.ps4)
+                        return PsbPixelFormat.TileA8_SW;
+                    else
+                        return PsbPixelFormat.A8_SW;
+                case "RGBA4444":
+                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
+                        return PsbPixelFormat.CommonRGBA4444;
+                    return PsbPixelFormat.WinRGBA4444;
+                case "A8L8":
+                    return PsbPixelFormat.A8L8;
+                default:
+                    return Enum.TryParse(typeStr, true, out PsbPixelFormat pixelFormat) ? pixelFormat : PsbPixelFormat.None;
+            }
+        }
+
         public static string ToStringForPsb(this PsbPixelFormat pixelFormat)
         {
             switch (pixelFormat)
