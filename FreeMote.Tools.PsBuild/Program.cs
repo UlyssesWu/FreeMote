@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -129,8 +128,8 @@ Example:
 Example:
   PsBuild info-psb sample_info.psb.m.json (Key specified in resx.json)
   PsBuild info-psb -k 1234567890ab -l 131 sample_info.psb.m.json (Must keep every filename correct)
-  Hint: Always keep file names correct.
-  If there are `a.scn.m` and `a.scn.m.json` in the same position, `.json` will be used (unless `-p`).
+  Hint: Always keep file names correct. A file name in source folder must match a name kept in .m.json
+  If there are both `.m` and `.m.json` in the source folder, `.json` will be used (unless using `-p`).
 ";
                 //options
                 //var optMdfSeed = archiveCmd.Option("-s|--seed <SEED>",
@@ -140,13 +139,13 @@ Example:
                     "Only pack files which existed in info.psb.m",
                     CommandOptionType.NoValue);
                 var optPacked = archiveCmd.Option("-p|--packed",
-                    "Prefer PSB files rather than json files in source folder",
+                    "Prefer using PSB files rather than json files in source folder",
                     CommandOptionType.NoValue);
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
-                    "Set key (Infer file name from path)",
+                    "Set key (get file name from input path)",
                     CommandOptionType.SingleValue);
                 var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
-                    "Set key length",
+                    "Set key length. Default=131",
                     CommandOptionType.SingleValue);
                 var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
                     "Disable parallel processing (can be slow but save a lot memory)", CommandOptionType.NoValue);
@@ -167,7 +166,7 @@ Example:
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
 
-                    int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : -1;
+                    int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 131;
 
                     foreach (var s in argPsbPaths.Values)
                     {
