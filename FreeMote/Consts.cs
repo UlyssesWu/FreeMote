@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -92,6 +90,11 @@ namespace FreeMote
         /// Always use double instead of float
         /// </summary>
         public static bool JsonUseDoubleOnly { get; set; } = false;
+
+        /// <summary>
+        /// (not implemented yet) Use Palette Merge will increase compile time but cut output size (only when using CI* images)
+        /// </summary>
+        public static bool PaletteMerge { get; set; } = false;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

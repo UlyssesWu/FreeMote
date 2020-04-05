@@ -156,6 +156,29 @@ namespace FreeMote.Tests
             RL.ConvertToImageFile(File.ReadAllBytes(imgPath), imgPath + "output.png", 32, 1024, PsbImageFormat.Png, PsbPixelFormat.RGBA8_SW);
         }
 
+        [TestMethod]
+        public void TestCI8()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var palPath = Path.Combine(resPath, "pm_title.psb", "2.bin");
+            var imgPath = Path.Combine(resPath, "pm_title.psb", "11.bin");
+
+            var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 512, 1024,
+                PsbPixelFormat.CI8_SW);
+            bmp.Save("ci8_10.png", ImageFormat.Png);
+        }
+
+        [TestMethod]
+        public void TestCI8_Pal()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var palPath = Path.Combine(resPath, "config.psb", "2.bin");
+            var imgPath = Path.Combine(resPath, "config.psb", "11.bin");
+
+            var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 512, 1024,
+                PsbPixelFormat.CI8_SW);
+            bmp.Save("ci8_10.png", ImageFormat.Png);
+        }
 
         [TestMethod]
         public void TestDxt5Decompress()

@@ -136,7 +136,41 @@ namespace FreeMote
         public static Bitmap ConvertToImageWithPalette(byte[] data, byte[] palette, int height, int width,
             PsbPixelFormat colorFormat = PsbPixelFormat.None)
         {
-            throw new NotImplementedException();
+            Bitmap bmp;
+            BitmapData bmpData;
+            switch (colorFormat)
+            {
+                case PsbPixelFormat.CI8_SW:
+                    bmp = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
+                    bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
+                        ImageLockMode.WriteOnly, bmp.PixelFormat);
+                    Abgr2Argb(ref palette);
+                    ColorPalette pal = bmp.Palette;
+                    for (int i = 0; i < 256; i++)
+                        pal.Entries[i] = Color.FromArgb(BitConverter.ToInt32(palette, i * 4));
+                    // Assign the edited palette to the bitmap.
+                    bmp.Palette = pal;
+
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    //Abgr2Argb(ref data);
+                    break;
+                default:
+                    return ConvertToImage(data, height, width, colorFormat);
+            }
+
+            int stride = bmpData.Stride; // 扫描线的宽度
+            int offset = stride - width; // 显示宽度与扫描线宽度的间隙
+            IntPtr iptr = bmpData.Scan0; // 获取bmpData的内存起始位置
+            int scanBytes = stride * height; // 用stride宽度，表示这是内存区域的大小
+
+            if (scanBytes >= data.Length)
+            {
+                System.Runtime.InteropServices.Marshal.Copy(data, 0, iptr, data.Length);
+                bmp.UnlockBits(bmpData); // 解锁内存区域
+                return bmp;
+            }
+
+            throw new BadImageFormatException("data may not corresponding");
         }
 
         public static byte[] Compress(Stream stream, int align = 4)
