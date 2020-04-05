@@ -300,8 +300,10 @@ namespace FreeMote.PsBuild
             return psb;
         }
 
-        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata, FreeMountContext context)
+        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata, FreeMountContext context,
+            out byte[] palette)
         {
+            palette = null;
             byte[] data;
             Bitmap image = null;
             var ext = Path.GetExtension(path)?.ToLowerInvariant();
@@ -345,7 +347,15 @@ namespace FreeMote.PsBuild
                 default:
                     if (SupportedImageExt.Contains(ext))
                     {
-                        image = new Bitmap(path);
+                        if (metadata.PixelFormat.UsePalette())
+                        {
+                            image = BitmapHelper.LoadBitmap(File.ReadAllBytes(path));
+                            palette = image.Palette.GetPaletteBytes(metadata.PalettePixelFormat);
+                        }
+                        else
+                        {
+                            image = new Bitmap(path);
+                        }
                     }
                     else if (context.SupportImageExt(ext))
                     {
@@ -422,7 +432,7 @@ namespace FreeMote.PsBuild
                 psb.MotionResourceInstrument();
             }
 
-            var resList = psb.CollectResources();
+            var resList = psb.CollectResources(duplicatePalette: Consts.GeneratePalette);
             var context = FreeMount.CreateContext();
             if (order == PsbLinkOrderBy.Order)
             {
@@ -430,8 +440,9 @@ namespace FreeMote.PsBuild
                 {
                     var resMd = resList[i];
                     var fullPath = Path.Combine(baseDir ?? "", resPaths[i]);
-                    byte[] data = LoadImageBytes(fullPath, resMd, context);
-                    resMd.Resource.Data = data;
+                    byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
+                    resMd.Data = data;
+                    resMd.PalData = palette;
                 }
 
                 return;
@@ -513,8 +524,9 @@ namespace FreeMote.PsBuild
                 }
 
                 var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd, context);
-                resMd.Resource.Data = data;
+                byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
+                resMd.Data = data;
+                resMd.PalData = palette;
             }
         }
 
@@ -526,8 +538,14 @@ namespace FreeMote.PsBuild
         /// <param name="baseDir"></param>
         internal static void Link(this PSB psb, PsbResourceJson resx, string baseDir)
         {
+            if (resx.Resources == null)
+            {
+                return;
+            }
+
             FreeMountContext context = FreeMount.CreateContext(resx.Context);
-            var resList = psb.CollectResources();
+            var resList = psb.CollectResources(duplicatePalette: Consts.GeneratePalette);
+
             foreach (var resxResource in resx.Resources)
             {
                 //Scan for Resource
@@ -552,8 +570,9 @@ namespace FreeMote.PsBuild
                 var fullPath = Path.IsPathRooted(resxResource.Value)
                     ? resxResource.Value
                     : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd, context);
-                resMd.Resource.Data = data;
+                byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
+                resMd.Data = data;
+                resMd.PalData = palette;
             }
         }
     }

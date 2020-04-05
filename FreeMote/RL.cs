@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 
 namespace FreeMote
 {
@@ -10,6 +11,20 @@ namespace FreeMote
     /// </summary>
     public static class RL
     {
+        public static Bitmap ConvertToImage(byte[] data, byte[] palette, int height, int width,
+            PsbPixelFormat colorFormat, PsbPixelFormat paletteColorFormat)
+        {
+            //Copy data & palette to avoid changing original Data (might be reused)
+            if (palette != null && palette.Length > 0)
+            {
+                return ConvertToImageWithPalette(data.ToArray(), palette.ToArray(), height, width, colorFormat, paletteColorFormat);
+            }
+            else
+            {
+                return ConvertToImage(data.ToArray(), height, width, colorFormat);
+            }
+        }
+
         public static Bitmap ConvertToImage(byte[] data, int height, int width,
             PsbPixelFormat colorFormat = PsbPixelFormat.None)
         {
@@ -21,24 +36,24 @@ namespace FreeMote
             {
                 case PsbPixelFormat.CommonRGBA4444:
                     data = Rgba428(data);
-                    Bgra2Abgr(ref data);
+                    Rgba2Argb(ref data);
                     break;
                 case PsbPixelFormat.WinRGBA4444:
                     data = Rgba428(data);
                     break;
                 case PsbPixelFormat.CommonRGBA8:
-                    Abgr2Argb(ref data);
+                    Switch_0_2(ref data);
                     break;
                 case PsbPixelFormat.A8L8:
                     data = ReadA8L8(data, width, height);
                     break;
                 case PsbPixelFormat.DXT5: //MARK: RL seems compatible to DXT5 compress?
                     data = DxtUtil.DecompressDxt5(data, width, height);
-                    Abgr2Argb(ref data); //DXT5(for win) need conversion
+                    Switch_0_2(ref data); //DXT5(for win) need conversion
                     break;
                 case PsbPixelFormat.RGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    Abgr2Argb(ref data);
+                    Switch_0_2(ref data);
                     break;
                 case PsbPixelFormat.TileRGBA8_SW:
                     data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
@@ -77,7 +92,7 @@ namespace FreeMote
         private static byte[] PixelBytesFromImage(Bitmap bmp, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
-                ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                ImageLockMode.ReadOnly, bmp.PixelFormat);
 
             int stride = bmpData.Stride; // 扫描线的宽度
             int offset = stride - bmp.Width; // 显示宽度与扫描线宽度的间隙
@@ -94,22 +109,22 @@ namespace FreeMote
                     result = Rgba428(result, false);
                     break;
                 case PsbPixelFormat.CommonRGBA4444:
-                    Bgra2Abgr(ref result, true);
+                    Rgba2Argb(ref result, true);
                     result = Rgba428(result, false);
                     break;
                 case PsbPixelFormat.CommonRGBA8:
-                    Abgr2Argb(ref result);
+                    Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.A8L8:
                     result = Rgba2A8L8(result);
                     break;
                 case PsbPixelFormat.DXT5:
-                    //Abgr2Argb(ref result);
+                    //Switch_0_2(ref result);
                     result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.RGBA8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    Abgr2Argb(ref result);
+                    Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.TileRGBA8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
@@ -128,23 +143,33 @@ namespace FreeMote
                 case PsbPixelFormat.A8:
                     result = Rgba2A8(result);
                     break;
+                case PsbPixelFormat.CI8_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
             }
 
             return result;
         }
 
         public static Bitmap ConvertToImageWithPalette(byte[] data, byte[] palette, int height, int width,
-            PsbPixelFormat colorFormat = PsbPixelFormat.None)
+            PsbPixelFormat colorFormat = PsbPixelFormat.None, PsbPixelFormat paletteColorFormat = PsbPixelFormat.None)
         {
             Bitmap bmp;
             BitmapData bmpData;
+
+            switch (paletteColorFormat)
+            {
+                case PsbPixelFormat.CommonRGBA8:
+                    Switch_0_2(ref palette);
+                    break;
+            }
+
             switch (colorFormat)
             {
                 case PsbPixelFormat.CI8_SW:
                     bmp = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
                     bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
                         ImageLockMode.WriteOnly, bmp.PixelFormat);
-                    Abgr2Argb(ref palette);
                     ColorPalette pal = bmp.Palette;
                     for (int i = 0; i < 256; i++)
                         pal.Entries[i] = Color.FromArgb(BitConverter.ToInt32(palette, i * 4));
@@ -152,7 +177,7 @@ namespace FreeMote
                     bmp.Palette = pal;
 
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    //Abgr2Argb(ref data);
+                    //Switch_0_2(ref data);
                     break;
                 default:
                     return ConvertToImage(data, height, width, colorFormat);
@@ -245,9 +270,10 @@ namespace FreeMote
         }
         
         public static void ConvertToImageFile(byte[] data, string path, int height, int width, PsbImageFormat format,
-            PsbPixelFormat colorFormat = PsbPixelFormat.None)
+            PsbPixelFormat colorFormat = PsbPixelFormat.None, byte[] palette = null, PsbPixelFormat paletteColorFormat = PsbPixelFormat.None)
         {
-            var bmp = ConvertToImage(data, height, width, colorFormat);
+            Bitmap bmp = ConvertToImage(data, palette, height, width, colorFormat, paletteColorFormat);
+            
             switch (format)
             {
                 case PsbImageFormat.Bmp:
@@ -284,10 +310,10 @@ namespace FreeMote
         #region Convert
 
         /// <summary>
-        /// RGBA(LE) -> ARGB(BE) (switch B & R)
+        /// BGRA(LE ARGB) -> RGBA(BE RGBA)  (switch B &amp; R)
         /// </summary>
         /// <param name="bytes"></param>
-        public static unsafe void Abgr2Argb(ref byte[] bytes)
+        public static unsafe void Switch_0_2(ref byte[] bytes)
         {
             //RGBA in little endian is actually ABGR
             //Actually abgr -> argb
@@ -312,11 +338,11 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// ARGB(LE) -> RGBA(LE) (switch A)
+        /// RGBA(BE) -> ARGB(LE) (switch A)
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="reverse"></param>
-        public static unsafe void Bgra2Abgr(ref byte[] bytes, bool reverse = false)
+        public static unsafe void Rgba2Argb(ref byte[] bytes, bool reverse = false)
         {
             //Actually bgra -> abgr
             fixed (byte* ptr = bytes)

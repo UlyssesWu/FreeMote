@@ -92,7 +92,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsbDecompile\$(OutDir)" /D /E /Y
+    <PostBuildEvent>echo There is a bug that some nuget package dll may not have edit date so it won't be copied. If it happens, remove /D and try again.
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsbDecompile\$(OutDir)" /D /E /Y
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsBuild\$(OutDir)" /D /E /Y
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtConvert\$(OutDir)" /D /E /Y
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtMake\$(OutDir)" /D /E /Y

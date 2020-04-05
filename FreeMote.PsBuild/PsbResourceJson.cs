@@ -61,7 +61,7 @@ namespace FreeMote.PsBuild
             PsbVersion = psb.Header.Version;
             PsbType = psb.Type;
             Platform = psb.Platform;
-            ExternalTextures = psb.Resources.Count <= 0;
+            //ExternalTextures = psb.Resources.Count <= 0;
 
             if (context != null)
             {

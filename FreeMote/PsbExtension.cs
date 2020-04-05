@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 
@@ -6,6 +7,36 @@ namespace FreeMote
 {
     public static class PsbExtension
     {
+        /// <summary>
+        /// Get RGBA bytes from palette
+        /// </summary>
+        /// <param name="palette"></param>
+        /// <param name="palettePixelFormat"></param>
+        /// <returns></returns>
+        public static byte[] GetPaletteBytes(this ColorPalette palette, PsbPixelFormat palettePixelFormat)
+        {
+            byte[] bytes = new byte[palette.Entries.Length * 4];
+            for (var i = 0; i < palette.Entries.Length; i++)
+            {
+                //LE ARGB
+                var color = palette.Entries[i];
+                bytes[i * 4] = color.B;
+                bytes[i * 4 + 1] = color.G;
+                bytes[i * 4 + 2] = color.R;
+                bytes[i * 4 + 3] = color.A;
+                var bt = BitConverter.GetBytes(color.ToArgb());
+            }
+
+            switch (palettePixelFormat)
+            {
+                case PsbPixelFormat.CommonRGBA8:
+                    RL.Switch_0_2(ref bytes);
+                    break;
+            }
+
+            return bytes;
+        }
+
         /// <summary>
         /// Get <see cref="PsbType"/>'s default extension
         /// </summary>
@@ -30,6 +61,22 @@ namespace FreeMote
         }
 
         /// <summary>
+        /// Whether the <see cref="PsbPixelFormat"/> use palette
+        /// </summary>
+        /// <param name="format"></param>
+        /// <returns></returns>
+        public static bool UsePalette(this PsbPixelFormat format)
+        {
+            switch (format)
+            {
+                case PsbPixelFormat.CI8_SW:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
         /// </summary>
         /// <param name="spec"></param>
@@ -40,6 +87,7 @@ namespace FreeMote
             {
                 case PsbSpec.common:
                 case PsbSpec.ems:
+                case PsbSpec.vita:
                     return PsbPixelFormat.CommonRGBA8;
                 case PsbSpec.krkr:
                 case PsbSpec.win:
@@ -70,7 +118,7 @@ namespace FreeMote
                 case "DXT5":
                     return PsbPixelFormat.DXT5;
                 case "RGBA8":
-                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
+                    if (spec == PsbSpec.common || spec == PsbSpec.ems || spec == PsbSpec.vita)
                         return PsbPixelFormat.CommonRGBA8;
                     else
                         return PsbPixelFormat.WinRGBA8;

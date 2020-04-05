@@ -59,7 +59,7 @@ namespace FreeMote.Psb
         /// </summary>
         public uint Index
         {
-            get => Resource.Index ?? UInt32.MaxValue;
+            get => Resource.Index ?? uint.MaxValue;
             set
             {
                 if (Resource != null)
@@ -139,7 +139,7 @@ namespace FreeMote.Psb
         /// Palette Pixel Format Type
         /// </summary>
         public string PalType => PaletteTypeString?.Value;
-        public PsbPixelFormat PalettePixelFormat { get; set; }
+        public PsbPixelFormat PalettePixelFormat => PalType.ToPsbPixelFormat(Spec);
 
         public byte[] Data
         {
@@ -153,6 +153,21 @@ namespace FreeMote.Psb
                 }
 
                 Resource.Data = value;
+            }
+        }
+
+        public byte[] PalData
+        {
+            get => Palette?.Data;
+
+            internal set
+            {
+                if (Palette == null)
+                {
+                    Palette = new PsbResource();
+                }
+
+                Palette.Data = value;
             }
         }
 
@@ -183,7 +198,7 @@ namespace FreeMote.Psb
         public PsbPixelFormat PixelFormat => Type.ToPsbPixelFormat(Spec);
 
         private string DebuggerString =>
-            $"{(string.IsNullOrWhiteSpace(Part) ? "" : Part + "/")}{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}";
+            $"{(string.IsNullOrWhiteSpace(Part) ? "" : Part + "/")}{Name}({Width}*{Height}){(Compress == PsbCompressType.RL ? "[RL]" : "")}(#{Index})";
 
         /// <summary>
         /// Convert Resource to Image
@@ -207,7 +222,7 @@ namespace FreeMote.Psb
                         return new TlgImageConverter().Read(new BinaryReader(ms));
                     }
                 default:
-                    return RL.ConvertToImage(Resource.Data, Height, Width, PixelFormat);
+                    return RL.ConvertToImage(Resource.Data, PalData, Height, Width, PixelFormat, PalettePixelFormat);
             }
         }
 
@@ -228,6 +243,11 @@ namespace FreeMote.Psb
                 default:
                     Data = RL.GetPixelBytesFromImage(bmp, PixelFormat);
                     break;
+            }
+
+            if (PixelFormat.UsePalette())
+            {
+                PalData = bmp.Palette.GetPaletteBytes(PalettePixelFormat);
             }
         }
 

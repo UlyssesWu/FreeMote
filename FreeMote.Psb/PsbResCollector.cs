@@ -34,8 +34,9 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="deDuplication">if true, we focus on Resource itself </param>
+        /// <param name="duplicatePalette">when compiling PSB, re-create palettes</param>
         /// <returns></returns>
-        public static List<ResourceMetadata> CollectResources(this PSB psb, bool deDuplication = true)
+        public static List<ResourceMetadata> CollectResources(this PSB psb, bool deDuplication = true, bool duplicatePalette = false)
         {
             List<ResourceMetadata> resourceList = psb.Resources == null
                 ? new List<ResourceMetadata>()
@@ -63,7 +64,7 @@ namespace FreeMote.Psb
                     break;
                 case PsbType.Motion:
                 default:
-                    FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
+                    FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication, duplicatePalette);
                     break;
             }
 
@@ -300,7 +301,7 @@ namespace FreeMote.Psb
             }
         }
 
-        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
+        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true, bool duplicatePalette = false)
         {
             switch (obj)
             {
@@ -368,8 +369,9 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="d">PsbObject which contains "pixel"</param>
         /// <param name="r">Resource</param>
+        /// <param name="duplicatePalette"></param>
         /// <returns></returns>
-        internal static ResourceMetadata GenerateMotionResMetadata(PsbDictionary d, PsbResource r = null)
+        internal static ResourceMetadata GenerateMotionResMetadata(PsbDictionary d, PsbResource r = null, bool duplicatePalette = false)
         {
             if (r == null)
             {
@@ -447,6 +449,22 @@ namespace FreeMote.Psb
                 left = (int) nl;
             }
 
+            PsbResource palResource = null;
+            PsbString palTypeString = null;
+            if (d["pal"] is PsbResource palRes)
+            {
+                if (duplicatePalette)
+                {
+                    palResource = new PsbResource();
+                    d["pal"] = palResource;
+                }
+                else
+                {
+                    palResource = palRes;
+                }
+                palTypeString = d["palType"] as PsbString;
+            }
+
             var md = new ResourceMetadata()
             {
                 Index = r.Index ?? int.MaxValue,
@@ -463,6 +481,8 @@ namespace FreeMote.Psb
                 Height = height,
                 TypeString = typeString,
                 Resource = r,
+                Palette = palResource,
+                PaletteTypeString = palTypeString
             };
             return md;
         }

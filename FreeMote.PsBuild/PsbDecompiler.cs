@@ -214,7 +214,7 @@ namespace FreeMote.PsBuild
                             else
                             {
                                 RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat);
+                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat, resource.PalData, resource.PalettePixelFormat);
                             }
 
                             break;
@@ -261,7 +261,7 @@ namespace FreeMote.PsBuild
 
                     try
                     {
-                        resDictionary.Add(i.ToString(), $"{name}/{relativePath}");
+                        resDictionary.Add(resource.Index.ToString(), $"{name}/{relativePath}");
                     }
                     catch (ArgumentException e)
                     {
@@ -360,7 +360,7 @@ namespace FreeMote.PsBuild
             for (int i = 0; i < resources.Count; i++)
             {
                 var resource = resources[i];
-                var tex = RL.ConvertToImage(resource.Data, resource.Height, resource.Width, resource.PixelFormat);
+                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Height, resource.Width, resource.PixelFormat, resource.PalettePixelFormat);
 
                 switch (order)
                 {

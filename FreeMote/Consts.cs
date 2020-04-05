@@ -95,6 +95,11 @@ namespace FreeMote
         /// (not implemented yet) Use Palette Merge will increase compile time but cut output size (only when using CI* images)
         /// </summary>
         public static bool PaletteMerge { get; set; } = false;
+
+        /// <summary>
+        /// Allows you to edit CI* images by re-generate the palette for each palette (will increase size), otherwise you should not change those images
+        /// </summary>
+        public static bool GeneratePalette { get; set; } = true;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462
