@@ -66,11 +66,12 @@ Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and a
 * @number201724 for PSB format references. LICENSE: MIT
 * @WcLyic for PSB samples and Editor help.
 * @nalsas (awatm) for Editor help.
-* [MonoGame](https://github.com/MonoGame/MonoGame) for `DxtUtil` code. LICENSE: Ms-PL
-* Singyuen Yip for `Adler32` code.
+* [MonoGame](https://github.com/MonoGame/MonoGame) for [DxtUtil](https://github.com/UlyssesWu/FreeMote/blob/master/FreeMote/DxtUtil.cs) code. LICENSE: Ms-PL
+* Singyuen Yip for [Adler32](https://github.com/UlyssesWu/FreeMote/blob/master/FreeMote/Adler32.cs) code.
 * @gdkchan for [DxtCodec](https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs) code.
 * @mfascia for [TexturePacker](https://github.com/mfascia/TexturePacker) code.
 * @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs) & [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs) code. LICENSE: MIT
 * @xdaniel & @FireyFly for [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
+* @Nyerguds for [BitmapHelper](https://stackoverflow.com/a/45100442) code.
 * @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/) as sponsor!
 * All nuget references used in this project.

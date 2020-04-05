@@ -12,6 +12,7 @@ Some codes are borrowed from other projects with no license specified. Thanks fo
 gdkchan (https://github.com/gdkchan)
 mfascia (https://github.com/mfascia)
 Singyuen Yip (yeshengyuan@foxmail.com)
+Maarten Meuris (https://github.com/Nyerguds)
 
 ------------------------------
 DxtUtil code is licensed under Ms-PL. AUTHOR: MonoGame (http://www.monogame.net)
