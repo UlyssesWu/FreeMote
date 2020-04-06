@@ -154,7 +154,12 @@ namespace FreeMote.PsBuild
                 {
                     var resource = resources[i];
                     //Generate Friendly Name
-                    string relativePath = resource.GetFriendlyName(psb.Type);
+                    var friendlyName = resource.GetFriendlyName(psb.Type);
+                    string relativePath = friendlyName;
+                    if (string.IsNullOrWhiteSpace(friendlyName))
+                    {
+                        relativePath = resource.Resource.Index?.ToString() ?? $"({i})";
+                    }
 
                     switch (imageOption)
                     {
@@ -261,12 +266,12 @@ namespace FreeMote.PsBuild
 
                     try
                     {
-                        resDictionary.Add(resource.Index.ToString(), $"{name}/{relativePath}");
+                        resDictionary.Add(resource.Resource.Index == null? friendlyName : resource.Index.ToString(), $"{name}/{relativePath}");
                     }
                     catch (ArgumentException e)
                     {
                         throw new PsbBadFormatException(PsbBadFormatReason.Resources,
-                            "There are resources with same names! Try Raw export mode.", e);
+                            "Resource Export Error: Name conflict, or Index is not specified. Try Raw export mode.", e);
                     }
                 }
             }

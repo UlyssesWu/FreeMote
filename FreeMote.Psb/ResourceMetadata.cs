@@ -268,9 +268,14 @@ namespace FreeMote.Psb
                 return Path.GetFileNameWithoutExtension(Name);
             }
 
-            if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Part))
+            if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(Part))
             {
-                return Index.ToString();
+                if (Resource.Index != null)
+                {
+                    return Index.ToString();
+                }
+
+                return "";
             }
 
             return $"{Part}{PsbResCollector.ResourceNameDelimiter}{Name}";

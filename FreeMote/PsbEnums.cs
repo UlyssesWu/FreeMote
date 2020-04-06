@@ -181,6 +181,7 @@ namespace FreeMote
         /// <summary>
         /// CI8 (C8) with Swizzle for vita
         /// </summary>
+        /// REF: http://wiki.tockdom.com/wiki/Image_Formats#C8_.28CI8.29
         CI8_SW,
     }
 

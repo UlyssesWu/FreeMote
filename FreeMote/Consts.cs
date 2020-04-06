@@ -97,7 +97,7 @@ namespace FreeMote
         public static bool PaletteMerge { get; set; } = false;
 
         /// <summary>
-        /// Allows you to edit CI* images by re-generate the palette for each palette (will increase size), otherwise you should not change those images
+        /// Allows you to edit CI* images by re-generate the palette for each bppIndexed image (will increase size), otherwise you should not change those images
         /// </summary>
         public static bool GeneratePalette { get; set; } = true;
     }
