@@ -505,6 +505,34 @@ namespace FreeMote.Psb
 
         #region PSB Parser
 
+        public static bool ByteArrayEqual(this byte[] a1, byte[] a2)
+        {
+            if (a1 == null && a2 == null)
+            {
+                return true;
+            }
+            if (a1 == null || a2 == null)
+            {
+                return false;
+            }
+            if (a1.Length != a2.Length)
+            {
+                return false;
+            }
+            return ByteSpanEqual(a1, a2);
+        }
+
+        /// <summary>
+        /// Fast compare byte array
+        /// </summary>
+        /// <param name="a1"></param>
+        /// <param name="a2"></param>
+        /// <returns></returns>
+        public static bool ByteSpanEqual(ReadOnlySpan<byte> a1, ReadOnlySpan<byte> a2)
+        {
+            return a1.SequenceEqual(a2);
+        }
+
         /// <summary>
         /// Check if number is not NaN
         /// </summary>

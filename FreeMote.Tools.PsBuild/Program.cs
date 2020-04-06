@@ -536,7 +536,7 @@ Example:
                 psb.SwitchSpec(portSpec);
                 psb.Merge();
                 File.WriteAllBytes(Path.ChangeExtension(s, $".{portSpec}{psb.Type.DefaultExtension()}"), psb.Build());
-                Console.WriteLine($"Convert {name} succeed.");
+                Console.WriteLine($"Convert {name} done.");
             }
         }
 
@@ -575,7 +575,7 @@ Example:
                 Console.WriteLine(e);
             }
 
-            Console.WriteLine($"Link {name} succeed.");
+            Console.WriteLine($"Link {name} done.");
         }
 
         private static void Compile(string s, ushort? version, uint? key, PsbSpec? spec, bool canRename,
@@ -603,7 +603,7 @@ Example:
                 Console.WriteLine($"Compile {name} failed.\r\n{e}");
             }
 
-            Console.WriteLine($"Compile {name} succeed.");
+            Console.WriteLine($"Compile {name} done.");
         }
 
         private static string PrintHelp()

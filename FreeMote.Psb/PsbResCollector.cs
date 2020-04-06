@@ -455,7 +455,7 @@ namespace FreeMote.Psb
             {
                 if (duplicatePalette)
                 {
-                    palResource = new PsbResource();
+                    palResource = new PsbResource(palRes.Index);
                     d["pal"] = palResource;
                 }
                 else

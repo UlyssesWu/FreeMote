@@ -304,6 +304,7 @@ namespace FreeMote.PsBuild
             out byte[] palette)
         {
             palette = null;
+            bool usePalette = metadata.PixelFormat.UsePalette();
             byte[] data;
             Bitmap image = null;
             var ext = Path.GetExtension(path)?.ToLowerInvariant();
@@ -417,7 +418,7 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
-        /// Link
+        /// Link Textures
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="resPaths">resource paths</param>
@@ -507,6 +508,7 @@ namespace FreeMote.PsBuild
                         resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
                     if (resMd == null && uint.TryParse(resName, out uint rid))
                     {
+                        //This Link has no support for raw palette
                         resMd = resList.FirstOrDefault(r => r.Index == rid);
                     }
 
@@ -526,7 +528,10 @@ namespace FreeMote.PsBuild
                 var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
                 byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
                 resMd.Data = data;
-                resMd.PalData = palette;
+                if (palette != null)
+                {
+                    resMd.PalData = palette;
+                }
             }
         }
 
@@ -559,6 +564,23 @@ namespace FreeMote.PsBuild
                 if (resMd == null && uint.TryParse(resxResource.Key, out uint rid))
                 {
                     resMd = resList.FirstOrDefault(r => r.Index == rid);
+                    if (resMd == null)
+                    {
+                        //support raw palette
+                        var palResMds = resList.FindAll(r => r.Palette?.Index == rid);
+                        if (palResMds.Count > 0)
+                        {
+                            var palFullPath = Path.IsPathRooted(resxResource.Value)
+                                ? resxResource.Value
+                                : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
+                            var palRawData = File.ReadAllBytes(palFullPath);
+                            foreach (var palResMd in palResMds)
+                            {
+                                palResMd.PalData = palRawData;
+                            }
+                            continue;
+                        }
+                    }
                 }
 
                 if (resMd == null)
@@ -572,7 +594,10 @@ namespace FreeMote.PsBuild
                     : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
                 byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
                 resMd.Data = data;
-                resMd.PalData = palette;
+                if (palette != null)
+                {
+                    resMd.PalData = palette;
+                }
             }
         }
     }

@@ -159,6 +159,7 @@ namespace FreeMote.PsBuild
                     if (string.IsNullOrWhiteSpace(friendlyName))
                     {
                         relativePath = resource.Resource.Index?.ToString() ?? $"({i})";
+                        friendlyName = i.ToString();
                     }
 
                     switch (imageOption)
@@ -349,7 +350,6 @@ namespace FreeMote.PsBuild
             OutputResources(psb, context, inputPath, imageOption, extractFormat, useResx);
         }
 
-        // ReSharper disable once InvalidXmlDocComment
         /// <summary>
         /// Inlined PSB -> External Texture PSB. Inverse of <seealso cref="PsbCompiler.Link"/>
         /// </summary>
@@ -400,7 +400,7 @@ namespace FreeMote.PsBuild
         /// Convert a PSB to External Texture PSB.
         /// </summary>
         /// <param name="inputPath"></param>
-        /// <param name="outputUnlinkedPsb">output unlinked PSB if you need</param>
+        /// <param name="outputUnlinkedPsb">output unlinked PSB; otherwise only output textures</param>
         /// <param name="order"></param>
         /// <param name="format"></param>
         /// <returns>The unlinked PSB path</returns>

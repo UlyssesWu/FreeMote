@@ -680,11 +680,15 @@ namespace FreeMote.Psb
                 switch (obj)
                 {
                     case PsbResource r:
-                        if (r.Index == null || Resources.FirstOrDefault(res => res.Index == r.Index) == null)
+                        var sameDataRes = Resources.Find(resource => resource.Data.ByteArrayEqual(r.Data) && resource.Index != null);
+                        if (sameDataRes == null)
                         {
                             Resources.Add(r);
                         }
-
+                        else
+                        {
+                            r.Index = sameDataRes.Index;
+                        }
                         break;
                     case PsbString s:
                         if (mergeString)
