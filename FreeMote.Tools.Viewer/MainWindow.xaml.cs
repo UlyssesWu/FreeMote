@@ -16,6 +16,7 @@ using System.Windows.Media;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace FreeMote.Tools.Viewer
 {
@@ -53,64 +54,8 @@ namespace FreeMote.Tools.Viewer
 
         public MainWindow()
         {
-            string[] args = Environment.GetCommandLineArgs();
-
-            if (args.Length <= 1)
-            {
-                _psbPath = "FreeMote.psb";
-            }
-            else if (args.Length == 2)
-            {
-                _psbPath = args.Last();
-                _extraPaths = null;
-            }
-            else
-            {
-                _psbPath = args[1];
-                _extraPaths = args.Skip(2).ToArray();
-            }
-
-            bool quickLoad = args.Contains("-d");
-            bool removeTempFile = false;
-
-            if (!File.Exists(_psbPath))
-            {
-                return;
-            }
-
-            if (!quickLoad)
-            {
-                try
-                {
-                    //Consts.FastMode = false;
-                    FreeMount.Init();
-                    using (var fs = File.OpenRead(_psbPath))
-                    {
-                        var ctx = FreeMount.CreateContext();
-                        string currentType = null;
-                        var ms = ctx.OpenFromShell(fs, ref currentType);
-                        var psb = ms != null ? new PSB(ms) : new PSB(fs);
-
-                        if (psb.Platform == PsbSpec.krkr)
-                        {
-                            psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
-                        }
-
-                        psb.Merge();
-                        //File.WriteAllText("output.json", PsbDecompiler.Decompile(psb));
-                        _psbPath = Path.GetTempFileName();
-                        File.WriteAllBytes(_psbPath, psb.Build());
-                        removeTempFile = true;
-                        ms?.Dispose();
-                    }
-
-                    GC.Collect(); //Can save memory from 700MB to 400MB
-                }
-                catch (Exception e)
-                {
-                    //ignore
-                }
-            }
+            _psbPath = Core.PsbPath;
+            _extraPaths = Core.ExtraPaths;
 
             _helper = new WindowInteropHelper(this);
 
@@ -139,6 +84,8 @@ namespace FreeMote.Tools.Viewer
             //Top = y1 - 600;
             // parse the XAML
             InitializeComponent();
+            Width = Core.Width;
+            Height = Core.Height;
             //Topmost = true;
             //Width = 800;
             //Height = 600;
@@ -149,7 +96,7 @@ namespace FreeMote.Tools.Viewer
 
             _emote = new Emote(_helper.EnsureHandle(), (int) Width, (int) Height, true);
             _emote.EmoteInit();
-
+            
             if (_extraPaths != null)
             {
                 _player = _emote.CreatePlayer("CombinedChara1", new[] {_psbPath}.Concat(_extraPaths).ToArray());
@@ -164,14 +111,20 @@ namespace FreeMote.Tools.Viewer
             _player.SetVariable("fade_z", 256);
             _player.SetSmoothing(true);
             _player.Show();
-
-            if (removeTempFile)
+            
+            if (Core.NeedRemoveTempFile)
             {
                 File.Delete(_psbPath);
+                Core.NeedRemoveTempFile = false;
             }
 
             // begin rendering the custom D3D scene into the D3DImage
             BeginRenderingScene();
+        }
+
+        private string PrintHelp()
+        {
+            return "";
         }
 
         private void LoadModel()
@@ -436,6 +389,11 @@ namespace FreeMote.Tools.Viewer
                 // unlock the D3DImage
                 _di.Unlock();
             }
+        }
+
+        protected override void OnDrop(DragEventArgs e)
+        {
+            base.OnDrop(e);
         }
 
         private void GetTimelines(object sender, RoutedEventArgs e)

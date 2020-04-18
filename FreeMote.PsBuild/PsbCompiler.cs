@@ -304,7 +304,6 @@ namespace FreeMote.PsBuild
             out byte[] palette)
         {
             palette = null;
-            bool usePalette = metadata.PixelFormat.UsePalette();
             byte[] data;
             Bitmap image = null;
             var ext = Path.GetExtension(path)?.ToLowerInvariant();
