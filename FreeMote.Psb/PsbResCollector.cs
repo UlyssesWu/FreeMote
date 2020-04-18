@@ -80,7 +80,7 @@ namespace FreeMote.Psb
             switch (obj)
             {
                 case PsbCollection c:
-                    c.ForEach(o => FindTachieResources(list, o));
+                    c.ForEach(o => FindTachieResources(list, o, currentLabel));
                     break;
                 case PsbDictionary d:
                     if (d["label"] is PsbString label)

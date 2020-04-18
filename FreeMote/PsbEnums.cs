@@ -171,6 +171,10 @@ namespace FreeMote
         /// </summary>
         TileRGBA8_SW,
         /// <summary>
+        /// L8 with Swizzle for vita
+        /// </summary>
+        L8_SW,
+        /// <summary>
         /// A8_SW (Swizzle)
         /// </summary>
         A8_SW,

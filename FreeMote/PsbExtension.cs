@@ -113,6 +113,8 @@ namespace FreeMote
 
             switch (typeStr.ToUpperInvariant())
             {
+                case "L8_SW":
+                    return PsbPixelFormat.L8_SW;
                 case "CI8_SW":
                     return PsbPixelFormat.CI8_SW;
                 case "DXT5":
@@ -123,15 +125,9 @@ namespace FreeMote
                     else
                         return PsbPixelFormat.WinRGBA8;
                 case "RGBA8_SW":
-                    if (spec == PsbSpec.ps4)
-                        return PsbPixelFormat.TileRGBA8_SW;
-                    else
-                        return PsbPixelFormat.RGBA8_SW;
+                    return spec == PsbSpec.ps4 ? PsbPixelFormat.TileRGBA8_SW : PsbPixelFormat.RGBA8_SW;
                 case "A8_SW":
-                    if (spec == PsbSpec.ps4)
-                        return PsbPixelFormat.TileA8_SW;
-                    else
-                        return PsbPixelFormat.A8_SW;
+                    return spec == PsbSpec.ps4 ? PsbPixelFormat.TileA8_SW : PsbPixelFormat.A8_SW;
                 case "RGBA4444":
                     if (spec == PsbSpec.common || spec == PsbSpec.ems)
                         return PsbPixelFormat.CommonRGBA4444;

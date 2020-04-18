@@ -72,6 +72,10 @@ namespace FreeMote
                 case PsbPixelFormat.L8:
                     data = ReadL8(data, height, width);
                     break;
+                case PsbPixelFormat.L8_SW:
+                    data = ReadL8(data, height, width);
+                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    break;
             }
 
             int stride = bmpData.Stride; // 扫描线的宽度
@@ -145,6 +149,10 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.CI8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.L8_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Rgba2L8(result);
                     break;
             }
 
@@ -313,7 +321,7 @@ namespace FreeMote
         /// BGRA(LE ARGB) -> RGBA(BE RGBA)  (switch B &amp; R)
         /// </summary>
         /// <param name="bytes"></param>
-        public static unsafe void Switch_0_2(ref byte[] bytes)
+        internal static unsafe void Switch_0_2(ref byte[] bytes)
         {
             //RGBA in little endian is actually ABGR
             //Actually abgr -> argb
@@ -342,7 +350,7 @@ namespace FreeMote
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="reverse"></param>
-        public static unsafe void Rgba2Argb(ref byte[] bytes, bool reverse = false)
+        internal static unsafe void Rgba2Argb(ref byte[] bytes, bool reverse = false)
         {
             //Actually bgra -> abgr
             fixed (byte* ptr = bytes)
@@ -376,12 +384,12 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// RGBA4444 & RGBA8 conversion
+        /// RGBA4444 &amp; RGBA8 conversion
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="extend">true: 4 to 8; false: 8 to 4</param>
         /// Shibuya Scramble!
-        public static byte[] Rgba428(byte[] bytes, bool extend = true)
+        internal static byte[] Rgba428(byte[] bytes, bool extend = true)
         {
             if (extend)
             {

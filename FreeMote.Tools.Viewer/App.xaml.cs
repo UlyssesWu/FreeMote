@@ -105,6 +105,10 @@ namespace FreeMote.Tools.Viewer
                         //ignore
                     }
                 }
+                else
+                {
+                    Core.DirectLoad = true;
+                }
 
                 App wpf = new App();
                 MainWindow main = new MainWindow();

@@ -148,6 +148,18 @@ namespace FreeMote.Tests
             var bts = RL.GetPixelBytesFromImageFile(imgPath, PsbPixelFormat.A8);
             RL.ConvertToImageFile(bts, imgPath + "output.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.A8);
         }
+
+        [TestMethod]
+        public void TestL8()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var imgPath = Path.Combine(resPath, "map00.psb.m", "0.raw");
+            
+            var img = RL.ConvertToImage(File.ReadAllBytes(imgPath), 1024, 1024, PsbPixelFormat.L8);
+            img.Save("l8.png", ImageFormat.Png);
+            //RL.ConvertToImageFile(bts, imgPath + "output.png", 544, 960, PsbImageFormat.Png, PsbPixelFormat.L8_SW);
+        }
+
         [TestMethod]
         public void TestRGBA8SW()
         {

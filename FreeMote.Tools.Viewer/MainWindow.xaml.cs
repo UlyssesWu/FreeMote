@@ -13,10 +13,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using FreeMote.Plugins;
-using FreeMote.Psb;
-using FreeMote.PsBuild;
-using McMaster.Extensions.CommandLineUtils;
 
 namespace FreeMote.Tools.Viewer
 {
