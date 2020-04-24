@@ -661,9 +661,11 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Update fields based on <see cref="Objects"/>
+        /// Fill fields based on <see cref="Objects"/>
         /// </summary>
-        public void Merge(bool mergeString = false)
+        /// <param name="mergeString"></param>
+        /// <param name="mergeRes"></param>
+        internal void Collect(bool mergeString = false, bool mergeRes = true)
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
@@ -678,9 +680,6 @@ namespace FreeMote.Psb
             Names = new List<string>(namesSet);
             Names.Sort(String.CompareOrdinal); //FIXED: Compared by bytes
             Strings = new List<PsbString>(stringsDic.Values);
-            UpdateIndexes();
-
-            //UniqueString(Objects);
 
             uint NextIndex(Dictionary<uint, PsbString> dic, ref uint idx)
             {
@@ -692,19 +691,27 @@ namespace FreeMote.Psb
                 return idx;
             }
 
-            IPsbValue Collect(IPsbValue obj) //TODO: move and use Collect
+            IPsbValue Collect(IPsbValue obj)
             {
                 switch (obj)
                 {
                     case PsbResource r:
-                        var sameDataRes = Resources.Find(resource => resource.Data.ByteArrayEqual(r.Data) && resource.Index != null);
-                        if (sameDataRes == null)
+                        if (!mergeRes)
                         {
                             Resources.Add(r);
                         }
                         else
                         {
-                            r.Index = sameDataRes.Index;
+                            var sameDataRes = Resources.Find(resource =>
+                                resource.Data.ByteArrayEqual(r.Data) && resource.Index != null);
+                            if (sameDataRes == null)
+                            {
+                                Resources.Add(r);
+                            }
+                            else
+                            {
+                                r.Index = sameDataRes.Index;
+                            }
                         }
                         break;
                     case PsbString s:
@@ -785,7 +792,17 @@ namespace FreeMote.Psb
 
                 return null;
             }
+        }
 
+        /// <summary>
+        /// Update fields and indexes based on <see cref="Objects"/>
+        /// </summary>
+        public void Merge(bool mergeString = false)
+        {
+            Collect(mergeString);
+            UpdateIndexes();
+
+            //UniqueString(Objects);
             //[Obsolete]
             void UniqueString(IPsbValue obj)
             {

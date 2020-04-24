@@ -297,6 +297,7 @@ namespace FreeMote.PsBuild
                 Objects = JsonConvert.DeserializeObject<PsbDictionary>(json, new PsbJsonConverter())
             };
             psb.Type = psb.InferType();
+            psb.Collect(false, false); //don't merge res since it's empty now
             return psb;
         }
 

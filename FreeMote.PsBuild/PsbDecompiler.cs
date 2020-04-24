@@ -162,6 +162,14 @@ namespace FreeMote.PsBuild
                         friendlyName = i.ToString();
                     }
 
+                    if (resource.Width <= 0 || resource.Height <= 0) //impossible to extract, just keep raw
+                    {
+                        if (imageOption == PsbImageOption.Extract)
+                        {
+                            imageOption = PsbImageOption.Original;
+                        }
+                    }
+
                     switch (imageOption)
                     {
                         case PsbImageOption.Extract:
