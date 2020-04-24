@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using FreeMote.Plugins;
 using FreeMote.Psb;
@@ -22,9 +23,15 @@ namespace FreeMote.Tools.Viewer
 
     class Program
     {
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern bool FreeConsole();
+
         [STAThread]
         static void Main(string[] args)
         {
+            Console.WriteLine("FreeMote Viewer");
+            Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+            Console.WriteLine();
             var app = new CommandLineApplication();
             app.OptionsComparison = StringComparison.OrdinalIgnoreCase;
 
@@ -110,12 +117,20 @@ namespace FreeMote.Tools.Viewer
                     Core.DirectLoad = true;
                 }
 
+                FreeConsole();
                 App wpf = new App();
                 MainWindow main = new MainWindow();
                 wpf.Run(main);
             });
 
-            app.Execute(args);
+            try
+            {
+                app.Execute(args);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
 
