@@ -36,7 +36,8 @@ namespace FreeMote.Psb
         /// <param name="deDuplication">if true, we focus on Resource itself </param>
         /// <param name="duplicatePalette">when compiling PSB, re-create palettes</param>
         /// <returns></returns>
-        public static List<ResourceMetadata> CollectResources(this PSB psb, bool deDuplication = true, bool duplicatePalette = false)
+        public static List<ResourceMetadata> CollectResources(this PSB psb, bool deDuplication = true,
+            bool duplicatePalette = false)
         {
             List<ResourceMetadata> resourceList = psb.Resources == null
                 ? new List<ResourceMetadata>()
@@ -63,8 +64,11 @@ namespace FreeMote.Psb
                     FindMmoResources(resourceList, psb.Objects[MmoSourceKey], MmoSourceKey, deDuplication);
                     break;
                 case PsbType.Motion:
-                default:
                     FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication, duplicatePalette);
+                    break;
+                default:
+                    if (psb.Resources != null)
+                        resourceList.AddRange(psb.Resources.Select(r => new ResourceMetadata() {Resource = r}));
                     break;
             }
 
@@ -93,8 +97,8 @@ namespace FreeMote.Psb
                         {
                             currentLabel = string.Join("-", currentLabel, label);
                         }
-                        
                     }
+
                     if (d[ResourceKey] is PsbResource r)
                     {
                         list.Add(GenerateTachieResMetadata(d, r, currentLabel));
@@ -113,15 +117,15 @@ namespace FreeMote.Psb
         {
             int width = 1, height = 1;
             int top = 0, left = 0;
-            var dd = d.Parent as PsbDictionary?? d;
+            var dd = d.Parent as PsbDictionary ?? d;
             if ((d["width"] ?? d["truncated_width"] ?? dd["width"]) is PsbNumber nw)
             {
-                width = (int)nw;
+                width = (int) nw;
             }
 
             if ((d["height"] ?? d["truncated_height"] ?? dd["height"]) is PsbNumber nh)
             {
-                height = (int)nh;
+                height = (int) nh;
             }
 
             if ((dd["top"] ?? d["top"]) is PsbNumber nx)
@@ -158,6 +162,7 @@ namespace FreeMote.Psb
             {
                 return null;
             }
+
             var resources = new List<PsbResource>();
             GenerateMotionResourceStubs(resources, psb.Objects[MotionSourceKey]);
             return resources;
@@ -301,7 +306,8 @@ namespace FreeMote.Psb
             }
         }
 
-        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true, bool duplicatePalette = false)
+        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true,
+            bool duplicatePalette = false)
         {
             switch (obj)
             {
@@ -371,7 +377,8 @@ namespace FreeMote.Psb
         /// <param name="r">Resource</param>
         /// <param name="duplicatePalette"></param>
         /// <returns></returns>
-        internal static ResourceMetadata GenerateMotionResMetadata(PsbDictionary d, PsbResource r = null, bool duplicatePalette = false)
+        internal static ResourceMetadata GenerateMotionResMetadata(PsbDictionary d, PsbResource r = null,
+            bool duplicatePalette = false)
         {
             if (r == null)
             {
@@ -462,6 +469,7 @@ namespace FreeMote.Psb
                 {
                     palResource = palRes;
                 }
+
                 palTypeString = d["palType"] as PsbString;
             }
 

@@ -66,7 +66,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// Type
         /// </summary>
-        public PsbType Type { get; set; } = PsbType.Motion;
+        public PsbType Type { get; set; } = PsbType.PSB;
 
         /// <summary>
         /// PSB Target Platform (Spec)
@@ -90,6 +90,20 @@ namespace FreeMote.Psb
                 {
                     Objects["spec"] = new PsbString(value.ToString());
                 }
+            }
+        }
+
+        public string TypeId
+        {
+            get
+            {
+                var id = Objects?["id"]?.ToString();
+                if (string.IsNullOrEmpty(id))
+                {
+                    return "";
+                }
+
+                return id;
             }
         }
 
@@ -179,19 +193,22 @@ namespace FreeMote.Psb
                 return PsbType.Tachie;
             }
 
-            if (Objects.ContainsKey("file_info") && Objects.ContainsKey("id") && Objects["id"] is PsbString archiveId &&
-                archiveId == "archive")
+            if (Objects.ContainsKey("file_info") && TypeId == "archive")
             {
                 return PsbType.ArchiveInfo;
             }
 
-            if (Objects.ContainsKey("code") && Objects.ContainsKey("id") && Objects["id"] is PsbString fontId &&
-                fontId == "font")
+            if (Objects.ContainsKey("code") && TypeId == "font")
             {
                 return PsbType.BmpFont;
             }
 
-            return PsbType.Motion;
+            if (TypeId == "motion")
+            {
+                return PsbType.Motion;
+            }
+
+            return PsbType.PSB;
         }
 
 #if DEBUG_OBJECT_WRITE
@@ -675,7 +692,7 @@ namespace FreeMote.Psb
                 return idx;
             }
 
-            IPsbValue Collect(IPsbValue obj)
+            IPsbValue Collect(IPsbValue obj) //TODO: move and use Collect
             {
                 switch (obj)
                 {

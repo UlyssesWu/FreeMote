@@ -31,9 +31,9 @@ namespace FreeMote
     public enum PsbType
     {
         /// <summary>
-        /// Motion (psb)
+        /// Unknown type PSB
         /// </summary>
-        Motion = 0,
+        PSB = 0,
         /// <summary>
         /// Images (pimg, dpak)
         /// </summary>
@@ -59,6 +59,10 @@ namespace FreeMote
         /// BMP Font (e.g. textfont24)
         /// </summary>
         BmpFont = 6,
+        /// <summary>
+        /// EMT
+        /// </summary>
+        Motion = 7,
     }
 
     /// <summary>
