@@ -241,7 +241,7 @@ Example:
                                                     PSB bodyPsb = new PSB(mms);
                                                     PsbDecompiler.DecompileToFile(bodyPsb,
                                                         Path.Combine(extractDir, pair.Key + suffix + ".json"),
-                                                        bodyContext, PsbImageOption.Extract);
+                                                        bodyContext, PsbExtractOption.Extract);
                                                 }
                                                 catch (Exception e)
                                                 {
@@ -282,7 +282,7 @@ Example:
                                                     PSB bodyPsb = new PSB(mms);
                                                     PsbDecompiler.DecompileToFile(bodyPsb,
                                                         Path.Combine(extractDir, pair.Key + suffix + ".json"), context,
-                                                        PsbImageOption.Extract);
+                                                        PsbExtractOption.Extract);
                                                 }
                                                 catch (Exception e)
                                                 {
@@ -420,7 +420,7 @@ Example:
                 }
                 else
                 {
-                    PsbDecompiler.DecompileToFile(path, PsbImageOption.Extract, format, key: key);
+                    PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key);
                 }
             }
 #if !DEBUG

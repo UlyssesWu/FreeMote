@@ -188,19 +188,24 @@ namespace FreeMote.Psb
                 return PsbType.Mmo;
             }
 
-            if (Objects.ContainsKey("imageList") && Objects.ContainsKey("spec"))
+            if (TypeId == "image" && Objects.ContainsKey("imageList"))
             {
                 return PsbType.Tachie;
             }
 
-            if (Objects.ContainsKey("file_info") && TypeId == "archive")
+            if (TypeId == "archive" && Objects.ContainsKey("file_info"))
             {
                 return PsbType.ArchiveInfo;
             }
 
-            if (Objects.ContainsKey("code") && TypeId == "font")
+            if (TypeId == "font" && Objects.ContainsKey("code"))
             {
                 return PsbType.BmpFont;
+            }
+
+            if (TypeId == "sound_archive")
+            {
+                return PsbType.SoundArchive;
             }
 
             if (TypeId == "motion")

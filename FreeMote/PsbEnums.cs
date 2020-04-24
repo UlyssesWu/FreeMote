@@ -63,6 +63,10 @@ namespace FreeMote
         /// EMT
         /// </summary>
         Motion = 7,
+        /// <summary>
+        /// Sound Archive
+        /// </summary>
+        SoundArchive = 8,
     }
 
     /// <summary>
@@ -108,9 +112,9 @@ namespace FreeMote
     }
 
     /// <summary>
-    /// How to handle images when decompiling
+    /// How to handle resource when decompiling
     /// </summary>
-    public enum PsbImageOption
+    public enum PsbExtractOption
     {
         /// <summary>
         /// Keep original
@@ -125,7 +129,7 @@ namespace FreeMote
         /// </summary>
         Compress,
         /// <summary>
-        /// Try to convert to common image format
+        /// Try to convert to common format
         /// </summary>
         Extract,
 

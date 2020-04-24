@@ -111,7 +111,7 @@ namespace FreeMote.PsBuild
                     Consts.JsonUseHexNumber));
         }
 
-        internal static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbImageOption imageOption = PsbImageOption.Original,
+        internal static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true)
         {
             var name = Path.GetFileNameWithoutExtension(filePath);
@@ -136,7 +136,7 @@ namespace FreeMote.PsBuild
 
             Dictionary<string, string> resDictionary = new Dictionary<string, string>();
 
-            if (imageOption == PsbImageOption.Original)
+            if (extractOption == PsbExtractOption.Original)
             {
                 for (int i = 0; i < psb.Resources.Count; i++)
                 {
@@ -164,15 +164,15 @@ namespace FreeMote.PsBuild
 
                     if (resource.Width <= 0 || resource.Height <= 0) //impossible to extract, just keep raw
                     {
-                        if (imageOption == PsbImageOption.Extract)
+                        if (extractOption == PsbExtractOption.Extract)
                         {
-                            imageOption = PsbImageOption.Original;
+                            extractOption = PsbExtractOption.Original;
                         }
                     }
 
-                    switch (imageOption)
+                    switch (extractOption)
                     {
-                        case PsbImageOption.Extract:
+                        case PsbExtractOption.Extract:
                             ImageFormat pixelFormat;
                             switch (extractFormat)
                             {
@@ -232,7 +232,7 @@ namespace FreeMote.PsBuild
                             }
 
                             break;
-                        case PsbImageOption.Original:
+                        case PsbExtractOption.Original:
                             if (resources[i].Compress == PsbCompressType.RL)
                             {
                                 relativePath += ".rl";
@@ -253,7 +253,7 @@ namespace FreeMote.PsBuild
                             }
 
                             break;
-                        case PsbImageOption.Decompress:
+                        case PsbExtractOption.Decompress:
                             relativePath += ".raw";
                             relativePath = CheckPath(relativePath, i);
                             File.WriteAllBytes(Path.Combine(dirPath, relativePath),
@@ -261,7 +261,7 @@ namespace FreeMote.PsBuild
                                     ? RL.Decompress(resource.Data)
                                     : resource.Data);
                             break;
-                        case PsbImageOption.Compress:
+                        case PsbExtractOption.Compress:
                             relativePath += ".rl";
                             relativePath = CheckPath(relativePath, i);
                             File.WriteAllBytes(Path.Combine(dirPath, relativePath),
@@ -270,7 +270,7 @@ namespace FreeMote.PsBuild
                                     : resource.Data);
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException(nameof(imageOption), imageOption, null);
+                            throw new ArgumentOutOfRangeException(nameof(extractOption), extractOption, null);
                     }
 
                     try
@@ -317,11 +317,11 @@ namespace FreeMote.PsBuild
         /// <param name="psb">PSB</param>
         /// <param name="outputPath">Output json file name, should end with .json</param>
         /// <param name="additionalContext">additional context used in decompilation</param>
-        /// <param name="imageOption">whether to extract image to common format</param>
+        /// <param name="extractOption">whether to extract image to common format</param>
         /// <param name="extractFormat">if extract, what format do you want</param>
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
-        public static void DecompileToFile(PSB psb, string outputPath, Dictionary<string, object> additionalContext = null, PsbImageOption imageOption = PsbImageOption.Original,
+        public static void DecompileToFile(PSB psb, string outputPath, Dictionary<string, object> additionalContext = null, PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
         {
             var context = FreeMount.CreateContext(additionalContext);
@@ -332,18 +332,18 @@ namespace FreeMote.PsBuild
 
             File.WriteAllText(outputPath, Decompile(psb)); //MARK: breaking change for json path
 
-            OutputResources(psb, context, outputPath, imageOption, extractFormat, useResx);
+            OutputResources(psb, context, outputPath, extractOption, extractFormat, useResx);
         }
 
         /// <summary>
         /// Decompile to files
         /// </summary>
         /// <param name="inputPath">PSB file path</param>
-        /// <param name="imageOption">whether to extract image to common format</param>
+        /// <param name="extractOption">whether to extract image to common format</param>
         /// <param name="extractFormat">if extract, what format do you want</param>
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
-        public static void DecompileToFile(string inputPath, PsbImageOption imageOption = PsbImageOption.Original,
+        public static void DecompileToFile(string inputPath, PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
         {
             var context = FreeMount.CreateContext();
@@ -355,7 +355,7 @@ namespace FreeMote.PsBuild
             File.WriteAllText(Path.ChangeExtension(inputPath, ".json"),
                 Decompile(inputPath, out var psb, context.Context)); //MARK: breaking change for json path
 
-            OutputResources(psb, context, inputPath, imageOption, extractFormat, useResx);
+            OutputResources(psb, context, inputPath, extractOption, extractFormat, useResx);
         }
 
         /// <summary>

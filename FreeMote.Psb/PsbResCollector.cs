@@ -66,6 +66,7 @@ namespace FreeMote.Psb
                 case PsbType.Motion:
                     FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication, duplicatePalette);
                     break;
+                case PsbType.SoundArchive:
                 default:
                     if (psb.Resources != null)
                         resourceList.AddRange(psb.Resources.Select(r => new ResourceMetadata() {Resource = r}));
