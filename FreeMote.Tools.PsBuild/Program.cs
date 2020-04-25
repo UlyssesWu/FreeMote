@@ -478,7 +478,7 @@ Example:
                 app.ShowHelp();
                 return;
             }
-
+            
             app.Execute(args);
 
             Console.WriteLine("Done.");

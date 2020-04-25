@@ -162,15 +162,16 @@ namespace FreeMote.PsBuild
                         friendlyName = i.ToString();
                     }
 
+                    var currentExtractOption = extractOption;
                     if (resource.Width <= 0 || resource.Height <= 0) //impossible to extract, just keep raw
                     {
-                        if (extractOption == PsbExtractOption.Extract)
+                        if (currentExtractOption == PsbExtractOption.Extract)
                         {
-                            extractOption = PsbExtractOption.Original;
+                            currentExtractOption = PsbExtractOption.Original;
                         }
                     }
 
-                    switch (extractOption)
+                    switch (currentExtractOption)
                     {
                         case PsbExtractOption.Extract:
                             ImageFormat pixelFormat;
@@ -270,7 +271,7 @@ namespace FreeMote.PsBuild
                                     : resource.Data);
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException(nameof(extractOption), extractOption, null);
+                            throw new ArgumentOutOfRangeException(nameof(currentExtractOption), currentExtractOption, null);
                     }
 
                     try
