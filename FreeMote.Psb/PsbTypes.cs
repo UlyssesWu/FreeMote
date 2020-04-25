@@ -205,7 +205,7 @@ namespace FreeMote.Psb
         /// <summary>
         /// PsbNumber: (int) 0
         /// </summary>
-        public static readonly PsbNumber Zero = new PsbNumber(0);
+        public static PsbNumber Zero => new PsbNumber(0); //always create a new PsbNumber to prevent value modified!
 
         internal PsbNumber(PsbObjType objType, BinaryReader br)
         {

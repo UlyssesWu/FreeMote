@@ -1,4 +1,5 @@
 ﻿//This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+//Author: Ulysses (wdwxy12345@gmail.com)
 
 using System;
 using System.Collections.Generic;
@@ -137,39 +138,37 @@ namespace FreeMote.PsBuild
         public PSB Build(PSB psb)
         {
             Mmo = new PSB {Type = PsbType.Mmo};
-
-            Mmo.Objects = new PsbDictionary
-            {
-                ["bgChildren"] = BuildBackground(),
-                ["comment"] = psb.Objects["comment"] ?? "Built by FreeMote, wdwxy12345@gmail.com".ToPsbString(),
-                ["defaultFPS"] = 60.ToPsbNumber(),
-                ["fontInfoIdCount"] = PsbNull.Null,
-                ["fontInfoList"] = new PsbCollection(0),
-                ["forceRepack"] = 1.ToPsbNumber(),
-                ["ignoreMotionPanel"] = PsbNumber.Zero,
-                ["keepSourceIconName"] = PsbNumber.Zero,
-                ["label"] = "FreeMote".ToPsbString(),
-                ["marker"] = PsbNumber.Zero,
-                ["maxTextureSize"] = BuildMaxTextureSize(psb),
-                ["metadata"] = BuildMetadata(psb),
-                ["modelScale"] = 32.ToPsbNumber(),
-                ["newScrapbookCellHeight"] = 8.ToPsbNumber(),
-                ["newScrapbookCellWidth"] = 8.ToPsbNumber(),
-                ["newTextureCellHeight"] = 8.ToPsbNumber(),
-                ["newTextureCellWidth"] = 8.ToPsbNumber(),
-                ["optimizeMargin"] = 1.ToPsbNumber(),
-                ["outputDepth"] = PsbNumber.Zero,
-                ["previewSize"] = FillDefaultPreviewSize(),
-                ["projectType"] = PsbNumber.Zero,
-                ["saveFormat"] = PsbNumber.Zero,
-                ["stereovisionProfile"] = psb.Objects["stereovisionProfile"],
-                ["targetOwn"] = FillDefaultTargetOwn(),
-                ["unifyTexture"] = 1.ToPsbNumber(),
-                ["version"] = new PsbNumber(3.12f),
-                ["objectChildren"] = BuildObjects(psb, out var rawPartsList, out var charaProfileList),
-                ["sourceChildren"] = BuildSources(psb),
-                ["metaformat"] = BuildMetaFormat(psb, Mmo, rawPartsList, charaProfileList)
-            };
+            //Type initializer is tempting but we can't use it since the later object is using the former one
+            Mmo.Objects = new PsbDictionary();
+            Mmo.Objects["bgChildren"] = BuildBackground();
+            Mmo.Objects["comment"] = psb.Objects["comment"] ?? "Built by FreeMote, wdwxy12345@gmail.com".ToPsbString();
+            Mmo.Objects["defaultFPS"] = 60.ToPsbNumber();
+            Mmo.Objects["fontInfoIdCount"] = PsbNull.Null;
+            Mmo.Objects["fontInfoList"] = new PsbCollection(0);
+            Mmo.Objects["forceRepack"] = 1.ToPsbNumber();
+            Mmo.Objects["ignoreMotionPanel"] = PsbNumber.Zero;
+            Mmo.Objects["keepSourceIconName"] = PsbNumber.Zero;
+            Mmo.Objects["label"] = "FreeMote".ToPsbString();
+            Mmo.Objects["marker"] = PsbNumber.Zero;
+            Mmo.Objects["maxTextureSize"] = BuildMaxTextureSize(psb);
+            Mmo.Objects["metadata"] = BuildMetadata(psb);
+            Mmo.Objects["modelScale"] = 32.ToPsbNumber();
+            Mmo.Objects["newScrapbookCellHeight"] = 8.ToPsbNumber();
+            Mmo.Objects["newScrapbookCellWidth"] = 8.ToPsbNumber();
+            Mmo.Objects["newTextureCellHeight"] = 8.ToPsbNumber();
+            Mmo.Objects["newTextureCellWidth"] = 8.ToPsbNumber();
+            Mmo.Objects["optimizeMargin"] = 1.ToPsbNumber();
+            Mmo.Objects["outputDepth"] = PsbNumber.Zero;
+            Mmo.Objects["previewSize"] = FillDefaultPreviewSize();
+            Mmo.Objects["projectType"] = PsbNumber.Zero;
+            Mmo.Objects["saveFormat"] = PsbNumber.Zero;
+            Mmo.Objects["stereovisionProfile"] = psb.Objects["stereovisionProfile"];
+            Mmo.Objects["targetOwn"] = FillDefaultTargetOwn();
+            Mmo.Objects["unifyTexture"] = 1.ToPsbNumber();
+            Mmo.Objects["version"] = new PsbNumber(3.12f);
+            Mmo.Objects["objectChildren"] = BuildObjects(psb, out var rawPartsList, out var charaProfileList);
+            Mmo.Objects["sourceChildren"] = BuildSources(psb);
+            Mmo.Objects["metaformat"] = BuildMetaFormat(psb, Mmo, rawPartsList, charaProfileList);
             //1.ToPsbNumber();
             //mmo.Objects["uniqId"] = 114514.ToPsbNumber();
 
@@ -514,21 +513,27 @@ namespace FreeMote.PsBuild
                         dic["meshSyncChildShape"] = (number.IntValue & 8) == 8 ? 1.ToPsbNumber() : PsbNumber.Zero;
 
                         //0110 is not enabled in editor?
-                        if ((number.IntValue & 4) == 4)
-                        {
-                            Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
-                        }
+                        //if ((number.IntValue & 4) == 4)
+                        //{
+                        //    Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
+                        //}
 
-                        if ((number.IntValue & 2) == 2)
-                        {
-                            Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
-                        }
+                        //if ((number.IntValue & 2) == 2)
+                        //{
+                        //    Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
+                        //}
 
+                        //project version
+                        dic["meshSyncChildZoom"] = (number.IntValue & 4) == 4 ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        dic["meshSyncChildAngle"] = (number.IntValue & 2) == 2 ? 1.ToPsbNumber() : PsbNumber.Zero;
+                        
                         dic["meshSyncChildCoord"] = (number.IntValue & 1) == 1 ? 1.ToPsbNumber() : PsbNumber.Zero;
                     }
                     else
                     {
                         dic["meshSyncChildShape"] = PsbNumber.Zero;
+                        dic["meshSyncChildZoom"] = PsbNumber.Zero;
+                        dic["meshSyncChildAngle"] = PsbNumber.Zero;
                         dic["meshSyncChildCoord"] = PsbNumber.Zero;
                     }
 
