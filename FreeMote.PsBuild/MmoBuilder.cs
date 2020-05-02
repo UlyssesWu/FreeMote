@@ -511,18 +511,6 @@ namespace FreeMote.PsBuild
                     if (dic["meshSyncChildMask"] is PsbNumber number)
                     {
                         dic["meshSyncChildShape"] = (number.IntValue & 8) == 8 ? 1.ToPsbNumber() : PsbNumber.Zero;
-
-                        //0110 is not enabled in editor?
-                        //if ((number.IntValue & 4) == 4)
-                        //{
-                        //    Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
-                        //}
-
-                        //if ((number.IntValue & 2) == 2)
-                        //{
-                        //    Console.WriteLine("[WARN] unknown meshSyncChildMask! Please provide sample for research.");
-                        //}
-
                         //project version
                         dic["meshSyncChildZoom"] = (number.IntValue & 4) == 4 ? 1.ToPsbNumber() : PsbNumber.Zero;
                         dic["meshSyncChildAngle"] = (number.IntValue & 2) == 2 ? 1.ToPsbNumber() : PsbNumber.Zero;
@@ -537,14 +525,14 @@ namespace FreeMote.PsBuild
                         dic["meshSyncChildCoord"] = PsbNumber.Zero;
                     }
 
-                    if (!dic.ContainsKey("meshSyncChildAngle"))
-                    {
-                        dic["meshSyncChildAngle"] = PsbNumber.Zero;
-                    }
-                    if (!dic.ContainsKey("meshSyncChildZoom"))
-                    {
-                        dic["meshSyncChildZoom"] = PsbNumber.Zero;
-                    }
+                    //if (!dic.ContainsKey("meshSyncChildAngle"))
+                    //{
+                    //    dic["meshSyncChildAngle"] = PsbNumber.Zero;
+                    //}
+                    //if (!dic.ContainsKey("meshSyncChildZoom"))
+                    //{
+                    //    dic["meshSyncChildZoom"] = PsbNumber.Zero;
+                    //}
 
                     //Expand inheritMask
                     //inheritAngle:         16  10000
