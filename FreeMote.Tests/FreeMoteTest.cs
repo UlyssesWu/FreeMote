@@ -146,7 +146,7 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var imgPath = Path.Combine(resPath, "textfont24", "[0]-[0].png");
             var bts = RL.GetPixelBytesFromImageFile(imgPath, PsbPixelFormat.A8);
-            RL.ConvertToImageFile(bts, imgPath + "output.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.A8);
+            RL.ConvertToImageFile(bts, imgPath + "output.png", 2048, 2048, PsbImageFormat.png, PsbPixelFormat.A8);
         }
 
         [TestMethod]
@@ -157,7 +157,7 @@ namespace FreeMote.Tests
             
             var img = RL.ConvertToImage(File.ReadAllBytes(imgPath), 1024, 1024, PsbPixelFormat.L8);
             img.Save("l8.png", ImageFormat.Png);
-            //RL.ConvertToImageFile(bts, imgPath + "output.png", 544, 960, PsbImageFormat.Png, PsbPixelFormat.L8_SW);
+            //RL.ConvertToImageFile(bts, imgPath + "output.png", 544, 960, PsbImageFormat.png, PsbPixelFormat.L8_SW);
         }
 
         [TestMethod]
@@ -165,7 +165,7 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var imgPath = Path.Combine(resPath, "pm_ev001b.psb", "0.bin");
-            RL.ConvertToImageFile(File.ReadAllBytes(imgPath), imgPath + "output.png", 32, 1024, PsbImageFormat.Png, PsbPixelFormat.RGBA8_SW);
+            RL.ConvertToImageFile(File.ReadAllBytes(imgPath), imgPath + "output.png", 32, 1024, PsbImageFormat.png, PsbPixelFormat.RGBA8_SW);
         }
 
         [TestMethod]
@@ -198,7 +198,7 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var rawDxt = Path.Combine(resPath, "D愛子a_春服-pure", "0.raw");
             var rawBytes = File.ReadAllBytes(rawDxt);
-            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.Png,
+            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.png,
                 PsbPixelFormat.DXT5);
         }
 
@@ -209,7 +209,7 @@ namespace FreeMote.Tests
             var rawPng = Path.Combine(resPath, "D愛子a_春服-pure", "0.png");
             Bitmap bitmap = new Bitmap(rawPng);
             var bc3Bytes = DxtUtil.Dxt5Encode(bitmap);
-            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.Png,
+            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.png,
                 PsbPixelFormat.DXT5);
         }
 
@@ -308,7 +308,7 @@ namespace FreeMote.Tests
                     File.ReadAllBytes(
                         Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw"))));
 
-            RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.Png, PsbPixelFormat.WinRGBA4444);
+            RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.png, PsbPixelFormat.WinRGBA4444);
         }
 
         [TestMethod]

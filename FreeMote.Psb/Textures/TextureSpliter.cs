@@ -102,7 +102,7 @@ namespace FreeMote.Psb.Textures
         /// <param name="option">Save option</param>
         /// <param name="imageFormat">Save format</param>
         /// <param name="pixelFormat">When save to PSB special formats, specific pixel format to use</param>
-        public static void SplitTextureToFiles(this PSB psb, string path, PsbExtractOption option = PsbExtractOption.Extract, PsbImageFormat imageFormat = PsbImageFormat.Png, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
+        public static void SplitTextureToFiles(this PSB psb, string path, PsbExtractOption option = PsbExtractOption.Extract, PsbImageFormat imageFormat = PsbImageFormat.png, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             if (!Directory.Exists(path))
             {
@@ -173,13 +173,13 @@ namespace FreeMote.Psb.Textures
                         default:
                             switch (imageFormat)
                             {
-                                case PsbImageFormat.Bmp:
+                                case PsbImageFormat.bmp:
                                     b.Save(savePath + ".bmp", ImageFormat.Bmp);
                                     break;
-                                case PsbImageFormat.Png:
+                                case PsbImageFormat.png:
                                 default:
                                     b.Save(savePath + ".png", ImageFormat.Png);
-                                    //b.Save(savePath + $"_{attr}.png", ImageFormat.Png);
+                                    //b.Save(savePath + $"_{attr}.png", ImageFormat.png);
                                     break;
                             }
                             break;

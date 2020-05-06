@@ -71,7 +71,7 @@ namespace FreeMote.Psb
                 g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f - res.Width / 2f, res.OriginY + height / 2f - res.Height / 2f));
 
             }
-            //bmp.Save("renderKrkr.png", ImageFormat.Png);
+            //bmp.Save("renderKrkr.png", ImageFormat.png);
             g.Dispose();
             return bmp;
         }

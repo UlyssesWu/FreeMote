@@ -107,8 +107,8 @@ namespace FreeMote
 
     public enum PsbImageFormat
     {
-        Bmp,
-        Png,
+        png,
+        bmp,
     }
 
     /// <summary>

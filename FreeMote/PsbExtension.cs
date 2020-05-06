@@ -116,6 +116,18 @@ namespace FreeMote
             }
         }
 
+        public static ImageFormat ToImageFormat(this PsbImageFormat imageFormat)
+        {
+            switch (imageFormat)
+            {
+                case PsbImageFormat.bmp:
+                    return ImageFormat.Bmp;
+                case PsbImageFormat.png:
+                default:
+                    return ImageFormat.Png;
+            }
+        }
+
         /// <summary>
         /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
         /// </summary>

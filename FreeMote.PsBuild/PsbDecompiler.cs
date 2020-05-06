@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using FreeMote.Psb;
 using FreeMote.Plugins;
+using FreeMote.Psb.Textures;
 using Newtonsoft.Json;
 
 // ReSharper disable AssignNullToNotNullAttribute
@@ -112,7 +113,7 @@ namespace FreeMote.PsBuild
         }
 
         internal static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbExtractOption extractOption = PsbExtractOption.Original,
-            PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true)
+            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true)
         {
             var name = Path.GetFileNameWithoutExtension(filePath);
             var dirPath = Path.Combine(Path.GetDirectoryName(filePath), name);
@@ -135,6 +136,17 @@ namespace FreeMote.PsBuild
             }
 
             Dictionary<string, string> resDictionary = new Dictionary<string, string>();
+
+            ImageFormat pixelFormat;
+            switch (extractFormat)
+            {
+                case PsbImageFormat.png:
+                    pixelFormat = ImageFormat.Png;
+                    break;
+                default:
+                    pixelFormat = ImageFormat.Bmp;
+                    break;
+            }
 
             if (extractOption == PsbExtractOption.Original)
             {
@@ -174,16 +186,13 @@ namespace FreeMote.PsBuild
                     switch (currentExtractOption)
                     {
                         case PsbExtractOption.Extract:
-                            ImageFormat pixelFormat;
                             switch (extractFormat)
                             {
-                                case PsbImageFormat.Png:
+                                case PsbImageFormat.png:
                                     relativePath += ".png";
-                                    pixelFormat = ImageFormat.Png;
                                     break;
                                 default:
                                     relativePath += ".bmp";
-                                    pixelFormat = ImageFormat.Bmp;
                                     break;
                             }
 
@@ -286,6 +295,19 @@ namespace FreeMote.PsBuild
                 }
             }
 
+            //Extra Extract
+            if (extractOption == PsbExtractOption.Extract)
+            {
+                if (psb.Type == PsbType.Tachie)
+                {
+                    var bitmaps = TextureCombiner.CombineTachie(psb);
+                    foreach (var kv in bitmaps)
+                    {
+                        kv.Value.Save(Path.Combine(dirPath, $"{kv.Key}.{extractFormat}"), pixelFormat);
+                    }
+                }
+            }
+
             //MARK: We use `.resx.json` to distinguish from psbtools' `.res.json`
             if (useResx)
             {
@@ -323,7 +345,7 @@ namespace FreeMote.PsBuild
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
         public static void DecompileToFile(PSB psb, string outputPath, Dictionary<string, object> additionalContext = null, PsbExtractOption extractOption = PsbExtractOption.Original,
-            PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
+            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null)
         {
             var context = FreeMount.CreateContext(additionalContext);
             if (key != null)
@@ -345,7 +367,7 @@ namespace FreeMote.PsBuild
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
         public static void DecompileToFile(string inputPath, PsbExtractOption extractOption = PsbExtractOption.Original,
-            PsbImageFormat extractFormat = PsbImageFormat.Png, bool useResx = true, uint? key = null)
+            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null)
         {
             var context = FreeMount.CreateContext();
             if (key != null)
@@ -413,7 +435,7 @@ namespace FreeMote.PsBuild
         /// <param name="order"></param>
         /// <param name="format"></param>
         /// <returns>The unlinked PSB path</returns>
-        public static string UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name, PsbImageFormat format = PsbImageFormat.Png)
+        public static string UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name, PsbImageFormat format = PsbImageFormat.png)
         {
             if (!File.Exists(inputPath))
             {
@@ -444,8 +466,8 @@ namespace FreeMote.PsBuild
                 File.WriteAllBytes(psbSavePath, psb.Build());
             }
 
-            var texExt = format == PsbImageFormat.Bmp ? ".bmp" :".png";
-            var texFormat = format == PsbImageFormat.Bmp ? ImageFormat.Bmp : ImageFormat.Png;
+            var texExt = format == PsbImageFormat.bmp ? ".bmp" :".png";
+            var texFormat = format == PsbImageFormat.bmp ? ImageFormat.Bmp : ImageFormat.Png;
            
             switch (order)
             {

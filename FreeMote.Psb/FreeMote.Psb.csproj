@@ -49,6 +49,7 @@
     <Compile Include="PsbTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResourceMetadata.cs" />
+    <Compile Include="Textures\TextureCombiner.cs" />
     <Compile Include="Textures\TexturePacker.cs" />
     <Compile Include="Textures\TextureSpliter.cs" />
   </ItemGroup>

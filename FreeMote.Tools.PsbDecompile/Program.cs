@@ -36,8 +36,8 @@ namespace FreeMote.Tools.PsbDecompile
             //options
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
-                "Convert textures to Png/Bmp. Default=Png", CommandOptionType.SingleValue, true);
-            var optRaw = app.Option("-raw|--raw", "Keep raw textures", CommandOptionType.NoValue, inherited: true);
+                "Convert textures to png/bmp. Default=png", CommandOptionType.SingleValue, true);
+            var optRaw = app.Option("-raw|--raw", "Output raw resources", CommandOptionType.NoValue, inherited: true);
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue,
                 inherited: true);
@@ -50,6 +50,40 @@ namespace FreeMote.Tools.PsbDecompile
             //args
             var argPath =
                 app.Argument("Files", "File paths", multipleValues: true);
+
+//            //command: image
+//            app.Command("image", imageCmd =>
+//            {
+//                //help
+//                imageCmd.Description = "Extract textures from PSBs";
+//                imageCmd.HelpOption();
+//                imageCmd.ExtendedHelpText = @"
+//Example:
+//  PsbDecompile image sample.psb
+//";
+//                //args
+//                var argPsbPath = imageCmd.Argument("PSB", "PSB Path").IsRequired();
+
+//                imageCmd.OnExecute(() =>
+//                {
+//                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
+//                    var psbPaths = argPsbPath.Values;
+//                    foreach (var psbPath in psbPaths)
+//                    {
+//                        if (File.Exists(psbPath))
+//                        {
+//                            try
+//                            {
+//                                PsbDecompiler.UnlinkToFile(psbPath, format: format);
+//                            }
+//                            catch (Exception e)
+//                            {
+//                                Console.WriteLine(e);
+//                            }
+//                        }
+//                    }
+//                });
+//            });
 
             //command: unlink
             app.Command("unlink", linkCmd =>
@@ -71,7 +105,7 @@ Example:
 
                 linkCmd.OnExecute(() =>
                 {
-                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.Png;
+                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPaths = argPsbPath.Values;
                     foreach (var psbPath in psbPaths)
@@ -339,7 +373,7 @@ Example:
                 }
 
                 bool useRaw = optRaw.HasValue();
-                PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.Png;
+                PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
 
                 foreach (var s in argPath.Values)
@@ -406,7 +440,7 @@ Example:
             return ms;
         }
 
-        static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.Png,
+        static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.png,
             uint? key = null)
         {
             var name = Path.GetFileNameWithoutExtension(path);

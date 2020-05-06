@@ -246,7 +246,7 @@ namespace FreeMote
         }
 
         public static void DecompressToImageFile(byte[] data, string path, int height, int width,
-            PsbImageFormat format = PsbImageFormat.Png, PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
+            PsbImageFormat format = PsbImageFormat.png, PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
         {
             byte[] bytes;
             try
@@ -284,10 +284,10 @@ namespace FreeMote
             
             switch (format)
             {
-                case PsbImageFormat.Bmp:
+                case PsbImageFormat.bmp:
                     bmp.Save(path, ImageFormat.Bmp);
                     break;
-                case PsbImageFormat.Png:
+                case PsbImageFormat.png:
                     bmp.Save(path, ImageFormat.Png);
                     break;
             }

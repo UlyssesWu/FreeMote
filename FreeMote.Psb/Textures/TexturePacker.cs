@@ -195,7 +195,7 @@ namespace FreeMote.Psb.Textures
                     }
                 }
 
-                //img.Save("tex.png", ImageFormat.Png);
+                //img.Save("tex.png", ImageFormat.png);
                 return img;
             }
 #endif
@@ -422,7 +422,7 @@ namespace FreeMote.Psb.Textures
                 }
             }
 
-            //img.Save("tex.png", ImageFormat.Png);
+            //img.Save("tex.png", ImageFormat.png);
             return img;
 
 

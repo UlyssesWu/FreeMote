@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Xml.Schema;
 
 namespace FreeMote.Psb
 {
@@ -128,6 +129,39 @@ namespace FreeMote.Psb
 
                 throw new ArgumentException($"{col} doesn't have children.");
             }
+        }
+
+        /// <summary>
+        /// Quickly fetch number (use at your own risk)
+        /// </summary>
+        /// <param name="col"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static int GetInt(this IPsbValue col)
+        {
+            return ((PsbNumber) col).AsInt;
+        }
+
+        /// <summary>
+        /// Quickly fetch number (use at your own risk)
+        /// </summary>
+        /// <param name="col"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static float GetFloat(this IPsbValue col)
+        {
+            return ((PsbNumber)col).AsFloat;
+        }
+
+        /// <summary>
+        /// Quickly fetch number (use at your own risk)
+        /// </summary>
+        /// <param name="col"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static double GetDouble(this IPsbValue col)
+        {
+            return ((PsbNumber)col).AsDouble;
         }
 
         /// <summary>
