@@ -222,6 +222,15 @@ namespace FreeMote.Plugins
         {
             if (type != null)
             {
+                if (type == "" && !Shells.ContainsKey(type))
+                {
+                    if (stream is MemoryStream ms)
+                        return ms;
+
+                    var mms = new MemoryStream((int)stream.Length);
+                    stream.CopyTo(mms);
+                    return mms;
+                }
                 return Shells[type]?.ToPsb(stream, context);
             }
 

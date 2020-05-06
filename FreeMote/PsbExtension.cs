@@ -38,6 +38,24 @@ namespace FreeMote
         }
 
         /// <summary>
+        /// Get shell type from suffix
+        /// </summary>
+        /// <param name="suffixString">e.g. .xxx.m</param>
+        /// <returns></returns>
+        public static string DefaultShellType(this string suffixString)
+        {
+            var suffix = suffixString.ToLowerInvariant();
+            if (suffix.EndsWith(".m"))
+            {
+                return "MDF";
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        /// <summary>
         /// Get <see cref="PsbType"/>'s default extension
         /// </summary>
         /// <param name="type"></param>

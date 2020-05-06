@@ -171,10 +171,11 @@ Example:
                                     hasBody = false;
                                 }
 
+                                var baseShellType = Path.GetExtension(fileName).DefaultShellType();
                                 PSB psb = null;
                                 using (var fs = File.OpenRead(s))
                                 {
-                                    psb = new PSB(MdfConvert(fs, context));
+                                    psb = new PSB(MdfConvert(fs, baseShellType, context));
                                 }
 
                                 File.WriteAllText(Path.GetFullPath(s) + ".json", PsbDecompiler.Decompile(psb));
@@ -187,6 +188,8 @@ Example:
                                 {
                                     suffix = suffixList[0] as PsbString ?? "";
                                 }
+
+                                var shellType = suffix.DefaultShellType();
 
                                 if (!hasBody)
                                 {
@@ -233,7 +236,7 @@ Example:
                                                 [Context_MdfKey] = key + pair.Key + suffix
                                             };
                                             bodyContext.Remove(Context_ArchiveSource);
-                                            var mms = MdfConvert(ms, bodyContext);
+                                            var mms = MdfConvert(ms, shellType, bodyContext);
                                             if (extractAll)
                                             {
                                                 try
@@ -274,7 +277,7 @@ Example:
                                         using (var ms = new MemoryStream(bodyBytes, start, len))
                                         {
                                             context[Context_MdfKey] = key + pair.Key + suffix;
-                                            var mms = MdfConvert(ms, context);
+                                            var mms = MdfConvert(ms, shellType, context);
                                             if (extractAll)
                                             {
                                                 try
@@ -396,11 +399,10 @@ Example:
             //            Console.WriteLine("\t PsbDecompile C:\\\\EMTfolder");
         }
 
-        private static MemoryStream MdfConvert(Stream stream, Dictionary<string, object> context = null)
+        private static MemoryStream MdfConvert(Stream stream, string shellType, Dictionary<string, object> context = null)
         {
             var ctx = FreeMount.CreateContext(context);
-            string currentType = "MDF";
-            var ms = ctx.OpenFromShell(stream, ref currentType);
+            var ms = ctx.OpenFromShell(stream, ref shellType);
             return ms;
         }
 
