@@ -494,5 +494,53 @@ namespace FreeMote.PsBuild
 
             return psbSavePath;
         }
+
+        /// <summary>
+        /// Save (most user friendly) images
+        /// </summary>
+        /// <param name="inputPath"></param>
+        /// <param name="format"></param>
+        public static void ExtractImageFiles(string inputPath, PsbImageFormat format = PsbImageFormat.png)
+        {
+            if (!File.Exists(inputPath))
+            {
+                return;
+            }
+
+            var name = Path.GetFileNameWithoutExtension(inputPath);
+            var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
+
+            if (File.Exists(dirPath))
+            {
+                name += "-resources";
+                dirPath += "-resources";
+            }
+
+            if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+
+            var texExt = format == PsbImageFormat.bmp ? ".bmp" : ".png";
+            var texFormat = format.ToImageFormat();
+
+            var psb = new PSB(inputPath);
+            if (psb.Type == PsbType.Tachie)
+            {
+                var bitmaps = TextureCombiner.CombineTachie(psb);
+                foreach (var kv in bitmaps)
+                {
+                    kv.Value.Save(Path.Combine(dirPath, $"{kv.Key}{texExt}"), texFormat);
+                }
+                return;
+            }
+
+            var texs = psb.Unlink();
+            
+            foreach (var tex in texs)
+            {
+                tex.Save(Path.Combine(dirPath, tex.Tag + texExt), texFormat);
+            }
+        }
     }
 }

@@ -100,28 +100,5 @@ namespace FreeMote.Psb.Textures
             }
         }
 
-        public static void CombineImagesToFile(PSB psb, string dirPath, PsbImageFormat extractFormat = PsbImageFormat.png)
-        {
-            if (psb.Type != PsbType.Tachie)
-            {
-                return;
-            }
-            
-            if (File.Exists(dirPath))
-            {
-                dirPath += "-resources";
-            }
-
-            if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
-            {
-                Directory.CreateDirectory(dirPath);
-            }
-
-            var bitmaps = CombineTachie(psb);
-            foreach (var kv in bitmaps)
-            {
-                kv.Value.Save(Path.Combine(dirPath, $"{kv.Key}.{extractFormat}"), extractFormat.ToImageFormat());
-            }
-        }
     }
 }

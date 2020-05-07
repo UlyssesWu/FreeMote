@@ -51,39 +51,39 @@ namespace FreeMote.Tools.PsbDecompile
             var argPath =
                 app.Argument("Files", "File paths", multipleValues: true);
 
-//            //command: image
-//            app.Command("image", imageCmd =>
-//            {
-//                //help
-//                imageCmd.Description = "Extract textures from PSBs";
-//                imageCmd.HelpOption();
-//                imageCmd.ExtendedHelpText = @"
-//Example:
-//  PsbDecompile image sample.psb
-//";
-//                //args
-//                var argPsbPath = imageCmd.Argument("PSB", "PSB Path").IsRequired();
+            //command: image
+            app.Command("image", imageCmd =>
+            {
+                //help
+                imageCmd.Description = "Extract textures from PSBs";
+                imageCmd.HelpOption();
+                imageCmd.ExtendedHelpText = @"
+Example:
+  PsbDecompile image sample.psb
+";
+                //args
+                var argPsbPath = imageCmd.Argument("PSB", "PSB Path").IsRequired();
 
-//                imageCmd.OnExecute(() =>
-//                {
-//                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
-//                    var psbPaths = argPsbPath.Values;
-//                    foreach (var psbPath in psbPaths)
-//                    {
-//                        if (File.Exists(psbPath))
-//                        {
-//                            try
-//                            {
-//                                PsbDecompiler.UnlinkToFile(psbPath, format: format);
-//                            }
-//                            catch (Exception e)
-//                            {
-//                                Console.WriteLine(e);
-//                            }
-//                        }
-//                    }
-//                });
-//            });
+                imageCmd.OnExecute(() =>
+                {
+                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
+                    var psbPaths = argPsbPath.Values;
+                    foreach (var psbPath in psbPaths)
+                    {
+                        if (File.Exists(psbPath))
+                        {
+                            try
+                            {
+                                PsbDecompiler.ExtractImageFiles(psbPath, format);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                            }
+                        }
+                    }
+                });
+            });
 
             //command: unlink
             app.Command("unlink", linkCmd =>

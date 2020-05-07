@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
@@ -10,6 +11,19 @@ using static FreeMote.Consts;
 
 namespace FreeMote.Tools.EmtConvert
 {
+    public enum PsbImageConvertMethod
+    {
+        ZeroTwo,
+        ROR,
+        ROL,
+        RGBA428,
+        RGBA2L8Grayscale,
+        Untile,
+        Unswizzle,
+        Tile,
+        Swizzle,
+    }
+
     class Program
     {
         private static uint? Key = null;
@@ -37,6 +51,97 @@ namespace FreeMote.Tools.EmtConvert
             //args
             var argPath =
                 app.Argument("Files", "File paths", multipleValues: true);
+
+            //command: pixel
+            app.Command("pixel", pixelCmd =>
+            {
+                //help
+                pixelCmd.Description = "Convert pixel colors of extracted images (RGBA BMP/PNG)";
+                pixelCmd.HelpOption();
+                pixelCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert pixel -m ZeroTwo sample.png
+";
+                //options
+                var optMethod = pixelCmd.Option<PsbImageConvertMethod>("-m|--method <METHOD>",
+                    "Set convert method",
+                    CommandOptionType.SingleValue);
+
+                //args
+                var argPaths = pixelCmd.Argument("Image", "Image Paths", true);
+
+                pixelCmd.OnExecute(() =>
+                {
+                    if (!optMethod.HasValue())
+                    {
+                        Console.WriteLine("Convert Method is not specified!");
+                        return;
+                    }
+
+                    foreach (var path in argPaths.Values)
+                    {
+                        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                        {
+                            continue;
+                        }
+
+                        int width = 0;
+                        int height = 0;
+                        PixelFormat pixelFormat = PixelFormat.Format32bppArgb;
+                        try
+                        {
+                            var img = Image.FromFile(path);
+                            width = img.Width;
+                            height = img.Height;
+                            pixelFormat = img.PixelFormat;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            continue;
+                        }
+
+                        var bts = RL.GetPixelBytesFromImageFile(path);
+
+                        switch (optMethod.ParsedValue)
+                        {
+                            case PsbImageConvertMethod.ZeroTwo:
+                                RL.Switch_0_2(ref bts);
+                                break;
+                            case PsbImageConvertMethod.ROR:
+                                RL.Rgba2Argb(ref bts);
+                                break;
+                            case PsbImageConvertMethod.ROL:
+                                RL.Rgba2Argb(ref bts, true);
+                                break;
+                            case PsbImageConvertMethod.RGBA428:
+                                bts = RL.Rgba428(bts);
+                                break;
+                            case PsbImageConvertMethod.RGBA2L8Grayscale:
+                                bts = RL.Rgba2L8(bts);
+                                bts = RL.ReadL8(bts, height, width);
+                                break;
+                            case PsbImageConvertMethod.Untile:
+                                bts = PostProcessing.UntileTexture(bts, width, height, pixelFormat);
+                                break;
+                            case PsbImageConvertMethod.Unswizzle:
+                                bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat);
+                                break;
+                            case PsbImageConvertMethod.Tile:
+                                bts = PostProcessing.TileTexture(bts, width, height, pixelFormat);
+                                break;
+                            case PsbImageConvertMethod.Swizzle:
+                                bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat);
+                                break;
+                            default:
+                                continue;
+                        }
+
+                        RL.ConvertToImageFile(bts, Path.ChangeExtension(path, ".converted.png"), height, width, PsbImageFormat.png);
+                    }
+                   
+                });
+            });
 
             //command: pack
             app.Command("pack", packCmd =>

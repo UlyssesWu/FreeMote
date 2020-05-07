@@ -321,7 +321,7 @@ namespace FreeMote
         /// BGRA(LE ARGB) -> RGBA(BE RGBA)  (switch B &amp; R)
         /// </summary>
         /// <param name="bytes"></param>
-        internal static unsafe void Switch_0_2(ref byte[] bytes)
+        public static unsafe void Switch_0_2(ref byte[] bytes)
         {
             //RGBA in little endian is actually ABGR
             //Actually abgr -> argb
@@ -346,11 +346,11 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// RGBA(BE) -> ARGB(LE) (switch A)
+        /// RGBA(BE) -> ARGB(LE BGRA) (switch A)
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="reverse"></param>
-        internal static unsafe void Rgba2Argb(ref byte[] bytes, bool reverse = false)
+        public static unsafe void Rgba2Argb(ref byte[] bytes, bool reverse = false)
         {
             //Actually bgra -> abgr
             fixed (byte* ptr = bytes)
@@ -389,7 +389,7 @@ namespace FreeMote
         /// <param name="bytes"></param>
         /// <param name="extend">true: 4 to 8; false: 8 to 4</param>
         /// Shibuya Scramble!
-        internal static byte[] Rgba428(byte[] bytes, bool extend = true)
+        public static byte[] Rgba428(byte[] bytes, bool extend = true)
         {
             if (extend)
             {
@@ -422,7 +422,7 @@ namespace FreeMote
             }
         }
 
-        private static byte[] Rgba2L8(byte[] data)
+        public static byte[] Rgba2L8(byte[] data)
         {
             byte[] output = new byte[data.Length / 4];
             int dst = 0;
@@ -520,7 +520,7 @@ namespace FreeMote
             return output;
         }
 
-        private static byte[] ReadL8(byte[] data, int height, int width)
+        public static byte[] ReadL8(byte[] data, int height, int width)
         {
             byte[] output = new byte[height * width * 4];
             int dst = 0;

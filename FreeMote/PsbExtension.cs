@@ -127,7 +127,7 @@ namespace FreeMote
                     return ImageFormat.Png;
             }
         }
-
+        
         /// <summary>
         /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
         /// </summary>
