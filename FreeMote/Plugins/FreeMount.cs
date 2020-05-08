@@ -26,6 +26,7 @@ namespace FreeMote.Plugins
         [ImportMany] private IEnumerable<Lazy<IPsbShell, IPsbPluginInfo>> _shells;
 
         [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
+        [ImportMany] private IEnumerable<Lazy<IPsbAudioFormatter, IPsbPluginInfo>> _audioFormatters;
 
         [Import(AllowDefault = true)] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
 
@@ -33,6 +34,9 @@ namespace FreeMote.Plugins
 
         public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } =
             new Dictionary<string, IPsbImageFormatter>();
+
+        public Dictionary<string, IPsbAudioFormatter> AudioFormatters { get; private set; } =
+            new Dictionary<string, IPsbAudioFormatter>();
 
         private CompositionContainer _container;
         private Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new Dictionary<IPsbPlugin, IPsbPluginInfo>();
@@ -155,6 +159,15 @@ namespace FreeMote.Plugins
                 }
             }
 
+            foreach (var audioFormatter in _audioFormatters)
+            {
+                _plugins.Add(audioFormatter.Value, audioFormatter.Metadata);
+                foreach (var extension in audioFormatter.Value.Extensions)
+                {
+                    AudioFormatters[extension] = audioFormatter.Value;
+                }
+            }
+
             if (_keyProvider != null)
             {
                 _plugins.Add(_keyProvider.Value, _keyProvider.Metadata);
@@ -183,6 +196,11 @@ namespace FreeMote.Plugins
             if (plugin is IPsbImageFormatter f)
             {
                 f.Extensions.ForEach(ext => ImageFormatters.Remove(ext));
+            }
+
+            if (plugin is IPsbAudioFormatter a)
+            {
+                a.Extensions.ForEach(ext => AudioFormatters.Remove(ext));
             }
 
             if (plugin is IPsbShell s)

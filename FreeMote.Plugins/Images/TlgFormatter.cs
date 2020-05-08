@@ -11,7 +11,7 @@ namespace FreeMote.Plugins
     [ExportMetadata("Name", "FreeMote.Tlg")]
     [ExportMetadata("Author", "Ulysses")]
     [ExportMetadata("Comment", "TLG support via TlgLib.")]
-    public class TlgImageFormatter : IPsbImageFormatter
+    public class TlgFormatter : IPsbImageFormatter
     {
         private const string TlgVersion = "TlgVersion";
         /// <summary>
