@@ -13,14 +13,42 @@ namespace FreeMote.Tools.EmtConvert
 {
     public enum PsbImageConvertMethod
     {
-        ZeroTwo,
+        /// <summary>
+        /// Switch byte [0] [2]
+        /// </summary>
+        /// 如果你是情迷弗兰克斯的女二号，面对泽拉图的威胁你会怎么做？
+        Switch02,
+        /// <summary>
+        /// Round Shift Right
+        /// </summary>
         ROR,
+        /// <summary>
+        /// Round Shift Left
+        /// </summary>
         ROL,
+        /// <summary>
+        /// Extend 2 bytes pixel to 4 bytes pixel
+        /// </summary>
         RGBA428,
+        /// <summary>
+        /// Convert color to L8 style GrayScale
+        /// </summary>
         RGBA2L8Grayscale,
+        /// <summary>
+        /// Untitle
+        /// </summary>
         Untile,
+        /// <summary>
+        /// Unswizzle
+        /// </summary>
         Unswizzle,
+        /// <summary>
+        /// Tile
+        /// </summary>
         Tile,
+        /// <summary>
+        /// Swizzle
+        /// </summary>
         Swizzle,
     }
 
@@ -60,7 +88,7 @@ namespace FreeMote.Tools.EmtConvert
                 pixelCmd.HelpOption();
                 pixelCmd.ExtendedHelpText = @"
 Example:
-  EmtConvert pixel -m ZeroTwo sample.png
+  EmtConvert pixel -m Switch02 sample.png
 ";
                 //options
                 var optMethod = pixelCmd.Option<PsbImageConvertMethod>("-m|--method <METHOD>",
@@ -105,7 +133,7 @@ Example:
 
                         switch (optMethod.ParsedValue)
                         {
-                            case PsbImageConvertMethod.ZeroTwo:
+                            case PsbImageConvertMethod.Switch02:
                                 RL.Switch_0_2(ref bts);
                                 break;
                             case PsbImageConvertMethod.ROR:
@@ -436,14 +464,6 @@ Example:
   EmtConvert -k 123456789 -nk 987654321 sample.psb    //Transfer from old key to new key
   Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.");
             return sb.ToString();
-            //            Console.WriteLine(@"Usage: .exe [mode] <PSB file path> <key> [new key]
-            //Mode: use `-c<shell type>` as the first param to enable shell compress/decompress mode.
-            //Example: emtconvert test.psb 123456789 (encrypt or decrypt using key)
-            //\t emtconvert test.psb 123456789 987654321 (transfer an impure PSB to another key)
-            //\t emtconvert -cLZ4 test.psb (compress to LZ4)
-            //\t emtconvert -c test.psb.lz4 (decompress)
-            //Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.
-            //");
         }
 
         static void AskForKey()
