@@ -5,7 +5,7 @@
         public PsbType PsbType => PsbType.Mmo;
         public bool IsThisType(PSB psb)
         {
-            throw new System.NotImplementedException();
+            return psb.Objects.ContainsKey("objectChildren") && psb.Objects.ContainsKey("sourceChildren");
         }
     }
 }

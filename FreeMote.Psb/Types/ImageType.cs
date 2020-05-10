@@ -5,7 +5,7 @@
         public PsbType PsbType => PsbType.Tachie;
         public bool IsThisType(PSB psb)
         {
-            throw new System.NotImplementedException();
+            return psb.TypeId == "image"; //&& psb.Objects.ContainsKey("imageList")
         }
     }
 }

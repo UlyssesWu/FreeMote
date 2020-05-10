@@ -23,6 +23,7 @@ namespace FreeMote.Plugins
 
 
         [ImportMany] private IEnumerable<Lazy<IPsbShell, IPsbPluginInfo>> _shells;
+        [ImportMany] private IEnumerable<Lazy<IPsbSpecialType, IPsbPluginInfo>> _specialTypes;
 
         [ImportMany] private IEnumerable<Lazy<IPsbImageFormatter, IPsbPluginInfo>> _imageFormatters;
         [ImportMany] private IEnumerable<Lazy<IPsbAudioFormatter, IPsbPluginInfo>> _audioFormatters;
@@ -30,6 +31,7 @@ namespace FreeMote.Plugins
         [Import(AllowDefault = true)] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
 
         public Dictionary<string, IPsbShell> Shells { get; private set; } = new Dictionary<string, IPsbShell>();
+        public Dictionary<string, IPsbSpecialType> SpecialTypes { get; private set; } = new Dictionary<string, IPsbSpecialType>();
 
         public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } =
             new Dictionary<string, IPsbImageFormatter>();
@@ -42,7 +44,7 @@ namespace FreeMote.Plugins
         private int _maxShellSigLength = 4;
 
         private static FreeMount _mount = null;
-        internal static FreeMount _ => _mount ?? (_mount = new FreeMount());
+        internal static FreeMount _ => _mount ??= new FreeMount();
 
         public static string CurrentPath => Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ??
                                             Environment.CurrentDirectory;
@@ -137,6 +139,7 @@ namespace FreeMote.Plugins
         private void UpdatePluginsCollection()
         {
             Shells = new Dictionary<string, IPsbShell>();
+            SpecialTypes = new Dictionary<string, IPsbSpecialType>();
             ImageFormatters = new Dictionary<string, IPsbImageFormatter>();
             foreach (var shell in _shells)
             {
@@ -147,6 +150,12 @@ namespace FreeMote.Plugins
 
                 _plugins.Add(shell.Value, shell.Metadata);
                 Shells.Add(shell.Value.Name, shell.Value);
+            }
+
+            foreach (var type in _specialTypes)
+            {
+                _plugins.Add(type.Value, type.Metadata);
+                SpecialTypes.Add(type.Value.TypeId, type.Value);
             }
 
             foreach (var imageFormatter in _imageFormatters)
@@ -205,6 +214,11 @@ namespace FreeMote.Plugins
             if (plugin is IPsbShell s)
             {
                 Shells.Remove(s.Name);
+            }
+
+            if (plugin is IPsbSpecialType t)
+            {
+                SpecialTypes.Remove(t.TypeId);
             }
 
             if (plugin is IPsbKeyProvider)

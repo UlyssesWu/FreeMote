@@ -5,7 +5,7 @@
         public PsbType PsbType => PsbType.SoundArchive;
         public bool IsThisType(PSB psb)
         {
-            throw new System.NotImplementedException();
+            return psb.TypeId == "sound_archive";
         }
     }
 }

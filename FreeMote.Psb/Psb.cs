@@ -17,7 +17,7 @@ namespace FreeMote.Psb
     /// </summary>
     /// Photo Shop Big
     /// Pretty SB
-    public class PSB
+    public partial class PSB
     {
         /// <summary>
         /// Header
@@ -64,6 +64,11 @@ namespace FreeMote.Psb
         public PsbDictionary Objects { get; set; }
 
         /// <summary>
+        /// Type specific handler
+        /// </summary>
+        public IPsbType TypeHandler { get; set; }
+
+        /// <summary>
         /// Type
         /// </summary>
         public PsbType Type { get; set; } = PsbType.PSB;
@@ -104,6 +109,15 @@ namespace FreeMote.Psb
                 }
 
                 return id;
+            }
+            set
+            {
+                if (Objects == null)
+                {
+                    return;
+                }
+
+                Objects["id"] = value.ToPsbString();
             }
         }
 
@@ -163,54 +177,14 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public PsbType InferType()
         {
-            if (Objects.ContainsKey("layers") && Objects.ContainsKey("height") && Objects.ContainsKey("width"))
+            foreach (var handler in TypeHandlers)
             {
-                return PsbType.Pimg;
-            }
-
-            if (Objects.Any(k => k.Key.Contains(".") && k.Value is PsbResource))
-            {
-                return PsbType.Pimg;
-            }
-
-            if (Objects.ContainsKey("scenes") && Objects.ContainsKey("name"))
-            {
-                return PsbType.Scn;
-            }
-
-            if (Objects.ContainsKey("list") && Objects.ContainsKey("map") && Resources?.Count == 0)
-            {
-                return PsbType.Scn; //filelist.scn
-            }
-
-            if (Objects.ContainsKey("objectChildren") && Objects.ContainsKey("sourceChildren"))
-            {
-                return PsbType.Mmo;
-            }
-
-            if (TypeId == "image" && Objects.ContainsKey("imageList"))
-            {
-                return PsbType.Tachie;
-            }
-
-            if (TypeId == "archive" && Objects.ContainsKey("file_info"))
-            {
-                return PsbType.ArchiveInfo;
-            }
-
-            if (TypeId == "font" && Objects.ContainsKey("code"))
-            {
-                return PsbType.BmpFont;
-            }
-
-            if (TypeId == "sound_archive")
-            {
-                return PsbType.SoundArchive;
-            }
-
-            if (TypeId == "motion")
-            {
-                return PsbType.Motion;
+                if (handler.Value.IsThisType(this))
+                {
+                    TypeHandler = handler.Value;
+                    Type = handler.Key;
+                    return Type;
+                }
             }
 
             return PsbType.PSB;
@@ -324,7 +298,7 @@ namespace FreeMote.Psb
             }
 
             Resources.Sort((r1, r2) => (int) ((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
-            Type = InferType();
+            InferType();
         }
 
         private void LoadUnknown(BinaryReader br)
@@ -1495,7 +1469,7 @@ namespace FreeMote.Psb
                 }
             }
 
-            Type = InferType();
+            InferType();
         }
     }
 }
