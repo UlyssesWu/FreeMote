@@ -301,7 +301,7 @@ namespace FreeMote.PsBuild
             return psb;
         }
 
-        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata, FreeMountContext context,
+        internal static byte[] LoadImageBytes(string path, ImageMetadata metadata, FreeMountContext context,
             out byte[] palette)
         {
             palette = null;
@@ -470,7 +470,7 @@ namespace FreeMote.PsBuild
                 //        resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
 
                 //Scan for Resource
-                ResourceMetadata resMd = null;
+                ImageMetadata resMd = null;
                 if (order == PsbLinkOrderBy.Name)
                 {
                     if (resName == null)
@@ -485,7 +485,7 @@ namespace FreeMote.PsBuild
                     }
                     else
                     {
-                        var texIdx = ResourceMetadata.GetTextureIndex(resName);
+                        var texIdx = ImageMetadata.GetTextureIndex(resName);
 
                         if (texIdx == null)
                         {

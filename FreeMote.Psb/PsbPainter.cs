@@ -15,7 +15,7 @@ namespace FreeMote.Psb
     {
         public string GroupMark { get; set; } = "■";
         public PSB Source { get; set; }
-        public List<ResourceMetadata> Resources { get; private set; } = new List<ResourceMetadata>();
+        public List<ImageMetadata> Resources { get; private set; } = new List<ImageMetadata>();
 
         public PsbPainter(PSB psb)
         {
@@ -33,7 +33,7 @@ namespace FreeMote.Psb
                 throw new FormatException("PsbPainter only works for Motion(psb) models.");
             }
 
-            Resources = new List<ResourceMetadata>();
+            Resources = new List<ImageMetadata>();
             CollectResource();
         }
 
@@ -48,7 +48,7 @@ namespace FreeMote.Psb
             Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppPArgb);
             Graphics g = Graphics.FromImage(bmp);
 
-            var drawRes = new List<ResourceMetadata>();
+            var drawRes = new List<ImageMetadata>();
             foreach (var res in Resources)
             {
                 if (res.Opacity <= 0 || !res.Visible)

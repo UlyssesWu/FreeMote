@@ -26,7 +26,6 @@ namespace FreeMote
 
     /// <summary>
     /// PSB Type
-    /// <remarks>It should not use generic name such as `Images` since different image types may still have different structures.</remarks>
     /// </summary>
     public enum PsbType
     {
@@ -134,10 +133,10 @@ namespace FreeMote
         Extract,
 
     }
-
+    
     public enum PsbPixelFormat
     {
-        None,
+        None = 0,
         /// <summary>
         /// Little Endian RGBA8
         /// </summary>
@@ -195,6 +194,14 @@ namespace FreeMote
         /// </summary>
         /// REF: http://wiki.tockdom.com/wiki/Image_Formats#C8_.28CI8.29
         CI8_SW,
+    }
+
+    public enum PsbAudioFormat
+    {
+        None = 0,
+        WAV,
+        Atrac9,
+        OPUS,
     }
 
     public enum EncodeMode

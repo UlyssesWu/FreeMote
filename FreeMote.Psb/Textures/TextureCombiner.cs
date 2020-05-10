@@ -10,9 +10,9 @@ namespace FreeMote.Psb.Textures
     static class TextureCombiner
     {
         /// <summary>
-        /// Combine Tachie texture parts 
+        /// Combine Image texture parts 
         /// </summary>
-        /// <param name="psb">Tachie (image) type PSB</param>
+        /// <param name="psb">Image (image) type PSB</param>
         /// <returns></returns>
         public static Dictionary<string, Bitmap> CombineTachie(PSB psb)
         {

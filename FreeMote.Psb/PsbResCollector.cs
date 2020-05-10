@@ -36,12 +36,12 @@ namespace FreeMote.Psb
         /// <param name="deDuplication">if true, we focus on Resource itself </param>
         /// <param name="duplicatePalette">when compiling PSB, re-create palettes</param>
         /// <returns></returns>
-        public static List<ResourceMetadata> CollectResources(this PSB psb, bool deDuplication = true,
+        public static List<ImageMetadata> CollectResources(this PSB psb, bool deDuplication = true,
             bool duplicatePalette = false)
         {
-            List<ResourceMetadata> resourceList = psb.Resources == null
-                ? new List<ResourceMetadata>()
-                : new List<ResourceMetadata>(psb.Resources.Count);
+            List<ImageMetadata> resourceList = psb.Resources == null
+                ? new List<ImageMetadata>()
+                : new List<ImageMetadata>(psb.Resources.Count);
 
             switch (psb.Type)
             {
@@ -51,7 +51,7 @@ namespace FreeMote.Psb
                 case PsbType.Pimg:
                 case PsbType.Scn:
                     resourceList.AddRange(psb.Objects.Where(k => k.Value is PsbResource).Select(k =>
-                        new ResourceMetadata()
+                        new ImageMetadata()
                         {
                             Name = k.Key,
                             Resource = k.Value as PsbResource,
@@ -69,7 +69,7 @@ namespace FreeMote.Psb
                 case PsbType.SoundArchive:
                 default:
                     if (psb.Resources != null)
-                        resourceList.AddRange(psb.Resources.Select(r => new ResourceMetadata() {Resource = r}));
+                        resourceList.AddRange(psb.Resources.Select(r => new ImageMetadata() {Resource = r}));
                     break;
             }
 
@@ -80,7 +80,7 @@ namespace FreeMote.Psb
             return resourceList;
         }
 
-        private static void FindTachieResources(List<ResourceMetadata> list, IPsbValue obj, string currentLabel = "")
+        private static void FindTachieResources(List<ImageMetadata> list, IPsbValue obj, string currentLabel = "")
         {
             switch (obj)
             {
@@ -114,7 +114,7 @@ namespace FreeMote.Psb
             }
         }
 
-        private static ResourceMetadata GenerateTachieResMetadata(PsbDictionary d, PsbResource r, string label = "")
+        private static ImageMetadata GenerateTachieResMetadata(PsbDictionary d, PsbResource r, string label = "")
         {
             int width = 1, height = 1;
             int top = 0, left = 0;
@@ -139,7 +139,7 @@ namespace FreeMote.Psb
                 left = ny.AsInt;
             }
 
-            var md = new ResourceMetadata()
+            var md = new ImageMetadata()
             {
                 Top = top,
                 Left = left,
@@ -169,7 +169,7 @@ namespace FreeMote.Psb
             return resources;
         }
 
-        private static void FindMmoResources(List<ResourceMetadata> list, IPsbValue obj, in string defaultPartname = "",
+        private static void FindMmoResources(List<ImageMetadata> list, IPsbValue obj, in string defaultPartname = "",
             bool deDuplication = true)
         {
             switch (obj)
@@ -199,7 +199,7 @@ namespace FreeMote.Psb
             }
         }
 
-        private static ResourceMetadata GenerateMmoResMetadata(PsbDictionary d, string defaultPartName = "",
+        private static ImageMetadata GenerateMmoResMetadata(PsbDictionary d, string defaultPartName = "",
             PsbResource r = null)
         {
             if (r == null)
@@ -258,7 +258,7 @@ namespace FreeMote.Psb
                 originY = (float) ny;
             }
 
-            var md = new ResourceMetadata()
+            var md = new ImageMetadata()
             {
                 Is2D = is2D,
                 Compress = compress,
@@ -273,7 +273,7 @@ namespace FreeMote.Psb
             return md;
         }
 
-        private static void FindPimgResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true)
+        private static void FindPimgResources(List<ImageMetadata> list, IPsbValue obj, bool deDuplication = true)
         {
             if (obj is PsbCollection c)
             {
@@ -307,7 +307,7 @@ namespace FreeMote.Psb
             }
         }
 
-        private static void FindMotionResources(List<ResourceMetadata> list, IPsbValue obj, bool deDuplication = true,
+        private static void FindMotionResources(List<ImageMetadata> list, IPsbValue obj, bool deDuplication = true,
             bool duplicatePalette = false)
         {
             switch (obj)
@@ -378,7 +378,7 @@ namespace FreeMote.Psb
         /// <param name="r">Resource</param>
         /// <param name="duplicatePalette"></param>
         /// <returns></returns>
-        internal static ResourceMetadata GenerateMotionResMetadata(PsbDictionary d, PsbResource r = null,
+        internal static ImageMetadata GenerateMotionResMetadata(PsbDictionary d, PsbResource r = null,
             bool duplicatePalette = false)
         {
             if (r == null)
@@ -474,7 +474,7 @@ namespace FreeMote.Psb
                 palTypeString = d["palType"] as PsbString;
             }
 
-            var md = new ResourceMetadata()
+            var md = new ImageMetadata()
             {
                 Index = r.Index ?? int.MaxValue,
                 Compress = compress,

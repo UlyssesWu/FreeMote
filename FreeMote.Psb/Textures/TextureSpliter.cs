@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-
 #if USE_FASTBITMAP
 using FastBitmapLib;
 #else
@@ -19,9 +18,9 @@ namespace FreeMote.Psb.Textures
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        public static List<ResourceMetadata> CollectSplitResources(this PSB psb)
+        public static List<ImageMetadata> CollectSplitResources(this PSB psb)
         {
-            List<ResourceMetadata> resList = new List<ResourceMetadata>();
+            List<ImageMetadata> resList = new List<ImageMetadata>();
             var source = (PsbDictionary)psb.Objects["source"];
             foreach (var tex in source)
             {

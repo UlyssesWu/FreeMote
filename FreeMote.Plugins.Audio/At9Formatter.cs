@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using VGAudio.Formats.Atrac9;
 
 namespace FreeMote.Plugins.Audio
 {
