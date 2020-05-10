@@ -234,10 +234,10 @@ Example:
                                 }
 
                                 Console.WriteLine($"Extracting info from {fileName} ...");
-
+                                var outputRaw = optRaw.HasValue();
                                 var bodyBytes = File.ReadAllBytes(body);
                                 var extractDir = Path.Combine(dir, name);
-                                if (File.Exists(extractDir))
+                                if (File.Exists(extractDir)) //conflict with File, not Directory
                                 {
                                     name += "-resources";
                                     extractDir += "-resources";
@@ -262,6 +262,13 @@ Example:
                                         var range = ((PsbCollection) pair.Value);
                                         var start = ((PsbNumber) range[0]).IntValue;
                                         var len = ((PsbNumber) range[1]).IntValue;
+
+                                        if (outputRaw)
+                                        {
+                                            File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
+                                                bodyBytes.AsSpan().Slice(start, len).ToArray());
+                                            return;
+                                        }
 
                                         using (var ms = new MemoryStream(bodyBytes, start, len))
                                         {
@@ -307,6 +314,13 @@ Example:
                                         var range = ((PsbCollection) pair.Value);
                                         var start = ((PsbNumber) range[0]).IntValue;
                                         var len = ((PsbNumber) range[1]).IntValue;
+
+                                        if (outputRaw)
+                                        {
+                                            File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
+                                                bodyBytes.AsSpan().Slice(start, len).ToArray());
+                                            continue;
+                                        }
 
                                         using (var ms = new MemoryStream(bodyBytes, start, len))
                                         {
