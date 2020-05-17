@@ -141,6 +141,23 @@ namespace FreeMote
             }
         }
 
+        public static string DefaultExtension(this PsbAudioFormat audioFormat)
+        {
+            switch (audioFormat)
+            {
+                case PsbAudioFormat.Atrac9:
+                    return ".at9";
+                case PsbAudioFormat.WAV:
+                    return ".wav";
+                case PsbAudioFormat.OPUS:
+                    return ".opus";
+                case PsbAudioFormat.XWMA:
+                    return ".xwma";
+                default:
+                    return $".{audioFormat.ToString().ToLowerInvariant()}";
+            }
+        }
+
         /// <summary>
         /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
         /// </summary>
@@ -197,7 +214,7 @@ namespace FreeMote
                     return "RGBA4444";
                 default:
                     return pixelFormat.ToString();
-                    //throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
+                //throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
             }
         }
 
@@ -265,6 +282,7 @@ namespace FreeMote
             {
                 length++;
             }
+
             br.BaseStream.Position = pos;
             var str = Consts.PsbEncoding.GetString(br.ReadBytes(length));
             br.ReadByte(); //skip \0 - fail if end without \0
@@ -275,7 +293,7 @@ namespace FreeMote
         {
             //bw.Write(str.ToCharArray());
             bw.Write(Consts.PsbEncoding.GetBytes(str));
-            bw.Write((byte)0);
+            bw.Write((byte) 0);
         }
 
         /// <summary>

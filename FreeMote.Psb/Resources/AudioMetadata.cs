@@ -40,17 +40,36 @@ namespace FreeMote.Psb
             throw new System.NotImplementedException();
         }
 
+        public bool TryToWave(FreeMountContext context, out List<byte[]> waveChannels)
+        {
+            waveChannels = null;
+            if (context == null)
+            {
+                return false;
+            }
+
+            waveChannels = new List<byte[]>(ChannelList.Count);
+            var result = true;
+            foreach (var channel in ChannelList)
+            {
+                var bytes = context.ResourceToWave(channel.Extension, channel);
+                if (bytes == null)
+                {
+                    result = false;
+                }
+                else
+                {
+                    waveChannels.Add(bytes);
+                }
+            }
+
+            return result;
+        }
+
         public List<IArchData> ChannelList { get; set; }
     }
 
-    public interface IArchData
-    {
-        PsbAudioFormat Format { get; }
-        bool CanEncode { get; }
-        bool CanDecode { get; }
-    }
-
-    public class Atrac9ArchData : IArchData
+    public class XwmaArchData : IArchData
     {
         public PsbResource Data { get; set; }
         public PsbResource Dpds { get; set; }
@@ -59,7 +78,8 @@ namespace FreeMote.Psb
         public string Wav { get; set; }
 
 
-        public PsbAudioFormat Format => PsbAudioFormat.Atrac9;
+        public string Extension => Format.DefaultExtension();
+        public PsbAudioFormat Format => PsbAudioFormat.XWMA;
         public bool CanEncode => false;
         public bool CanDecode => true;
     }
@@ -71,7 +91,18 @@ namespace FreeMote.Psb
         public int ChannelCount { get; set; }
         public int SampRate { get; set; }
 
+        public string Extension => Format.DefaultExtension();
         public PsbAudioFormat Format => PsbAudioFormat.OPUS;
+        public bool CanEncode { get; }
+        public bool CanDecode { get; }
+    }
+
+    public class Atrac9ArchData : IArchData
+    {
+        public PsbResource Data { get; set; }
+
+        public string Extension => Format.DefaultExtension();
+        public PsbAudioFormat Format => PsbAudioFormat.Atrac9;
         public bool CanEncode { get; }
         public bool CanDecode { get; }
     }

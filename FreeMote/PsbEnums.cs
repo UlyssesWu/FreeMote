@@ -202,6 +202,7 @@ namespace FreeMote
         WAV,
         Atrac9,
         OPUS,
+        XWMA,
     }
 
     public enum EncodeMode

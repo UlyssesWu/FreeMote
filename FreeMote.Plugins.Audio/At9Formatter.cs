@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using VGAudio.Formats.Atrac9;
+using System.IO;
+using FreeMote.Psb;
+using VGAudio.Containers.At9;
+using VGAudio.Containers.Wave;
 
 namespace FreeMote.Plugins.Audio
 {
@@ -11,26 +14,41 @@ namespace FreeMote.Plugins.Audio
     [ExportMetadata("Comment", "At9 support via VGAudio.")]
     public class At9Formatter : IPsbAudioFormatter
     {
-        public List<string> Extensions => throw new NotImplementedException();
+        public List<string> Extensions { get; } = new List<string> {".at9"};
 
-        public bool CanToBytes(byte[] wave, Dictionary<string, object> context = null)
+        public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
-        public bool CanToWave(in byte[] data, Dictionary<string, object> context = null)
+        public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            throw new NotImplementedException();
+            if (archData is Atrac9ArchData)
+            {
+                return true;
+            }
+
+            return false;
         }
 
-        public byte[] ToBytes(byte[] bitmap, Dictionary<string, object> context = null)
+        public IArchData ToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("AT9 encode is not supported. Use at9tool manually.");
+            return null;
         }
 
-        public byte[] ToWave(in byte[] data, Dictionary<string, object> context = null)
+        public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            throw new NotImplementedException();
+            var at9Arch = (Atrac9ArchData) archData;
+            At9Reader reader = new At9Reader();
+            //var format = reader.ReadFormat();
+            using MemoryStream ms = new MemoryStream(at9Arch.Data.Data);
+            using MemoryStream oms = new MemoryStream();
+            var data = reader.Read(ms);
+            WaveWriter writer = new WaveWriter();
+            writer.WriteToStream(data, oms, new WaveConfiguration { Codec = WaveCodec.Pcm16Bit });
+            
+            return oms.ToArray();
         }
     }
 }

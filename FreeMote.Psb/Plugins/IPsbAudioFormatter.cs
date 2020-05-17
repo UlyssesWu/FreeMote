@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using FreeMote.Psb;
 
 namespace FreeMote.Plugins
 {
@@ -8,9 +9,9 @@ namespace FreeMote.Plugins
         /// Target Extension (if have) e.g. ".wav"
         /// </summary>
         List<string> Extensions { get; }
-        bool CanToWave(in byte[] data, Dictionary<string, object> context = null);
-        bool CanToBytes(byte[] wave, Dictionary<string, object> context = null);
-        byte[] ToWave(in byte[] data, Dictionary<string, object> context = null);
-        byte[] ToBytes(byte[] bitmap, Dictionary<string, object> context = null);
+        bool CanToWave(IArchData archData, Dictionary<string, object> context = null);
+        bool CanToArchData(byte[] wave, Dictionary<string, object> context = null);
+        byte[] ToWave(IArchData archData, Dictionary<string, object> context = null);
+        IArchData ToArchData(byte[] wave, Dictionary<string, object> context = null);
     }
 }

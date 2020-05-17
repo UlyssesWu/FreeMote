@@ -23,6 +23,16 @@ namespace FreeMote.Plugins
             return FreeMount._.ImageFormatters.ContainsKey(ext);
         }
 
+        public bool SupportAudioExt(string ext)
+        {
+            return FreeMount._.AudioFormatters.ContainsKey(ext);
+        }
+
+        public byte[] ResourceToWave(string ext, IArchData archData)
+        {
+            return FreeMount._.ResourceToWave(ext, archData, Context);
+        }
+
         /// <summary>
         /// Use plugins to convert resource bytes to bitmap
         /// </summary>

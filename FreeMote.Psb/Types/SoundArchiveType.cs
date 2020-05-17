@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using FreeMote.Plugins;
 
@@ -24,6 +25,13 @@ namespace FreeMote.Psb.Types
             return resourceList;
         }
 
+        public AudioMetadata GenerateAudioMetadata(PsbDictionary dic)
+        {
+            var md = new AudioMetadata();
+            //TODO:
+            return md;
+        }
+
         public void Link(PSB psb, FreeMountContext context, IList<string> resPaths, string baseDir = null,
             PsbLinkOrderBy order = PsbLinkOrderBy.Convention)
         {
@@ -38,13 +46,37 @@ namespace FreeMote.Psb.Types
         public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
             PsbLinkOrderBy order = PsbLinkOrderBy.Name)
         {
-            throw new System.NotImplementedException();
         }
 
         public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
             PsbExtractOption extractOption = PsbExtractOption.Original)
         {
-            throw new System.NotImplementedException();
+            var resources = psb.CollectResources<AudioMetadata>();
+            Dictionary<string, string> resDictionary = new Dictionary<string, string>();
+
+            if (extractOption == PsbExtractOption.Original)
+            {
+                for (int i = 0; i < psb.Resources.Count; i++)
+                {
+                    var relativePath = psb.Resources[i].Index == null ? $"#{i}.bin" : $"{psb.Resources[i].Index}.bin";
+
+                    File.WriteAllBytes(
+                        Path.Combine(dirPath, relativePath),
+                        psb.Resources[i].Data);
+                    resDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{relativePath}");
+                }
+            }
+            else
+            {
+                for (int i = 0; i < resources.Count; i++)
+                {
+                    var resource = resources[i];
+
+                    //TODO:
+                }
+            }
+
+            return resDictionary;
         }
     }
 }

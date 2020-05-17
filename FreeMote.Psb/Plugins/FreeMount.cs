@@ -239,6 +239,16 @@ namespace FreeMote.Plugins
             return ImageFormatters[ext].ToBitmap(data, context);
         }
 
+        public byte[] ResourceToWave(string ext, IArchData archData, Dictionary<string, object> context = null)
+        {
+            if (AudioFormatters[ext] == null || !AudioFormatters[ext].CanToWave(archData, context))
+            {
+                return null;
+            }
+
+            return AudioFormatters[ext].ToWave(archData, context);
+        }
+
         public byte[] BitmapToResource(string ext, Bitmap bitmap, Dictionary<string, object> context = null)
         {
             if (ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBytes(bitmap))
@@ -247,6 +257,16 @@ namespace FreeMote.Plugins
             }
 
             return ImageFormatters[ext].ToBytes(bitmap, context);
+        }
+
+        public IArchData WaveToResource(string ext, in byte[] wave, Dictionary<string, object> context = null)
+        {
+            if (AudioFormatters[ext] == null || !AudioFormatters[ext].CanToArchData(wave))
+            {
+                return null;
+            }
+
+            return AudioFormatters[ext].ToArchData(wave, context);
         }
 
         public MemoryStream OpenFromShell(Stream stream, ref string type, Dictionary<string, object> context = null)
