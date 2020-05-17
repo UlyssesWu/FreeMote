@@ -31,13 +31,6 @@ namespace FreeMote.Psb.Types
         {
             LinkImages(psb, context, resPaths, baseDir, order, true);
         }
-
-
-        public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string filePath,
-            PsbExtractOption extractOption = PsbExtractOption.Original)
-        {
-            throw new System.NotImplementedException();
-        }
         
         private static void FindMotionResources<T>(List<T> list, IPsbValue obj, bool deDuplication = true) where T: IResourceMetadata
         {

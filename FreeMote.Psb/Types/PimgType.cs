@@ -60,13 +60,7 @@ namespace FreeMote.Psb.Types
 
             return resourceList;
         }
-
-        public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string filePath,
-            PsbExtractOption extractOption = PsbExtractOption.Original)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         private static void FindPimgResources<T>(List<T> list, IPsbValue obj, bool deDuplication = true) where T: IResourceMetadata
         {
             if (obj is PsbList c)

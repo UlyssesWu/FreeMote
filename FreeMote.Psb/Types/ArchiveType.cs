@@ -27,13 +27,12 @@ namespace FreeMote.Psb.Types
         public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
             PsbLinkOrderBy order = PsbLinkOrderBy.Name)
         {
-            throw new System.NotImplementedException();
         }
 
         public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
             PsbExtractOption extractOption = PsbExtractOption.Original)
         {
-            throw new System.NotImplementedException();
+            return null;
         }
     }
 }

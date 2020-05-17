@@ -39,11 +39,5 @@ namespace FreeMote.Psb.Types
 
             return resourceList;
         }
-        
-        public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string filePath,
-            PsbExtractOption extractOption = PsbExtractOption.Original)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
