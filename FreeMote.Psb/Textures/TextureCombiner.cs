@@ -22,7 +22,7 @@ namespace FreeMote.Psb.Textures
             }
 
             Dictionary<string, Bitmap> images = new Dictionary<string, Bitmap>();
-            PsbCollection imageList = psb.Objects["imageList"] as PsbCollection;
+            PsbList imageList = psb.Objects["imageList"] as PsbList;
             if (imageList == null)
             {
                 return images;
@@ -32,7 +32,7 @@ namespace FreeMote.Psb.Textures
             {
                 var imageItem = psbValue as PsbDictionary;
 
-                var texture = imageItem?["texture"] as PsbCollection;
+                var texture = imageItem?["texture"] as PsbList;
                 if (texture == null)
                 {
                     continue;
@@ -48,7 +48,7 @@ namespace FreeMote.Psb.Textures
                     foreach (var texObj in texture)
                     {
                         var tex = (PsbDictionary)texObj;
-                        var md = PsbResCollector.GenerateMotionResMetadata(tex.Children("image") as PsbDictionary);
+                        var md = PsbResHelper.GenerateImageMetadata(tex.Children("image") as PsbDictionary);
                         md.Spec = psb.Platform;
 
                         var left = tex["left"].GetInt();

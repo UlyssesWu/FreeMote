@@ -9,6 +9,23 @@ namespace FreeMote
     public static class Consts
     {
         /// <summary>
+        /// delimiter for output texture filename
+        /// </summary>
+        internal const string ResourceNameDelimiter = "-";
+
+        public const string ResourceKey = "pixel";
+
+        /// <summary>
+        /// The string with this prefix will be convert to number when compile/decompile
+        /// </summary>
+        public const string NumberStringPrefix = "#0x";
+
+        /// <summary>
+        /// The string with this prefix (with ID followed) will be convert to resource when compile/decompile
+        /// </summary>
+        public const string ResourceIdentifier = "#resource#";
+
+        /// <summary>
         /// (string)
         /// </summary>
         public const string Context_PsbShellType = "PsbShellType";

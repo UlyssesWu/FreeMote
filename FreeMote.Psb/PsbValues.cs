@@ -56,7 +56,7 @@ namespace FreeMote.Psb
         Double = 0x1F,
 
         //objects
-        Collection = 0x20, //object collection
+        List = 0x20, //object list
         Objects = 0x21, //object dictionary
 
 
@@ -96,7 +96,7 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
-    /// Collection
+    /// List or Dictionary
     /// </summary>
     public interface IPsbCollection : IPsbChild, IEnumerable
     {
@@ -1084,13 +1084,13 @@ namespace FreeMote.Psb
     /// [value1, value2...]
     /// </summary>
     [Serializable]
-    public class PsbCollection : List<IPsbValue>, IPsbValue, IPsbCollection
+    public class PsbList : List<IPsbValue>, IPsbValue, IPsbCollection
     {
-        public PsbCollection(int capacity) : base(capacity)
+        public PsbList(int capacity) : base(capacity)
         {
         }
 
-        public PsbCollection() : base()
+        public PsbList() : base()
         {
         }
 
@@ -1111,11 +1111,11 @@ namespace FreeMote.Psb
         IPsbValue IPsbCollection.this[string s] =>
             int.TryParse(s.Replace("[", "").Replace("]", ""), out int i) ? base[i] : null;
 
-        public PsbObjType Type { get; } = PsbObjType.Collection;
+        public PsbObjType Type { get; } = PsbObjType.List;
 
         public override string ToString()
         {
-            return $"Collection[{Count}]";
+            return $"List[{Count}]";
         }
     }
 

@@ -127,7 +127,20 @@ namespace FreeMote
                     return ImageFormat.Png;
             }
         }
-        
+
+        public static string DefaultExtension(this PsbImageFormat imageFormat)
+        {
+            switch (imageFormat)
+            {
+                case PsbImageFormat.png:
+                    return ".png";
+                case PsbImageFormat.bmp:
+                    return ".bmp";
+                default:
+                    return $".{imageFormat}";
+            }
+        }
+
         /// <summary>
         /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
         /// </summary>

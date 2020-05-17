@@ -345,7 +345,7 @@ Example:
                                 foreach (var item in contents.OrderBy(item => item.Name, StringComparer.Ordinal))
                                 {
                                     fileInfoDic.Add(item.Name,
-                                        new PsbCollection
+                                        new PsbList
                                             {new PsbNumber((int) ms.Position), new PsbNumber(item.Content.Length)});
                                     if (item.Content is MemoryStream ims)
                                     {
@@ -375,7 +375,7 @@ Example:
                                         {
                                             fs.CopyTo(
                                                 ms); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
-                                            fileInfoDic.Add(fileNameWithoutSuffix, new PsbCollection
+                                            fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
                                                 {new PsbNumber((int) ms.Position), new PsbNumber(fs.Length)});
                                         }
                                     }
@@ -397,7 +397,7 @@ Example:
 
                                         var outputMdf = fmContext.PackToShell(File.OpenRead(kv.Value.Path), "MDF");
                                         outputMdf.WriteTo(ms);
-                                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbCollection
+                                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
                                             {new PsbNumber((int) ms.Position), new PsbNumber(outputMdf.Length)});
                                         outputMdf.Dispose();
                                     }
@@ -415,7 +415,7 @@ Example:
 
                                         var outputMdf = fmContext.PackToShell(content.Psb.ToStream(), "MDF");
                                         outputMdf.WriteTo(ms);
-                                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbCollection
+                                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
                                             {new PsbNumber((int) ms.Position), new PsbNumber(outputMdf.Length)});
                                         outputMdf.Dispose();
                                     }
@@ -513,7 +513,7 @@ Example:
         {
             var suffix = "";
             if (psb.Objects.ContainsKey("expire_suffix_list") &&
-                psb.Objects["expire_suffix_list"] is PsbCollection col && col[0] is PsbString s)
+                psb.Objects["expire_suffix_list"] is PsbList col && col[0] is PsbString s)
             {
                 suffix = s;
             }

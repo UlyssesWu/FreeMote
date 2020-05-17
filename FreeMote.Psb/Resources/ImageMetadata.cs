@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -13,6 +14,8 @@ namespace FreeMote.Psb
     [DebuggerDisplay("{" + nameof(DebuggerString) + "}")]
     public class ImageMetadata : IResourceMetadata
     {
+        private static readonly List<string> SupportedImageExt = new List<string> {".png", ".bmp", ".jpg", ".jpeg"};
+        
         /// <summary>
         /// Name 1
         /// </summary>
@@ -103,11 +106,14 @@ namespace FreeMote.Psb
         /// Pal
         /// </summary>
         public PsbResource Palette { get; set; }
+
         public PsbString PaletteTypeString { get; set; }
+
         /// <summary>
         /// Palette Pixel Format Type
         /// </summary>
         public string PalType => PaletteTypeString?.Value;
+
         public PsbPixelFormat PalettePixelFormat => PalType.ToPsbPixelFormat(Spec);
 
         public byte[] Data
@@ -163,6 +169,13 @@ namespace FreeMote.Psb
         /// <para>Spec can not be get from source part, so set it before use</para>
         /// </summary>
         public PsbSpec Spec { get; set; } = PsbSpec.other;
+
+        public byte[] Link(string fullPath, FreeMountContext context)
+        {
+            Data = LoadImageBytes(fullPath, context, out var palette);
+            PalData = palette;
+            return Data;
+        }
 
         public PsbPixelFormat PixelFormat => Type.ToPsbPixelFormat(Spec);
 
@@ -247,7 +260,123 @@ namespace FreeMote.Psb
                 return "";
             }
 
-            return $"{Part}{PsbResCollector.ResourceNameDelimiter}{Name}";
+            return $"{Part}{Consts.ResourceNameDelimiter}{Name}";
+        }
+
+        internal byte[] LoadImageBytes(string path, FreeMountContext context,
+            out byte[] palette)
+        {
+            palette = null;
+            byte[] data;
+            Bitmap image = null;
+            var ext = Path.GetExtension(path)?.ToLowerInvariant();
+
+            if (Compress == PsbCompressType.ByName && ext != null && Name != null &&
+                Name.EndsWith(ext, true, null))
+            {
+                return File.ReadAllBytes(path);
+            }
+
+            switch (ext)
+            {
+                //tlg
+                case ".tlg" when Compress == PsbCompressType.Tlg:
+                    return File.ReadAllBytes(path);
+                case ".tlg":
+                    image = context.ResourceToBitmap(".tlg", File.ReadAllBytes(path));
+                    break;
+                //rl
+                case ".rl" when Compress == PsbCompressType.RL:
+                    return File.ReadAllBytes(path);
+                case ".rl" when Compress == PsbCompressType.None:
+                    return RL.Decompress(File.ReadAllBytes(path));
+                case ".rl":
+                    image = RL.DecompressToImage(File.ReadAllBytes(path), Height, Width,
+                        PixelFormat);
+                    break;
+                //raw
+                case ".raw" when Compress == PsbCompressType.None:
+                    return File.ReadAllBytes(path);
+                case ".raw" when Compress == PsbCompressType.RL:
+                    return RL.Compress(File.ReadAllBytes(path));
+                case ".raw":
+                    image = RL.ConvertToImage(File.ReadAllBytes(path), Height, Width,
+                        PixelFormat);
+                    break;
+                //bin
+                case ".bin":
+                    return File.ReadAllBytes(path);
+                //image
+                default:
+                    if (SupportedImageExt.Contains(ext))
+                    {
+                        if (PixelFormat.UsePalette())
+                        {
+                            image = BitmapHelper.LoadBitmap(File.ReadAllBytes(path));
+                            palette = image.Palette.GetPaletteBytes(PalettePixelFormat);
+                        }
+                        else
+                        {
+                            image = new Bitmap(path);
+                        }
+                    }
+                    else if (context.SupportImageExt(ext))
+                    {
+                        image = context.ResourceToBitmap(ext, File.ReadAllBytes(path));
+                    }
+                    else
+                    {
+                        //MARK: No longer try to read files we don't know
+                        //return File.ReadAllBytes(path);
+                        return null;
+                    }
+
+                    break;
+            }
+
+            switch (Compress)
+            {
+                case PsbCompressType.RL:
+                    data = RL.CompressImage(image, PixelFormat);
+                    break;
+                case PsbCompressType.Tlg:
+                    data = context.BitmapToResource(".tlg", image);
+                    if (data == null)
+                    {
+                        var tlgPath = Path.ChangeExtension(path, ".tlg");
+                        if (File.Exists(tlgPath))
+                        {
+                            Console.WriteLine($"[WARN] Can not encode TLG, using {tlgPath}");
+                            data = File.ReadAllBytes(tlgPath);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
+                            data = File.ReadAllBytes(path);
+                        }
+                    }
+
+                    break;
+                case PsbCompressType.ByName:
+                    var imgExt = Path.GetExtension(Name);
+                    if (context.SupportImageExt(imgExt))
+                    {
+                        data = context.BitmapToResource(imgExt, image);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[WARN] Unsupported image: {path}");
+                        data = File.ReadAllBytes(path);
+                    }
+
+                    break;
+                case PsbCompressType.None:
+                default:
+                    data = RL.GetPixelBytesFromImage(image, PixelFormat);
+                    break;
+            }
+
+            return data;
         }
     }
 }

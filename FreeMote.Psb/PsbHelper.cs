@@ -50,7 +50,7 @@ namespace FreeMote.Psb
             }
 
             //not really useful
-            var resList = psb.CollectResources();
+            var resList = psb.CollectResources<ImageMetadata>();
             width = resList.Max(data => data.Width);
             height = resList.Max(data => data.Height);
             return false;
@@ -69,7 +69,7 @@ namespace FreeMote.Psb
                 return result.Value == null ? null : result.Key;
             }
 
-            if (c?.Parent is PsbCollection col)
+            if (c?.Parent is PsbList col)
             {
                 var result = col.Value.IndexOf(c);
                 if (result < 0)
@@ -122,7 +122,7 @@ namespace FreeMote.Psb
                 {
                     case PsbDictionary dictionary:
                         return dictionary[name];
-                    case PsbCollection collection:
+                    case PsbList collection:
                         col = collection.FirstOrDefault(c => c is PsbDictionary d && d.ContainsKey(name));
                         continue;
                 }
@@ -178,7 +178,7 @@ namespace FreeMote.Psb
                 {
                     case PsbDictionary dictionary:
                         return dictionary.Values.ElementAt(index);
-                    case PsbCollection collection:
+                    case PsbList collection:
                         col = collection[index];
                         continue;
                 }
@@ -287,7 +287,7 @@ namespace FreeMote.Psb
                     return dictionary.FindByPath(path);
                 }
 
-                if (currentObj is PsbCollection collection)
+                if (currentObj is PsbList collection)
                 {
                     path = path.Substring(pos);
                     return collection.FindByPath(path);
@@ -298,7 +298,7 @@ namespace FreeMote.Psb
         }
 
         /// <inheritdoc cref="FindByPath(FreeMote.Psb.PsbDictionary,string)"/>
-        public static IPsbValue FindByPath(this PsbCollection psbObj, string path)
+        public static IPsbValue FindByPath(this PsbList psbObj, string path)
         {
             if (psbObj == null)
                 return null;
@@ -334,7 +334,7 @@ namespace FreeMote.Psb
                     return dictionary.FindByPath(path);
                 }
 
-                if (currentObj is PsbCollection collection)
+                if (currentObj is PsbList collection)
                 {
                     path = path.Substring(pos);
                     return collection.FindByPath(path);
@@ -373,7 +373,7 @@ namespace FreeMote.Psb
             }
 
             IPsbValue currentObj = null;
-            if (psbObj is PsbCollection col)
+            if (psbObj is PsbList col)
             {
                 currentObj = col.FirstOrDefault(c =>
                     c is PsbDictionary d && d.ContainsKey("label") && d["label"] is PsbString s &&
@@ -383,7 +383,7 @@ namespace FreeMote.Psb
             {
                 //var dd = dic.Value.FirstOrDefault();
                 var children =
-                    (PsbCollection) (dic.ContainsKey("layerChildren") ? dic["layerChildren"] : dic["children"]);
+                    (PsbList) (dic.ContainsKey("layerChildren") ? dic["layerChildren"] : dic["children"]);
                 currentObj = children.FirstOrDefault(c =>
                     c is PsbDictionary d && d.ContainsKey("label") && d["label"] is PsbString s &&
                     s.Value == current);

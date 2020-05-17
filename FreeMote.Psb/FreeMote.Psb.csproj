@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AudioMetadata.cs" />
+    <Compile Include="Resources\AudioMetadata.cs" />
     <Compile Include="IPsbType.cs" />
     <Compile Include="IResourceMetadata.cs" />
     <Compile Include="Plugins\FreeMount.cs" />
@@ -58,11 +58,12 @@
     <Compile Include="PSB.cs" />
     <Compile Include="PsbHelper.cs" />
     <Compile Include="PsbPainter.cs" />
-    <Compile Include="PsbResCollector.cs" />
+    <Compile Include="PsbResHelper.cs" />
     <Compile Include="PsbValues.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ImageMetadata.cs" />
+    <Compile Include="Resources\ImageMetadata.cs" />
     <Compile Include="Types\ArchiveType.cs" />
+    <Compile Include="Types\BaseImageType.cs" />
     <Compile Include="Types\FontType.cs" />
     <Compile Include="Types\ImageType.cs" />
     <Compile Include="Types\MmoType.cs" />

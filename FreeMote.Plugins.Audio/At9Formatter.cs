@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using VGAudio.Formats.Atrac9;
 
 namespace FreeMote.Plugins.Audio
 {
+    [Export(typeof(IPsbAudioFormatter))]
+    [ExportMetadata("Name", "FreeMote.At9")]
+    [ExportMetadata("Author", "Ulysses")]
+    [ExportMetadata("Comment", "At9 support via VGAudio.")]
     public class At9Formatter : IPsbAudioFormatter
     {
         public List<string> Extensions => throw new NotImplementedException();

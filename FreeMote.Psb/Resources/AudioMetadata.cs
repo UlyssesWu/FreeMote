@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using FreeMote.Plugins;
 
 namespace FreeMote.Psb
 {
@@ -10,13 +11,35 @@ namespace FreeMote.Psb
     public class AudioMetadata : IResourceMetadata
     {
         public string Name { get; set; }
+
+        /// <summary>
+        /// Index is a value for tracking resource when compiling.
+        /// </summary>
+        public uint Index
+        {
+            get => Resource.Index ?? uint.MaxValue;
+            set
+            {
+                if (Resource != null)
+                {
+                    Resource.Index = value;
+                }
+            }
+        }
+
         public int Loop { get; set; }
         public PsbString LoopStr { get; set; }
         public int Quality { get; set; }
         public string File { get; set; }
         public PsbAudioFormat AudioFormat { get; set; }
         public PsbSpec Spec { get; set; } = PsbSpec.other;
-        
+        public PsbResource Resource { get; set; }
+
+        public byte[] Link(string fullPath, FreeMountContext context)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public List<IArchData> ChannelList { get; set; }
     }
 

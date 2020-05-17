@@ -7,6 +7,8 @@ namespace FreeMote.Plugins
 
     public class FreeMountContext
     {
+        public PsbImageFormat ImageFormat { get; set; } = PsbImageFormat.png;
+        
         public Dictionary<string, object> Context { get; set; }
 
         public FreeMountContext(Dictionary<string, object> context)

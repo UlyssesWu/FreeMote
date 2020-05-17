@@ -82,7 +82,7 @@ namespace FreeMote.Psb
         private void CollectResource()
         {
             //TODO: selectorControl
-            var resources = Source.Platform == PsbSpec.krkr ? Source.CollectResources() : Source.CollectSplitResources();
+            var resources = Source.Platform == PsbSpec.krkr ? Source.CollectResources<ImageMetadata>().ToList() : Source.CollectSplitResources();
             //get base chara (in case of logo)
             var basePart = "all_parts";
             try
@@ -99,7 +99,7 @@ namespace FreeMote.Psb
             foreach (var motion in (PsbDictionary)Source.Objects["object"].Children(basePart).Children("motion"))
             {
                 //Console.WriteLine($"Motion: {motion.Key}");
-                var layerCol = motion.Value.Children("layer") as PsbCollection;
+                var layerCol = motion.Value.Children("layer") as PsbList;
                 foreach (var layer in layerCol)
                 {
                     if (layer is PsbDictionary o)
@@ -116,7 +116,7 @@ namespace FreeMote.Psb
             {
                 if (collection is PsbDictionary dic)
                 {
-                    if (dic.ContainsKey("frameList") && dic["frameList"] is PsbCollection col)
+                    if (dic.ContainsKey("frameList") && dic["frameList"] is PsbList col)
                     {
                         var labelName = dic["label"].ToString(); //part label, e.g. "涙R"
                         //Collect Locations
@@ -126,7 +126,7 @@ namespace FreeMote.Psb
                             .Select(v => v.Children("content").Children("coord"));
                         if (coordObj.Any())
                         {
-                            var coord = coordObj.First() as PsbCollection;
+                            var coord = coordObj.First() as PsbList;
                             var coordTuple = (x: (float)(PsbNumber)coord[0], y: (float)(PsbNumber)coord[1], z: (float)(PsbNumber)coord[2]);
 
                             if (baseLocation == null)
@@ -231,16 +231,16 @@ namespace FreeMote.Psb
 
                     }
 
-                    if (dic.ContainsKey("children") && dic["children"] is PsbCollection ccol)
+                    if (dic.ContainsKey("children") && dic["children"] is PsbList ccol)
                     {
                         Travel(ccol, motionName, baseLocation, baseVisible);
                     }
-                    if (dic.ContainsKey("layer") && dic["layer"] is PsbCollection ccoll)
+                    if (dic.ContainsKey("layer") && dic["layer"] is PsbList ccoll)
                     {
                         Travel(ccoll, motionName, baseLocation, baseVisible);
                     }
                 }
-                else if (collection is PsbCollection ccol)
+                else if (collection is PsbList ccol)
                 {
                     foreach (var cc in ccol)
                     {
