@@ -5,9 +5,8 @@ namespace FreeMote.Psb
     public interface IResourceMetadata
     {
         string Name { get; set; }
-        public uint Index { get; set; }
+        public uint Index { get; }
         PsbSpec Spec { get; set; }
-        PsbResource Resource { get; set; }
         byte[] Link(string fullPath, FreeMountContext context);
     }
 

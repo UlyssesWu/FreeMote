@@ -13,5 +13,6 @@ namespace FreeMote.Plugins
         bool CanToArchData(byte[] wave, Dictionary<string, object> context = null);
         byte[] ToWave(IArchData archData, Dictionary<string, object> context = null);
         IArchData ToArchData(byte[] wave, Dictionary<string, object> context = null);
+        bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data);
     }
 }

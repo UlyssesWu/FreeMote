@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb
@@ -12,32 +14,52 @@ namespace FreeMote.Psb
     {
         public string Name { get; set; }
 
-        /// <summary>
-        /// Index is a value for tracking resource when compiling.
-        /// </summary>
         public uint Index
         {
-            get => Resource.Index ?? uint.MaxValue;
-            set
+            get
             {
-                if (Resource != null)
+                if (ChannelList == null)
                 {
-                    Resource.Index = value;
+                    return uint.MaxValue;
                 }
+
+                return ChannelList.Min(arch => arch.Index);
             }
         }
 
+        public int Device { get; set; }
+        public int Type { get; set; }
         public int Loop { get; set; }
         public PsbString LoopStr { get; set; }
         public int Quality { get; set; }
-        public string File { get; set; }
+        /// <summary>
+        /// File
+        /// </summary>
+        public string FileString { get; set; }
         public PsbAudioFormat AudioFormat { get; set; }
         public PsbSpec Spec { get; set; } = PsbSpec.other;
-        public PsbResource Resource { get; set; }
 
         public byte[] Link(string fullPath, FreeMountContext context)
         {
             throw new System.NotImplementedException();
+        }
+
+        public string GetFileName(string ext = ".wav")
+        {
+            if (string.IsNullOrWhiteSpace(ext))
+            {
+                ext = ".wav";
+            }
+            var nameWithExt = Name.EndsWith(ext) ? Name : Name + ext;
+            return nameWithExt;
+
+            //if (string.IsNullOrWhiteSpace(FileString))
+            //{
+            //    return Name;
+            //}
+
+            //var fileName = Path.GetFileName(FileString);
+            //return string.IsNullOrEmpty(fileName) ? Name : fileName.EndsWith(ext) ? fileName : fileName + ext;
         }
 
         public bool TryToWave(FreeMountContext context, out List<byte[]> waveChannels)
@@ -52,7 +74,7 @@ namespace FreeMote.Psb
             var result = true;
             foreach (var channel in ChannelList)
             {
-                var bytes = context.ResourceToWave(channel.Extension, channel);
+                var bytes = channel.TryToWave(context);
                 if (bytes == null)
                 {
                     result = false;
@@ -66,7 +88,7 @@ namespace FreeMote.Psb
             return result;
         }
 
-        public List<IArchData> ChannelList { get; set; }
+        public List<IArchData> ChannelList { get; set; } = new List<IArchData>();
     }
 
     public class XwmaArchData : IArchData
@@ -78,7 +100,9 @@ namespace FreeMote.Psb
         public string Wav { get; set; }
 
 
+        public uint Index => Data.Index ?? uint.MaxValue;
         public string Extension => Format.DefaultExtension();
+        public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.XWMA;
         public bool CanEncode => false;
         public bool CanDecode => true;
@@ -91,7 +115,9 @@ namespace FreeMote.Psb
         public int ChannelCount { get; set; }
         public int SampRate { get; set; }
 
+        public uint Index => Data.Index ?? uint.MaxValue;
         public string Extension => Format.DefaultExtension();
+        public string WaveExtension { get; set; } = ".ogg";
         public PsbAudioFormat Format => PsbAudioFormat.OPUS;
         public bool CanEncode { get; }
         public bool CanDecode { get; }
@@ -101,7 +127,9 @@ namespace FreeMote.Psb
     {
         public PsbResource Data { get; set; }
 
+        public uint Index => Data.Index ?? uint.MaxValue;
         public string Extension => Format.DefaultExtension();
+        public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.Atrac9;
         public bool CanEncode { get; }
         public bool CanDecode { get; }

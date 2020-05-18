@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using FreeMote.Psb;
 
 namespace FreeMote.Plugins
 {
@@ -31,6 +32,11 @@ namespace FreeMote.Plugins
         public byte[] ResourceToWave(string ext, IArchData archData)
         {
             return FreeMount._.ResourceToWave(ext, archData, Context);
+        }
+
+        public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData)
+        {
+            return FreeMount._.TryGetArchData(psb, voice, out archData);
         }
 
         /// <summary>

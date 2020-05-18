@@ -120,18 +120,19 @@ namespace FreeMote
         /// </summary>
         Original,
         /// <summary>
+        /// Try to convert to common format
+        /// </summary>
+        Extract,
+        /// <summary>
         /// Decompress if needed
         /// </summary>
+        [Obsolete]
         Decompress,
         /// <summary>
         /// Compress if needed
         /// </summary>
+        [Obsolete]
         Compress,
-        /// <summary>
-        /// Try to convert to common format
-        /// </summary>
-        Extract,
-
     }
     
     public enum PsbPixelFormat

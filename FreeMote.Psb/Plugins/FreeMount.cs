@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using FreeMote.Psb;
 
 namespace FreeMote.Plugins
 {
@@ -18,6 +19,7 @@ namespace FreeMote.Plugins
     public class FreeMount : IDisposable
     {
         private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
+        private const string PLUGIN_AUDIO_DLL = "FreeMote.Plugins.Audio.dll";
         private const string PLUGIN_DIR = "Plugins";
         private const string LIB_DIR = "lib";
 
@@ -118,6 +120,8 @@ namespace FreeMote.Plugins
             //Adds all the parts found in the same assembly as the Program class
             AddCatalog(Path.Combine(CurrentPath, PLUGIN_DLL), catalog);
             AddCatalog(Path.Combine(CurrentPath, LIB_DIR, PLUGIN_DLL), catalog); //Allow load in lib folder
+            AddCatalog(Path.Combine(CurrentPath, PLUGIN_AUDIO_DLL), catalog);
+            AddCatalog(Path.Combine(CurrentPath, LIB_DIR, PLUGIN_AUDIO_DLL), catalog); //Allow load in lib folder
             AddCatalog(path, catalog); //Plugins folder can override default plugin
 
             //Create the CompositionContainer with the parts in the catalog
@@ -268,6 +272,21 @@ namespace FreeMote.Plugins
 
             return AudioFormatters[ext].ToArchData(wave, context);
         }
+
+        public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData)
+        {
+            archData = null;
+            foreach (var audioFormatter in AudioFormatters)
+            {
+                if (audioFormatter.Value.TryGetArchData(psb, voice, out archData))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
 
         public MemoryStream OpenFromShell(Stream stream, ref string type, Dictionary<string, object> context = null)
         {

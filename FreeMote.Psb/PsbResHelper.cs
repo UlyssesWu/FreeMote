@@ -11,6 +11,11 @@ namespace FreeMote.Psb
 {
     public static class PsbResHelper
     {
+        public static byte[] TryToWave(this IArchData archData, FreeMountContext context)
+        {
+            return context?.ResourceToWave(archData.Extension, archData);
+        }
+
         /// <summary>
         /// Get all resources with necessary info
         /// </summary>

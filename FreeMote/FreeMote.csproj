@@ -52,7 +52,6 @@
     <Compile Include="BTree.cs" />
     <Compile Include="DxtCodec.cs" />
     <Compile Include="DxtUtil.cs" />
-    <Compile Include="IArchData.cs" />
     <Compile Include="MdfFile.cs" />
     <Compile Include="PostProcessing.cs" />
     <Compile Include="PsbExtension.cs" />
