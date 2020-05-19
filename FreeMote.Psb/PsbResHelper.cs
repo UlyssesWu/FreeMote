@@ -13,7 +13,7 @@ namespace FreeMote.Psb
     {
         public static byte[] TryToWave(this IArchData archData, FreeMountContext context)
         {
-            return context?.ResourceToWave(archData.Extension, archData);
+            return context?.ArchDataToWave(archData.Extension, archData);
         }
 
         /// <summary>
@@ -22,9 +22,19 @@ namespace FreeMote.Psb
         /// <param name="psb"></param>
         /// <param name="deDuplication">if true, we focus on Resource itself </param>
         /// <returns></returns>
-        public static List<T> CollectResources<T>(this PSB psb, bool deDuplication = true) where T: IResourceMetadata
+        public static List<T> CollectResources<T>(this PSB psb, bool deDuplication = true) where T : IResourceMetadata
         {
-            var resourceList = psb.TypeHandler.CollectResources<T>(psb, deDuplication);
+            List<T> resourceList;
+            if (psb.TypeHandler != null)
+            {
+                resourceList = psb.TypeHandler.CollectResources<T>(psb, deDuplication);
+            }
+            else
+            {
+                resourceList = new List<T>();
+                if (psb.Resources != null)
+                    resourceList.AddRange(psb.Resources.Select(r => new ImageMetadata {Resource = r}).Cast<T>());
+            }
 
             //Set Spec
             resourceList.ForEach(r => r.Spec = psb.Platform);
@@ -32,7 +42,7 @@ namespace FreeMote.Psb
 
             return resourceList;
         }
-        
+
         public static void LinkImages(PSB psb, FreeMountContext context, IList<string> resPaths, string baseDir = null,
             PsbLinkOrderBy order = PsbLinkOrderBy.Convention, bool isExternal = false)
         {
@@ -64,7 +74,8 @@ namespace FreeMote.Psb
                         $"Can not link by file name for krkr PSB. Please consider using {PsbLinkOrderBy.Convention}");
                 }
 
-                resList.Sort((md1, md2) => (int)(((ImageMetadata)md1).TextureIndex ?? 0) - (int)(((ImageMetadata)md2).TextureIndex ?? 0));
+                resList.Sort((md1, md2) =>
+                    (int) (((ImageMetadata) md1).TextureIndex ?? 0) - (int) (((ImageMetadata) md2).TextureIndex ?? 0));
             }
 
             for (var i = 0; i < resPaths.Count; i++)
@@ -106,7 +117,7 @@ namespace FreeMote.Psb
                             continue;
                         }
 
-                        resMd = resList[(int)texIdx.Value];
+                        resMd = resList[(int) texIdx.Value];
                     }
                 }
                 else //if (order == PsbLinkOrderBy.Convention)
@@ -137,7 +148,8 @@ namespace FreeMote.Psb
             }
         }
 
-        internal static void LinkImages(PSB psb, FreeMountContext context, IDictionary<string, string> resources, string baseDir = null)
+        internal static void LinkImages(PSB psb, FreeMountContext context, IDictionary<string, string> resources,
+            string baseDir = null)
         {
             var resList = psb.CollectResources<ImageMetadata>();
 
@@ -202,7 +214,8 @@ namespace FreeMote.Psb
             for (int i = 0; i < resources.Count; i++)
             {
                 var resource = resources[i];
-                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Height, resource.Width, resource.PixelFormat, resource.PalettePixelFormat);
+                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Height, resource.Width,
+                    resource.PixelFormat, resource.PalettePixelFormat);
 
                 switch (order)
                 {
@@ -233,7 +246,8 @@ namespace FreeMote.Psb
             return texs;
         }
 
-        public static void UnlinkImagesToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool disposeResInPsb = true,
+        public static void UnlinkImagesToFile(PSB psb, FreeMountContext context, string name, string dirPath,
+            bool disposeResInPsb = true,
             PsbLinkOrderBy order = PsbLinkOrderBy.Name)
         {
             var texs = UnlinkImages(psb, order, disposeResInPsb);
@@ -248,12 +262,14 @@ namespace FreeMote.Psb
                     {
                         tex.Save(Path.Combine(dirPath, tex.Tag + texExt), texFormat);
                     }
+
                     break;
                 case PsbLinkOrderBy.Name:
                     foreach (var tex in texs)
                     {
                         tex.Save(Path.Combine(dirPath, $"{name}_{tex.Tag}{texExt}"), texFormat);
                     }
+
                     break;
                 case PsbLinkOrderBy.Order:
                     for (var i = 0; i < texs.Count; i++)
@@ -261,13 +277,15 @@ namespace FreeMote.Psb
                         var tex = texs[i];
                         tex.Save(Path.Combine(dirPath, $"{i}{texExt}"), texFormat);
                     }
+
                     break;
             }
 
             return;
         }
 
-        public static Dictionary<string, string> OutputImageResources(PSB psb, FreeMountContext context, string name, string dirPath,
+        public static Dictionary<string, string> OutputImageResources(PSB psb, FreeMountContext context, string name,
+            string dirPath,
             PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.png)
         {
@@ -376,7 +394,8 @@ namespace FreeMote.Psb
                             else
                             {
                                 RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat, resource.PalData, resource.PalettePixelFormat);
+                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat, resource.PalData,
+                                    resource.PalettePixelFormat);
                             }
 
                             break;
@@ -423,7 +442,8 @@ namespace FreeMote.Psb
 
                     try
                     {
-                        resDictionary.Add(resource.Resource.Index == null ? friendlyName : resource.Index.ToString(), $"{name}/{relativePath}");
+                        resDictionary.Add(resource.Resource.Index == null ? friendlyName : resource.Index.ToString(),
+                            $"{name}/{relativePath}");
                     }
                     catch (ArgumentException e)
                     {
@@ -471,10 +491,10 @@ namespace FreeMote.Psb
             {
                 is2D = true;
                 clip = RectangleF.FromLTRB(
-                    left: clipDic["left"] == null ? 0f : (float)(PsbNumber)clipDic["left"],
-                    top: clipDic["top"] == null ? 0f : (float)(PsbNumber)clipDic["top"],
-                    right: clipDic["right"] == null ? 1f : (float)(PsbNumber)clipDic["right"],
-                    bottom: clipDic["bottom"] == null ? 1f : (float)(PsbNumber)clipDic["bottom"]
+                    left: clipDic["left"] == null ? 0f : (float) (PsbNumber) clipDic["left"],
+                    top: clipDic["top"] == null ? 0f : (float) (PsbNumber) clipDic["top"],
+                    right: clipDic["right"] == null ? 1f : (float) (PsbNumber) clipDic["right"],
+                    bottom: clipDic["bottom"] == null ? 1f : (float) (PsbNumber) clipDic["bottom"]
                 );
             }
 
@@ -493,25 +513,25 @@ namespace FreeMote.Psb
             if (d["width"] is PsbNumber nw)
             {
                 is2D = true;
-                width = (int)nw;
+                width = (int) nw;
             }
 
             if (d["height"] is PsbNumber nh)
             {
                 is2D = true;
-                height = (int)nh;
+                height = (int) nh;
             }
 
             if (d["originX"] is PsbNumber nx)
             {
                 is2D = true;
-                originX = (float)nx;
+                originX = (float) nx;
             }
 
             if (d["originY"] is PsbNumber ny)
             {
                 is2D = true;
-                originY = (float)ny;
+                originY = (float) ny;
             }
 
             PsbString typeString = null;
@@ -524,13 +544,13 @@ namespace FreeMote.Psb
             if (d["top"] is PsbNumber nt)
             {
                 is2D = true;
-                top = (int)nt;
+                top = (int) nt;
             }
 
             if (d["left"] is PsbNumber nl)
             {
                 is2D = true;
-                left = (int)nl;
+                left = (int) nl;
             }
 
             PsbResource palResource = null;
@@ -591,13 +611,5 @@ namespace FreeMote.Psb
 
             return null;
         }
-
-
-
-
-
-
-
-
     }
 }

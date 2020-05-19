@@ -7,7 +7,7 @@ namespace FreeMote.Psb
         string Name { get; set; }
         public uint Index { get; }
         PsbSpec Spec { get; set; }
-        byte[] Link(string fullPath, FreeMountContext context);
+        void Link(string fullPath, FreeMountContext context);
     }
 
     /// <summary>

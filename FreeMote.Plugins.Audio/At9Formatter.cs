@@ -31,7 +31,7 @@ namespace FreeMote.Plugins.Audio
             return false;
         }
 
-        public IArchData ToArchData(byte[] wave, Dictionary<string, object> context = null)
+        public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
         {
             throw new NotSupportedException("AT9 encode is not supported. Use at9tool manually.");
             return null;

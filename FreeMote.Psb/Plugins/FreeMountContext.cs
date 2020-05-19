@@ -29,9 +29,14 @@ namespace FreeMote.Plugins
             return FreeMount._.AudioFormatters.ContainsKey(ext);
         }
 
-        public byte[] ResourceToWave(string ext, IArchData archData)
+        public byte[] ArchDataToWave(string ext, IArchData archData)
         {
-            return FreeMount._.ResourceToWave(ext, archData, Context);
+            return FreeMount._.ArchDataToWave(ext, archData, Context);
+        }
+
+        public IArchData WaveToArchData(string ext, in byte[] wave, string waveExt = ".wav")
+        {
+            return FreeMount._.WaveToArchData(ext, wave, waveExt,  Context);
         }
 
         public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData)

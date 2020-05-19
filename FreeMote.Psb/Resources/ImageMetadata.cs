@@ -170,11 +170,11 @@ namespace FreeMote.Psb
         /// </summary>
         public PsbSpec Spec { get; set; } = PsbSpec.other;
 
-        public byte[] Link(string fullPath, FreeMountContext context)
+        public void Link(string fullPath, FreeMountContext context)
         {
             Data = LoadImageBytes(fullPath, context, out var palette);
             PalData = palette;
-            return Data;
+            //return Data;
         }
 
         public PsbPixelFormat PixelFormat => Type.ToPsbPixelFormat(Spec);

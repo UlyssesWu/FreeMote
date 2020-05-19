@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb.Types
@@ -98,12 +100,61 @@ namespace FreeMote.Psb.Types
         public void Link(PSB psb, FreeMountContext context, IList<string> resPaths, string baseDir = null,
             PsbLinkOrderBy order = PsbLinkOrderBy.Convention)
         {
-            
+            var rawResList = psb.CollectResources<AudioMetadata>();
+            if (order == PsbLinkOrderBy.Order)
+            {
+                for (int i = 0; i < rawResList.Count; i++)
+                {
+                    var resMd = rawResList[i];
+                    var fullPath = Path.Combine(baseDir ?? "", resPaths[i]);
+                    resMd.Link(fullPath, context);
+                }
+
+                return;
+            }
+
+            foreach (var resPath in resPaths)
+            {
+                var resMd = rawResList.FirstOrDefault(r => r.Name == Path.GetFileNameWithoutExtension(resPath));
+                if (resMd == null)
+                {
+                    Console.WriteLine($"[WARN] {resPath} is not used.");
+                    continue;
+                }
+
+                var fullPath = Path.Combine(baseDir ?? "", resPath);
+                resMd.Link(fullPath, context);
+            }
         }
 
         public void Link(PSB psb, FreeMountContext context, IDictionary<string, string> resPaths, string baseDir = null)
         {
-            
+            var rawResList = psb.CollectResources<AudioMetadata>();
+
+            foreach (var resPath in resPaths)
+            {
+                var fullPath = Path.Combine(baseDir ?? "", resPath.Value);
+                var resMd = rawResList.FirstOrDefault(r => r.Name == resPath.Key);
+                if (resMd == null)
+                {
+                    if (uint.TryParse(resPath.Key, out var idx))
+                    {
+                        var resource = psb.Resources.FirstOrDefault(r => r.Index == idx);
+                        if (resource != null)
+                        {
+                            resource.Data = File.ReadAllBytes(fullPath);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] {resPath.Key} is not used.");
+                        }
+                    }
+                }
+                else
+                {
+                    resMd.Link(fullPath, context);
+                }
+            }
         }
 
         public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
@@ -121,7 +172,7 @@ namespace FreeMote.Psb.Types
             {
                 for (int i = 0; i < psb.Resources.Count; i++)
                 {
-                    var relativePath = psb.Resources[i].Index == null ? $"#{i}.bin" : $"{psb.Resources[i].Index}.bin";
+                    var relativePath = psb.Resources[i].Index == null ? $"#{i}.raw" : $"{psb.Resources[i].Index}.raw";
 
                     File.WriteAllBytes(
                         Path.Combine(dirPath, relativePath),

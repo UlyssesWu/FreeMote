@@ -9,7 +9,5 @@
         string Extension { get; }
         string WaveExtension { get; set; }
         PsbAudioFormat Format { get; }
-        bool CanEncode { get; }
-        bool CanDecode { get; }
     }
 }
