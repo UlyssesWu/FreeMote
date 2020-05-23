@@ -50,11 +50,11 @@ namespace FreeMote.Plugins.Audio
             if (string.IsNullOrEmpty(ToolPath))
             {
                 archData.WaveExtension = Extensions[0];
-                return ((XwmaArchData)archData).ToXWMA();
+                return ((XwmaArchData)archData).ToXwma();
             }
 
             archData.WaveExtension = ".wav";
-            var xwmaBytes = ((XwmaArchData) archData).ToXWMA();
+            var xwmaBytes = ((XwmaArchData) archData).ToXwma();
             var tempFile = Path.GetTempFileName();
             File.WriteAllBytes(tempFile, xwmaBytes);
             var tempOutFile = Path.GetTempFileName();
@@ -84,7 +84,48 @@ namespace FreeMote.Plugins.Audio
         
         public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
         {
-            throw new NotSupportedException($"XWMA encode is not supported. Use {EncoderTool} manually.");
+            if (!File.Exists(ToolPath))
+            {
+                return null;
+            }
+
+            var tempFile = Path.GetTempFileName();
+            File.WriteAllBytes(tempFile, wave);
+            var tempOutFile = Path.GetTempFileName();
+            MemoryStream oms = null;
+            try
+            {
+                ProcessStartInfo info = new ProcessStartInfo(ToolPath, $"\"{tempFile}\" \"{tempOutFile}\"")
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true
+                };
+                Process process = Process.Start(info);
+                process?.WaitForExit();
+                
+                var fs = File.OpenRead(tempOutFile);
+                oms = new MemoryStream((int)fs.Length);
+                fs.CopyTo(oms);
+                oms.Position = 0;
+
+                File.Delete(tempFile);
+                File.Delete(tempOutFile);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            if (oms == null)
+            {
+                return null;
+            }
+            
+            XwmaArchData data = new XwmaArchData();
+            data.ReadFromXwma(oms);
+            oms.Dispose();
+            
+            return data;
         }
 
         public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data)

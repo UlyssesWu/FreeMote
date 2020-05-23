@@ -6,7 +6,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FreeMote.Plugins;
 using FreeMote.Plugins.Images;
 using FreeMote.Plugins.Shells;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

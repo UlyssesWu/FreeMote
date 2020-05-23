@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using FreeMote.Plugins;
 using FreeMote.Psb;
-using FreeMote.Psb.Types;
 using Newtonsoft.Json;
 
 namespace FreeMote.PsBuild
