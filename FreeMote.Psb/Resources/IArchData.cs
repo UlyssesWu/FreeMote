@@ -9,5 +9,6 @@
         string Extension { get; }
         string WaveExtension { get; set; }
         PsbAudioFormat Format { get; }
+        PsbResource Data { get; }
     }
 }

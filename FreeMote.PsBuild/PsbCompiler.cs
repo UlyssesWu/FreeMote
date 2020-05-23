@@ -321,7 +321,7 @@ namespace FreeMote.PsBuild
                 return;
             }
 
-            FreeMountContext context = FreeMount.CreateContext(resx.Context);
+            var context = FreeMount.CreateContext(resx.Context);
             if (psb.TypeHandler != null)
             {
                 psb.TypeHandler.Link(psb, context, resx.Resources, baseDir);

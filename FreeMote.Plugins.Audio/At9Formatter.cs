@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Reflection;
 using FreeMote.Psb;
 using VGAudio.Containers.At9;
 using VGAudio.Containers.Wave;
@@ -15,6 +16,19 @@ namespace FreeMote.Plugins.Audio
     public class At9Formatter : IPsbAudioFormatter
     {
         public List<string> Extensions { get; } = new List<string> {".at9"};
+
+        private const string EncoderTool = "at9tool.exe";
+
+        public string ToolPath { get; set; } = null;
+
+        public At9Formatter()
+        {
+            var toolPath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? "", "Tools", EncoderTool);
+            if (File.Exists(toolPath))
+            {
+                ToolPath = toolPath;
+            }
+        }
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
@@ -33,8 +47,7 @@ namespace FreeMote.Plugins.Audio
 
         public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
         {
-            throw new NotSupportedException("AT9 encode is not supported. Use at9tool manually.");
-            return null;
+            throw new NotSupportedException($"AT9 encode is not supported. Use {EncoderTool} manually.");
         }
 
         public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data)
@@ -68,7 +81,6 @@ namespace FreeMote.Plugins.Audio
             var data = reader.Read(ms);
             WaveWriter writer = new WaveWriter();
             writer.WriteToStream(data, oms, new WaveConfiguration {Codec = WaveCodec.Pcm16Bit});
-
             return oms.ToArray();
         }
     }

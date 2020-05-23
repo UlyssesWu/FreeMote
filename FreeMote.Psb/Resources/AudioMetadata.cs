@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb
@@ -43,6 +44,10 @@ namespace FreeMote.Psb
 
         public void Link(string fullPath, FreeMountContext context)
         {
+            if (ChannelList.Count > 1)
+            {
+                Console.WriteLine("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
+            }
             var ext = Path.GetExtension(fullPath).ToLowerInvariant();
             switch (ext)
             {
@@ -103,7 +108,8 @@ namespace FreeMote.Psb
                     opus.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 default:
-                    Console.WriteLine($"[WARN] {fullPath} is not used.");
+                    channel.Data.Data = File.ReadAllBytes(fullPath);
+                    //Console.WriteLine($"[WARN] {fullPath} is not used.");
                     break;
             }
         }
@@ -178,6 +184,37 @@ namespace FreeMote.Psb
         public string Extension => Format.DefaultExtension();
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.XWMA;
+
+        public byte[] ToXWMA()
+        {
+            using MemoryStream ms =
+                new MemoryStream(20 + Data.Data.Length + Dpds.Data.Length + Fmt.Data.Length + 6);
+            using BinaryWriter writer = new BinaryWriter(ms);
+            writer.WriteUTF8("RIFF");
+            writer.Write(0);
+            writer.WriteUTF8("XWMA");
+
+            writer.BaseStream.Position += writer.BaseStream.Position & 1;
+            writer.WriteUTF8("fmt ");
+            writer.Write(Fmt.Data.Length);
+            writer.Write(Fmt.Data);
+
+            writer.BaseStream.Position += writer.BaseStream.Position & 1;
+            writer.WriteUTF8("dpds");
+            writer.Write(Dpds.Data.Length);
+            writer.Write(Dpds.Data);
+
+            writer.BaseStream.Position += writer.BaseStream.Position & 1;
+            writer.WriteUTF8("data");
+            writer.Write(Data.Data.Length);
+            writer.Write(Data.Data);
+
+            var len = (uint)writer.BaseStream.Length;
+            writer.Seek(4, SeekOrigin.Begin);
+            writer.Write(len - 8);
+
+            return ms.ToArray();
+        }
     }
 
     public class OpusArchData : IArchData
