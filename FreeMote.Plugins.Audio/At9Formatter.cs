@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using FreeMote.Psb;
@@ -15,6 +16,8 @@ namespace FreeMote.Plugins.Audio
     [ExportMetadata("Comment", "At9 support via VGAudio.")]
     public class At9Formatter : IPsbAudioFormatter
     {
+        public const string At9BitRate = "At9BitRate";
+
         public List<string> Extensions { get; } = new List<string> {".at9"};
 
         private const string EncoderTool = "at9tool.exe";
@@ -32,6 +35,10 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
+            if (File.Exists(ToolPath))
+            {
+                return true;
+            }
             return false;
         }
 
@@ -47,7 +54,55 @@ namespace FreeMote.Plugins.Audio
 
         public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
         {
-            throw new NotSupportedException($"AT9 encode is not supported. Use {EncoderTool} manually.");
+            if (!File.Exists(ToolPath))
+            {
+                return null;
+            }
+
+            var tempFile = Path.GetTempFileName();
+            File.WriteAllBytes(tempFile, wave);
+            var tempOutFile = Path.GetTempFileName();
+
+            byte[] outBytes = null;
+            try
+            {
+                int bitRate = 96;
+                if (context != null)
+                {
+                    if (context.ContainsKey(At9BitRate) && context[At9BitRate] is int br)
+                    {
+                        bitRate = br;
+                    }
+                    else
+                    {
+                        context[At9BitRate] = bitRate;
+                    }
+                }
+                //br 96 for 1 channel, br 192 for 2 channels (need 2ch sample!)
+                ProcessStartInfo info = new ProcessStartInfo(ToolPath, $"-e -br {bitRate} \"{tempFile}\" \"{tempOutFile}\"")
+                {
+                    UseShellExecute = false,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true
+                };
+                Process process = Process.Start(info);
+                process?.WaitForExit();
+
+                outBytes = File.ReadAllBytes(tempOutFile);
+                File.Delete(tempFile);
+                File.Delete(tempOutFile);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            var arch = new Atrac9ArchData
+            {
+                Data = new PsbResource {Data = outBytes}
+            };
+
+            return arch;
         }
 
         public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data)
@@ -73,14 +128,12 @@ namespace FreeMote.Plugins.Audio
 
         public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            var at9Arch = (Atrac9ArchData) archData;
             At9Reader reader = new At9Reader();
             //var format = reader.ReadFormat();
-            using MemoryStream ms = new MemoryStream(at9Arch.Data.Data);
+            var data = reader.Read(archData.Data.Data);
             using MemoryStream oms = new MemoryStream();
-            var data = reader.Read(ms);
             WaveWriter writer = new WaveWriter();
-            writer.WriteToStream(data, oms, new WaveConfiguration {Codec = WaveCodec.Pcm16Bit});
+            writer.WriteToStream(data, oms, new WaveConfiguration {Codec = WaveCodec.Pcm16Bit}); //only 16Bit supported
             return oms.ToArray();
         }
     }

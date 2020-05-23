@@ -88,6 +88,7 @@ namespace FreeMote.Psb.Types
                     {
                         if (context.TryGetArchData(psb, channelDic, out var archData))
                         {
+                            archData.PsbArchData = channelDic;
                             md.ChannelList.Add(archData);
                         }
                     }
@@ -186,8 +187,8 @@ namespace FreeMote.Psb.Types
                 {
                     if (resource.ChannelList.Count == 1)
                     {
-                        var relativePath = resource.GetFileName(resource.ChannelList[0].WaveExtension);
                         var bts = resource.ChannelList[0].TryToWave(context);
+                        var relativePath = resource.GetFileName(resource.ChannelList[0].WaveExtension); //WaveExtension may change after ToWave
                         if (bts != null)
                         {
                             File.WriteAllBytes(Path.Combine(dirPath, relativePath), bts);
@@ -199,8 +200,8 @@ namespace FreeMote.Psb.Types
                         for (var j = 0; j < resource.ChannelList.Count; j++)
                         {
                             var waveChannel = resource.ChannelList[j];
-                            var relativePath = resource.GetFileName($"-{j}{waveChannel.WaveExtension}");
                             var bts = waveChannel.TryToWave(context);
+                            var relativePath = resource.GetFileName($"-{j}{waveChannel.WaveExtension}");
                             if (bts != null)
                             {
                                 File.WriteAllBytes(Path.Combine(dirPath, relativePath), bts);

@@ -122,6 +122,11 @@ namespace FreeMote
         /// If true, prefer plugins than inherit
         /// </summary>
         public static bool PluginFirst { get; set; } = false;
+
+        /// <summary>
+        /// Use managed code rather than external/native if possible
+        /// </summary>
+        public static bool PreferManaged { get; set; } = false;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

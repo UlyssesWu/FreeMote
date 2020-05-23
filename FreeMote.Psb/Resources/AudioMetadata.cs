@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb
@@ -34,6 +33,7 @@ namespace FreeMote.Psb
         public int Loop { get; set; }
         public PsbString LoopStr { get; set; }
         public int Quality { get; set; }
+
         /// <summary>
         /// File
         /// </summary>
@@ -41,13 +41,14 @@ namespace FreeMote.Psb
 
         public PsbAudioFormat AudioFormat => ChannelList.Count > 0 ? ChannelList[0].Format : PsbAudioFormat.None;
         public PsbSpec Spec { get; set; } = PsbSpec.other;
-
+        
         public void Link(string fullPath, FreeMountContext context)
         {
             if (ChannelList.Count > 1)
             {
                 Console.WriteLine("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
             }
+
             var ext = Path.GetExtension(fullPath).ToLowerInvariant();
             switch (ext)
             {
@@ -57,10 +58,11 @@ namespace FreeMote.Psb
                     break;
                 case ".wav":
                 case ".ogg":
-                    var newArch = context.WaveToArchData(ChannelList[0].Extension, File.ReadAllBytes(fullPath), ChannelList[0].WaveExtension);
+                    var newArch = context.WaveToArchData(ChannelList[0].Extension, File.ReadAllBytes(fullPath),
+                        ChannelList[0].WaveExtension);
                     if (newArch != null)
                     {
-                        ChannelList[0] = newArch;
+                        ChannelList[0].SetPsbArchData(newArch.ToPsbArchData());
                     }
                     else
                     {
@@ -70,17 +72,18 @@ namespace FreeMote.Psb
                         }
                         else
                         {
-                            Console.WriteLine($"[WARN] There is no encoder for {ChannelList[0].Extension}! {fullPath} is not used.");
+                            Console.WriteLine(
+                                $"[WARN] There is no encoder for {ChannelList[0].Extension}! {fullPath} is not used.");
                         }
                     }
+
                     break;
                 case ".bin":
                 case ".raw":
-                    default:
+                default:
                     LoadFromRawFile(ChannelList[0], fullPath);
                     break;
             }
-            
         }
 
         private void LoadFromRawFile(IArchData channel, string fullPath)
@@ -94,12 +97,13 @@ namespace FreeMote.Psb
                     {
                         xwma.Dpds.Data = File.ReadAllBytes(dpds);
                     }
-                    
+
                     var fmt = Path.ChangeExtension(fullPath, ".fmt");
                     if (File.Exists(fmt))
                     {
                         xwma.Fmt.Data = File.ReadAllBytes(fmt);
                     }
+
                     break;
                 case Atrac9ArchData at9:
                     at9.Data.Data = File.ReadAllBytes(fullPath);
@@ -112,6 +116,7 @@ namespace FreeMote.Psb
                     //Console.WriteLine($"[WARN] {fullPath} is not used.");
                     break;
             }
+            channel.SetPsbArchData(channel.ToPsbArchData());
         }
 
         public string GetFileName(string ext = ".wav")
@@ -120,6 +125,7 @@ namespace FreeMote.Psb
             {
                 ext = ".wav";
             }
+
             var nameWithExt = Name.EndsWith(ext) ? Name : Name + ext;
             return nameWithExt;
 
@@ -161,82 +167,5 @@ namespace FreeMote.Psb
         public List<IArchData> ChannelList { get; set; } = new List<IArchData>();
     }
 
-    public class WavArchData : IArchData
-    {
-        public uint Index => Data.Index ?? uint.MaxValue;
-        public string Extension => ".wav";
-        public string WaveExtension { get; set; } = ".wav";
-        public PsbAudioFormat Format => PsbAudioFormat.WAV;
 
-        public PsbResource Data { get; set; }
-    }
-
-    public class XwmaArchData : IArchData
-    {
-        public PsbResource Data { get; set; }
-        public PsbResource Dpds { get; set; }
-        public PsbResource Fmt { get; set; }
-
-        public string Wav { get; set; }
-
-
-        public uint Index => Data.Index ?? uint.MaxValue;
-        public string Extension => Format.DefaultExtension();
-        public string WaveExtension { get; set; } = ".wav";
-        public PsbAudioFormat Format => PsbAudioFormat.XWMA;
-
-        public byte[] ToXWMA()
-        {
-            using MemoryStream ms =
-                new MemoryStream(20 + Data.Data.Length + Dpds.Data.Length + Fmt.Data.Length + 6);
-            using BinaryWriter writer = new BinaryWriter(ms);
-            writer.WriteUTF8("RIFF");
-            writer.Write(0);
-            writer.WriteUTF8("XWMA");
-
-            writer.BaseStream.Position += writer.BaseStream.Position & 1;
-            writer.WriteUTF8("fmt ");
-            writer.Write(Fmt.Data.Length);
-            writer.Write(Fmt.Data);
-
-            writer.BaseStream.Position += writer.BaseStream.Position & 1;
-            writer.WriteUTF8("dpds");
-            writer.Write(Dpds.Data.Length);
-            writer.Write(Dpds.Data);
-
-            writer.BaseStream.Position += writer.BaseStream.Position & 1;
-            writer.WriteUTF8("data");
-            writer.Write(Data.Data.Length);
-            writer.Write(Data.Data);
-
-            var len = (uint)writer.BaseStream.Length;
-            writer.Seek(4, SeekOrigin.Begin);
-            writer.Write(len - 8);
-
-            return ms.ToArray();
-        }
-    }
-
-    public class OpusArchData : IArchData
-    {
-        public PsbResource Data { get; set; }
-        public int SampleCount { get; set; }
-        public int ChannelCount { get; set; }
-        public int SampRate { get; set; }
-
-        public uint Index => Data.Index ?? uint.MaxValue;
-        public string Extension => Format.DefaultExtension();
-        public string WaveExtension { get; set; } = ".ogg";
-        public PsbAudioFormat Format => PsbAudioFormat.OPUS;
-    }
-
-    public class Atrac9ArchData : IArchData
-    {
-        public PsbResource Data { get; set; }
-
-        public uint Index => Data.Index ?? uint.MaxValue;
-        public string Extension => Format.DefaultExtension();
-        public string WaveExtension { get; set; } = ".wav";
-        public PsbAudioFormat Format => PsbAudioFormat.Atrac9;
-    }
 }

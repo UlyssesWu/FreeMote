@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using FreeMote.Psb;
@@ -37,6 +38,10 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
+            if (File.Exists(ToolPath))
+            {
+                return true;
+            }
             return false;
         }
 
@@ -47,10 +52,34 @@ namespace FreeMote.Plugins.Audio
                 archData.WaveExtension = Extensions[0];
                 return ((XwmaArchData)archData).ToXWMA();
             }
-            else
+
+            archData.WaveExtension = ".wav";
+            var xwmaBytes = ((XwmaArchData) archData).ToXWMA();
+            var tempFile = Path.GetTempFileName();
+            File.WriteAllBytes(tempFile, xwmaBytes);
+            var tempOutFile = Path.GetTempFileName();
+
+            byte[] outBytes = null;
+            try
             {
-                return null; //TODO
+                ProcessStartInfo info = new ProcessStartInfo(ToolPath, $"\"{tempFile}\" \"{tempOutFile}\"")
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden, CreateNoWindow = true
+                };
+                Process process = Process.Start(info);
+                process?.WaitForExit();
+
+                outBytes = File.ReadAllBytes(tempOutFile);
+                File.Delete(tempFile);
+                File.Delete(tempOutFile);
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+                
+
+            return outBytes;
         }
         
         public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)

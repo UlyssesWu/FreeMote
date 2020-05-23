@@ -112,6 +112,16 @@ namespace FreeMote.Psb
             bw.Write(Encoding.UTF8.GetBytes(value));
         }
 
+        /// <summary>
+        /// Set archData value to archData object
+        /// </summary>
+        /// <param name="archData"></param>
+        /// <param name="val"></param>
+        public static void SetPsbArchData(this IArchData archData, IPsbValue val)
+        {
+            archData.PsbArchData["archData"] = val;
+        }
+
         #region Object Finding
 
         /// <summary>

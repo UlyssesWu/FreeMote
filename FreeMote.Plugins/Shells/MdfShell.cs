@@ -8,7 +8,7 @@ using System.Text;
 using Troschuetz.Random.Generators;
 using static FreeMote.Consts;
 
-namespace FreeMote.Plugins
+namespace FreeMote.Plugins.Shells
 {
     [Export(typeof(IPsbShell))]
     [ExportMetadata("Name", "FreeMote.Mdf")]

@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Resources\ArchDatas.cs" />
     <Compile Include="Resources\AudioMetadata.cs" />
     <Compile Include="IPsbType.cs" />
     <Compile Include="IResourceMetadata.cs" />

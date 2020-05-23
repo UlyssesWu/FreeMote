@@ -5,7 +5,7 @@ using System.Drawing;
 using System.IO;
 using FreeMote.Tlg;
 
-namespace FreeMote.Plugins
+namespace FreeMote.Plugins.Images
 {
     [Export(typeof(IPsbImageFormatter))]
     [ExportMetadata("Name", "FreeMote.Tlg")]
@@ -14,10 +14,7 @@ namespace FreeMote.Plugins
     public class TlgFormatter : IPsbImageFormatter
     {
         private const string TlgVersion = "TlgVersion";
-        /// <summary>
-        /// Use managed TLG loader if possible
-        /// </summary>
-        public static bool PreferManaged { get; set; } = false;
+
         /// <summary>
         /// Is TLG encode plugin enabled
         /// </summary>
@@ -33,7 +30,7 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public static Bitmap LoadTlg(byte[] tlgData, out int version)
         {
-            if (!PreferManaged)
+            if (!Consts.PreferManaged)
             {
                 try
                 {
