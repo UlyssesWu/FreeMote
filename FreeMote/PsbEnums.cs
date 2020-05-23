@@ -101,6 +101,10 @@ namespace FreeMote
         /// PS4
         /// </summary>
         ps4,
+        /// <summary>
+        /// NSwitch
+        /// </summary>
+        nx,
         other = Byte.MaxValue,
     }
 
