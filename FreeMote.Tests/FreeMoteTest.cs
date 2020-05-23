@@ -4,14 +4,12 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using FastBitmapLib;
-using FreeMote.Plugins;
+using FreeMote.Plugins.Images;
 using FreeMote.Plugins.Shells;
-using FreeMote.Psb;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 
 namespace FreeMote.Tests
 {

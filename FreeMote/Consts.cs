@@ -9,6 +9,23 @@ namespace FreeMote
     public static class Consts
     {
         /// <summary>
+        /// delimiter for output texture filename
+        /// </summary>
+        internal const string ResourceNameDelimiter = "-";
+
+        public const string ResourceKey = "pixel";
+
+        /// <summary>
+        /// The string with this prefix will be convert to number when compile/decompile
+        /// </summary>
+        public const string NumberStringPrefix = "#0x";
+
+        /// <summary>
+        /// The string with this prefix (with ID followed) will be convert to resource when compile/decompile
+        /// </summary>
+        public const string ResourceIdentifier = "#resource#";
+
+        /// <summary>
         /// (string)
         /// </summary>
         public const string Context_PsbShellType = "PsbShellType";
@@ -100,6 +117,16 @@ namespace FreeMote
         /// Allows you to edit CI* images by re-generate the palette for each bppIndexed image (will increase size), otherwise you should not change those images
         /// </summary>
         public static bool GeneratePalette { get; set; } = true;
+
+        /// <summary>
+        /// If true, prefer plugins than inherit
+        /// </summary>
+        public static bool PluginFirst { get; set; } = false;
+
+        /// <summary>
+        /// Use managed code rather than external/native if possible
+        /// </summary>
+        public static bool PreferManaged { get; set; } = false;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

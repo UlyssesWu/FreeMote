@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FreeMote.Plugins;
 
 // ReSharper disable InconsistentNaming
 
@@ -17,7 +18,7 @@ namespace FreeMote.Psb
     /// </summary>
     /// Photo Shop Big
     /// Pretty SB
-    public class PSB
+    public partial class PSB
     {
         /// <summary>
         /// Header
@@ -64,6 +65,11 @@ namespace FreeMote.Psb
         public PsbDictionary Objects { get; set; }
 
         /// <summary>
+        /// Type specific handler
+        /// </summary>
+        public IPsbType TypeHandler { get; set; }
+
+        /// <summary>
         /// Type
         /// </summary>
         public PsbType Type { get; set; } = PsbType.PSB;
@@ -93,6 +99,8 @@ namespace FreeMote.Psb
             }
         }
 
+        internal string FilePath { get; private set; }
+
         public string TypeId
         {
             get
@@ -104,6 +112,15 @@ namespace FreeMote.Psb
                 }
 
                 return id;
+            }
+            set
+            {
+                if (Objects == null)
+                {
+                    return;
+                }
+
+                Objects["id"] = value.ToPsbString();
             }
         }
 
@@ -118,6 +135,9 @@ namespace FreeMote.Psb
             {
                 throw new FileNotFoundException("File not exists.", path);
             }
+
+            FilePath = path;
+
 #if DEBUG_OBJECT_WRITE
             _tw = new StreamWriter(path + ".debug");
 #endif
@@ -163,54 +183,25 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public PsbType InferType()
         {
-            if (Objects.ContainsKey("layers") && Objects.ContainsKey("height") && Objects.ContainsKey("width"))
+            foreach (var handler in TypeHandlers)
             {
-                return PsbType.Pimg;
+                if (handler.Value.IsThisType(this))
+                {
+                    TypeHandler = handler.Value;
+                    Type = handler.Key;
+                    return Type;
+                }
             }
 
-            if (Objects.Any(k => k.Key.Contains(".") && k.Value is PsbResource))
+            foreach (var handler in FreeMount._.SpecialTypes)
             {
-                return PsbType.Pimg;
-            }
-
-            if (Objects.ContainsKey("scenes") && Objects.ContainsKey("name"))
-            {
-                return PsbType.Scn;
-            }
-
-            if (Objects.ContainsKey("list") && Objects.ContainsKey("map") && Resources?.Count == 0)
-            {
-                return PsbType.Scn; //filelist.scn
-            }
-
-            if (Objects.ContainsKey("objectChildren") && Objects.ContainsKey("sourceChildren"))
-            {
-                return PsbType.Mmo;
-            }
-
-            if (TypeId == "image" && Objects.ContainsKey("imageList"))
-            {
-                return PsbType.Tachie;
-            }
-
-            if (TypeId == "archive" && Objects.ContainsKey("file_info"))
-            {
-                return PsbType.ArchiveInfo;
-            }
-
-            if (TypeId == "font" && Objects.ContainsKey("code"))
-            {
-                return PsbType.BmpFont;
-            }
-
-            if (TypeId == "sound_archive")
-            {
-                return PsbType.SoundArchive;
-            }
-
-            if (TypeId == "motion")
-            {
-                return PsbType.Motion;
+                if (handler.Value.IsThisType(this))
+                {
+                    TypeHandler = handler.Value;
+                    TypeId = handler.Key;
+                    Type = PsbType.PSB;
+                    return PsbType.PSB;
+                }
             }
 
             return PsbType.PSB;
@@ -324,7 +315,7 @@ namespace FreeMote.Psb
             }
 
             Resources.Sort((r1, r2) => (int) ((r1.Index ?? int.MaxValue) - (r2.Index ?? int.MaxValue)));
-            Type = InferType();
+            InferType();
         }
 
         private void LoadUnknown(BinaryReader br)
@@ -476,8 +467,8 @@ namespace FreeMote.Psb
                     }
 
                     return res;
-                case PsbObjType.Collection:
-                    return LoadCollection(br, lazyLoad);
+                case PsbObjType.List:
+                    return LoadList(br, lazyLoad);
                 case PsbObjType.Objects:
                     return LoadObjects(br, lazyLoad);
                 //Compiler used
@@ -554,16 +545,16 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Load a collection, won't ensure stream Position unless use <paramref name="lazyLoad"/>
+        /// Load a list, won't ensure stream Position unless use <paramref name="lazyLoad"/>
         /// </summary>
         /// <param name="br"></param>
         /// <param name="lazyLoad">whether to lift stream Position</param>
         /// <returns></returns>
-        private PsbCollection LoadCollection(BinaryReader br, bool lazyLoad = false)
+        private PsbList LoadList(BinaryReader br, bool lazyLoad = false)
         {
             var offsets = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
             var pos = br.BaseStream.Position;
-            PsbCollection collection = new PsbCollection(offsets.Count);
+            PsbList list = new PsbList(offsets.Count);
             uint? maxOffset = null;
             var endPos = pos;
             if (lazyLoad && offsets.Count > 0)
@@ -580,15 +571,15 @@ namespace FreeMote.Psb
                 {
                     if (obj is IPsbChild c)
                     {
-                        c.Parent = collection;
+                        c.Parent = list;
                     }
 
                     if (obj is IPsbSingleton s)
                     {
-                        s.Parents.Add(collection);
+                        s.Parents.Add(list);
                     }
 
-                    collection.Add(obj);
+                    list.Add(obj);
                 }
 
                 if (lazyLoad && offset == maxOffset)
@@ -602,7 +593,7 @@ namespace FreeMote.Psb
                 br.BaseStream.Position = endPos;
             }
 
-            return collection;
+            return list;
         }
 
         /// <summary>
@@ -763,7 +754,7 @@ namespace FreeMote.Psb
                         }
 
                         break;
-                    case PsbCollection c:
+                    case PsbList c:
                         for (var i = 0; i < c.Count; i++)
                         {
                             var o = c[i];
@@ -828,7 +819,7 @@ namespace FreeMote.Psb
                         }
 
                         break;
-                    case PsbCollection c:
+                    case PsbList c:
                         foreach (var o in c)
                         {
                             UniqueString(o);
@@ -1095,7 +1086,7 @@ namespace FreeMote.Psb
                     }
 
                     return;
-                case PsbCollection pCol:
+                case PsbList pCol:
                     SaveCollection(bw, pCol);
                     return;
                 case PsbDictionary pDic:
@@ -1138,11 +1129,11 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Save a Collection
+        /// Save a List
         /// </summary>
         /// <param name="bw"></param>
         /// <param name="pCol"></param>
-        private void SaveCollection(BinaryWriter bw, PsbCollection pCol)
+        private void SaveCollection(BinaryWriter bw, PsbList pCol)
         {
             bw.Write((byte) pCol.Type);
             var indexList = new List<uint>(pCol.Count);
@@ -1495,7 +1486,7 @@ namespace FreeMote.Psb
                 }
             }
 
-            Type = InferType();
+            InferType();
         }
     }
 }

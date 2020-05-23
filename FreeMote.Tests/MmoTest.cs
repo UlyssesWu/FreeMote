@@ -39,7 +39,7 @@ namespace FreeMote.Tests
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             //var psb2 = PsbCompiler.LoadPsbFromJsonFile(path2);
             //psb.Objects["objectChildren"] = psb2.Objects["object"];
-            //var collection = (PsbCollection)psb.Objects["objectChildren"];
+            //var collection = (PsbList)psb.Objects["objectChildren"];
             //collection.RemoveAt(0);
             psb.Objects["metaformat"] = PsbNull.Null;
             psb.Merge();
@@ -122,8 +122,8 @@ namespace FreeMote.Tests
             var path = Path.Combine(resPath, "mmo", "NekoCrash.json");
             var mmo = PsbCompiler.LoadPsbFromJsonFile(path);
 
-            var children = (PsbCollection)mmo.Objects["objectChildren"];
-            var source = (PsbCollection)mmo.Objects["sourceChildren"];
+            var children = (PsbList)mmo.Objects["objectChildren"];
+            var source = (PsbList)mmo.Objects["sourceChildren"];
             var obj = (PsbDictionary)children.FindByMmoPath(
                 "all_parts/全体構造/■全体レイアウト/move_UD/move_LR/□下半身配置_le/胴体回転中心/全身調整/□頭部調整_le/act_sp");
             var realPath = obj.Path;
@@ -139,14 +139,14 @@ namespace FreeMote.Tests
             var path2 = Path.Combine(resPath, "crash-temp.mmo");
 
             var mmo1 = PsbCompiler.LoadPsbFromJsonFile(path);
-            var allpart1 = FindPart((PsbCollection)mmo1.Objects["objectChildren"], "body_parts");
+            var allpart1 = FindPart((PsbList)mmo1.Objects["objectChildren"], "body_parts");
             var mmo2 = new PSB(path2);
-            var allpart2 = FindPart((PsbCollection)mmo2.Objects["objectChildren"], "body_parts");
+            var allpart2 = FindPart((PsbList)mmo2.Objects["objectChildren"], "body_parts");
 
             //var p1 = mmo1.Objects.FindByPath(
             //    "/objectChildren/[3]/children/[1]/layerChildren/[0]/children/[0]/frameList/[0]/content/coord");
             //var pp = ((IPsbChild) p1).Parent.Parent.Parent.Parent["label"];
-            PsbDictionary FindPart(PsbCollection col, string label)
+            PsbDictionary FindPart(PsbList col, string label)
             {
                 foreach (var c in col)
                 {

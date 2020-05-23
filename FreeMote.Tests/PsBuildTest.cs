@@ -135,7 +135,7 @@ namespace FreeMote.Tests
         {
             string s = @"
 [1.000000, 1.0000001, 1.001, 1.0, 1, 1.51, 233.333328,233.33333333333337]";
-            var psbList = JsonConvert.DeserializeObject<PsbCollection>(s, new PsbJsonConverter());
+            var psbList = JsonConvert.DeserializeObject<PsbList>(s, new PsbJsonConverter());
             foreach (var psbValue in psbList)
             {
                 var v = psbValue;
@@ -181,8 +181,8 @@ namespace FreeMote.Tests
             psbWin.Merge();
 
             ////Graft
-            var resKrkr = psbKrkr.CollectResources(false);
-            var resWin = psbWin.CollectResources(false);
+            var resKrkr = psbKrkr.CollectResources<ImageMetadata>(false);
+            var resWin = psbWin.CollectResources<ImageMetadata>(false);
             var headWin = resWin.FirstOrDefault(r => r.Height == 186 && r.Width == 122);
             var headKrkr = resKrkr.FirstOrDefault(r => r.Height == 186 && r.Width == 122);
             if (headWin != null && headKrkr != null)
@@ -429,7 +429,7 @@ namespace FreeMote.Tests
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             var o = psb.Objects.FindByPath(
                     "/object/head_parts/motion/頭部変形基礎/layer/[0]/children/[3]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[0]/children/[1]/children/[0]/children/[0]/children/[0]/children/[0]/frameList/[0]/content/coord")
-                as PsbCollection;
+                as PsbList;
             var num = o[0] as PsbNumber;
             var val = num.IntValue;
             var valNaN = num.FloatValue;
@@ -681,8 +681,8 @@ namespace FreeMote.Tests
 
                     Console.WriteLine($"{a1} != {a2}");
                     return false;
-                case PsbCollection c1:
-                    var c2 = (PsbCollection) p2;
+                case PsbList c1:
+                    var c2 = (PsbList) p2;
                     for (var i = 0; i < c1.Count; i++)
                     {
                         if (CompareValue(c1[i], c2[i]))

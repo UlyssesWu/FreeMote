@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using FreeMote.Plugins;
+using FreeMote.Plugins.Shells;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
 

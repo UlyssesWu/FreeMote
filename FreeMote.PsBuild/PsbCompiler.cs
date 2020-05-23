@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using Newtonsoft.Json;
@@ -10,33 +8,10 @@ using Newtonsoft.Json;
 namespace FreeMote.PsBuild
 {
     /// <summary>
-    /// Texture Link Order
-    /// </summary>
-    public enum PsbLinkOrderBy
-    {
-        /// <summary>
-        /// The image name should be FreeMote style: {part}-{name}.{ext}
-        /// </summary>
-        Convention = 0,
-
-        /// <summary>
-        /// The image name should be EMT Editor style: {name}_tex#{no:D3}.{ext}
-        /// </summary>
-        Name = 1,
-
-        /// <summary>
-        /// The order in list matters
-        /// </summary>
-        Order = 2,
-    }
-
-    /// <summary>
     /// Compile PSB File
     /// </summary>
     public static class PsbCompiler
     {
-        private static readonly List<string> SupportedImageExt = new List<string> {".png", ".bmp", ".jpg", ".jpeg"};
-
         /// <summary>
         /// Compile to file
         /// </summary>
@@ -296,125 +271,9 @@ namespace FreeMote.PsBuild
             {
                 Objects = JsonConvert.DeserializeObject<PsbDictionary>(json, new PsbJsonConverter())
             };
-            psb.Type = psb.InferType();
+            psb.InferType();
             psb.Collect(false, false); //don't merge res since it's empty now
             return psb;
-        }
-
-        internal static byte[] LoadImageBytes(string path, ResourceMetadata metadata, FreeMountContext context,
-            out byte[] palette)
-        {
-            palette = null;
-            byte[] data;
-            Bitmap image = null;
-            var ext = Path.GetExtension(path)?.ToLowerInvariant();
-
-            if (metadata.Compress == PsbCompressType.ByName && ext != null && metadata.Name != null &&
-                metadata.Name.EndsWith(ext, true, null))
-            {
-                return File.ReadAllBytes(path);
-            }
-
-            switch (ext)
-            {
-                //tlg
-                case ".tlg" when metadata.Compress == PsbCompressType.Tlg:
-                    return File.ReadAllBytes(path);
-                case ".tlg":
-                    image = context.ResourceToBitmap(".tlg", File.ReadAllBytes(path));
-                    break;
-                //rl
-                case ".rl" when metadata.Compress == PsbCompressType.RL:
-                    return File.ReadAllBytes(path);
-                case ".rl" when metadata.Compress == PsbCompressType.None:
-                    return RL.Decompress(File.ReadAllBytes(path));
-                case ".rl":
-                    image = RL.DecompressToImage(File.ReadAllBytes(path), metadata.Height, metadata.Width,
-                        metadata.PixelFormat);
-                    break;
-                //raw
-                case ".raw" when metadata.Compress == PsbCompressType.None:
-                    return File.ReadAllBytes(path);
-                case ".raw" when metadata.Compress == PsbCompressType.RL:
-                    return RL.Compress(File.ReadAllBytes(path));
-                case ".raw":
-                    image = RL.ConvertToImage(File.ReadAllBytes(path), metadata.Height, metadata.Width,
-                        metadata.PixelFormat);
-                    break;
-                //bin
-                case ".bin":
-                    return File.ReadAllBytes(path);
-                //image
-                default:
-                    if (SupportedImageExt.Contains(ext))
-                    {
-                        if (metadata.PixelFormat.UsePalette())
-                        {
-                            image = BitmapHelper.LoadBitmap(File.ReadAllBytes(path));
-                            palette = image.Palette.GetPaletteBytes(metadata.PalettePixelFormat);
-                        }
-                        else
-                        {
-                            image = new Bitmap(path);
-                        }
-                    }
-                    else if (context.SupportImageExt(ext))
-                    {
-                        image = context.ResourceToBitmap(ext, File.ReadAllBytes(path));
-                    }
-                    else
-                    {
-                        //MARK: No longer try to read files we don't know
-                        //return File.ReadAllBytes(path);
-                        return null;
-                    }
-
-                    break;
-            }
-
-            switch (metadata.Compress)
-            {
-                case PsbCompressType.RL:
-                    data = RL.CompressImage(image, metadata.PixelFormat);
-                    break;
-                case PsbCompressType.Tlg:
-                    data = context.BitmapToResource(".tlg", image);
-                    if (data == null)
-                    {
-                        var tlgPath = Path.ChangeExtension(path, ".tlg");
-                        if (File.Exists(tlgPath))
-                        {
-                            Console.WriteLine($"[WARN] Can not encode TLG, using {tlgPath}");
-                            data = File.ReadAllBytes(tlgPath);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
-                            data = File.ReadAllBytes(path);
-                        }
-                    }
-
-                    break;
-                case PsbCompressType.ByName:
-                    var imgExt = Path.GetExtension(metadata.Name);
-                    if (context.SupportImageExt(imgExt))
-                    {
-                        data = context.BitmapToResource(imgExt, image);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[WARN] Unsupported image: {path}");
-                        data = File.ReadAllBytes(path);
-                    }
-
-                    break;
-                case PsbCompressType.None:
-                default:
-                    data = RL.GetPixelBytesFromImage(image, metadata.PixelFormat);
-                    break;
-            }
-
-            return data;
         }
 
         /// <summary>
@@ -428,110 +287,21 @@ namespace FreeMote.PsBuild
         public static void Link(this PSB psb, IList<string> resPaths, string baseDir = null,
             PsbLinkOrderBy order = PsbLinkOrderBy.Convention, bool isExternal = false)
         {
-            if (isExternal)
-            {
-                psb.MotionResourceInstrument();
-            }
-
-            var resList = psb.CollectResources(duplicatePalette: Consts.GeneratePalette);
             var context = FreeMount.CreateContext();
-            if (order == PsbLinkOrderBy.Order)
-            {
-                for (int i = 0; i < resList.Count; i++)
-                {
-                    var resMd = resList[i];
-                    var fullPath = Path.Combine(baseDir ?? "", resPaths[i]);
-                    byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
-                    resMd.Data = data;
-                    resMd.PalData = palette;
-                }
 
+            if (psb.Type == PsbType.Motion)
+            {
+                PsbResHelper.LinkImages(psb, context, resPaths, baseDir, order, isExternal);
                 return;
             }
 
-            if (order == PsbLinkOrderBy.Name)
+            if (psb.TypeHandler != null)
             {
-                if (psb.Platform == PsbSpec.krkr)
-                {
-                    throw new InvalidOperationException(
-                        $"Can not link by file name for krkr PSB. Please consider using {PsbLinkOrderBy.Convention}");
-                }
-
-                resList.Sort((md1, md2) => (int) (md1.TextureIndex ?? 0) - (int) (md2.TextureIndex ?? 0));
+                psb.TypeHandler.Link(psb, context, resPaths, baseDir, order);
             }
-
-            for (var i = 0; i < resPaths.Count; i++)
+            else
             {
-                var resPath = resPaths[i];
-                var resName = Path.GetFileNameWithoutExtension(resPath);
-                //var resMd = uint.TryParse(resName, out uint rid)
-                //    ? resList.FirstOrDefault(r => r.Index == rid)
-                //    : resList.FirstOrDefault(r =>
-                //        resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
-
-                //Scan for Resource
-                ResourceMetadata resMd = null;
-                if (order == PsbLinkOrderBy.Name)
-                {
-                    if (resName == null)
-                    {
-                        continue;
-                    }
-
-                    if (resList.Count == 1 && resPaths.Count == 1)
-                    {
-                        //If there is only one resource and one texture, we won't care about file name.
-                        resMd = resList[0];
-                    }
-                    else
-                    {
-                        var texIdx = ResourceMetadata.GetTextureIndex(resName);
-
-                        if (texIdx == null)
-                        {
-                            Console.WriteLine($"[WARN]{resPath} is not used since the file name cannot be recognized.");
-                            continue;
-                        }
-
-                        if (resList.Count <= texIdx.Value)
-                        {
-                            Console.WriteLine($"[WARN]{resPath} is not used since the tex No. is too large.");
-                            continue;
-                        }
-
-                        resMd = resList[(int) texIdx.Value];
-                    }
-                }
-                else //if (order == PsbLinkOrderBy.Convention)
-                {
-                    resMd = resList.FirstOrDefault(r =>
-                        resName == $"{r.Part}{PsbResCollector.ResourceNameDelimiter}{r.Name}");
-                    if (resMd == null && uint.TryParse(resName, out uint rid))
-                    {
-                        //This Link has no support for raw palette
-                        resMd = resList.FirstOrDefault(r => r.Index == rid);
-                    }
-
-                    if (resMd == null && psb.Type == PsbType.Pimg)
-                    {
-                        resMd = resList.FirstOrDefault(r => resName == Path.GetFileNameWithoutExtension(r.Name));
-                    }
-                }
-
-
-                if (resMd == null)
-                {
-                    Console.WriteLine($"[WARN]{resPath} is not used.");
-                    continue;
-                }
-
-                var fullPath = Path.Combine(baseDir ?? "", resPath.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
-                resMd.Data = data;
-                if (palette != null)
-                {
-                    resMd.PalData = palette;
-                }
+                PsbResHelper.LinkImages(psb, context, resPaths, baseDir, order);
             }
         }
 
@@ -548,56 +318,14 @@ namespace FreeMote.PsBuild
                 return;
             }
 
-            FreeMountContext context = FreeMount.CreateContext(resx.Context);
-            var resList = psb.CollectResources(duplicatePalette: Consts.GeneratePalette);
-
-            foreach (var resxResource in resx.Resources)
+            var context = FreeMount.CreateContext(resx.Context);
+            if (psb.TypeHandler != null)
             {
-                //Scan for Resource
-                var resMd = resList.FirstOrDefault(r =>
-                    resxResource.Key == r.GetFriendlyName(psb.Type));
-                if (resMd == null && psb.Type == PsbType.Pimg)
-                {
-                    resMd = resList.FirstOrDefault(r => resxResource.Key == Path.GetFileNameWithoutExtension(r.Name));
-                }
-
-                if (resMd == null && uint.TryParse(resxResource.Key, out uint rid))
-                {
-                    resMd = resList.FirstOrDefault(r => r.Index == rid);
-                    if (resMd == null)
-                    {
-                        //support raw palette
-                        var palResMds = resList.FindAll(r => r.Palette?.Index == rid);
-                        if (palResMds.Count > 0)
-                        {
-                            var palFullPath = Path.IsPathRooted(resxResource.Value)
-                                ? resxResource.Value
-                                : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
-                            var palRawData = File.ReadAllBytes(palFullPath);
-                            foreach (var palResMd in palResMds)
-                            {
-                                palResMd.PalData = palRawData;
-                            }
-                            continue;
-                        }
-                    }
-                }
-
-                if (resMd == null)
-                {
-                    Console.WriteLine($"[WARN]{resxResource.Key} is not used.");
-                    continue;
-                }
-
-                var fullPath = Path.IsPathRooted(resxResource.Value)
-                    ? resxResource.Value
-                    : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
-                byte[] data = LoadImageBytes(fullPath, resMd, context, out var palette);
-                resMd.Data = data;
-                if (palette != null)
-                {
-                    resMd.PalData = palette;
-                }
+                psb.TypeHandler.Link(psb, context, resx.Resources, baseDir);
+            }
+            else
+            {
+                PsbResHelper.LinkImages(psb, context, resx.Resources, baseDir);
             }
         }
     }

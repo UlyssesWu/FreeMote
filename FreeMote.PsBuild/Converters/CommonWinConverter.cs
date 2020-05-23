@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using FreeMote.Psb;
 
 namespace FreeMote.PsBuild.Converters
@@ -34,7 +35,7 @@ namespace FreeMote.PsBuild.Converters
             var asSpec = EmsAsCommon ? PsbSpec.ems : PsbSpec.common;
             var toSpec = psb.Platform == PsbSpec.win ? asSpec : PsbSpec.win;
             var toPixelFormat = toSpec == asSpec ? PsbPixelFormat.CommonRGBA8 : PsbPixelFormat.WinRGBA8;
-            var resList = psb.CollectResources(false);
+            var resList = psb.CollectResources<ImageMetadata>(false);
             foreach (var resMd in resList)
             {
                 var resourceData = resMd.Resource.Data;

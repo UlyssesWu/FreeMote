@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
 using FreeMote.Plugins;
 using FreeMote.Psb.Textures;
+using FreeMote.Psb.Types;
 using Newtonsoft.Json;
 
 // ReSharper disable AssignNullToNotNullAttribute
@@ -117,10 +115,8 @@ namespace FreeMote.PsBuild
         {
             var name = Path.GetFileNameWithoutExtension(filePath);
             var dirPath = Path.Combine(Path.GetDirectoryName(filePath), name);
-
-            var resources = psb.CollectResources();
             PsbResourceJson resx = new PsbResourceJson(psb, context.Context);
-
+            
             if (File.Exists(dirPath))
             {
                 name += "-resources";
@@ -129,184 +125,13 @@ namespace FreeMote.PsBuild
 
             if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
             {
-                if (psb.Resources.Count != 0 || resources.Count != 0)
+                if (psb.Resources.Count != 0)
                 {
                     Directory.CreateDirectory(dirPath);
                 }
             }
 
-            Dictionary<string, string> resDictionary = new Dictionary<string, string>();
-
-            ImageFormat pixelFormat;
-            switch (extractFormat)
-            {
-                case PsbImageFormat.png:
-                    pixelFormat = ImageFormat.Png;
-                    break;
-                default:
-                    pixelFormat = ImageFormat.Bmp;
-                    break;
-            }
-
-            if (extractOption == PsbExtractOption.Original)
-            {
-                for (int i = 0; i < psb.Resources.Count; i++)
-                {
-                    var relativePath = psb.Resources[i].Index == null ? $"#{i}.bin" : $"{psb.Resources[i].Index}.bin";
-
-                    File.WriteAllBytes(
-                        Path.Combine(dirPath, relativePath),
-                        psb.Resources[i].Data);
-                    resDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{relativePath}");
-                }
-            }
-            else
-            {
-                for (int i = 0; i < resources.Count; i++)
-                {
-                    var resource = resources[i];
-                    //Generate Friendly Name
-                    var friendlyName = resource.GetFriendlyName(psb.Type);
-                    string relativePath = friendlyName;
-                    if (string.IsNullOrWhiteSpace(friendlyName))
-                    {
-                        relativePath = resource.Resource.Index?.ToString() ?? $"({i})";
-                        friendlyName = i.ToString();
-                    }
-
-                    var currentExtractOption = extractOption;
-                    if (resource.Width <= 0 || resource.Height <= 0) //impossible to extract, just keep raw
-                    {
-                        if (currentExtractOption == PsbExtractOption.Extract)
-                        {
-                            currentExtractOption = PsbExtractOption.Original;
-                        }
-                    }
-
-                    switch (currentExtractOption)
-                    {
-                        case PsbExtractOption.Extract:
-                            switch (extractFormat)
-                            {
-                                case PsbImageFormat.png:
-                                    relativePath += ".png";
-                                    break;
-                                default:
-                                    relativePath += ".bmp";
-                                    break;
-                            }
-
-                            relativePath = CheckPath(relativePath, i);
-                            if (resource.Compress == PsbCompressType.RL)
-                            {
-                                RL.DecompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat);
-                            }
-                            else if (resource.Compress == PsbCompressType.Tlg ||
-                                     resource.Compress == PsbCompressType.ByName)
-                            {
-                                var bmp = context.ResourceToBitmap(resource.Compress == PsbCompressType.Tlg
-                                    ? ".tlg"
-                                    : Path.GetExtension(resource.Name), resource.Data);
-                                if (bmp == null)
-                                {
-                                    if (resource.Compress == PsbCompressType.Tlg) //Fallback to managed TLG decoder
-                                    {
-                                        using (var ms = new MemoryStream(resource.Data))
-                                        using (var br = new BinaryReader(ms))
-                                        {
-                                            bmp = new TlgImageConverter().Read(br);
-                                            bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
-                                            bmp.Dispose();
-                                        }
-                                    }
-
-                                    relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
-                                    File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                                }
-                                else
-                                {
-                                    bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
-                                    bmp.Dispose();
-                                }
-                            }
-                            //else if (resource.Compress == PsbCompressType.ByName)
-                            //{
-                            //    relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));
-                            //    File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                            //}
-                            else
-                            {
-                                RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat, resource.PalData, resource.PalettePixelFormat);
-                            }
-
-                            break;
-                        case PsbExtractOption.Original:
-                            if (resources[i].Compress == PsbCompressType.RL)
-                            {
-                                relativePath += ".rl";
-                                relativePath = CheckPath(relativePath, i);
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                            }
-                            else if (resource.Compress == PsbCompressType.Tlg)
-                            {
-                                relativePath += ".tlg";
-                                relativePath = CheckPath(relativePath, i);
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                            }
-                            else
-                            {
-                                relativePath += ".raw";
-                                relativePath = CheckPath(relativePath, i);
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
-                            }
-
-                            break;
-                        case PsbExtractOption.Decompress:
-                            relativePath += ".raw";
-                            relativePath = CheckPath(relativePath, i);
-                            File.WriteAllBytes(Path.Combine(dirPath, relativePath),
-                                resources[i].Compress == PsbCompressType.RL
-                                    ? RL.Decompress(resource.Data)
-                                    : resource.Data);
-                            break;
-                        case PsbExtractOption.Compress:
-                            relativePath += ".rl";
-                            relativePath = CheckPath(relativePath, i);
-                            File.WriteAllBytes(Path.Combine(dirPath, relativePath),
-                                resources[i].Compress != PsbCompressType.RL
-                                    ? RL.Compress(resource.Data)
-                                    : resource.Data);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(currentExtractOption), currentExtractOption, null);
-                    }
-
-                    try
-                    {
-                        resDictionary.Add(resource.Resource.Index == null? friendlyName : resource.Index.ToString(), $"{name}/{relativePath}");
-                    }
-                    catch (ArgumentException e)
-                    {
-                        throw new PsbBadFormatException(PsbBadFormatReason.Resources,
-                            "Resource Export Error: Name conflict, or Index is not specified. Try Raw export mode.", e);
-                    }
-                }
-            }
-
-            //Extra Extract
-            if (extractOption == PsbExtractOption.Extract)
-            {
-                if (psb.Type == PsbType.Tachie)
-                {
-                    var bitmaps = TextureCombiner.CombineTachie(psb);
-                    foreach (var kv in bitmaps)
-                    {
-                        kv.Value.Save(Path.Combine(dirPath, $"{kv.Key}.{extractFormat}"), pixelFormat);
-                    }
-                }
-            }
+            var resDictionary = psb.TypeHandler.OutputResources(psb, context, name, dirPath, extractOption);
 
             //MARK: We use `.resx.json` to distinguish from psbtools' `.res.json`
             if (useResx)
@@ -320,17 +145,6 @@ namespace FreeMote.PsBuild
             {
                 File.WriteAllText(Path.ChangeExtension(filePath, ".res.json"),
                     JsonConvert.SerializeObject(resDictionary.Values.ToList(), Formatting.Indented));
-            }
-
-            string CheckPath(string rPath, int id)
-            {
-                var k = Path.GetFileNameWithoutExtension(rPath);
-                if (resDictionary.ContainsKey(k))
-                {
-                    return $"{id}{Path.GetExtension(rPath)}";
-                }
-
-                return rPath;
             }
         }
 
@@ -382,52 +196,6 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
-        /// Inlined PSB -> External Texture PSB. Inverse of <seealso cref="PsbCompiler.Link"/>
-        /// </summary>
-        /// <param name="psb"></param>
-        /// <param name="order">To make a regular external texture PSB you should set it to <see cref="PsbLinkOrderBy.Name"/>.</param>
-        /// <param name="disposeResInPsb">Whether to remove resources in PSB. To make a real external texture PSB you should set it to true.</param>
-        /// <returns>Ordered textures</returns>
-        public static List<Bitmap> Unlink(this PSB psb, PsbLinkOrderBy order = PsbLinkOrderBy.Name, bool disposeResInPsb = true)
-        {
-            var resources = psb.CollectResources();
-            List<Bitmap> texs = new List<Bitmap>();
-
-            for (int i = 0; i < resources.Count; i++)
-            {
-                var resource = resources[i];
-                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Height, resource.Width, resource.PixelFormat, resource.PalettePixelFormat);
-
-                switch (order)
-                {
-                    case PsbLinkOrderBy.Convention:
-                        tex.Tag = resource.GetFriendlyName(psb.Type);
-                        break;
-                    default:
-                        var tId = resource.TextureIndex;
-                        if (tId == null)
-                        {
-                            throw new FormatException(
-                                "Unable to unlink with texture names since they can't be recognized.");
-                        }
-
-                        tex.Tag = $"tex{tId.Value:D3}";
-                        break;
-                }
-                
-                texs.Add(tex);
-
-                //Finally, dispose
-                if (disposeResInPsb)
-                {
-                    resource.Data = null;
-                }
-            }
-
-            return texs;
-        }
-
-        /// <summary>
         /// Convert a PSB to External Texture PSB.
         /// </summary>
         /// <param name="inputPath"></param>
@@ -444,7 +212,7 @@ namespace FreeMote.PsBuild
 
             var name = Path.GetFileNameWithoutExtension(inputPath);
             var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
-            var psbSavePath = "";
+            var psbSavePath = inputPath;
             if (File.Exists(dirPath))
             {
                 name += "-resources";
@@ -456,40 +224,21 @@ namespace FreeMote.PsBuild
                 Directory.CreateDirectory(dirPath);
             }
 
+            var context = FreeMount.CreateContext();
+            context.ImageFormat = format;
             var psb = new PSB(inputPath);
-            var texs = psb.Unlink();
+            if (psb.TypeHandler is BaseImageType imageType)
+            {
+                imageType.UnlinkToFile(psb, context, name, dirPath, outputUnlinkedPsb, order);
+            }
+
+            psb.TypeHandler.UnlinkToFile(psb, context, name, dirPath, outputUnlinkedPsb, order);
 
             if (outputUnlinkedPsb)
             {
                 psb.Merge();
                 psbSavePath = Path.ChangeExtension(inputPath, ".unlinked.psb"); //unlink only works with motion.psb so no need for ext rename
                 File.WriteAllBytes(psbSavePath, psb.Build());
-            }
-
-            var texExt = format == PsbImageFormat.bmp ? ".bmp" :".png";
-            var texFormat = format == PsbImageFormat.bmp ? ImageFormat.Bmp : ImageFormat.Png;
-           
-            switch (order)
-            {
-                case PsbLinkOrderBy.Convention:
-                    foreach (var tex in texs)
-                    {
-                        tex.Save(Path.Combine(dirPath, tex.Tag + texExt), texFormat);
-                    }
-                    break;
-                case PsbLinkOrderBy.Name:
-                    foreach (var tex in texs)
-                    {
-                        tex.Save(Path.Combine(dirPath, $"{name}_{tex.Tag}{texExt}"), texFormat);
-                    }
-                    break;
-                case PsbLinkOrderBy.Order:
-                    for (var i = 0; i < texs.Count; i++)
-                    {
-                        var tex = texs[i];
-                        tex.Save(Path.Combine(dirPath, $"{i}{texExt}"), texFormat);
-                    }
-                    break;
             }
 
             return psbSavePath;
@@ -535,7 +284,7 @@ namespace FreeMote.PsBuild
                 return;
             }
 
-            var texs = psb.Unlink();
+            var texs = PsbResHelper.UnlinkImages(psb);
             
             foreach (var tex in texs)
             {

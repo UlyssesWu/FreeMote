@@ -69,7 +69,7 @@ namespace FreeMote.PsBuild.Converters
             //add `easing`
             if (!psb.Objects.ContainsKey("easing"))
             {
-                psb.Objects.Add("easing", new PsbCollection(0));
+                psb.Objects.Add("easing", new PsbList(0));
             }
 
             //add `/object/*/motion/*/bounds`
@@ -95,7 +95,7 @@ namespace FreeMote.PsBuild.Converters
                         }
 
 
-                        if (!(mDic["layer"] is PsbCollection col))
+                        if (!(mDic["layer"] is PsbList col))
                         {
                             continue;
                         }
@@ -123,7 +123,7 @@ namespace FreeMote.PsBuild.Converters
                 }
             }
 
-            void LayerTravel(PsbCollection collection, List<string> indexList)
+            void LayerTravel(PsbList collection, List<string> indexList)
             {
                 foreach (var col in collection)
                 {
@@ -134,7 +134,7 @@ namespace FreeMote.PsBuild.Converters
                             indexList.Add(str.Value);
                         }
 
-                        if (dic["children"] is PsbCollection childrenCollection)
+                        if (dic["children"] is PsbList childrenCollection)
                         {
                             LayerTravel(childrenCollection, indexList);
                         }
@@ -162,7 +162,7 @@ namespace FreeMote.PsBuild.Converters
                     var info = (PsbDictionary) icon.Value;
                     var width = (int) (PsbNumber) info["width"];
                     var height = (int) (PsbNumber) info["height"];
-                    var res = info[PsbResCollector.ResourceKey] as PsbResource;
+                    var res = info[Consts.ResourceKey] as PsbResource;
                     if (res == null)
                     {
                         Debug.WriteLine("pixel is null! Maybe External Texture."); //TODO: throw Exception
@@ -225,7 +225,7 @@ namespace FreeMote.PsBuild.Converters
                     var paths = node.Texture.Source.Split(new[] {Delimiter}, StringSplitOptions.RemoveEmptyEntries);
                     var icon = (PsbDictionary) source[paths[0]].Children("icon").Children(paths[1]);
                     icon.Remove("compress");
-                    icon.Remove(PsbResCollector.ResourceKey);
+                    icon.Remove(Consts.ResourceKey);
                     icon["attr"] = PsbNumber.Zero;
                     icon["left"] = new PsbNumber(node.Bounds.Left);
                     icon["top"] = new PsbNumber(node.Bounds.Top);
@@ -246,7 +246,7 @@ namespace FreeMote.PsBuild.Converters
                     {"truncated_width", new PsbNumber(atlas.Width)},
                     {"type", new PsbString(TargetPixelFormat.ToStringForPsb())}
                 };
-                texture.Add(PsbResCollector.ResourceKey, new PsbResource {Data = data, Parents = new List<IPsbCollection> {texture}});
+                texture.Add(Consts.ResourceKey, new PsbResource {Data = data, Parents = new List<IPsbCollection> {texture}});
                 texDic.Add("texture", texture);
                 //type
                 texDic.Add("type", PsbNumber.Zero);
@@ -354,7 +354,7 @@ namespace FreeMote.PsBuild.Converters
                 }
             }
 
-            if (collection is PsbCollection col)
+            if (collection is PsbList col)
             {
                 foreach (var child in col)
                 {

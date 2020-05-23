@@ -22,7 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>8</LangVersion>
     <DocumentationFile>
     </DocumentationFile>
   </PropertyGroup>
@@ -34,13 +34,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>8</LangVersion>
     <DocumentationFile>bin\Release\FreeMote.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime" />
@@ -54,13 +53,6 @@
     <Compile Include="DxtCodec.cs" />
     <Compile Include="DxtUtil.cs" />
     <Compile Include="MdfFile.cs" />
-    <Compile Include="Plugins\FreeMount.cs" />
-    <Compile Include="Plugins\FreeMountContext.cs" />
-    <Compile Include="Plugins\IPsbAudioFormatter.cs" />
-    <Compile Include="Plugins\IPsbKeyProvider.cs" />
-    <Compile Include="Plugins\IPsbPluginInfo.cs" />
-    <Compile Include="Plugins\IPsbImageFormatter.cs" />
-    <Compile Include="Plugins\IPsbShell.cs" />
     <Compile Include="PostProcessing.cs" />
     <Compile Include="PsbExtension.cs" />
     <Compile Include="RleCompress.cs" />

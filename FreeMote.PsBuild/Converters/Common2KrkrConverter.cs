@@ -84,7 +84,7 @@ namespace FreeMote.PsBuild.Converters
                         var data = UseRL
                             ? RL.CompressImage(bmps[iconPair.Key], TargetPixelFormat)
                             : RL.GetPixelBytesFromImage(bmps[iconPair.Key], TargetPixelFormat);
-                        icon[PsbResCollector.ResourceKey] =
+                        icon[Consts.ResourceKey] =
                             new PsbResource {Data = data, Parents = new List<IPsbCollection> {icon}};
                         icon["compress"] = UseRL ? new PsbString("RL") : new PsbString();
                         icon.Remove("left");
@@ -189,7 +189,7 @@ namespace FreeMote.PsBuild.Converters
                 }
             }
 
-            if (collection is PsbCollection col)
+            if (collection is PsbList col)
             {
                 foreach (var child in col)
                 {

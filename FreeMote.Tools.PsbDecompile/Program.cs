@@ -216,7 +216,7 @@ Example:
                                 PsbResourceJson resx = new PsbResourceJson(psb, context);
 
                                 var dic = psb.Objects["file_info"] as PsbDictionary;
-                                var suffixList = ((PsbCollection) psb.Objects["expire_suffix_list"]);
+                                var suffixList = ((PsbList) psb.Objects["expire_suffix_list"]);
                                 var suffix = "";
                                 if (suffixList.Count > 0)
                                 {
@@ -259,7 +259,7 @@ Example:
                                     {
                                         count++;
                                         //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
-                                        var range = ((PsbCollection) pair.Value);
+                                        var range = ((PsbList) pair.Value);
                                         var start = ((PsbNumber) range[0]).IntValue;
                                         var len = ((PsbNumber) range[1]).IntValue;
 
@@ -311,7 +311,7 @@ Example:
                                     {
                                         Console.WriteLine(
                                             $"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
-                                        var range = ((PsbCollection) pair.Value);
+                                        var range = ((PsbList) pair.Value);
                                         var start = ((PsbNumber) range[0]).IntValue;
                                         var len = ((PsbNumber) range[1]).IntValue;
 

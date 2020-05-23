@@ -26,7 +26,6 @@ namespace FreeMote
 
     /// <summary>
     /// PSB Type
-    /// <remarks>It should not use generic name such as `Images` since different image types may still have different structures.</remarks>
     /// </summary>
     public enum PsbType
     {
@@ -102,6 +101,10 @@ namespace FreeMote
         /// PS4
         /// </summary>
         ps4,
+        /// <summary>
+        /// NSwitch
+        /// </summary>
+        nx,
         other = Byte.MaxValue,
     }
 
@@ -121,23 +124,24 @@ namespace FreeMote
         /// </summary>
         Original,
         /// <summary>
+        /// Try to convert to common format
+        /// </summary>
+        Extract,
+        /// <summary>
         /// Decompress if needed
         /// </summary>
+        [Obsolete]
         Decompress,
         /// <summary>
         /// Compress if needed
         /// </summary>
+        [Obsolete]
         Compress,
-        /// <summary>
-        /// Try to convert to common format
-        /// </summary>
-        Extract,
-
     }
-
+    
     public enum PsbPixelFormat
     {
-        None,
+        None = 0,
         /// <summary>
         /// Little Endian RGBA8
         /// </summary>
@@ -195,6 +199,15 @@ namespace FreeMote
         /// </summary>
         /// REF: http://wiki.tockdom.com/wiki/Image_Formats#C8_.28CI8.29
         CI8_SW,
+    }
+
+    public enum PsbAudioFormat
+    {
+        None = 0,
+        WAV,
+        Atrac9,
+        OPUS,
+        XWMA,
     }
 
     public enum EncodeMode

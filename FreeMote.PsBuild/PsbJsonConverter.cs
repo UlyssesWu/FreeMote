@@ -18,7 +18,7 @@ namespace FreeMote.PsBuild
         //internal static List<Type> SupportTypes = new List<Type> {
         //    typeof(PsbNull),typeof(PsbBool),typeof(PsbNumber),
         //    typeof(PsbArray), typeof(PsbString),typeof(PsbResource),
-        //    typeof(PsbCollection),typeof(PsbDictionary),
+        //    typeof(PsbList),typeof(PsbDictionary),
         //};
 
         public bool ArrayCollapse { get; set; }
@@ -55,7 +55,7 @@ namespace FreeMote.PsBuild
                             }
                             else
                             {
-                                writer.WriteValue($"{PsbResCollector.NumberStringPrefix}{num.IntValue:X8}f");
+                                writer.WriteValue($"{Consts.NumberStringPrefix}{num.IntValue:X8}f");
                             }
                             //writer.WriteRawValue(num.FloatValue.ToString("R"));
                             break;
@@ -66,7 +66,7 @@ namespace FreeMote.PsBuild
                             }
                             else
                             {
-                                writer.WriteValue($"{PsbResCollector.NumberStringPrefix}{num.LongValue:X16}d");
+                                writer.WriteValue($"{Consts.NumberStringPrefix}{num.LongValue:X16}d");
                             }
                             break;
                         default:
@@ -79,12 +79,12 @@ namespace FreeMote.PsBuild
                     break;
                 case PsbResource res:
                     //writer.WriteValue(Convert.ToBase64String(res.Data, Base64FormattingOptions.None));
-                    writer.WriteValue($"{PsbResCollector.ResourceIdentifier}{res.Index}");
+                    writer.WriteValue($"{Consts.ResourceIdentifier}{res.Index}");
                     break;
                 case PsbArray array:
                     writer.WriteValue(array.Value);
                     break;
-                case PsbCollection collection:
+                case PsbList collection:
                     if (ArrayCollapse)
                     {
                         writer.WriteStartArray();
@@ -173,9 +173,9 @@ namespace FreeMote.PsBuild
                     return new PsbBool(token.Value<bool>());
                 case JTokenType.String:
                     string str = token.Value<string>();
-                    if (str.StartsWith(PsbResCollector.NumberStringPrefix))
+                    if (str.StartsWith(Consts.NumberStringPrefix))
                     {
-                        var prefixLen = PsbResCollector.NumberStringPrefix.Length;
+                        var prefixLen = Consts.NumberStringPrefix.Length;
                         if (str.EndsWith("f"))
                         {
                             return new PsbNumber(int.Parse(str.Substring(prefixLen, 8), NumberStyles.AllowHexSpecifier)) { NumberType = PsbNumberType.Float };
@@ -186,9 +186,9 @@ namespace FreeMote.PsBuild
                         }
                         return new PsbNumber(long.Parse(str.Substring(prefixLen), NumberStyles.AllowHexSpecifier));
                     }
-                    if (str.StartsWith(PsbResCollector.ResourceIdentifier))
+                    if (str.StartsWith(Consts.ResourceIdentifier))
                     {
-                        return new PsbResource(uint.Parse(str.Replace(PsbResCollector.ResourceIdentifier, "")));
+                        return new PsbResource(uint.Parse(str.Replace(Consts.ResourceIdentifier, "")));
                     }
                     var psbStr = new PsbString(str, (uint)context.Count);
                     if (context.ContainsKey(str))
@@ -202,7 +202,7 @@ namespace FreeMote.PsBuild
                     return psbStr;
                 case JTokenType.Array:
                     var array = (JArray)token;
-                    var collection = new PsbCollection(array.Count);
+                    var collection = new PsbList(array.Count);
                     foreach (var val in array)
                     {
                         var o = ConvertToken(val, context);

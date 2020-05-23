@@ -22,7 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-	<LangVersion>7.3</LangVersion>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,10 +31,11 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-	<LangVersion>7.3</LangVersion>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -45,13 +46,34 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="At9Formatter.cs" />
+    <Compile Include="OpusFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XwmaFormatter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
+      <Project>{c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7}</Project>
+      <Name>FreeMote.Psb</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FreeMote\FreeMote.csproj">
       <Project>{d43ca425-6476-4ae3-a3d8-bbcac0f0383c}</Project>
       <Name>FreeMote</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="VGAudio">
+      <Version>2.2.1-CI00001</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>echo There is a bug that some nuget package dll may not have edit date so it won't be copied. If it happens, remove /D and try again.
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsbDecompile\$(OutDir)" /E /Y
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsBuild\$(OutDir)" /E /Y
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtConvert\$(OutDir)" /E /Y</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
 </Project>
