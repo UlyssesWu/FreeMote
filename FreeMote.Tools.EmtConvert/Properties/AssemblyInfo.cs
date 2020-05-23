@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("FreeMote.Tools.EmtConvert")]
-[assembly: AssemblyDescription("Convert/Compress/Decompress EMT PSB")]
+[assembly: AssemblyDescription("Convert/Compress/Decompress EMT PSBs and their images")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("FreeMote")]

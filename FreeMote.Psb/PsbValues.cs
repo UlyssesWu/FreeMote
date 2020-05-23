@@ -677,7 +677,7 @@ namespace FreeMote.Psb
             uint count = br.ReadBytes(n).UnzipUInt();
             if (count > int.MaxValue)
             {
-                throw new ArgumentOutOfRangeException("Long array is not supported yet");
+                throw new PsbBadFormatException(PsbBadFormatReason.Array, innerException: new ArgumentOutOfRangeException("Long array is not supported yet"));
             }
 
             EntryLength = (byte) (br.ReadByte() - PsbObjType.NumberN8);
