@@ -98,9 +98,13 @@ namespace FreeMote.Psb
             return ms.ToArray();
         }
 
+        /// <summary>
+        /// This will close the stream
+        /// </summary>
+        /// <param name="ms"></param>
         public void ReadFromXwma(Stream ms)
         {
-            BinaryReader br = new BinaryReader(ms, Encoding.ASCII);
+            BinaryReader br = new BinaryReader(ms, Encoding.ASCII, false);
             var sig = new string(br.ReadChars(4));
             if (sig != "RIFF")
             {

@@ -41,7 +41,7 @@ Open and render EMT _pure_ PSB. This tool requires [FreeMote.NET](https://github
 ## Build
 This project requires **VS 2019** and .NET **4.7.2 - 4.8** to build.
 
-**FreeMote.Plugins** requires a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote.Plugins, you can unload FreeMote.Plugins project and remove it from other projects' reference.
+**FreeMote.Plugins** / **FreeMote.Plugins.Audio** require a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote Plugins, you can unload Plugins projects and remove them from other projects' reference.
 
 To install our own nuget packages, add this feed to VS:
 

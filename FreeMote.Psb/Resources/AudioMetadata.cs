@@ -53,8 +53,12 @@ namespace FreeMote.Psb
             switch (ext)
             {
                 case ".at9":
-                    var arch = (Atrac9ArchData) ChannelList[0];
-                    arch.Data.Data = File.ReadAllBytes(fullPath);
+                    var at9Arch = (Atrac9ArchData) ChannelList[0];
+                    at9Arch.Data.Data = File.ReadAllBytes(fullPath);
+                    break;
+                case ".xwma":
+                    var xwmaArch = (XwmaArchData) ChannelList[0];
+                    xwmaArch.ReadFromXwma(File.OpenRead(fullPath));
                     break;
                 case ".wav":
                 case ".ogg":
