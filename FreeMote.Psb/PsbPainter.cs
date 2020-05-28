@@ -68,8 +68,30 @@ namespace FreeMote.Psb
                 Debug.WriteLine(
                     $"Drawing {res} at {res.OriginX},{res.OriginY} w:{res.Width},h:{res.Height}");
                 //g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f, res.OriginY + height / 2f));
-                g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f - res.Width / 2f, res.OriginY + height / 2f - res.Height / 2f));
+                if (res.Opacity >= 10)
+                {
+                    g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f - res.Width / 2f, res.OriginY + height / 2f - res.Height / 2f));
+                }
+                else
+                {
+                    //https://stackoverflow.com/a/4779371
+                    //create a color matrix object  
+                    ColorMatrix matrix = new ColorMatrix();
 
+                    //set the opacity  
+                    matrix.Matrix33 = res.Opacity /10.0f;
+
+                    //create image attributes  
+                    ImageAttributes attributes = new ImageAttributes();
+
+                    //set the color(opacity) of the image  
+                    attributes.SetColorMatrix(matrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+                    //now draw the image  
+                    var image = res.ToImage();
+                    g.DrawImage(image, new Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, image.Width, image.Height,
+                        GraphicsUnit.Pixel, attributes);
+                }
             }
             //bmp.Save("renderKrkr.png", ImageFormat.png);
             g.Dispose();
@@ -110,7 +132,7 @@ namespace FreeMote.Psb
             }
 
             Resources = Resources.OrderBy(metadata => metadata.ZIndex).ToList();
-
+            //TODO: mesh\bp&cc
             //Travel
             void Travel(IPsbCollection collection, string motionName, (float x, float y, float z)? baseLocation, bool baseVisible = true)
             {

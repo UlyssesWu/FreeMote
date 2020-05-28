@@ -144,6 +144,10 @@ namespace FreeMote.Plugins.Shells
                 {
                     layer.Opacity = 0;
                 }
+                else
+                {
+                    layer.Opacity = (byte)(resMd.Opacity /10.0f * 255);
+                }
 
                 if (resMd.MotionName != currentGroup)
                 {
