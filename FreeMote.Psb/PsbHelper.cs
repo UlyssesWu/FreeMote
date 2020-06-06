@@ -187,19 +187,15 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static IPsbValue Children(this IPsbValue col, int index)
         {
-            while (true)
+            switch (col)
             {
-                switch (col)
-                {
-                    case PsbDictionary dictionary:
-                        return dictionary.Values.ElementAt(index);
-                    case PsbList collection:
-                        col = collection[index];
-                        continue;
-                }
-
-                throw new ArgumentException($"{col} doesn't have children.");
+                case PsbDictionary dictionary:
+                    return dictionary.Values.ElementAt(index);
+                case PsbList collection:
+                    return collection[index];
             }
+
+            throw new ArgumentException($"{col} doesn't have children.");
         }
 
         public static IEnumerable<IPsbValue> FindAllByPath(this PsbDictionary psbObj, string path)

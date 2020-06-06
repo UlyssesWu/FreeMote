@@ -62,6 +62,7 @@ namespace FreeMote.Psb.Types
         
         private static void FindPimgResources<T>(List<T> list, IPsbValue obj, bool deDuplication = true) where T: IResourceMetadata
         {
+            //TODO: find more metadata
             if (obj is PsbList c)
             {
                 foreach (var o in c)

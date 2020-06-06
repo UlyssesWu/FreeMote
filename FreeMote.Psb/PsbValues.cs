@@ -437,6 +437,12 @@ namespace FreeMote.Psb
             set => Data = BitConverter.GetBytes(value);
         }
 
+        public uint UIntValue
+        {
+            get => BitConverter.ToUInt32(Data, 0);
+            set => Data = BitConverter.GetBytes(value);
+        }
+
         public float FloatValue
         {
             get => BitConverter.ToSingle(Data, 0);

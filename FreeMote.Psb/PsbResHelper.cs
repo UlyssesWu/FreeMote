@@ -331,7 +331,7 @@ namespace FreeMote.Psb
                     }
 
                     var currentExtractOption = extractOption;
-                    if (resource.Width <= 0 || resource.Height <= 0) //impossible to extract, just keep raw
+                    if (resource.Compress != PsbCompressType.Tlg && resource.Compress != PsbCompressType.ByName && (resource.Width <= 0 || resource.Height <= 0)) //impossible to extract, just keep raw
                     {
                         if (currentExtractOption == PsbExtractOption.Extract)
                         {
@@ -442,6 +442,25 @@ namespace FreeMote.Psb
 
                     try
                     {
+                        if (resource.Resource.Index != null)
+                        {
+                            if (resDictionary.ContainsKey(resource.Index.ToString()))
+                            {
+                                Console.WriteLine(
+                                    "[WARN] Resource Index conflict. May be resource sharing, but may also be something wrong.");
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            if (resDictionary.ContainsKey(friendlyName.ToString()))
+                            {
+                                Console.WriteLine(
+                                    "[WARN] Resource Name conflict. May be resource sharing, but may also be something wrong.");
+                                continue;
+                            }
+                        }
+
                         resDictionary.Add(resource.Resource.Index == null ? friendlyName : resource.Index.ToString(),
                             $"{name}/{relativePath}");
                     }
