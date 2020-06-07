@@ -216,6 +216,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestPlugins()
         {
+            Debug.WriteLine(FreeMount.CurrentPath);
             FreeMount.Init();
             var resource = new ImageMetadata
             {

@@ -44,37 +44,80 @@ namespace FreeMote.Psb.Types
 
         private static void FindPimgResources<T>(List<T> list, IPsbValue obj, bool deDuplication = true) where T: IResourceMetadata
         {
-            //TODO: find more metadata
             if (obj is PsbList c)
             {
                 foreach (var o in c)
                 {
                     if (!(o is PsbDictionary dic)) continue;
-                    if (dic["layer_id"] is PsbString layerId)
+                    if (dic.ContainsKey("layer_id"))
                     {
-                        var res = (ImageMetadata)(IResourceMetadata)list.FirstOrDefault(k => k.Name.StartsWith(layerId.Value, true, null));
+                        int layerId = 0;
+                        if (dic["layer_id"] is PsbString sLayerId && int.TryParse(sLayerId.Value, out var id))
+                        {
+                            layerId = id;
+                        }
+                        else if (dic["layer_id"] is PsbNumber nLayerId)
+                        {
+                            layerId = nLayerId.IntValue;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] layer_id {dic["layer_id"]} is wrong.");
+                            continue;
+                        }
+
+                        var res = (ImageMetadata)(IResourceMetadata)list.FirstOrDefault(k => k.Name.StartsWith(layerId.ToString(), true, null));
                         if (res == null)
                         {
                             continue;
                         }
 
-                        if (uint.TryParse(layerId.Value, out var id))
-                        {
-                            res.Index = id;
-                        }
+                        res.Index = (uint)layerId;
 
                         if (dic["width"] is PsbNumber nw)
                         {
-                            res.Width = deDuplication ? Math.Max((int)nw, res.Width) : (int)nw;
+                            res.Width = GetIntValue(nw, res.Width);
                         }
 
                         if (dic["height"] is PsbNumber nh)
                         {
-                            res.Height = deDuplication ? Math.Max((int)nh, res.Height) : (int)nh;
+                            res.Height = GetIntValue(nh, res.Height);
+                        }
+
+                        if (dic["top"] is PsbNumber nt)
+                        {
+                            res.Top = GetIntValue(nt, res.Top);
+                        }
+
+                        if (dic["left"] is PsbNumber nl)
+                        {
+                            res.Left = GetIntValue(nl, res.Left);
+                        }
+
+                        if (dic["opacity"] is PsbNumber no)
+                        {
+                            res.Opacity = GetIntValue(no, res.Opacity);
+                        }
+
+                        if (dic["group_layer_id"] is PsbNumber gLayerId)
+                        {
+                            res.Part = gLayerId.IntValue.ToString();
+                        }
+
+                        if (dic["visible"] is PsbNumber nv)
+                        {
+                            res.Visible = nv.IntValue != 0;
+                        }
+
+                        if (dic["name"] is PsbString nn)
+                        {
+                            res.Label = nn.Value;
                         }
                     }
                 }
             }
+
+            int GetIntValue(PsbNumber num, int ori) => deDuplication ? Math.Max((int)num, ori) : (int)num;
         }
     }
 }
