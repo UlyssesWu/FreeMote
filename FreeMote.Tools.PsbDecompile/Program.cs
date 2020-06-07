@@ -56,14 +56,15 @@ namespace FreeMote.Tools.PsbDecompile
             app.Command("image", imageCmd =>
             {
                 //help
-                imageCmd.Description = "Extract textures from PSBs";
+                imageCmd.Description = "Extract (combined) textures from PSBs";
                 imageCmd.HelpOption();
                 imageCmd.ExtendedHelpText = @"
 Example:
   PsbDecompile image sample.psb
+  PsbDecompile image sample-resource-folder
 ";
                 //args
-                var argPsbPath = imageCmd.Argument("PSB", "PSB Path").IsRequired();
+                var argPsbPath = imageCmd.Argument("Path", "PSB paths or PSB directory paths").IsRequired();
 
                 imageCmd.OnExecute(() =>
                 {
@@ -172,6 +173,7 @@ Example:
   PsbDecompile info-psb -k 1234567890ab sample_info.psb.m
   PsbDecompile info-psb -k 1234567890ab -l 131 -a sample_info.psb.m
   Hint: The body.bin should exist in the same folder and keep both file names correct.
+  Todo: Pack body.bin which larger than 2GB is not supported currently.
 ";
                 //options
                 //var optMdfSeed = archiveCmd.Option("-s|--seed <SEED>",
