@@ -13,17 +13,21 @@ namespace FreeMote
                 {
                     deflateStream.CopyTo(ms);
                 }
+
+                input.Dispose();
                 return ms.ToArray();
             }
         }
 
-        public static Stream DecompressToStream(Stream input)
+        public static Stream DecompressToStream(Stream input, int size = 0)
         {
-            MemoryStream ms = new MemoryStream();
+            MemoryStream ms = size <= 0 ? new MemoryStream() : new MemoryStream(size);
             using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
             {
                 deflateStream.CopyTo(ms);
             }
+
+            input.Dispose();
             ms.Seek(0, SeekOrigin.Begin);
             return ms;
         }
@@ -33,11 +37,14 @@ namespace FreeMote
             using (MemoryStream ms = new MemoryStream())
             {
                 ms.WriteByte(0x78);
-                ms.WriteByte((byte)(fast ? 0x9C : 0xDA));
-                using (DeflateStream deflateStream = new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal))
+                ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
+                using (DeflateStream deflateStream =
+                    new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal))
                 {
                     input.CopyTo(deflateStream);
                 }
+
+                input.Dispose();
                 return ms.ToArray();
             }
         }
@@ -46,15 +53,16 @@ namespace FreeMote
         {
             MemoryStream ms = new MemoryStream();
             ms.WriteByte(0x78);
-            ms.WriteByte((byte)(fast ? 0x9C : 0xDA));
-            using (DeflateStream deflateStream = new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
+            ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
+            using (DeflateStream deflateStream =
+                new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
             {
                 input.CopyTo(deflateStream);
             }
 
+            input.Dispose();
             ms.Position = 0;
             return ms;
         }
-
     }
 }

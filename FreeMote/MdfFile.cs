@@ -48,10 +48,10 @@ namespace FreeMote
             mfs.Dispose();
         }
 
-        public static Stream DecompressToPsbStream(Stream input)
+        public static Stream DecompressToPsbStream(Stream input, int size = 0)
         {
             input.Seek(10, SeekOrigin.Begin);
-            return ZlibCompress.DecompressToStream(input);
+            return ZlibCompress.DecompressToStream(input, size);
         }
 
         public static Stream CompressPsbToMdfStream(Stream input, bool fast = true)

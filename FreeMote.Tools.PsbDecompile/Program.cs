@@ -43,7 +43,8 @@ namespace FreeMote.Tools.PsbDecompile
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue,
                 inherited: true);
-
+            var optNoParallel = app.Option("-1by1|--enumerate",
+                "Disable parallel processing (can be very slow)", CommandOptionType.NoValue, inherited: true);
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
             var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue,
                 true);
@@ -68,8 +69,10 @@ Example:
 
                 imageCmd.OnExecute(() =>
                 {
+                    var enableParallel = !optNoParallel.HasValue();
                     PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                     var psbPaths = argPsbPath.Values;
+
                     foreach (var psbPath in psbPaths)
                     {
                         if (File.Exists(psbPath))
@@ -81,6 +84,39 @@ Example:
                             catch (Exception e)
                             {
                                 Console.WriteLine(e);
+                            }
+                        }
+                        else if (Directory.Exists(psbPath))
+                        {
+                            var files = PsbExtension.GetFiles(psbPath, new[] {"*.psb", "*.pimg", "*.m", "*.bytes"});
+
+                            if (enableParallel)
+                            {
+                                Parallel.ForEach(files, (s, state) =>
+                                {
+                                    try
+                                    {
+                                        PsbDecompiler.ExtractImageFiles(s, format);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(e);
+                                    }
+                                });
+                            }
+                            else
+                            {
+                                foreach (var s in files)
+                                {
+                                    try
+                                    {
+                                        PsbDecompiler.ExtractImageFiles(s, format);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(e);
+                                    }
+                                }
                             }
                         }
                     }
@@ -146,8 +182,6 @@ Example:
                 var optExtractAll = archiveCmd.Option("-a|--all",
                     "Decompile all contents in body.bin if possible (can be slow)",
                     CommandOptionType.NoValue);
-                var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
-                    "Disable parallel processing when using `-a` (can be very slow)", CommandOptionType.NoValue);
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
                     "Set key (Infer file name from path)",
                     CommandOptionType.SingleValue);
@@ -163,7 +197,7 @@ Example:
                     bool extractAll = optExtractAll.HasValue();
                     var outputRaw = optRaw.HasValue();
                     bool enableParallel = FastMode;
-                    if (optInfoOom.HasValue())
+                    if (optNoParallel.HasValue())
                     {
                         enableParallel = false;
                     }

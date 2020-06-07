@@ -39,6 +39,7 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToPsb(Stream stream, Dictionary<string, object> context = null)
         {
+            int size = 0;
             if (context != null)
             {
                 if (context.ContainsKey(Context_MdfKey))
@@ -50,12 +51,19 @@ namespace FreeMote.Plugins.Shells
                 }
 
                 var pos = stream.Position;
-                stream.Seek(9, SeekOrigin.Current);
+                stream.Seek(4, SeekOrigin.Current);
+                var bytes = new byte[4];
+                stream.Read(bytes, 0, 4);
+                if (FastMode)
+                {
+                    size = BitConverter.ToInt32(bytes, 0);
+                }
+                stream.Seek(1, SeekOrigin.Current);
                 context[Context_PsbZlibFastCompress] = stream.ReadByte() == (byte) 0x9C;
                 stream.Position = pos;
             }
 
-            return MdfFile.DecompressToPsbStream(stream) as MemoryStream;
+            return MdfFile.DecompressToPsbStream(stream, size) as MemoryStream;
         }
 
         internal MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength)

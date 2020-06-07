@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -376,6 +377,16 @@ namespace FreeMote
             }
 
             return name;
+        }
+
+        // Takes same patterns, and executes in parallel
+        public static IEnumerable<string> GetFiles(string path,
+            string[] searchPatterns,
+            SearchOption searchOption = SearchOption.TopDirectoryOnly)
+        {
+            return searchPatterns.AsParallel()
+                .SelectMany(searchPattern =>
+                    Directory.EnumerateFiles(path, searchPattern, searchOption));
         }
     }
 }

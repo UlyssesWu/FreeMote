@@ -42,24 +42,6 @@ namespace FreeMote.Psb.Types
             return resourceList;
         }
 
-        public List<IResourceMetadata> CollectResources(PSB psb, bool deDuplication = true)
-        {
-            List<IResourceMetadata> resourceList = psb.Resources == null
-                ? new List<IResourceMetadata>()
-                : new List<IResourceMetadata>(psb.Resources.Count);
-
-            resourceList.AddRange(psb.Objects.Where(k => k.Value is PsbResource).Select(k =>
-                new ImageMetadata()
-                {
-                    Name = k.Key,
-                    Resource = k.Value as PsbResource,
-                    Compress = k.Key.EndsWith(".tlg", true, null) ? PsbCompressType.Tlg : PsbCompressType.ByName
-                }));
-            FindPimgResources(resourceList, psb.Objects[PimgSourceKey], deDuplication);
-
-            return resourceList;
-        }
-        
         private static void FindPimgResources<T>(List<T> list, IPsbValue obj, bool deDuplication = true) where T: IResourceMetadata
         {
             //TODO: find more metadata
