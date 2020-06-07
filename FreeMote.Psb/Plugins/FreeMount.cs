@@ -63,10 +63,11 @@ namespace FreeMote.Plugins
         /// <summary>
         /// Init Plugins
         /// <para>Must be called before using FreeMount features</para>
+        /// <param name="path">Base path to find plugins</param>
         /// </summary>
-        public static void Init()
+        public static void Init(string path = null)
         {
-            _.Init(null);
+            _.InitPlugins(path);
         }
 
         /// <summary>
@@ -108,9 +109,13 @@ namespace FreeMote.Plugins
             return new FreeMountContext(context ?? new Dictionary<string, object>());
         }
 
-        public void Init(string path)
+        /// <summary>
+        /// Find plugin DLLs and init
+        /// </summary>
+        /// <param name="path">Base path to find plugins</param>
+        public void InitPlugins(string path)
         {
-            if (path == null)
+            if (string.IsNullOrEmpty(path))
             {
                 path = Path.Combine(CurrentPath, PLUGIN_DIR);
             }

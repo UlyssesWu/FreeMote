@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using FreeMote.Plugins;
@@ -253,14 +251,8 @@ Example:
                     }
                     else if (Directory.Exists(s))
                     {
-                        foreach (var file in Directory.EnumerateFiles(s, "*.psb")
-                            .Union(Directory.EnumerateFiles(s, "*.mmo"))
-                            .Union(Directory.EnumerateFiles(s, "*.pimg"))
-                            .Union(Directory.EnumerateFiles(s, "*.scn"))
-                            .Union(Directory.EnumerateFiles(s, "*.dpak"))
-                            .Union(Directory.EnumerateFiles(s, "*.psz"))
-                            .Union(Directory.EnumerateFiles(s, "*.psp"))
-                        )
+                        foreach (var file in PsbExtension.GetFiles(s,
+                            new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
                             Decompile(s, useRaw, format, key);
                         }
@@ -310,6 +302,7 @@ Example:
             {
                 stream.Dispose();
             }
+
             return ms;
         }
 
@@ -340,7 +333,8 @@ Example:
 #endif
         }
 
-        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, bool outputRaw = true, bool extractAll = false, bool enableParallel = true)
+        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, bool outputRaw = true,
+            bool extractAll = false, bool enableParallel = true)
         {
             if (File.Exists(filePath))
             {
@@ -414,8 +408,9 @@ Example:
                     if (enableParallel) //parallel!
                     {
                         int count = 0;
-                        
-                        using var mmFile = MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
+
+                        using var mmFile =
+                            MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
                         Parallel.ForEach(dic, pair =>
                         {
                             count++;
@@ -471,7 +466,8 @@ Example:
                     {
                         //no parallel
                         //var maxLen = dic?.Values.Max(item => item.Children(1).GetInt()) ?? 0;
-                        using var mmFile = MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
+                        using var mmFile =
+                            MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
 
                         foreach (var pair in dic)
                         {

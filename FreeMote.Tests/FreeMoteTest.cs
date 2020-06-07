@@ -91,7 +91,7 @@ namespace FreeMote.Tests
                 psb.EncodeToFile(targetKey, file + ".pure", EncodeMode.Encrypt, EncodePosition.Auto);
             }
         }
-
+        
         [TestMethod]
         public void TestDecode()
         {

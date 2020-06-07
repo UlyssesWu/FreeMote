@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -210,6 +211,19 @@ namespace FreeMote.Tests
                     }
                 }
             }
+        }
+
+        [TestMethod]
+        public void TestPlugins()
+        {
+            FreeMount.Init();
+            var resource = new ImageMetadata
+            {
+                Compress = PsbCompressType.Tlg,
+                Name = "test.tlg",
+                Resource = new PsbResource()
+            };
+            resource.SetData(new Bitmap(100,100));
         }
 
         [TestMethod]
