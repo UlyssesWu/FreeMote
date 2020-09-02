@@ -35,8 +35,8 @@ namespace FreeMote.Tools.PsbDecompile
 
             //options
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
-            var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
-                "Convert textures to png/bmp. Default=png", CommandOptionType.SingleValue, true);
+            //var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
+            //    "Convert textures to png/bmp. Default=png", CommandOptionType.SingleValue, true);
             var optRaw = app.Option("-raw|--raw", "Output raw resources", CommandOptionType.NoValue, inherited: true);
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
             var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue,
@@ -69,7 +69,6 @@ Example:
                 imageCmd.OnExecute(() =>
                 {
                     var enableParallel = !optNoParallel.HasValue();
-                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                     var psbPaths = argPsbPath.Values;
 
                     foreach (var psbPath in psbPaths)
@@ -78,7 +77,7 @@ Example:
                         {
                             try
                             {
-                                PsbDecompiler.ExtractImageFiles(psbPath, format);
+                                PsbDecompiler.ExtractImageFiles(psbPath);
                             }
                             catch (Exception e)
                             {
@@ -95,7 +94,7 @@ Example:
                                 {
                                     try
                                     {
-                                        PsbDecompiler.ExtractImageFiles(s, format);
+                                        PsbDecompiler.ExtractImageFiles(s);
                                     }
                                     catch (Exception e)
                                     {
@@ -109,7 +108,7 @@ Example:
                                 {
                                     try
                                     {
-                                        PsbDecompiler.ExtractImageFiles(s, format);
+                                        PsbDecompiler.ExtractImageFiles(s);
                                     }
                                     catch (Exception e)
                                     {
@@ -142,7 +141,7 @@ Example:
 
                 linkCmd.OnExecute(() =>
                 {
-                    PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
+                    //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPaths = argPsbPath.Values;
                     foreach (var psbPath in psbPaths)
@@ -151,7 +150,7 @@ Example:
                         {
                             try
                             {
-                                PsbDecompiler.UnlinkToFile(psbPath, format: format, order: order);
+                                PsbDecompiler.UnlinkToFile(psbPath, order: order);
                             }
                             catch (Exception e)
                             {
@@ -242,21 +241,21 @@ Example:
                 }
 
                 bool useRaw = optRaw.HasValue();
-                PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
+                //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
 
                 foreach (var s in argPath.Values)
                 {
                     if (File.Exists(s))
                     {
-                        Decompile(s, useRaw, format, key);
+                        Decompile(s, useRaw, PsbImageFormat.png , key);
                     }
                     else if (Directory.Exists(s))
                     {
                         foreach (var file in PsbExtension.GetFiles(s,
                             new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
-                            Decompile(s, useRaw, format, key);
+                            Decompile(s, useRaw, PsbImageFormat.png, key);
                         }
                     }
                 }
@@ -279,21 +278,8 @@ Example:
             sb.AppendLine().AppendLine("Plugins:");
             sb.AppendLine(FreeMount.PrintPluginInfos(2));
             sb.AppendLine(@"Examples: 
-  PsbDecompile -e bmp -k 123456789 sample.psb");
+  PsbDecompile -k 123456789 sample.psb");
             return sb.ToString();
-
-            //            Console.WriteLine("Usage: .exe [Mode] [Setting] <PSB path>");
-            //            Console.WriteLine(@"Mode:
-            //-raw : Keep resource in original format.
-            //-er : Similar to raw mode but uncompress those compressed resources.
-            //-eb : Convert images to BMP format.
-            //-ep : [Default] Convert images to PNG format.
-            //Setting:
-            //-oom : Disable In-Memory Loading. (Lower memory usage but longer time for loading)
-            //-k<Key> : Set PSB key. use `-k` (without key specified) to reset.
-            //");
-            //            Console.WriteLine("Example: PsbDecompile -ep emt.pure.psb");
-            //            Console.WriteLine("\t PsbDecompile C:\\\\EMTfolder");
         }
 
         private static MemoryStream MdfConvert(Stream stream, string shellType, Dictionary<string, object> context = null)
