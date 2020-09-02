@@ -6,7 +6,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FreeMote.Plugins.Images;
 using FreeMote.Plugins.Shells;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -269,30 +268,30 @@ namespace FreeMote.Tests
             }
         }
 
-        [TestMethod]
-        public void TestTlgNative()
-        {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            //var path = Path.Combine(resPath, "title-pimg");
-            var path = Path.Combine(resPath, "title-pimg", "566.tlg");
-            var bmp = TlgFormatter.LoadTlg(File.ReadAllBytes(path), out int ver);
-            var width = bmp.Width;
-            var height = bmp.Height;
-            bmp.Save("tlg.png", ImageFormat.Png);
+        //[TestMethod]
+        //public void TestTlgNative()
+        //{
+        //    var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+        //    //var path = Path.Combine(resPath, "title-pimg");
+        //    var path = Path.Combine(resPath, "title-pimg", "566.tlg");
+        //    var bmp = TlgFormatter.LoadTlg(File.ReadAllBytes(path), out int ver);
+        //    var width = bmp.Width;
+        //    var height = bmp.Height;
+        //    bmp.Save("tlg.png", ImageFormat.Png);
 
-            path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.png");
-            Bitmap bmp2 = new Bitmap(path);
-            var bts = TlgFormatter.SaveTlg(bmp2);
-            TlgImageConverter converter = new TlgImageConverter();
-            using (var ms = new MemoryStream(bts))
-            {
-                using (var br = new BinaryReader(ms))
-                {
-                    var bmp3 = converter.Read(br);
-                    bmp3.Save("tlg2.png", ImageFormat.Png);
-                }
-            }
-        }
+        //    path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.png");
+        //    Bitmap bmp2 = new Bitmap(path);
+        //    var bts = TlgFormatter.SaveTlg(bmp2);
+        //    TlgImageConverter converter = new TlgImageConverter();
+        //    using (var ms = new MemoryStream(bts))
+        //    {
+        //        using (var br = new BinaryReader(ms))
+        //        {
+        //            var bmp3 = converter.Read(br);
+        //            bmp3.Save("tlg2.png", ImageFormat.Png);
+        //        }
+        //    }
+        //}
 
         [TestMethod]
         public void TestRGBA4444()

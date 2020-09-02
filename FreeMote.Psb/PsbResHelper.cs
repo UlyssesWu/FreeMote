@@ -368,13 +368,11 @@ namespace FreeMote.Psb
                                 {
                                     if (resource.Compress == PsbCompressType.Tlg) //Fallback to managed TLG decoder
                                     {
-                                        using (var ms = new MemoryStream(resource.Data))
-                                        using (var br = new BinaryReader(ms))
-                                        {
-                                            bmp = new TlgImageConverter().Read(br);
-                                            bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
-                                            bmp.Dispose();
-                                        }
+                                        using var ms = new MemoryStream(resource.Data);
+                                        using var br = new BinaryReader(ms);
+                                        bmp = new TlgImageConverter().Read(br);
+                                        bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
+                                        bmp.Dispose();
                                     }
 
                                     relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));

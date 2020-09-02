@@ -48,7 +48,7 @@ namespace FreeMote
 
     }
 
-    internal class TlgMetaData
+    public class TlgMetaData
     {
         public int Bpp;
         public int Version;
@@ -132,7 +132,7 @@ namespace FreeMote
             };
         }
 
-        internal Bitmap ReadAndGetMetaData(BinaryReader file, out TlgMetaData md)
+        public Bitmap ReadAndGetMetaData(BinaryReader file, out TlgMetaData md)
         {
             TlgMetaData meta = ReadMetaData(file);
             md = meta;

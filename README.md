@@ -17,7 +17,7 @@ Compile and decompile PSB files. Convert PSB among different platforms. Recover 
 ### FreeMote.Plugins
 External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMote/wiki) for usages.
 
-* Images: TLG encoding/decoding support via [**FreeMote.Tlg**](https://github.com/Project-AZUSA/TlgLib) (by Ulysses).
+* Images: TLG encoding/decoding support via [**FreeMote.Tlg**](https://github.com/Project-AZUSA/TlgLib) (by Ulysses). (x64)
 * Shells: Compression/decompression support.
 * Audio: Experimental support for audio used in PSB.
 
@@ -41,7 +41,7 @@ Open and render EMT _pure_ PSB. This tool requires [FreeMote.NET](https://github
 ## Build
 This project requires **VS 2019** and .NET **4.7.2 - 4.8** to build.
 
-**FreeMote.Plugins** / **FreeMote.Plugins.Audio** require a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote Plugins, you can unload Plugins projects and remove them from other projects' reference.
+**FreeMote.Plugins** / **FreeMote.Plugins.x64** require a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote Plugins, you can unload Plugins projects and remove them from other projects' reference.
 
 To install our own nuget packages, add this feed to VS:
 

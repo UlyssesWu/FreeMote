@@ -19,7 +19,7 @@ namespace FreeMote.Plugins
     public class FreeMount : IDisposable
     {
         private const string PLUGIN_DLL = "FreeMote.Plugins.dll";
-        private const string PLUGIN_AUDIO_DLL = "FreeMote.Plugins.Audio.dll";
+        private const string PLUGIN_X64_DLL = "FreeMote.Plugins.x64.dll";
         private const string PLUGIN_DIR = "Plugins";
         private const string LIB_DIR = "lib";
 
@@ -125,8 +125,11 @@ namespace FreeMote.Plugins
             //Adds all the parts found in the same assembly as the Program class
             AddCatalog(Path.Combine(CurrentPath, PLUGIN_DLL), catalog);
             AddCatalog(Path.Combine(CurrentPath, LIB_DIR, PLUGIN_DLL), catalog); //Allow load in lib folder
-            AddCatalog(Path.Combine(CurrentPath, PLUGIN_AUDIO_DLL), catalog);
-            AddCatalog(Path.Combine(CurrentPath, LIB_DIR, PLUGIN_AUDIO_DLL), catalog); //Allow load in lib folder
+            if (Environment.Is64BitProcess)
+            {
+                AddCatalog(Path.Combine(CurrentPath, PLUGIN_X64_DLL), catalog);
+                AddCatalog(Path.Combine(CurrentPath, LIB_DIR, PLUGIN_X64_DLL), catalog); //Allow load in lib folder
+            }
             AddCatalog(path, catalog); //Plugins folder can override default plugin
 
             //Create the CompositionContainer with the parts in the catalog
@@ -240,7 +243,7 @@ namespace FreeMote.Plugins
 
         public Bitmap ResourceToBitmap(string ext, in byte[] data, Dictionary<string, object> context = null)
         {
-            if (ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBitmap(data))
+            if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBitmap(data))
             {
                 return null;
             }
@@ -250,7 +253,7 @@ namespace FreeMote.Plugins
 
         public byte[] ArchDataToWave(string ext, IArchData archData, Dictionary<string, object> context = null)
         {
-            if (AudioFormatters[ext] == null || !AudioFormatters[ext].CanToWave(archData, context))
+            if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToWave(archData, context))
             {
                 return null;
             }
@@ -260,7 +263,7 @@ namespace FreeMote.Plugins
 
         public byte[] BitmapToResource(string ext, Bitmap bitmap, Dictionary<string, object> context = null)
         {
-            if (ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBytes(bitmap))
+            if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBytes(bitmap))
             {
                 return null;
             }
@@ -270,7 +273,7 @@ namespace FreeMote.Plugins
 
         public IArchData WaveToArchData(string ext, in byte[] wave, string waveExt, Dictionary<string, object> context = null)
         {
-            if (AudioFormatters[ext] == null || !AudioFormatters[ext].CanToArchData(wave))
+            if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToArchData(wave))
             {
                 return null;
             }

@@ -326,32 +326,17 @@ namespace FreeMote
             }
         }
 
-        /// <summary>
-        /// 查找一个byte数组在另一个byte数组第一次出现位置
-        /// </summary>
-        /// <param name="array">被查找的数组（大）</param>
-        /// <param name="array2">要查找的数组（小）</param>
-        /// <returns>找到返回索引，找不到返回-1</returns>
-        internal static int FindIndex(byte[] array, byte[] array2)
+        //https://stackoverflow.com/a/31107925
+        internal static unsafe long IndexOf(this byte[] haystack, byte[] needle, long startOffset = 0)
         {
-            int i, j;
-
-            for (i = 0; i < array.Length; i++)
+            fixed (byte* h = haystack) fixed (byte* n = needle)
             {
-                if (i + array2.Length <= array.Length)
-                {
-                    for (j = 0; j < array2.Length; j++)
-                    {
-                        if (array[i + j] != array2[j]) break;
-                    }
-
-                    if (j == array2.Length) return i;
-                }
-                else
-                    break;
+                for (byte* hNext = h + startOffset, hEnd = h + haystack.LongLength + 1 - needle.LongLength, nEnd = n + needle.LongLength; hNext < hEnd; hNext++)
+                for (byte* hInc = hNext, nInc = n; *nInc == *hInc; hInc++)
+                    if (++nInc == nEnd)
+                        return hNext - h;
+                return -1;
             }
-
-            return -1;
         }
 
         /// <summary>

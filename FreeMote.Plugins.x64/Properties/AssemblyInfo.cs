@@ -1,9 +1,8 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("FreeMote.Plugins.Audio")]
-[assembly: AssemblyDescription("FreeMote Audio plugins.")]
+[assembly: AssemblyTitle("FreeMote.Plugins.x64")]
+[assembly: AssemblyDescription("FreeMote official plugins (x64)")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("FreeMote")]
@@ -12,9 +11,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]
-[assembly: InternalsVisibleTo("FreeMote.Tests")]
 
-[assembly: Guid("1796443f-ef3f-4e60-a7a1-f7807935f124")]
+[assembly: Guid("7b5bae81-6779-4404-9e6e-512be4471ab9")]
 
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.6.0.0")]
