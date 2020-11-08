@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Text;
 using FreeMote.Plugins;
 using FreeMote.Plugins.Shells;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -67,6 +68,22 @@ namespace FreeMote.Tests
             using (FileStream fs = new FileStream(paths[0], FileMode.Open))
             {
                 PSB psb = new PSB(fs);
+            }
+        }
+
+        [TestMethod]
+        public void TestPsbEncoding()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "staffroll_script.txt.scn");
+
+            //Consts.PsbEncoding = Encoding.GetEncoding("SHIFT-JIS");
+            PSB psb = new PSB();
+            psb.LoadFromStream(File.OpenRead(path));
+            foreach (var psbString in psb.Strings)
+            {
+                var str = psbString;
+                var str2 = Encoding.GetEncoding("SHIFT-JIS").GetString(Encoding.UTF8.GetBytes(str.Value));
             }
         }
 

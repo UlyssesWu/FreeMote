@@ -867,6 +867,11 @@ namespace FreeMote.Psb
                 First = br.ReadBytes(EntryLength).UnzipUInt();
             }
 
+            if (Size > br.BaseStream.Length) //False positive
+            {
+                return;
+            }
+
             IsArray = true;
         }
 

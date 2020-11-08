@@ -88,7 +88,7 @@ namespace FreeMote.PsBuild
                     }
                     else //key = null
                     {
-                        if (e.Reason == PsbBadFormatReason.Header) //now try Dullahan loading
+                        if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array) //now try Dullahan loading
                         {
                             psb = PSB.DullahanLoad(stream);
                         }

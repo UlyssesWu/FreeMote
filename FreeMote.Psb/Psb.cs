@@ -162,8 +162,12 @@ namespace FreeMote.Psb
             }
         }
 
-        public PSB(Stream stream, bool tryDullahanLoading = true)
+        public PSB(Stream stream, bool tryDullahanLoading = true, Encoding encoding = null)
         {
+            if (encoding != null)
+            {
+                Encoding = encoding;
+            }
             try
             {
                 LoadFromStream(stream);
@@ -212,7 +216,7 @@ namespace FreeMote.Psb
         private long _last = 0;
 #endif
 
-        private void LoadFromStream(Stream stream)
+        internal void LoadFromStream(Stream stream)
         {
             var sig = new byte[4];
             stream.Read(sig, 0, 4);
