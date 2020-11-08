@@ -1303,7 +1303,7 @@ namespace FreeMote.Psb
             Header.OffsetEntries = (uint) br.BaseStream.Position;
             IPsbValue obj = Unpack(br, true);
 
-            Objects = obj as PsbDictionary ?? throw new Exception("Can not parse objects");
+            Objects = obj as PsbDictionary ?? throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
 
             //Load Strings
             while (!PsbArrayDetector.IsPsbArrayType((byte) br.PeekChar()))

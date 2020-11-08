@@ -1383,6 +1383,8 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         private IPsbValue BuildMetadata(PSB psb)
         {
+            //TODO: Check metadata is valid
+
             var metadata = new PsbDictionary(2)
             {
                 ["type"] = 1.ToPsbNumber(),
