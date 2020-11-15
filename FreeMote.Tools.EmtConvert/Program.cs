@@ -276,18 +276,28 @@ Example:
                             continue;
                         }
 
-                        Console.Write($"Using {method} to fix {s} ...");
-                        PSB psb = new PSB(s);
-                        if (psb.FixMotionMetadata())
+                        switch(method)
                         {
-                            psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
-                            Console.WriteLine("Fixed!");
-                        }
-                        else
-                        {
-                            Console.WriteLine("not fixed.");
-                        }
-                        
+                            case PsbFixMethod.MetadataBase:
+                            
+                                {
+                                    Console.Write($"Using {method} to fix {s} ...");
+                                    PSB psb = new PSB(s);
+                                    if (psb.FixMotionMetadata())
+                                    {
+                                        psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
+                                        Console.WriteLine("Fixed!");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("not fixed.");
+                                    }
+                                }
+                                break;
+                            default:
+                                Console.WriteLine($"Not implemented method: {method}");
+                                break;
+                        }                        
                     }
                 });
             });
