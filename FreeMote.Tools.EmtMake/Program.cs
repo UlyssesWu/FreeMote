@@ -34,6 +34,7 @@ namespace FreeMote.Tools.EmtMake
 
             if (psb != null)
             {
+                psb.FixMotionMetadata(); //Fix for partial exported PSB
                 if (psb.Platform != PsbSpec.krkr)
                 {
                     if (psb.Platform == PsbSpec.common || psb.Platform == PsbSpec.win)

@@ -794,6 +794,31 @@ namespace FreeMote.Psb
             }
         }
 
+        ///// <summary>
+        ///// Combine another PSB (for partial exported PSB). Not actually working
+        ///// </summary>
+        ///// <param name="other"></param>
+        ///// <param name="method"></param>
+        //[Obsolete]
+        //internal void Combine(PSB other, PsbCombineMethod method = PsbCombineMethod.Default)
+        //{
+        //    switch (method)
+        //    {
+
+        //        case PsbCombineMethod.Objects:
+        //            if (Objects["object"] is PsbDictionary dic && other.Objects["object"] is PsbDictionary otherDic)
+        //            {
+        //                dic.UnionWith(otherDic);
+        //            }
+        //            break;
+        //        case PsbCombineMethod.Default:
+        //        case PsbCombineMethod.All:
+        //        default:
+        //            Objects.UnionWith(other.Objects);
+        //            break;
+        //    }
+        //}
+        
         /// <summary>
         /// Update fields and indexes based on <see cref="Objects"/>
         /// </summary>

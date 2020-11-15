@@ -29,6 +29,97 @@ namespace FreeMote.Psb
             }
         }
 
+        private static bool ApplyDefaultMotionMetadata(PSB psb, PsbDictionary metadata)
+        {
+            List<(string Chara, string Motion)> knownMotions = new List<(string Chara, string Motion)>
+            {
+                ("body_parts", "全身変形基礎"),
+                ("body_parts", "下半身変形基礎"),
+                ("head_parts", "頭部変形基礎"),
+                ("head_parts", "頭部全体変形"),
+                ("all_parts", "タイムライン構造"),
+                ("all_parts", "全体構造")
+            };
+
+            //Find a known pattern
+            foreach (var knownMotion in knownMotions)
+            {
+                if (psb.Objects.FindByPath($"/object/{knownMotion.Chara}") is PsbDictionary knownDic && knownDic["motion"].Children(knownMotion.Motion) is PsbDictionary motionDic && motionDic.Count > 0)
+                {
+                    metadata["chara"] = knownMotion.Chara.ToPsbString();
+                    metadata["motion"] = knownMotion.Motion.ToPsbString();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Fix [metadata/base/motion] missing issue for <seealso cref="PsbType.Motion"/> PSB 
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns>Whether the PSB is confirmed to be fine already or fine after fixed</returns>
+        public static bool FixMotionMetadata(this PSB psb)
+        {
+            if (psb.Objects.FindByPath("/metadata/base") is PsbDictionary dic && dic["chara"] is PsbString chara && dic["motion"] is PsbString motion)
+            {
+                var realChara = psb.Objects.FindByPath($"/object/{chara}") as PsbDictionary;
+                if (realChara == null) //chara not exist
+                {
+                    //dic.Clear();
+                    return ApplyDefaultMotionMetadata(psb, dic);
+                }
+
+                var realMotion = realChara["motion"] as PsbDictionary;
+ 
+                if (realMotion == null || realMotion.Count == 0) //motion not exist and nothing can replace it
+                {
+                    return ApplyDefaultMotionMetadata(psb, dic);
+                    //TODO: find a nice replacement, usually head_parts/頭部変形基礎(1st) or 頭部全体変形(2nd)
+                    //TODO: Build a tree and pick the top
+                    //dic["chara"] = "head_parts".ToPsbString();
+                    //dic["motion"] = "頭部全体変形".ToPsbString();
+                    //dic["chara"] = "head_parts".ToPsbString();
+                    //dic["motion"] = "頭部変形基礎".ToPsbString();
+                    //dic.Clear();
+                    //dic["motion"] = "FreeMote".ToPsbString();
+                    //var dummy = new PsbDictionary();
+                    //dummy["bounds"] = new PsbDictionary
+                    //{
+                    //    {"bottom", 0.ToPsbNumber()}, {"top", 0.ToPsbNumber()}, {"right", 0.ToPsbNumber()},
+                    //    {"left", 0.ToPsbNumber()}
+                    //};
+                    //dummy["lastTime"] = 61.ToPsbNumber();
+                    //dummy["layer"] = new PsbList();
+                    //dummy["layerIndexMap"] = new PsbDictionary();
+                    //dummy["loopTime"] = (-1).ToPsbNumber();
+                    //dummy["metadata"] = PsbNull.Null;
+                    //dummy["parameter"] = new PsbList();
+                    //dummy["parameterize"] = PsbNull.Null;
+                    //dummy["priority"] = new PsbList();
+                    //dummy["referenceModelFileList"] = new PsbList();
+                    //dummy["referenceProjectFileList"] = new PsbList();
+                    //dummy["tag"] = new PsbList();
+                    //dummy["type"] = 0.ToPsbNumber();
+                    //dummy["variable"] = new PsbList();
+                    //realChara["motion"] = new PsbDictionary {{"FreeMote", dummy}};
+
+                    //return false;
+                }
+
+                if (realMotion.ContainsKey(motion)) //ok, no need to fix
+                {
+                    return true;
+                }
+
+                dic["motion"] = realMotion.Keys.Last().ToPsbString(); //pick the last motion to replace it, the last usually covers most 
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Try to measure EMT PSB Canvas Size
         /// </summary>

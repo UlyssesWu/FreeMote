@@ -822,6 +822,7 @@ namespace FreeMote.Psb
         {
             IsArray = false;
             Position = br.BaseStream.Position;
+            var remainingLength = br.BaseStream.Length - br.BaseStream.Position;
 
             //Parse Type
             var type = br.ReadByte();
@@ -867,7 +868,7 @@ namespace FreeMote.Psb
                 First = br.ReadBytes(EntryLength).UnzipUInt();
             }
 
-            if (Size > br.BaseStream.Length) //False positive
+            if (Size > remainingLength) //False positive
             {
                 return;
             }
@@ -1084,6 +1085,24 @@ namespace FreeMote.Psb
         }
 
         public PsbObjType Type { get; } = PsbObjType.Objects;
+
+        public void UnionWith(PsbDictionary dic)
+        {
+            foreach (var key in dic.Keys)
+            {
+                if (ContainsKey(key))
+                {
+                    if (this[key] is PsbDictionary childDic && dic[key] is PsbDictionary otherDic)
+                    {
+                        childDic.UnionWith(otherDic);
+                    }
+                }
+                else
+                {
+                    Add(key, dic[key]);
+                }
+            }
+        }
 
         public override string ToString()
         {

@@ -1048,8 +1048,21 @@ namespace FreeMote.PsBuild
             //};
 
             var metadata = (PsbDictionary)psb.Objects["metadata"];
-            metaFormatContent["baseChara"] = metadata["base"].Children("chara");
-            metaFormatContent["baseMotion"] = metadata["base"].Children("motion");
+            if (metadata["base"] is PsbDictionary baseDic)
+            {
+                var baseChara = baseDic.Children("chara");
+                if (baseChara != null && !(baseChara is PsbNull))
+                {
+                    metaFormatContent["baseChara"] = metadata["base"].Children("chara");
+                }
+
+                var baseMotion = baseDic.Children("motion");
+                if (baseMotion != null && !(baseMotion is PsbNull))
+                {
+                    metaFormatContent["baseMotion"] = metadata["base"].Children("motion");
+                }
+            }
+
             metaFormatContent["bustControlDefinitionList"] = metadata["bustControl"];
             metaFormatContent["bustControlParameterDefinitionList"] = mmoRef["bustControlParameterDefinitionList"];
             metaFormatContent["captureList"] = new PsbList

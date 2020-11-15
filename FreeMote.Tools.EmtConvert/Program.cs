@@ -52,6 +52,14 @@ namespace FreeMote.Tools.EmtConvert
         Swizzle,
     }
 
+    public enum PsbFixMethod
+    {
+        /// <summary>
+        /// Fix [/metadata/base/motion] missing issue for partial exported motion PSB
+        /// </summary>
+        MetadataBase,
+    }
+
     class Program
     {
         private static uint? Key = null;
@@ -231,6 +239,55 @@ Example:
                         {
                             Draw(s, width, height);
                         }
+                    }
+                });
+            });
+
+            //command: fix
+            app.Command("fix", fixCmd =>
+            {
+                //help
+                fixCmd.Description = "Some mysterious fixes for PSB";
+                fixCmd.HelpOption();
+                fixCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert fix -m MetadataBase sample.psb 
+";
+                //options
+                var optMethod = fixCmd.Option<PsbFixMethod>("-m|--method <METHOD>",
+                    "Set fix method.", CommandOptionType.SingleValue);
+
+                //args
+                var argPsbPaths = fixCmd.Argument("PSB", "PSB Paths", true);
+
+                fixCmd.OnExecute(() =>
+                {
+                    if (!optMethod.HasValue())
+                    {
+                        Console.WriteLine("Fix Method is not specified!");
+                        return;
+                    }
+
+                    var method = optMethod.ParsedValue;
+                    foreach (var s in argPsbPaths.Values)
+                    {
+                        if (!File.Exists(s))
+                        {
+                            continue;
+                        }
+
+                        Console.Write($"Using {method} to fix {s} ...");
+                        PSB psb = new PSB(s);
+                        if (psb.FixMotionMetadata())
+                        {
+                            psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
+                            Console.WriteLine("Fixed!");
+                        }
+                        else
+                        {
+                            Console.WriteLine("not fixed.");
+                        }
+                        
                     }
                 });
             });

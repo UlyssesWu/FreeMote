@@ -4,12 +4,14 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -40,8 +42,7 @@ namespace FreeMote.Tools.Viewer
         private WindowInteropHelper _helper;
         private EmotePlayer _player;
         private IntPtr _scene;
-        private string _psbPath;
-        private string[] _extraPaths;
+        private List<string> _psbPaths;
         private PreciseTimer _timer;
 
         private double _deltaX, _deltaY;
@@ -50,8 +51,7 @@ namespace FreeMote.Tools.Viewer
 
         public MainWindow()
         {
-            _psbPath = Core.PsbPath;
-            _extraPaths = Core.ExtraPaths;
+            _psbPaths = Core.PsbPaths;
 
             _helper = new WindowInteropHelper(this);
 
@@ -93,13 +93,13 @@ namespace FreeMote.Tools.Viewer
             _emote = new Emote(_helper.EnsureHandle(), (int) Width, (int) Height, true);
             _emote.EmoteInit();
             
-            if (_extraPaths != null)
+            if (_psbPaths.Count > 1)
             {
-                _player = _emote.CreatePlayer("CombinedChara1", new[] {_psbPath}.Concat(_extraPaths).ToArray());
+                _player = _emote.CreatePlayer("CombinedChara1", _psbPaths.ToArray());
             }
             else
             {
-                _player = _emote.CreatePlayer("Chara1", _psbPath);
+                _player = _emote.CreatePlayer("Chara1", _psbPaths.FirstOrDefault());
             }
 
             _player.SetScale(1, 0, 0);
@@ -110,7 +110,11 @@ namespace FreeMote.Tools.Viewer
             
             if (Core.NeedRemoveTempFile)
             {
-                File.Delete(_psbPath);
+                foreach (var psbPath in _psbPaths)
+                {
+                    File.Delete(psbPath);
+                }
+                
                 Core.NeedRemoveTempFile = false;
             }
 

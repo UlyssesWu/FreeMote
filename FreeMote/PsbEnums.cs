@@ -4,16 +4,6 @@
 
 namespace FreeMote
 {
-    internal enum PsbBadFormatReason
-    {
-        Header,
-        IsMdf,
-        Objects,
-        Resources,
-        Array,
-        Body,
-    }
-
     internal class PsbBadFormatException : FormatException
     {
         public PsbBadFormatReason Reason { get; }
@@ -22,6 +12,35 @@ namespace FreeMote
         {
             Reason = reason;
         }
+    }
+
+    /// <summary>
+    /// PSB.Combine(PSB)
+    /// </summary>
+    public enum PsbCombineMethod
+    {
+        /// <summary>
+        /// Default
+        /// </summary>
+        Default,
+        /// <summary>
+        /// Merge everything
+        /// </summary>
+        All,
+        /// <summary>
+        /// Only merge objects
+        /// </summary>
+        Objects
+    }
+
+    internal enum PsbBadFormatReason
+    {
+        Header,
+        IsMdf,
+        Objects,
+        Resources,
+        Array,
+        Body,
     }
 
     /// <summary>

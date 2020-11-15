@@ -70,7 +70,7 @@ namespace FreeMote.Tests
                 PSB psb = new PSB(fs);
             }
         }
-
+        
         [TestMethod]
         public void TestPsbEncoding()
         {
