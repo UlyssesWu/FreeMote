@@ -78,34 +78,6 @@ namespace FreeMote.Psb
                     return ApplyDefaultMotionMetadata(psb, dic);
                     //TODO: find a nice replacement, usually head_parts/頭部変形基礎(1st) or 頭部全体変形(2nd)
                     //TODO: Build a tree and pick the top
-                    //dic["chara"] = "head_parts".ToPsbString();
-                    //dic["motion"] = "頭部全体変形".ToPsbString();
-                    //dic["chara"] = "head_parts".ToPsbString();
-                    //dic["motion"] = "頭部変形基礎".ToPsbString();
-                    //dic.Clear();
-                    //dic["motion"] = "FreeMote".ToPsbString();
-                    //var dummy = new PsbDictionary();
-                    //dummy["bounds"] = new PsbDictionary
-                    //{
-                    //    {"bottom", 0.ToPsbNumber()}, {"top", 0.ToPsbNumber()}, {"right", 0.ToPsbNumber()},
-                    //    {"left", 0.ToPsbNumber()}
-                    //};
-                    //dummy["lastTime"] = 61.ToPsbNumber();
-                    //dummy["layer"] = new PsbList();
-                    //dummy["layerIndexMap"] = new PsbDictionary();
-                    //dummy["loopTime"] = (-1).ToPsbNumber();
-                    //dummy["metadata"] = PsbNull.Null;
-                    //dummy["parameter"] = new PsbList();
-                    //dummy["parameterize"] = PsbNull.Null;
-                    //dummy["priority"] = new PsbList();
-                    //dummy["referenceModelFileList"] = new PsbList();
-                    //dummy["referenceProjectFileList"] = new PsbList();
-                    //dummy["tag"] = new PsbList();
-                    //dummy["type"] = 0.ToPsbNumber();
-                    //dummy["variable"] = new PsbList();
-                    //realChara["motion"] = new PsbDictionary {{"FreeMote", dummy}};
-
-                    //return false;
                 }
 
                 if (realMotion.ContainsKey(motion)) //ok, no need to fix

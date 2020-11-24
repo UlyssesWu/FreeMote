@@ -145,7 +145,7 @@ namespace FreeMote.Tools.Viewer
 Hint:
   You can load multiple partial exported PSB like the 2nd example. 
   The specified order is VERY important, always try to put the Main part at last (body is the Main part comparing to head)!
-  But if you're picking multiple files from file explorer and drag&drop to FreeMoteViewer, select the Main part first.";
+  If you're picking multiple files from file explorer and drag&drop to FreeMoteViewer, drag the non-Main part.";
         }
     }
 
