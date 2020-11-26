@@ -365,7 +365,7 @@ namespace FreeMote.Plugins
         {
             return _keyProvider?.Value?.GetKey(stream, context);
         }
-
+        
         public void Dispose()
         {
             _container?.Dispose();

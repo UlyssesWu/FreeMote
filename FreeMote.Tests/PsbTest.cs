@@ -70,7 +70,17 @@ namespace FreeMote.Tests
                 PSB psb = new PSB(fs);
             }
         }
-        
+
+        [TestMethod]
+        public void TestPsbV4()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "dx_ふかみ_駅員服.psb");
+            PSB psb = new PSB(path);
+            //var unk1 = psb.UnknownData[0];
+            psb.BuildToFile("regen.psb");
+        }
+
         [TestMethod]
         public void TestPsbEncoding()
         {

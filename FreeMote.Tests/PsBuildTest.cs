@@ -65,6 +65,18 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestInplaceReplace()
+        {
+            FreeMount.Init();
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var path = Path.Combine(resPath, "dx_ふかみ_駅員服.psb");
+            var path = Path.Combine(resPath, "dx_ふかみ_駅員服.lz4.psb");
+            var jsonPath = Path.Combine(resPath, "dx_ふかみ_駅員服.json");
+            PsbCompiler.InplaceReplaceToFile(path, jsonPath);
+        }
+
+
+        [TestMethod]
         public void TestDirectCompile()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

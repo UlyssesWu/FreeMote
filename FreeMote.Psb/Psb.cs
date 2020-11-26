@@ -43,8 +43,8 @@ namespace FreeMote.Psb
         /// </summary>
         public List<PsbString> Strings { get; set; }
 
-        private PsbArray ChunkOffsets;
-        private PsbArray ChunkLengths;
+        internal PsbArray ChunkOffsets;
+        internal PsbArray ChunkLengths;
 
         /// <summary>
         /// Resource Chunk
@@ -177,6 +177,7 @@ namespace FreeMote.Psb
                       (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array))
             {
                 stream.Seek(0, SeekOrigin.Begin);
+                Header = new PsbHeader {Version = 3};
                 LoadFromDullahan(stream);
             }
         }

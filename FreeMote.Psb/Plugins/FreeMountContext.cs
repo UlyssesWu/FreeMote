@@ -97,5 +97,28 @@ namespace FreeMote.Plugins
         {
             return FreeMount._.GetKey(input, Context);
         }
+
+        /// <summary>
+        /// Open stream from PSB file, unpack the shell if exists
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public Stream OpenStreamFromPsbFile(string path)
+        {
+            var psbFs = File.OpenRead(path);
+
+            var ctx = FreeMount.CreateContext();
+            string type = null;
+            Stream stream = psbFs;
+            var psbMs = ctx.OpenFromShell(psbFs, ref type);
+            if (psbMs != null)
+            {
+                ctx.Context[Consts.Context_PsbShellType] = type;
+                psbFs.Dispose();
+                stream = psbMs;
+            }
+
+            return stream;
+        }
     }
 }

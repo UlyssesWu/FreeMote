@@ -176,6 +176,33 @@ Example:
                 });
             });
 
+            //command: replace
+            app.Command("replace", replaceCmd =>
+            {
+                //help
+                replaceCmd.Description = "In-place Replace the images in PSB";
+                replaceCmd.HelpOption();
+                replaceCmd.ExtendedHelpText = @"
+Example:
+  PsBuild replace sample.psb sample.json
+  Hint: Only works with textures not compressed (RGBA8, RGBA4444) pure PSBs.
+";
+                var argPsbPath = replaceCmd.Argument("PSB", "PSB path", false);
+                var argJsonPath = replaceCmd.Argument("Json", "PSB Json path", false);
+
+                replaceCmd.OnExecute(() =>
+                {
+                    if (!File.Exists(argPsbPath.Value) || !File.Exists(argJsonPath.Value))
+                    {
+                        Console.WriteLine("File not exists.");
+                        return;
+                    }
+
+                    var output = PsbCompiler.InplaceReplaceToFile(argPsbPath.Value, argJsonPath.Value);
+                    Console.WriteLine($"In-place Replace Output: {output}");
+                });
+            });
+
             app.OnExecute(() =>
             {
                 if (optDouble.HasValue())

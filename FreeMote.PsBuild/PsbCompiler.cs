@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using Newtonsoft.Json;
@@ -327,6 +328,75 @@ namespace FreeMote.PsBuild
             {
                 PsbResHelper.LinkImages(psb, context, resx.Resources, baseDir);
             }
+        }
+
+
+        /// <summary>
+        /// Modify the original PSB and only replace resources (according to json)
+        /// </summary>
+        /// <param name="psbPath">PSB to be modified</param>
+        /// <param name="jsonPath">PSB Json which only resources are changed</param>
+        /// <returns></returns>
+        public static MemoryStream InplaceReplace(string psbPath, string jsonPath)
+        {
+            var jsonPsb = LoadPsbFromJsonFile(jsonPath);
+            using var psbFs = File.OpenRead(psbPath);
+
+            var ctx = FreeMount.CreateContext();
+            var psbStream = ctx.OpenStreamFromPsbFile(psbPath);
+            var psb = new PSB(psbStream);
+
+            if (jsonPsb.Resources.Count != psb.Resources.Count)
+            {
+                throw new NotSupportedException("The 2 PSBs are different (Resource count).");
+            }
+
+            MemoryStream ms = new MemoryStream((int)psbStream.Length);
+            psbStream.Seek(0, SeekOrigin.Begin);
+            psbStream.CopyTo(ms);
+            using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
+
+            for (var i = 0; i < jsonPsb.Resources.Count; i++)
+            {
+                var resource = jsonPsb.Resources[i];
+                var oriResource = psb.Resources[i];
+                if (resource.Data.Length > oriResource.Data.Length)
+                {
+                    throw new NotSupportedException($"The 2 PSBs are different (Resource {i} length: {resource.Data.Length} vs {oriResource.Data.Length}).");
+                }
+
+                if (oriResource.Index == null)
+                {
+                    Console.WriteLine($"[WARN] Resource {i} is not replaced.");
+                    continue;
+                }
+
+                var offset = psb.ChunkOffsets[(int)oriResource.Index];
+                var length = psb.ChunkLengths[(int)oriResource.Index];
+
+                bw.BaseStream.Seek(psb.Header.OffsetChunkData + offset, SeekOrigin.Begin);
+                bw.Write(resource.Data);
+                if (length > resource.Data.Length)
+                {
+                    bw.Write(new byte[length - resource.Data.Length]);
+                }
+            }
+            
+            return ms;
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="InplaceReplace"/>
+        /// </summary>
+        public static string InplaceReplaceToFile(string psbPath, string jsonPath)
+        {
+            var ms = InplaceReplace(psbPath, jsonPath);
+            var outputPath = Path.ChangeExtension(psbPath, "IR.psb");
+            using var fs = File.Create(outputPath);
+            ms.WriteTo(fs);
+            fs.Close();
+            ms.Close();
+            return outputPath;
         }
     }
 }
