@@ -234,7 +234,7 @@ namespace FreeMote.PsBuild
           "motionIndependentLayerInherit": 0,
           "motionMaskThresholdOpacity": 64,
          */
-        ParticleLayerItem = 4,
+        ParticleLayerItem = 4, //global.LAYER_TYPE_PARTICLE = (int)4
         //"particle": "point" (psb: 0) | "ellipse" (psb: 1) | "quad" (psb: 2) 
         /*                                 
           "particleAccelRatio": 1.0,
@@ -250,9 +250,11 @@ namespace FreeMote.PsBuild
          */
 
         CameraLayerItem = 5,
+        ModelLayerItem = 6,
         ClipLayerItem = 7, //nothing special
         TextLayerItem = 8,
-
+        AnchorLayerItem = 9,
+        FeedbackLayerItem = 10,
         /*
         "fontParams": {
         "antiAlias": 1,

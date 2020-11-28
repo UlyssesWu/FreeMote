@@ -158,12 +158,12 @@ namespace FreeMote.PsBuild
             //Convert
             if (cryptKey != null)
             {
-                return PsbFile.EncodeToBytes(cryptKey.Value, bytes, EncodeMode.Encrypt, EncodePosition.Auto);
+                bytes = PsbFile.EncodeToBytes(cryptKey.Value, bytes, EncodeMode.Encrypt, EncodePosition.Auto);
             }
 
             if (context.HasShell && keepShell)
             {
-                return context.PackToShell(new MemoryStream(bytes)).ToArray();
+                bytes = context.PackToShell(new MemoryStream(bytes)).ToArray();
             }
 
             return bytes;
