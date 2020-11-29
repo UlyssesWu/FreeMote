@@ -59,7 +59,7 @@ namespace FreeMote
 
         internal BNode Root
         {
-            get => _root ?? (_root = new BNode());
+            get => _root ??= new BNode();
             set => _root = value;
         }
 

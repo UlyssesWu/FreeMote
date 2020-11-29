@@ -59,6 +59,10 @@ namespace FreeMote.Psb
         List = 0x20, //object list
         Objects = 0x21, //object dictionary
 
+        ExtraChunkN1 = 0x22,
+        ExtraChunkN2 = 0x23,
+        ExtraChunkN3 = 0x24,
+        ExtraChunkN4 = 0x25,
 
         //used by compiler,it's fake
         Integer = 0x80,
@@ -1153,7 +1157,7 @@ namespace FreeMote.Psb
     /// Resource: Reference type
     /// </summary>
     [Serializable]
-    [DebuggerDisplay("Resource[{Data?.Length}](#{" + nameof(Index) + "})")]
+    [DebuggerDisplay("Resource[{Data?.Length}]({" + nameof(IdentifierChar) + ",nq}{" + nameof(Index) + "})")]
     public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite, IPsbSingleton
     {
         internal PsbResource(int n, BinaryReader br)
@@ -1161,10 +1165,16 @@ namespace FreeMote.Psb
             Index = br.ReadCompactUInt((byte) n);
         }
 
-        public PsbResource(uint? index = null)
+        private string IdentifierChar => IsExtra ? "@" : "#";
+        internal string ResourceIdentifier => IsExtra ? Consts.ExtraResourceIdentifier : Consts.ResourceIdentifier;
+
+        public PsbResource(uint? index = null, bool isExtra = false)
         {
             Index = index;
+            IsExtra = isExtra;
         }
+
+        public bool IsExtra { get; set; } = false;
 
         /// <summary>
         /// Update index when compile
@@ -1183,13 +1193,13 @@ namespace FreeMote.Psb
                 {
                     case 0:
                     case 1:
-                        return PsbObjType.ResourceN1;
+                        return IsExtra ? PsbObjType.ExtraChunkN1 : PsbObjType.ResourceN1;
                     case 2:
-                        return PsbObjType.ResourceN2;
+                        return IsExtra ? PsbObjType.ExtraChunkN2 : PsbObjType.ResourceN2;
                     case 3:
-                        return PsbObjType.ResourceN3;
+                        return IsExtra ? PsbObjType.ExtraChunkN3 : PsbObjType.ResourceN3;
                     case 4:
-                        return PsbObjType.ResourceN4;
+                        return IsExtra ? PsbObjType.ExtraChunkN4 : PsbObjType.ResourceN4;
                     default:
                         throw new ArgumentOutOfRangeException("Index", "Not a valid resource");
                 }
@@ -1198,7 +1208,7 @@ namespace FreeMote.Psb
 
         public override string ToString()
         {
-            return $"#resource#{Index}";
+            return $"{(IsExtra? Consts.ExtraResourceIdentifier : Consts.ResourceIdentifier)}{Index}";
         }
 
         public void WriteTo(BinaryWriter bw)

@@ -76,9 +76,11 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "dx_ふかみ_駅員服.psb");
+            Consts.PsbObjectOrderByKey = false;
+            Consts.FastMode = false;
+            //var path = Path.Combine(resPath, "東北ずん子e-mote_ver39(max2048).psb");
             PSB psb = new PSB(path);
-            //var unk1 = psb.UnknownData[0];
-            psb.BuildToFile("regen.psb");
+            psb.BuildToFile("regenerated.psb");
         }
 
         [TestMethod]
@@ -106,19 +108,6 @@ namespace FreeMote.Tests
             {
                 PSB psb = new PSB(fs);
             }
-        }
-
-        [TestMethod]
-        public void TestEmtLoad396()
-        {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "emote396-a8l8.pure.psb");
-            //var path = Path.Combine(resPath, "common-rgba4444.psb");
-            //var path = Path.Combine(resPath, "common-rgba4444.json.psbuild.pure.psb");
-            PSB psb = new PSB(path);
-            var d = psb.UnknownData[0];
-            var dl = d.Length;
-            File.WriteAllBytes("p.bytes", d);
         }
 
         [TestMethod]

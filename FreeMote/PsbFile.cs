@@ -179,9 +179,9 @@ namespace FreeMote
 
             if (header.Version > 3)
             {
-                header.OffsetUnknownOffsets = br.ReadUInt32();
-                header.OffsetUnknownLengths = br.ReadUInt32();
-                header.OffsetUnknownData = br.ReadUInt32();
+                header.OffsetExtraChunkOffsets = br.ReadUInt32();
+                header.OffsetExtraChunkLengths = br.ReadUInt32();
+                header.OffsetExtraChunkData = br.ReadUInt32();
             }
 
             bw.Write(header.HeaderLength);
@@ -199,9 +199,9 @@ namespace FreeMote
 
             if (header.Version > 3)
             {
-                bw.Write(header.OffsetUnknownOffsets);
-                bw.Write(header.OffsetUnknownLengths);
-                bw.Write(header.OffsetUnknownData);
+                bw.Write(header.OffsetExtraChunkOffsets);
+                bw.Write(header.OffsetExtraChunkLengths);
+                bw.Write(header.OffsetExtraChunkData);
             }
         }
 
@@ -230,9 +230,9 @@ namespace FreeMote
 
             if (header.Version > 3)
             {
-                header.OffsetUnknownOffsets = context.ReadUInt32(br);
-                header.OffsetUnknownLengths = context.ReadUInt32(br);
-                header.OffsetUnknownData = context.ReadUInt32(br);
+                header.OffsetExtraChunkOffsets = context.ReadUInt32(br);
+                header.OffsetExtraChunkLengths = context.ReadUInt32(br);
+                header.OffsetExtraChunkData = context.ReadUInt32(br);
             }
 
             //var checksumStartPosition = bw.BaseStream.Position;
@@ -261,15 +261,15 @@ namespace FreeMote
                 }
                 else //PSBv4
                 {
-                    checkBuffer = BitConverter.GetBytes(header.OffsetUnknownOffsets)
-                        .Concat(BitConverter.GetBytes(header.OffsetUnknownLengths))
-                        .Concat(BitConverter.GetBytes(header.OffsetUnknownData)).ToArray();
+                    checkBuffer = BitConverter.GetBytes(header.OffsetExtraChunkOffsets)
+                        .Concat(BitConverter.GetBytes(header.OffsetExtraChunkLengths))
+                        .Concat(BitConverter.GetBytes(header.OffsetExtraChunkData)).ToArray();
                     adler32.Update(checkBuffer);
                     header.Checksum = (uint) adler32.Checksum;
                     bw.Write(header.Checksum);
-                    bw.Write(header.OffsetUnknownOffsets);
-                    bw.Write(header.OffsetUnknownLengths);
-                    bw.Write(header.OffsetUnknownData);
+                    bw.Write(header.OffsetExtraChunkOffsets);
+                    bw.Write(header.OffsetExtraChunkLengths);
+                    bw.Write(header.OffsetExtraChunkData);
                 }
             }
         }
@@ -305,9 +305,9 @@ namespace FreeMote
 
             if (header.Version > 3)
             {
-                header.OffsetUnknownOffsets = br.ReadUInt32();
-                header.OffsetUnknownLengths = br.ReadUInt32();
-                header.OffsetUnknownData = br.ReadUInt32();
+                header.OffsetExtraChunkOffsets = br.ReadUInt32();
+                header.OffsetExtraChunkLengths = br.ReadUInt32();
+                header.OffsetExtraChunkData = br.ReadUInt32();
             }
 
             var checksumEndPosition = br.BaseStream.Position;
@@ -337,15 +337,15 @@ namespace FreeMote
                 }
                 else //PSBv4
                 {
-                    checkBuffer = BitConverter.GetBytes(header.OffsetUnknownOffsets)
-                        .Concat(BitConverter.GetBytes(header.OffsetUnknownLengths))
-                        .Concat(BitConverter.GetBytes(header.OffsetUnknownData)).ToArray();
+                    checkBuffer = BitConverter.GetBytes(header.OffsetExtraChunkOffsets)
+                        .Concat(BitConverter.GetBytes(header.OffsetExtraChunkLengths))
+                        .Concat(BitConverter.GetBytes(header.OffsetExtraChunkData)).ToArray();
                     adler32.Update(checkBuffer);
                     header.Checksum = (uint) adler32.Checksum;
                     context.Write(header.Checksum, bw);
-                    context.Write(header.OffsetUnknownOffsets, bw);
-                    context.Write(header.OffsetUnknownLengths, bw);
-                    context.Write(header.OffsetUnknownData, bw);
+                    context.Write(header.OffsetExtraChunkOffsets, bw);
+                    context.Write(header.OffsetExtraChunkLengths, bw);
+                    context.Write(header.OffsetExtraChunkData, bw);
                 }
             }
         }

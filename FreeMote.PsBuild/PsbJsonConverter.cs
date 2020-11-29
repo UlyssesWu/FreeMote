@@ -79,7 +79,7 @@ namespace FreeMote.PsBuild
                     break;
                 case PsbResource res:
                     //writer.WriteValue(Convert.ToBase64String(res.Data, Base64FormattingOptions.None));
-                    writer.WriteValue($"{Consts.ResourceIdentifier}{res.Index}");
+                    writer.WriteValue($"{res.ResourceIdentifier}{res.Index}");
                     break;
                 case PsbArray array:
                     writer.WriteValue(array.Value);
@@ -186,6 +186,12 @@ namespace FreeMote.PsBuild
                         }
                         return new PsbNumber(long.Parse(str.Substring(prefixLen), NumberStyles.AllowHexSpecifier));
                     }
+
+                    if (str.StartsWith(Consts.ExtraResourceIdentifier))
+                    {
+                        return new PsbResource(uint.Parse(str.Replace(Consts.ExtraResourceIdentifier, "")), true);
+                    }
+
                     if (str.StartsWith(Consts.ResourceIdentifier))
                     {
                         return new PsbResource(uint.Parse(str.Replace(Consts.ResourceIdentifier, "")));

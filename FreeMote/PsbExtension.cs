@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace FreeMote
 {
@@ -372,6 +373,28 @@ namespace FreeMote
             return searchPatterns.AsParallel()
                 .SelectMany(searchPattern =>
                     Directory.EnumerateFiles(path, searchPattern, searchOption));
+        }
+        
+        /// <summary>
+        /// Print byte array in Hex
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        internal static string PrintInHex(this byte[] bytes)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var b in bytes)
+            {
+                var s = Convert.ToString(b, 16);
+                if (s.Length == 1)
+                {
+                    s = "0" + s;
+                }
+
+                sb.Append(s);
+            }
+
+            return sb.ToString();
         }
     }
 }

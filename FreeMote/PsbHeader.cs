@@ -70,31 +70,30 @@ namespace FreeMote
         public uint OffsetEntries;
 
         /// <summary>
-        /// [New in v3] Adler32 Checksum for header
+        /// [v3] Adler32 Checksum for header
         /// <para>Not always checked in v3. Sadly, it's always checked from v4, so we have to handle it.</para>
         /// </summary>
         //[FieldOffset(40)]
         public uint Checksum;
 
         /// <summary>
-        /// [New in v4] Usually an empty array (3 bytes)
-        /// <para><see cref="OffsetUnknownData"/> - 6</para>
+        /// [v4] Extra chunk offsets
         /// </summary>
         //[FieldOffset(44)]
-        public uint OffsetUnknownOffsets;
+        public uint OffsetExtraChunkOffsets;
 
         /// <summary>
-        /// [New in v4] Usually an empty array (3 bytes)
-        /// <para><see cref="OffsetUnknownData"/> - 3</para>
+        /// [v4] Extra chunk lengths
         /// </summary>
         //[FieldOffset(48)]
-        public uint OffsetUnknownLengths;
+        public uint OffsetExtraChunkLengths;
 
         /// <summary>
-        /// [New in v4] If there are no data, same as <see cref="OffsetChunkOffsets"/>
+        /// [v4] 
+        /// <para>If there are no data, same as <see cref="OffsetChunkOffsets"/></para>
         /// </summary>
         //[FieldOffset(52)]
-        public uint OffsetUnknownData;
+        public uint OffsetExtraChunkData;
 
 
         public static PsbHeader Load(BinaryReader br)
@@ -136,9 +135,9 @@ namespace FreeMote
                 }
                 if (header.Version > 3)
                 {
-                    header.OffsetUnknownOffsets = br.ReadUInt32();
-                    header.OffsetUnknownLengths = br.ReadUInt32();
-                    header.OffsetUnknownData = br.ReadUInt32();
+                    header.OffsetExtraChunkOffsets = br.ReadUInt32();
+                    header.OffsetExtraChunkLengths = br.ReadUInt32();
+                    header.OffsetExtraChunkData = br.ReadUInt32();
                 }
             }
             return header;
@@ -178,9 +177,9 @@ namespace FreeMote
             }
             if (header.Version > 3)
             {
-                header.OffsetUnknownOffsets = context.ReadUInt32(br);
-                header.OffsetUnknownLengths = context.ReadUInt32(br);
-                header.OffsetUnknownData = context.ReadUInt32(br);
+                header.OffsetExtraChunkOffsets = context.ReadUInt32(br);
+                header.OffsetExtraChunkLengths = context.ReadUInt32(br);
+                header.OffsetExtraChunkData = context.ReadUInt32(br);
             }
             return header;
         }
@@ -207,9 +206,9 @@ namespace FreeMote
                 Checksum = (uint)adler32.Checksum;
                 return Checksum;
             }
-            checkBuffer = BitConverter.GetBytes(OffsetUnknownOffsets)
-                                           .Concat(BitConverter.GetBytes(OffsetUnknownLengths))
-                                           .Concat(BitConverter.GetBytes(OffsetUnknownData))
+            checkBuffer = BitConverter.GetBytes(OffsetExtraChunkOffsets)
+                                           .Concat(BitConverter.GetBytes(OffsetExtraChunkLengths))
+                                           .Concat(BitConverter.GetBytes(OffsetExtraChunkData))
                                            .ToArray();
             adler32.Update(checkBuffer);
             Checksum = (uint)adler32.Checksum;
@@ -272,9 +271,9 @@ namespace FreeMote
                 OffsetChunkLengths = (uint)(OffsetChunkLengths + offset);
                 OffsetChunkData = (uint)(OffsetChunkData + offset);
                 OffsetEntries = (uint)(OffsetEntries + offset);
-                OffsetUnknownOffsets = OffsetChunkOffsets - 6;
-                OffsetUnknownLengths = OffsetChunkOffsets - 3;
-                OffsetUnknownData = OffsetChunkOffsets;
+                OffsetExtraChunkOffsets = OffsetChunkOffsets - 6;
+                OffsetExtraChunkLengths = OffsetChunkOffsets - 3;
+                OffsetExtraChunkData = OffsetChunkOffsets;
             }
             UpdateChecksum();
         }
@@ -301,9 +300,9 @@ namespace FreeMote
                 }
                 if (Version > 3)
                 {
-                    bw.Write(OffsetUnknownOffsets);
-                    bw.Write(OffsetUnknownLengths);
-                    bw.Write(OffsetUnknownData);
+                    bw.Write(OffsetExtraChunkOffsets);
+                    bw.Write(OffsetExtraChunkLengths);
+                    bw.Write(OffsetExtraChunkData);
                 }
                 bw.Flush();
                 return ms.ToArray();

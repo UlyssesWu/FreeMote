@@ -63,6 +63,7 @@
     <Compile Include="PsbResHelper.cs" />
     <Compile Include="PsbValues.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources\FlattenArrayMetadata.cs" />
     <Compile Include="Resources\IArchData.cs" />
     <Compile Include="Resources\ImageMetadata.cs" />
     <Compile Include="Types\ArchiveType.cs" />

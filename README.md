@@ -71,7 +71,7 @@ Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and a
 * Singyuen Yip for [Adler32](https://github.com/UlyssesWu/FreeMote/blob/master/FreeMote/Adler32.cs) code.
 * @gdkchan for [DxtCodec](https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs) code.
 * @mfascia for [TexturePacker](https://github.com/mfascia/TexturePacker) code.
-* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs) & [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs) code. LICENSE: MIT
+* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs), [ArcPSB](https://github.com/morkt/GARbro/blob/master/ArcFormats/Emote/ArcPSB.cs), [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs) code. LICENSE: MIT
 * @xdaniel & @FireyFly for [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
 * @Nyerguds for [BitmapHelper](https://stackoverflow.com/a/45100442) code.
 * @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/) as sponsor!

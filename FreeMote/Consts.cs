@@ -26,6 +26,11 @@ namespace FreeMote
         public const string ResourceIdentifier = "#resource#";
 
         /// <summary>
+        /// The string with this prefix (with ID followed) will be convert to extra resource when compile/decompile
+        /// </summary>
+        public const string ExtraResourceIdentifier = "#resource@";
+
+        /// <summary>
         /// (string)
         /// </summary>
         public const string Context_PsbShellType = "PsbShellType";
@@ -107,6 +112,11 @@ namespace FreeMote
         /// Always use double instead of float
         /// </summary>
         public static bool JsonUseDoubleOnly { get; set; } = false;
+
+        /// <summary>
+        /// Whether to sort the object order by key when build PSB
+        /// </summary>
+        public static bool PsbObjectOrderByKey { get; set; } = true;
 
         /// <summary>
         /// (not implemented yet) Use Palette Merge will increase compile time but cut output size (only when using CI* images)
