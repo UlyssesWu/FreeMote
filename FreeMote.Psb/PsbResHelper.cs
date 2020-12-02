@@ -197,6 +197,8 @@ namespace FreeMote.Psb
                     : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
                 resMd.Link(fullPath, context);
             }
+
+
         }
 
         /// <summary>
@@ -292,6 +294,7 @@ namespace FreeMote.Psb
             var resources = psb.CollectResources<ImageMetadata>();
 
             Dictionary<string, string> resDictionary = new Dictionary<string, string>();
+            Dictionary<string, string> extraResDictionary = new Dictionary<string, string>();
 
             ImageFormat pixelFormat;
             switch (extractFormat)
@@ -308,12 +311,22 @@ namespace FreeMote.Psb
             {
                 for (int i = 0; i < psb.Resources.Count; i++)
                 {
-                    var relativePath = psb.Resources[i].Index == null ? $"#{i}.bin" : $"{psb.Resources[i].Index}.bin";
+                    var relativePath = psb.Resources[i].Index == null ? $"##{i}.bin" : $"{psb.Resources[i].Index}.bin";
 
                     File.WriteAllBytes(
                         Path.Combine(dirPath, relativePath),
                         psb.Resources[i].Data);
                     resDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{relativePath}");
+                }
+
+                for (int i = 0; i < psb.ExtraResources.Count; i++)
+                {
+                    var relativePath = psb.Resources[i].Index == null ? $"#@{i}.bin" : $"@{psb.Resources[i].Index}.bin";
+
+                    File.WriteAllBytes(
+                        Path.Combine(dirPath, Consts.ExtraResourceFolderName, relativePath),
+                        psb.ExtraResources[i].Data);
+                    resDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{Consts.ExtraResourceFolderName}/{relativePath}");
                 }
             }
             else
@@ -445,16 +458,16 @@ namespace FreeMote.Psb
                             if (resDictionary.ContainsKey(resource.Index.ToString()))
                             {
                                 Console.WriteLine(
-                                    "[WARN] Resource Index conflict. May be resource sharing, but may also be something wrong.");
+                                    $"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
                                 continue;
                             }
                         }
                         else
                         {
-                            if (resDictionary.ContainsKey(friendlyName.ToString()))
+                            if (resDictionary.ContainsKey(friendlyName))
                             {
                                 Console.WriteLine(
-                                    "[WARN] Resource Name conflict. May be resource sharing, but may also be something wrong.");
+                                    $"[WARN] Resource Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
                                 continue;
                             }
                         }

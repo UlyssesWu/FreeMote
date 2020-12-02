@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using FreeMote.Plugins;
 
 namespace FreeMote.Psb
 {
@@ -515,6 +516,15 @@ namespace FreeMote.Psb
 
             paths.Reverse();
             return string.Join("/", paths);
+        }
+
+        #endregion
+
+        #region Context
+
+        internal static bool UseFlattenArray(this FreeMountContext context)
+        {
+            return context.Context.ContainsKey(Consts.Context_UseFlattenArray) && context.Context[Consts.Context_UseFlattenArray] is bool use && use == true;
         }
 
         #endregion

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using FreeMote.Plugins;
 
@@ -44,8 +45,7 @@ namespace FreeMote.Psb
         public PsbSpec Spec { get; set; }
         public void Link(string fullPath, FreeMountContext context)
         {
-            return;
-            //throw new System.NotImplementedException();
+            Data = File.ReadAllBytes(fullPath);
         }
     }
 }

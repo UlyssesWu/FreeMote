@@ -73,6 +73,7 @@ namespace FreeMote.Psb.Types
                         }
 
                         res.Index = (uint)layerId;
+                        //res.Part = layerId.ToString();
 
                         if (dic["width"] is PsbNumber nw)
                         {

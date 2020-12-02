@@ -277,10 +277,16 @@ namespace FreeMote.Psb
             {
                 //Pre Load Extra Resources (Chunks)
                 br.BaseStream.Seek(Header.OffsetExtraChunkOffsets, SeekOrigin.Begin);
-                ExtraChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
+                ExtraChunkOffsets = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
                 br.BaseStream.Seek(Header.OffsetExtraChunkLengths, SeekOrigin.Begin);
-                ExtraChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
+                ExtraChunkLengths = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
                 ExtraResources = new List<PsbResource>(ExtraChunkLengths.Value.Count);
+            }
+            else
+            {
+                ExtraResources = new List<PsbResource>(0);
+                ExtraChunkOffsets = new PsbArray();
+                ExtraChunkLengths = new PsbArray();
             }
 
             //Load Entries
@@ -719,7 +725,7 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="mergeString"></param>
         /// <param name="mergeRes"></param>
-        internal void Collect(bool mergeString = false, bool mergeRes = true)
+        internal void Collect(bool mergeString = false, bool mergeRes = false)
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
@@ -730,10 +736,10 @@ namespace FreeMote.Psb
             var stringsDic = new Dictionary<string, PsbString>();
             var stringsIndexDic = new Dictionary<uint, PsbString>();
             uint strIdx = 0;
-            Collect(Objects);
+            TravelCollect(Objects);
 
             Names = new List<string>(namesSet);
-            Names.Sort(String.CompareOrdinal); //FIXED: Compared by bytes
+            Names.Sort(string.CompareOrdinal); //FIXED: Compared by bytes
             Strings = new List<PsbString>(stringsDic.Values);
 
             uint NextIndex(Dictionary<uint, PsbString> dic, ref uint idx)
@@ -746,7 +752,7 @@ namespace FreeMote.Psb
                 return idx;
             }
 
-            IPsbValue Collect(IPsbValue obj)
+            IPsbValue TravelCollect(IPsbValue obj)
             {
                 switch (obj)
                 {
@@ -754,7 +760,20 @@ namespace FreeMote.Psb
                         var resList = r.IsExtra ? ExtraResources : Resources;
                         if (!mergeRes)
                         {
-                            resList.Add(r);
+                            //Still have to merge by index, otherwise you will have mismatched resource reference in objects!
+                            if (r.Index != null)
+                            {
+                                var sameDataRes = resList.Find(res => res.Index != null && res.Index == r.Index);
+                                if (sameDataRes == null)
+                                {
+                                    resList.Add(r);
+                                }
+                                else
+                                {
+                                    //r.Index = sameDataRes.Index; 
+                                    return sameDataRes; //merge resource correctly!
+                                }
+                            }
                         }
                         else
                         {
@@ -766,7 +785,8 @@ namespace FreeMote.Psb
                             }
                             else
                             {
-                                r.Index = sameDataRes.Index;
+                                //r.Index = sameDataRes.Index; //This is bad, because the Index will be discontinuous
+                                return sameDataRes; //merge resource correctly!
                             }
                         }
                         break;
@@ -818,7 +838,7 @@ namespace FreeMote.Psb
                         for (var i = 0; i < c.Count; i++)
                         {
                             var o = c[i];
-                            var result = Collect(o);
+                            var result = TravelCollect(o);
                             if (result != null)
                             {
                                 c[i] = result;
@@ -836,7 +856,7 @@ namespace FreeMote.Psb
                                 //Does Name appears in String Table? No.
                             }
 
-                            var result = Collect(d[key]);
+                            var result = TravelCollect(d[key]);
                             if (result != null)
                             {
                                 d[key] = result;
@@ -1176,6 +1196,10 @@ namespace FreeMote.Psb
                     pStr.WriteTo(bw);
                     return;
                 case PsbResource pRes:
+                    if (pRes.Index == null || pRes.Index >= Resources.Count)
+                    {
+                        Debug.WriteLine($"Resource index: {pRes.Index} seems to be wrong!");
+                    }
                     if (pRes.Data == null) //MARK: null resource will be eliminated!
                     {
                         PsbNull.Null.WriteTo(bw);

@@ -52,6 +52,12 @@ namespace FreeMote.PsBuild
         /// </summary>
         public Dictionary<string, string> Resources { get; set; }
 
+        /// <summary>
+        /// ExtraResources
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, string> ExtraResources { get; set; }
+
         public PsbResourceJson()
         {
         }

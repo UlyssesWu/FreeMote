@@ -15,6 +15,8 @@ namespace FreeMote
 
         public const string ResourceKey = "pixel";
 
+        public const string ExtraResourceFolderName = "extra";
+
         /// <summary>
         /// The string with this prefix will be convert to number when compile/decompile
         /// </summary>
@@ -65,6 +67,11 @@ namespace FreeMote
         /// (int) MDF Key length
         /// </summary>
         public const string Context_MdfKeyLength = "MdfKeyLength";
+
+        /// <summary>
+        /// (bool) Whether to decode and encode FlattenArray in extra resources (false by default)
+        /// </summary>
+        public const string Context_UseFlattenArray = "UseFlattenArray";
 
         /// <summary>
         /// 0x075BCD15
