@@ -273,12 +273,15 @@ namespace FreeMote.Psb
             ChunkLengths = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
             Resources = new List<PsbResource>(ChunkLengths.Value.Count);
 
-            //Pre Load Extra Resources (Chunks)
-            br.BaseStream.Seek(Header.OffsetExtraChunkOffsets, SeekOrigin.Begin);
-            ExtraChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
-            br.BaseStream.Seek(Header.OffsetExtraChunkLengths, SeekOrigin.Begin);
-            ExtraChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
-            ExtraResources = new List<PsbResource>(ExtraChunkLengths.Value.Count);
+            if (Header.Version >= 4)
+            {
+                //Pre Load Extra Resources (Chunks)
+                br.BaseStream.Seek(Header.OffsetExtraChunkOffsets, SeekOrigin.Begin);
+                ExtraChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
+                br.BaseStream.Seek(Header.OffsetExtraChunkLengths, SeekOrigin.Begin);
+                ExtraChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
+                ExtraResources = new List<PsbResource>(ExtraChunkLengths.Value.Count);
+            }
 
             //Load Entries
             br.BaseStream.Seek(Header.OffsetEntries, SeekOrigin.Begin);
@@ -525,6 +528,7 @@ namespace FreeMote.Psb
                     Debug.WriteLine("FreeMote won't need these for compile.");
                     break;
                 default:
+                    Debug.WriteLine($"Found unknown type {type}. Please provide the PSB for research.");
                     return null;
             }
 
@@ -1603,7 +1607,8 @@ namespace FreeMote.Psb
 
                 var currentPos = br.BaseStream.Position;
                 var remainLength = br.BaseStream.Length - currentPos;
-                var shouldBeLength = ChunkOffsets.Value.Max() + ChunkLengths.Value.Max();
+                var lengthOfMaxOffsetItem = ChunkLengths[ChunkLengths.Value.IndexOf(ChunkOffsets.Value.Max())];
+                var shouldBeLength = ChunkOffsets.Value.Max() + lengthOfMaxOffsetItem;
                 var padding = Math.Max((remainLength - shouldBeLength), 0);
 
                 #endregion
