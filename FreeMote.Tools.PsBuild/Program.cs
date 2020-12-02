@@ -343,7 +343,7 @@ Example:
             try
             {
                 //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
-                var filename = name + ".psb"; //rename later
+                var filename = name + ".psb"; //rename later //TODO: support set output path
                 PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename,
                     canPackShell);
             }

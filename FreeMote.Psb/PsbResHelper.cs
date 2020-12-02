@@ -453,22 +453,32 @@ namespace FreeMote.Psb
 
                     try
                     {
+                        bool indexConflict = false;
+                        uint conflictedIndex = 0;
                         if (resource.Resource.Index != null)
                         {
                             if (resDictionary.ContainsKey(resource.Index.ToString()))
                             {
                                 Console.WriteLine(
                                     $"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
-                                continue;
+                                //continue;
+                                indexConflict = true;
+                                conflictedIndex = resource.Resource.Index.Value;
+                                resource.Resource.Index = null; //have another try on friendly name
                             }
                         }
-                        else
+                        if (resource.Resource.Index == null)
                         {
                             if (resDictionary.ContainsKey(friendlyName))
                             {
                                 Console.WriteLine(
                                     $"[WARN] Resource Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
                                 continue;
+                            }
+
+                            if (indexConflict)
+                            {
+                                Console.WriteLine($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
                             }
                         }
 

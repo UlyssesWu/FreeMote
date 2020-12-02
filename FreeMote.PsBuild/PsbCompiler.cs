@@ -24,7 +24,8 @@ namespace FreeMote.PsBuild
         /// <param name="platform">PSB Platform</param>
         /// <param name="renameOutput">If true, the output file extension is renamed by type</param>
         /// <param name="keepShell">If true, the output can be compressed PSB shell type (if specified)</param>
-        public static void CompileToFile(string inputPath, string outputPath, string inputResPath = null,
+        /// <returns>The actual output path</returns>
+        public static string CompileToFile(string inputPath, string outputPath, string inputResPath = null,
             ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true,
             bool keepShell = true)
         {
@@ -79,6 +80,8 @@ namespace FreeMote.PsBuild
 
             // ReSharper disable once AssignNullToNotNullAttribute
             File.WriteAllBytes(outputPath, result);
+
+            return outputPath;
         }
 
         /// <summary>

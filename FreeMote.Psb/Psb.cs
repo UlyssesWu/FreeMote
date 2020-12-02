@@ -724,7 +724,7 @@ namespace FreeMote.Psb
         /// Fill fields based on <see cref="Objects"/>
         /// </summary>
         /// <param name="mergeString"></param>
-        /// <param name="mergeRes"></param>
+        /// <param name="mergeRes">Whether to merge resources with exact same data. Be careful!</param>
         internal void Collect(bool mergeString = false, bool mergeRes = false)
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
