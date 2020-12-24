@@ -335,7 +335,7 @@ namespace FreeMote.PsBuild
                 {"compress", "RL".ToPsbString()},
                 {"height", pixel.Height.ToPsbNumber()},
                 {"id", "rgbabitmap".ToPsbString()},
-                {"pixel", new PsbResource {Data = RL.CompressImage(pixel, PsbPixelFormat.WinRGBA8)}},
+                {"pixel", new PsbResource {Data = RL.CompressImage(pixel, PsbPixelFormat.LeRGBA8)}},
                 {"width", pixel.Width.ToPsbNumber()},
             },
                 ["type"] = type.ToPsbNumber()

@@ -28,7 +28,7 @@ namespace FreeMote.Psb.Textures
                 if (tex.Value is PsbDictionary texDic)
                 {
                     var typeStr = (PsbString) texDic["texture"].Children("type");
-                    typeStr = PsbPixelFormat.WinRGBA8.ToStringForPsb().ToPsbString();
+                    typeStr = PsbPixelFormat.LeRGBA8.ToStringForPsb().ToPsbString();
                     var bmps = SplitTexture(texDic, psb.Platform);
                     var icons = (PsbDictionary) texDic["icon"];
                     foreach (var iconPair in icons)

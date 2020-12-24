@@ -11,9 +11,9 @@ namespace FreeMote.PsBuild.Converters
     class Common2KrkrConverter : ISpecConverter
     {
         /// <summary>
-        /// krkr uses <see cref="PsbPixelFormat.WinRGBA8"/> on windows platform
+        /// krkr uses <see cref="PsbPixelFormat.LeRGBA8"/> on windows platform
         /// </summary>
-        public PsbPixelFormat TargetPixelFormat { get; set; } = PsbPixelFormat.WinRGBA8;
+        public PsbPixelFormat TargetPixelFormat { get; set; } = PsbPixelFormat.LeRGBA8;
 
         public bool UseRL { get; set; } = true;
         public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> {PsbSpec.win, PsbSpec.common};

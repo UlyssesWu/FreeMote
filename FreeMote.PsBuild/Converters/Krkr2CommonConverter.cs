@@ -18,7 +18,7 @@ namespace FreeMote.PsBuild.Converters
         public Krkr2CommonConverter(bool toWin = false)
         {
             ToWin = toWin;
-            TargetPixelFormat = ToWin ? PsbPixelFormat.WinRGBA8 : PsbPixelFormat.CommonRGBA8;
+            TargetPixelFormat = ToWin ? PsbPixelFormat.LeRGBA8 : PsbPixelFormat.BeRGBA8;
         }
 
         public SpecConvertOption ConvertOption { get; set; } = SpecConvertOption.Default;

@@ -34,14 +34,14 @@ namespace FreeMote
 
             switch (colorFormat)
             {
-                case PsbPixelFormat.CommonRGBA4444:
+                case PsbPixelFormat.BeRGBA4444:
                     data = Rgba428(data);
                     Rgba2Argb(ref data);
                     break;
-                case PsbPixelFormat.WinRGBA4444:
+                case PsbPixelFormat.LeRGBA4444:
                     data = Rgba428(data);
                     break;
-                case PsbPixelFormat.CommonRGBA8:
+                case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref data);
                     break;
                 case PsbPixelFormat.A8L8:
@@ -114,14 +114,14 @@ namespace FreeMote
 
             switch (pixelFormat)
             {
-                case PsbPixelFormat.WinRGBA4444:
+                case PsbPixelFormat.LeRGBA4444:
                     result = Rgba428(result, false);
                     break;
-                case PsbPixelFormat.CommonRGBA4444:
+                case PsbPixelFormat.BeRGBA4444:
                     Rgba2Argb(ref result, true);
                     result = Rgba428(result, false);
                     break;
-                case PsbPixelFormat.CommonRGBA8:
+                case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.A8L8:
@@ -176,7 +176,7 @@ namespace FreeMote
 
             switch (paletteColorFormat)
             {
-                case PsbPixelFormat.CommonRGBA8:
+                case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref palette);
                     break;
             }

@@ -31,7 +31,7 @@ namespace FreeMote
 
             switch (palettePixelFormat)
             {
-                case PsbPixelFormat.CommonRGBA8:
+                case PsbPixelFormat.BeRGBA8:
                     RL.Switch_0_2(ref bytes);
                     break;
             }
@@ -108,10 +108,10 @@ namespace FreeMote
                 case PsbSpec.common:
                 case PsbSpec.ems:
                 case PsbSpec.vita:
-                    return PsbPixelFormat.CommonRGBA8;
+                    return PsbPixelFormat.BeRGBA8;
                 case PsbSpec.krkr:
                 case PsbSpec.win:
-                    return PsbPixelFormat.WinRGBA8;
+                    return PsbPixelFormat.LeRGBA8;
                 case PsbSpec.other:
                 default:
                     return PsbPixelFormat.None;
@@ -183,17 +183,17 @@ namespace FreeMote
                     return PsbPixelFormat.DXT5;
                 case "RGBA8":
                     if (spec == PsbSpec.common || spec == PsbSpec.ems || spec == PsbSpec.vita)
-                        return PsbPixelFormat.CommonRGBA8;
+                        return PsbPixelFormat.BeRGBA8;
                     else
-                        return PsbPixelFormat.WinRGBA8;
+                        return PsbPixelFormat.LeRGBA8;
                 case "RGBA8_SW":
                     return spec == PsbSpec.ps4 ? PsbPixelFormat.TileRGBA8_SW : PsbPixelFormat.RGBA8_SW;
                 case "A8_SW":
                     return spec == PsbSpec.ps4 ? PsbPixelFormat.TileA8_SW : PsbPixelFormat.A8_SW;
                 case "RGBA4444":
                     if (spec == PsbSpec.common || spec == PsbSpec.ems)
-                        return PsbPixelFormat.CommonRGBA4444;
-                    return PsbPixelFormat.WinRGBA4444;
+                        return PsbPixelFormat.BeRGBA4444;
+                    return PsbPixelFormat.LeRGBA4444;
                 case "RGBA4444_SW":
                     return PsbPixelFormat.LeRGBA4444_SW;
                 case "A8L8":
@@ -208,13 +208,13 @@ namespace FreeMote
             switch (pixelFormat)
             {
                 case PsbPixelFormat.None:
-                case PsbPixelFormat.WinRGBA8:
-                case PsbPixelFormat.CommonRGBA8:
+                case PsbPixelFormat.LeRGBA8:
+                case PsbPixelFormat.BeRGBA8:
                     return "RGBA8";
                 case PsbPixelFormat.DXT5:
                     return "DXT5";
-                case PsbPixelFormat.WinRGBA4444:
-                case PsbPixelFormat.CommonRGBA4444:
+                case PsbPixelFormat.LeRGBA4444:
+                case PsbPixelFormat.BeRGBA4444:
                     return "RGBA4444";
                 default:
                     return pixelFormat.ToString();

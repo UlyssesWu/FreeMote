@@ -246,7 +246,7 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "emote_test2-pure", "tex-texture.png");
-            var bytes = RL.CompressImageFile(path, PsbPixelFormat.CommonRGBA8);
+            var bytes = RL.CompressImageFile(path, PsbPixelFormat.BeRGBA8);
             File.WriteAllBytes(path + ".rl", bytes);
         }
 
@@ -299,13 +299,13 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw");
             var path = Path.Combine(resPath, "emote_test.pure", "tex#000-texture.png");
-            var bts = RL.GetPixelBytesFromImageFile(path, PsbPixelFormat.WinRGBA4444);
+            var bts = RL.GetPixelBytesFromImageFile(path, PsbPixelFormat.LeRGBA4444);
             Assert.IsTrue(
                 bts.SequenceEqual(
                     File.ReadAllBytes(
                         Path.Combine(resPath, "emote_test.pure", "tex#000-texture.raw"))));
 
-            RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.png, PsbPixelFormat.WinRGBA4444);
+            RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.png, PsbPixelFormat.LeRGBA4444);
         }
 
         [TestMethod]

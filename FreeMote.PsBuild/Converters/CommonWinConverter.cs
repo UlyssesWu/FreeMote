@@ -34,7 +34,7 @@ namespace FreeMote.PsBuild.Converters
 
             var asSpec = EmsAsCommon ? PsbSpec.ems : PsbSpec.common;
             var toSpec = psb.Platform == PsbSpec.win ? asSpec : PsbSpec.win;
-            var toPixelFormat = toSpec == asSpec ? PsbPixelFormat.CommonRGBA8 : PsbPixelFormat.WinRGBA8;
+            var toPixelFormat = toSpec == asSpec ? PsbPixelFormat.BeRGBA8 : PsbPixelFormat.LeRGBA8;
             var resList = psb.CollectResources<ImageMetadata>(false);
             foreach (var resMd in resList)
             {

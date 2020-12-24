@@ -162,21 +162,21 @@ namespace FreeMote
     {
         None = 0,
         /// <summary>
-        /// Little Endian RGBA8
+        /// Little Endian RGBA8 (plat: win)
         /// </summary>
-        WinRGBA8,
+        LeRGBA8,
         /// <summary>
-        /// Big Endian RGBA8
+        /// Big Endian RGBA8 (plat: common)
         /// </summary>
-        CommonRGBA8,
+        BeRGBA8,
         /// <summary>
-        /// Little Endian RGBA4444
+        /// Little Endian RGBA4444 (plat: win)
         /// </summary>
-        WinRGBA4444,
+        LeRGBA4444,
         /// <summary>
-        /// Big Endian RGBA4444
+        /// Big Endian RGBA4444 (plat: common)
         /// </summary>
-        CommonRGBA4444,
+        BeRGBA4444,
         /// <summary>
         /// Big Endian DXT5
         /// </summary>
