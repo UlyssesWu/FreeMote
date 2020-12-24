@@ -218,6 +218,10 @@ namespace FreeMote
         /// </summary>
         /// REF: http://wiki.tockdom.com/wiki/Image_Formats#C8_.28CI8.29
         CI8_SW,
+        /// <summary>
+        /// Little Endian RGBA4444 with Swizzle for vita
+        /// </summary>
+        LeRGBA4444_SW,
     }
 
     public enum PsbAudioFormat

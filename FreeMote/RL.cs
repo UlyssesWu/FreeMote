@@ -55,6 +55,11 @@ namespace FreeMote
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     Switch_0_2(ref data);
                     break;
+                case PsbPixelFormat.LeRGBA4444_SW:
+                    data = Rgba428(data);
+                    //Rgba2Argb(ref data);
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
                 case PsbPixelFormat.TileRGBA8_SW:
                     data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
@@ -153,6 +158,10 @@ namespace FreeMote
                 case PsbPixelFormat.L8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Rgba2L8(result);
+                    break;
+                case PsbPixelFormat.LeRGBA4444_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Rgba428(result, false);
                     break;
             }
 

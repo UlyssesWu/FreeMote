@@ -194,6 +194,8 @@ namespace FreeMote
                     if (spec == PsbSpec.common || spec == PsbSpec.ems)
                         return PsbPixelFormat.CommonRGBA4444;
                     return PsbPixelFormat.WinRGBA4444;
+                case "RGBA4444_SW":
+                    return PsbPixelFormat.LeRGBA4444_SW;
                 case "A8L8":
                     return PsbPixelFormat.A8L8;
                 default:
