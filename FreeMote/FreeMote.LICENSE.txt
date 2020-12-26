@@ -106,7 +106,7 @@ the implied warranties of merchantability, fitness for a particular purpose and
 non-infringement.
 
 ------------------------------
-ImageTLG & PspDecompression code is licensed under MIT. AUTHOR: morkt (https://github.com/morkt)
+ImageTLG, ArcPSB, PspDecompression code is licensed under MIT. AUTHOR: morkt (https://github.com/morkt)
 
 The MIT License (MIT)
 

@@ -222,6 +222,14 @@ namespace FreeMote
         /// Little Endian RGBA4444 with Swizzle for vita
         /// </summary>
         LeRGBA4444_SW,
+        /// <summary>
+        /// RGBA5650
+        /// </summary>
+        RGBA5650,
+        /// <summary>
+        /// RGBA5650 with Swizzle for vita
+        /// </summary>
+        RGBA5650_SW,
     }
 
     public enum PsbAudioFormat

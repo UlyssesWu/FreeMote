@@ -198,6 +198,10 @@ namespace FreeMote
                     return PsbPixelFormat.LeRGBA4444_SW;
                 case "A8L8":
                     return PsbPixelFormat.A8L8;
+                case "RGBA5650":
+                    return PsbPixelFormat.RGBA5650;
+                case "RGBA5650_SW":
+                    return PsbPixelFormat.RGBA5650_SW;
                 default:
                     return Enum.TryParse(typeStr, true, out PsbPixelFormat pixelFormat) ? pixelFormat : PsbPixelFormat.None;
             }

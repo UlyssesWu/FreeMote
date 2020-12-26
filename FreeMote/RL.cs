@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace FreeMote
 {
@@ -35,11 +36,11 @@ namespace FreeMote
             switch (colorFormat)
             {
                 case PsbPixelFormat.BeRGBA4444:
-                    data = Rgba428(data);
-                    Rgba2Argb(ref data);
+                    data = Argb428(data);
+                    Argb2Rgba(ref data);
                     break;
                 case PsbPixelFormat.LeRGBA4444:
-                    data = Rgba428(data);
+                    data = Argb428(data);
                     break;
                 case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref data);
@@ -56,7 +57,7 @@ namespace FreeMote
                     Switch_0_2(ref data);
                     break;
                 case PsbPixelFormat.LeRGBA4444_SW:
-                    data = Rgba428(data);
+                    data = Argb428(data);
                     //Rgba2Argb(ref data);
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
@@ -79,6 +80,13 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.L8_SW:
                     data = ReadL8(data, height, width);
+                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    break;
+                case PsbPixelFormat.RGBA5650:
+                    data = ReadRgba5650(data);
+                    break;
+                case PsbPixelFormat.RGBA5650_SW:
+                    data = ReadRgba5650(data);
                     data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
             }
@@ -115,17 +123,17 @@ namespace FreeMote
             switch (pixelFormat)
             {
                 case PsbPixelFormat.LeRGBA4444:
-                    result = Rgba428(result, false);
+                    result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.BeRGBA4444:
-                    Rgba2Argb(ref result, true);
-                    result = Rgba428(result, false);
+                    Argb2Rgba(ref result, true);
+                    result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.A8L8:
-                    result = Rgba2A8L8(result);
+                    result = Argb2A8L8(result);
                     break;
                 case PsbPixelFormat.DXT5:
                     //Switch_0_2(ref result);
@@ -139,29 +147,36 @@ namespace FreeMote
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.L8:
-                    result = Rgba2L8(result);
+                    result = Argb2L8(result);
                     break;
                 case PsbPixelFormat.A8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    result = Rgba2A8(result);
+                    result = Argb2A8(result);
                     break;
                 case PsbPixelFormat.TileA8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    result = Rgba2A8(result);
+                    result = Argb2A8(result);
                     break;
                 case PsbPixelFormat.A8:
-                    result = Rgba2A8(result);
+                    result = Argb2A8(result);
                     break;
                 case PsbPixelFormat.CI8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.L8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    result = Rgba2L8(result);
+                    result = Argb2L8(result);
                     break;
                 case PsbPixelFormat.LeRGBA4444_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    result = Rgba428(result, false);
+                    result = Argb428(result, false);
+                    break;
+                case PsbPixelFormat.RGBA5650:
+                    result = Argb2Rgba5650(result);
+                    break;
+                case PsbPixelFormat.RGBA5650_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Argb2Rgba5650(result);
                     break;
             }
 
@@ -359,7 +374,7 @@ namespace FreeMote
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="reverse"></param>
-        public static unsafe void Rgba2Argb(ref byte[] bytes, bool reverse = false)
+        public static unsafe void Argb2Rgba(ref byte[] bytes, bool reverse = false)
         {
             //Actually bgra -> abgr
             fixed (byte* ptr = bytes)
@@ -392,13 +407,87 @@ namespace FreeMote
             }
         }
 
+        public static byte[] ReadRgba5650(byte[] data)
+        {
+            var result = new byte[data.Length * 2];
+            var shorts = MemoryMarshal.Cast<byte, ushort>(data.AsSpan());
+            for (int i = 0; i < shorts.Length; i++)
+            {
+                var c2 = shorts[i];
+                var r = (byte)((c2 >> 11) * 256u / 32u);
+                var g = (byte)((c2 >> 5 & 0b00000_111111) * 256u / 64u);
+                var b = (byte)((c2 & 0b00000_000000_11111) * 256u / 32u);
+                //var a = data[i + 3];
+                result[i * 4] = b;
+                result[i * 4 + 1] = g;
+                result[i * 4 + 2] = r;
+                result[i * 4 + 3] = 0xFF;
+            }
+
+            return result;
+        }
+
+        public static byte[] Argb2Rgba5650(byte[] data)
+        {
+            var result = new byte[data.Length / 2];
+            var shorts = MemoryMarshal.Cast<byte, ushort>(result.AsSpan());
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                var b = data[i];
+                var g = data[i + 1];
+                var r = data[i + 2];
+                //var a = data[i + 3];
+                ushort c2 = (ushort) (r * 32u / 256u << 11 | g * 64u / 256u << 5 | b * 32u / 256u);
+                shorts[i / 4] = c2;
+            }
+
+            return result;
+        }
+
+        public static byte[] ReadRgba5551(byte[] data)
+        {
+            var result = new byte[data.Length * 2]; 
+            var shorts = MemoryMarshal.Cast<byte, ushort>(data.AsSpan());
+            for (int i = 0; i < shorts.Length; i++)
+            {
+                var c2 = shorts[i];
+                var r = (byte)((c2 >> 11) * 256u / 32u);
+                var g = (byte)((c2 >> 6 & 0b11111) * 256u / 32u);
+                var b = (byte)((c2 >> 1 & 0b11111) * 256u / 32u);
+                var a = (byte)(c2 & 1);
+                result[i * 4] = b;
+                result[i * 4 + 1] = g;
+                result[i * 4 + 2] = r;
+                result[i * 4 + 3] = a;
+            }
+
+            return result;
+        }
+
+        public static byte[] Argb2Rgba5551(byte[] data)
+        {
+            var result = new byte[data.Length / 2];
+            var shorts = MemoryMarshal.Cast<byte, ushort>(result.AsSpan());
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                var b = data[i];
+                var g = data[i + 1];
+                var r = data[i + 2];
+                var a = data[i + 3] == (byte)0x0 ? (byte)0 : (byte)1;
+                ushort c2 = (ushort)(r * 32u / 256u << 11 | g * 32u / 256u << 6 | b * 32u / 256u << 1 | a);
+                shorts[i / 4] = c2;
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// RGBA4444 &amp; RGBA8 conversion
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="extend">true: 4 to 8; false: 8 to 4</param>
         /// Shibuya Scramble!
-        public static byte[] Rgba428(byte[] bytes, bool extend = true)
+        public static byte[] Argb428(byte[] bytes, bool extend = true)
         {
             if (extend)
             {
@@ -430,8 +519,8 @@ namespace FreeMote
                 return result;
             }
         }
-
-        public static byte[] Rgba2L8(byte[] data)
+        
+        public static byte[] Argb2L8(byte[] data)
         {
             byte[] output = new byte[data.Length / 4];
             int dst = 0;
@@ -447,7 +536,7 @@ namespace FreeMote
             return output;
         }
 
-        private static byte[] Rgba2A8(byte[] data)
+        private static byte[] Argb2A8(byte[] data)
         {
             byte[] output = new byte[data.Length / 4];
             int dst = 0;
@@ -490,7 +579,7 @@ namespace FreeMote
             return output;
         }
 
-        private static byte[] Rgba2A8L8(byte[] data)
+        private static byte[] Argb2A8L8(byte[] data)
         {
             byte[] output = new byte[data.Length / 2];
             int dst = 0;

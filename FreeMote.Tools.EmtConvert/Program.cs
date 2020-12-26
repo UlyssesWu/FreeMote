@@ -29,11 +29,11 @@ namespace FreeMote.Tools.EmtConvert
         /// <summary>
         /// Extend 2 bytes pixel to 4 bytes pixel
         /// </summary>
-        RGBA428,
+        LeARGB_4To8,
         /// <summary>
         /// Convert color to L8 style GrayScale
         /// </summary>
-        RGBA2L8Grayscale,
+        LeARGB_TO_L8Grayscale,
         /// <summary>
         /// Untitle
         /// </summary>
@@ -145,16 +145,16 @@ Example:
                                 RL.Switch_0_2(ref bts);
                                 break;
                             case PsbImageConvertMethod.ROR:
-                                RL.Rgba2Argb(ref bts);
+                                RL.Argb2Rgba(ref bts);
                                 break;
                             case PsbImageConvertMethod.ROL:
-                                RL.Rgba2Argb(ref bts, true);
+                                RL.Argb2Rgba(ref bts, true);
                                 break;
-                            case PsbImageConvertMethod.RGBA428:
-                                bts = RL.Rgba428(bts);
+                            case PsbImageConvertMethod.LeARGB_4To8:
+                                bts = RL.Argb428(bts);
                                 break;
-                            case PsbImageConvertMethod.RGBA2L8Grayscale:
-                                bts = RL.Rgba2L8(bts);
+                            case PsbImageConvertMethod.LeARGB_TO_L8Grayscale:
+                                bts = RL.Argb2L8(bts);
                                 bts = RL.ReadL8(bts, height, width);
                                 break;
                             case PsbImageConvertMethod.Untile:
