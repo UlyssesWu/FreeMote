@@ -58,6 +58,12 @@ namespace FreeMote.PsBuild
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, string> ExtraResources { get; set; }
 
+        /// <summary>
+        /// ExtraResources (FlattenArray)
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, List<float>> ExtraFlattenArrays { get; set; }
+
         public PsbResourceJson()
         {
         }

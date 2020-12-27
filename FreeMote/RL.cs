@@ -20,10 +20,8 @@ namespace FreeMote
             {
                 return ConvertToImageWithPalette(data.ToArray(), palette.ToArray(), height, width, colorFormat, paletteColorFormat);
             }
-            else
-            {
-                return ConvertToImage(data.ToArray(), height, width, colorFormat);
-            }
+
+            return ConvertToImage(data.ToArray(), height, width, colorFormat);
         }
 
         public static Bitmap ConvertToImage(byte[] data, int height, int width,
@@ -48,7 +46,7 @@ namespace FreeMote
                 case PsbPixelFormat.A8L8:
                     data = ReadA8L8(data, width, height);
                     break;
-                case PsbPixelFormat.DXT5: //MARK: RL seems compatible to DXT5 compress?
+                case PsbPixelFormat.DXT5:
                     data = DxtUtil.DecompressDxt5(data, width, height);
                     Switch_0_2(ref data); //DXT5(for win) need conversion
                     break;
@@ -98,7 +96,7 @@ namespace FreeMote
 
             if (scanBytes >= data.Length)
             {
-                System.Runtime.InteropServices.Marshal.Copy(data, 0, iptr, data.Length);
+                Marshal.Copy(data, 0, iptr, data.Length);
                 bmp.UnlockBits(bmpData); // 解锁内存区域
                 return bmp;
             }
@@ -117,7 +115,7 @@ namespace FreeMote
             int scanBytes = stride * bmp.Height; // 用stride宽度，表示这是内存区域的大小
 
             var result = new byte[scanBytes];
-            System.Runtime.InteropServices.Marshal.Copy(iPtr, result, 0, scanBytes);
+            Marshal.Copy(iPtr, result, 0, scanBytes);
             bmp.UnlockBits(bmpData); // 解锁内存区域
 
             switch (pixelFormat)
@@ -222,7 +220,7 @@ namespace FreeMote
 
             if (scanBytes >= data.Length)
             {
-                System.Runtime.InteropServices.Marshal.Copy(data, 0, iptr, data.Length);
+                Marshal.Copy(data, 0, iptr, data.Length);
                 bmp.UnlockBits(bmpData); // 解锁内存区域
                 return bmp;
             }

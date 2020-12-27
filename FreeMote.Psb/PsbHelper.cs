@@ -527,6 +527,11 @@ namespace FreeMote.Psb
             return context.Context.ContainsKey(Consts.Context_UseFlattenArray) && context.Context[Consts.Context_UseFlattenArray] is bool use && use == true;
         }
 
+        internal static void SetUseFlattenArray(this FreeMountContext context, bool use)
+        {
+            context.Context[Consts.Context_UseFlattenArray] = use;
+        }
+
         #endregion
 
         #region MDF

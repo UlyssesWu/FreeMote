@@ -72,7 +72,7 @@ namespace FreeMote
         /// (bool) Whether to decode and encode FlattenArray in extra resources (false by default)
         /// </summary>
         public const string Context_UseFlattenArray = "UseFlattenArray";
-
+        
         /// <summary>
         /// 0x075BCD15
         /// </summary>

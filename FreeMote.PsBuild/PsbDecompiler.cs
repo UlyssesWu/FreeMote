@@ -115,7 +115,6 @@ namespace FreeMote.PsBuild
         {
             var name = Path.GetFileNameWithoutExtension(filePath);
             var dirPath = Path.Combine(Path.GetDirectoryName(filePath), name);
-            var extraDir = Path.Combine(dirPath, Consts.ExtraResourceFolderName);
             PsbResourceJson resx = new PsbResourceJson(psb, context.Context);
             
             if (File.Exists(dirPath))
@@ -124,21 +123,23 @@ namespace FreeMote.PsBuild
                 dirPath += "-resources";
             }
 
+            var extraDir = Path.Combine(dirPath, Consts.ExtraResourceFolderName);
+
+
             if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
             {
                 if (psb.Resources.Count != 0)
                 {
                     Directory.CreateDirectory(dirPath);
                 }
+            }
 
-                if (!context.UseFlattenArray())
+            if (psb.ExtraResources.Count > 0 && !context.UseFlattenArray())
+            {
+                if (Directory.Exists(extraDir))
                 {
-                    if (Directory.Exists(extraDir))
-                    {
-                        Directory.CreateDirectory(extraDir);
-                    }
+                    Directory.CreateDirectory(extraDir);
                 }
-                //TODO: implement extra resource export, import and convert to context
             }
 
             var resDictionary = psb.TypeHandler.OutputResources(psb, context, name, dirPath, extractOption);

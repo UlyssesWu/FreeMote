@@ -170,12 +170,12 @@ namespace FreeMote.Psb.Textures
 
                     switch (option)
                     {
-                        case PsbExtractOption.Decompress:
-                            File.WriteAllBytes(savePath + ".raw", RL.GetPixelBytesFromImage(b, pixelFormat));
-                            break;
-                        case PsbExtractOption.Compress:
-                            File.WriteAllBytes(savePath + ".rl", RL.CompressImage(b, pixelFormat));
-                            break;
+                        //case PsbExtractOption.Decompress:
+                        //    File.WriteAllBytes(savePath + ".raw", RL.GetPixelBytesFromImage(b, pixelFormat));
+                        //    break;
+                        //case PsbExtractOption.Compress:
+                        //    File.WriteAllBytes(savePath + ".rl", RL.CompressImage(b, pixelFormat));
+                        //    break;
                         case PsbExtractOption.Original:
                         case PsbExtractOption.Extract:
                         default:

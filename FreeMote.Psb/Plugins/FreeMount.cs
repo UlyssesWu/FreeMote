@@ -12,7 +12,6 @@ using FreeMote.Psb;
 
 namespace FreeMote.Plugins
 {
-    /// <inheritdoc />
     /// <summary>
     /// FreeMote Plugin System
     /// </summary>

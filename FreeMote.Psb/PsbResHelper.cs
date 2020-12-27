@@ -294,7 +294,6 @@ namespace FreeMote.Psb
             var resources = psb.CollectResources<ImageMetadata>();
 
             Dictionary<string, string> resDictionary = new Dictionary<string, string>();
-            Dictionary<string, string> extraResDictionary = new Dictionary<string, string>();
 
             ImageFormat pixelFormat;
             switch (extractFormat)
@@ -317,16 +316,6 @@ namespace FreeMote.Psb
                         Path.Combine(dirPath, relativePath),
                         psb.Resources[i].Data);
                     resDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{relativePath}");
-                }
-
-                for (int i = 0; i < psb.ExtraResources.Count; i++)
-                {
-                    var relativePath = psb.Resources[i].Index == null ? $"#@{i}.bin" : $"@{psb.Resources[i].Index}.bin";
-
-                    File.WriteAllBytes(
-                        Path.Combine(dirPath, Consts.ExtraResourceFolderName, relativePath),
-                        psb.ExtraResources[i].Data);
-                    resDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{Consts.ExtraResourceFolderName}/{relativePath}");
                 }
             }
             else
@@ -431,22 +420,22 @@ namespace FreeMote.Psb
                             }
 
                             break;
-                        case PsbExtractOption.Decompress:
-                            relativePath += ".raw";
-                            relativePath = CheckPath(relativePath, i);
-                            File.WriteAllBytes(Path.Combine(dirPath, relativePath),
-                                resources[i].Compress == PsbCompressType.RL
-                                    ? RL.Decompress(resource.Data)
-                                    : resource.Data);
-                            break;
-                        case PsbExtractOption.Compress:
-                            relativePath += ".rl";
-                            relativePath = CheckPath(relativePath, i);
-                            File.WriteAllBytes(Path.Combine(dirPath, relativePath),
-                                resources[i].Compress != PsbCompressType.RL
-                                    ? RL.Compress(resource.Data)
-                                    : resource.Data);
-                            break;
+                        //case PsbExtractOption.Decompress:
+                        //    relativePath += ".raw";
+                        //    relativePath = CheckPath(relativePath, i);
+                        //    File.WriteAllBytes(Path.Combine(dirPath, relativePath),
+                        //        resources[i].Compress == PsbCompressType.RL
+                        //            ? RL.Decompress(resource.Data)
+                        //            : resource.Data);
+                        //    break;
+                        //case PsbExtractOption.Compress:
+                        //    relativePath += ".rl";
+                        //    relativePath = CheckPath(relativePath, i);
+                        //    File.WriteAllBytes(Path.Combine(dirPath, relativePath),
+                        //        resources[i].Compress != PsbCompressType.RL
+                        //            ? RL.Compress(resource.Data)
+                        //            : resource.Data);
+                        //    break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(currentExtractOption), currentExtractOption, null);
                     }
@@ -505,6 +494,31 @@ namespace FreeMote.Psb
             }
 
             return resDictionary;
+        }
+
+        public static Dictionary<string, string> OutputExtraResources(PSB psb, FreeMountContext context, string name,
+            string dirPath, PsbExtractOption extractOption = PsbExtractOption.Original)
+        {
+            Dictionary<string, string> extraResDictionary = new Dictionary<string, string>();
+
+            if (extractOption == PsbExtractOption.Original)
+            {
+                for (int i = 0; i < psb.ExtraResources.Count; i++)
+                {
+                    var relativePath = psb.Resources[i].Index == null ? $"#@{i}.bin" : $"@{psb.Resources[i].Index}.bin";
+
+                    File.WriteAllBytes(
+                        Path.Combine(dirPath, Consts.ExtraResourceFolderName, relativePath),
+                        psb.ExtraResources[i].Data);
+                    extraResDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{Consts.ExtraResourceFolderName}/{relativePath}");
+                }
+            }
+            else //Extract
+            {
+                //TODO:
+            }
+
+            return extraResDictionary;
         }
 
         /// <summary>
