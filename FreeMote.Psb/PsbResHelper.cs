@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using FreeMote.Plugins;
 using FreeMote.Psb.Types;
 
@@ -197,7 +198,10 @@ namespace FreeMote.Psb
                     : Path.Combine(baseDir ?? "", resxResource.Value.Replace('/', '\\'));
                 resMd.Link(fullPath, context);
             }
+        }
 
+        public static void LinkExtraResources(PSB psb, FreeMountContext context)
+        {
 
         }
 
@@ -501,21 +505,56 @@ namespace FreeMote.Psb
         {
             Dictionary<string, string> extraResDictionary = new Dictionary<string, string>();
 
+            if (!context.UseFlattenArray() && !Consts.FlattenArrayByDefault)
+            {
+                extractOption = PsbExtractOption.Original;
+            }
+
             if (extractOption == PsbExtractOption.Original)
             {
+                if (!Directory.Exists(dirPath))
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
+
                 for (int i = 0; i < psb.ExtraResources.Count; i++)
                 {
-                    var relativePath = psb.Resources[i].Index == null ? $"#@{i}.bin" : $"@{psb.Resources[i].Index}.bin";
+                    var relativePath = psb.ExtraResources[i].Index == null ? $"#@{i}.bin" : $"@{psb.ExtraResources[i].Index}.bin";
 
                     File.WriteAllBytes(
-                        Path.Combine(dirPath, Consts.ExtraResourceFolderName, relativePath),
+                        Path.Combine(dirPath, relativePath),
                         psb.ExtraResources[i].Data);
                     extraResDictionary.Add(Path.GetFileNameWithoutExtension(relativePath), $"{name}/{Consts.ExtraResourceFolderName}/{relativePath}");
                 }
             }
             else //Extract
             {
-                //TODO:
+                var dict = new Dictionary<string, float[]>();
+                context.Context[Consts.Context_FlattenArray] = dict;
+                for (int i = 0; i < psb.ExtraResources.Count; i++)
+                {
+                    var relativePath = psb.ExtraResources[i].Index == null ? $"#@{i}.bin" : $"@{psb.ExtraResources[i].Index}.bin";
+                    var data = psb.ExtraResources[i].Data;
+                    var resName = Path.GetFileNameWithoutExtension(relativePath);
+                    if (data.Length % 4 == 0)
+                    {
+                        var floats = MemoryMarshal.Cast<byte, float>(data.AsSpan());
+                        dict.Add(resName, floats.ToArray());
+                        extraResDictionary.Add(resName, "");
+                    }
+                    else
+                    {
+                        if (!Directory.Exists(dirPath))
+                        {
+                            Directory.CreateDirectory(dirPath);
+                        }
+
+                        File.WriteAllBytes(
+                            Path.Combine(dirPath, relativePath),
+                            psb.ExtraResources[i].Data);
+                        extraResDictionary.Add(resName, $"{name}/{Consts.ExtraResourceFolderName}/{relativePath}");
+                    }
+                }
             }
 
             return extraResDictionary;

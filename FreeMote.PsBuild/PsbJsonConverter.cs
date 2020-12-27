@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -21,13 +22,11 @@ namespace FreeMote.PsBuild
         //    typeof(PsbList),typeof(PsbDictionary),
         //};
 
-        public bool ArrayCollapse { get; set; }
         public bool UseDoubleOnly { get; set; }
         public bool UseHexNumber { get; set; }
 
-        public PsbJsonConverter(bool arrayCollapse = true, bool useDoubleOnly = false, bool useHexNumber = false)
+        public PsbJsonConverter(bool useDoubleOnly = false, bool useHexNumber = false)
         {
-            ArrayCollapse = arrayCollapse;
             UseDoubleOnly = useDoubleOnly;
             UseHexNumber = useHexNumber;
         }
@@ -85,29 +84,12 @@ namespace FreeMote.PsBuild
                     writer.WriteValue(array.Value);
                     break;
                 case PsbList collection:
-                    if (ArrayCollapse)
+                    writer.WriteStartArray();
+                    foreach (var obj in collection)
                     {
-                        writer.WriteStartArray();
-                        if (collection.Count > 0 && !(collection[0] is IPsbCollection))
-                        {
-                            writer.Formatting = Formatting.None;
-                        }
-                        foreach (var obj in collection)
-                        {
-                            WriteJson(writer, obj, serializer);
-                        }
-                        writer.WriteEndArray();
-                        writer.Formatting = Formatting.Indented;
+                        WriteJson(writer, obj, serializer);
                     }
-                    else
-                    {
-                        writer.WriteStartArray();
-                        foreach (var obj in collection)
-                        {
-                            WriteJson(writer, obj, serializer);
-                        }
-                        writer.WriteEndArray();
-                    }
+                    writer.WriteEndArray();
                     break;
                 case PsbDictionary dictionary:
                     writer.WriteStartObject();
@@ -249,6 +231,43 @@ namespace FreeMote.PsBuild
         {
             return objectType.GetInterface("IPsbValue") != null;
             //return SupportTypes.Contains(objectType);
+        }
+    }
+
+    public class ArrayCollapseJsonTextWriter : JsonTextWriter
+    {
+        public bool AddIndentSpace { get; set; } = false;
+
+        public ArrayCollapseJsonTextWriter(TextWriter writer) : base(writer)
+        {
+        }
+
+        protected override void WriteIndent()
+        {
+            if (WriteState != WriteState.Array)
+            {
+                base.WriteIndent();
+            }
+            else
+            {
+                if (AddIndentSpace)
+                {
+                    WriteIndentSpace();
+                }
+            }
+        }
+
+        public static string SerializeObject(object obj, JsonConverter converter = null)
+        { 
+            using StringWriter sw = new StringWriter();
+            using JsonWriter jw = new ArrayCollapseJsonTextWriter(sw) {Formatting = Formatting.Indented};
+            var ser = new JsonSerializer();
+            if (converter != null)
+            {
+                ser.Converters.Add(converter);
+            }
+            ser.Serialize(jw, obj);
+            return sw.ToString();
         }
     }
 }

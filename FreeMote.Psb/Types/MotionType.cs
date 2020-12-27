@@ -114,9 +114,7 @@ namespace FreeMote.Psb.Types
         public override Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
             PsbExtractOption extractOption = PsbExtractOption.Original)
         {
-            var dic = base.OutputResources(psb, context, name, dirPath, extractOption);
-
-            return dic;
+            return base.OutputResources(psb, context, name, dirPath, extractOption);
         }
     }
 }

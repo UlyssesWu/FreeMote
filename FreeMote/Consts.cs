@@ -72,6 +72,11 @@ namespace FreeMote
         /// (bool) Whether to decode and encode FlattenArray in extra resources (false by default)
         /// </summary>
         public const string Context_UseFlattenArray = "UseFlattenArray";
+
+        /// <summary>
+        /// (Dict) FlattenArray in Context
+        /// </summary>
+        public const string Context_FlattenArray = "FlattenArray";
         
         /// <summary>
         /// 0x075BCD15
@@ -126,6 +131,11 @@ namespace FreeMote
         public static bool PsbObjectOrderByKey { get; set; } = true;
 
         /// <summary>
+        /// Always consider ExtraResource as FlattenArray of float unless it's not 4-bytes aligned
+        /// </summary>
+        public static bool FlattenArrayByDefault { get; set; } = true;
+
+        /// <summary>
         /// (not implemented yet) Use Palette Merge will increase compile time but cut output size (only when using CI* images)
         /// </summary>
         public static bool PaletteMerge { get; set; } = false;
@@ -134,12 +144,7 @@ namespace FreeMote
         /// Allows you to edit CI* images by re-generate the palette for each bppIndexed image (will increase size), otherwise you should not change those images
         /// </summary>
         public static bool GeneratePalette { get; set; } = true;
-
-        /// <summary>
-        /// If true, prefer plugins than inherit
-        /// </summary>
-        public static bool PluginFirst { get; set; } = false;
-
+        
         /// <summary>
         /// Use managed code rather than external/native if possible
         /// </summary>

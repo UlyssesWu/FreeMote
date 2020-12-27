@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
@@ -105,9 +106,13 @@ namespace FreeMote.PsBuild
 
         public static string Decompile(PSB psb)
         {
+            if (Consts.JsonArrayCollapse)
+            {
+                return ArrayCollapseJsonTextWriter.SerializeObject(psb.Objects,
+                    new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
+            }
             return JsonConvert.SerializeObject(psb.Objects, Formatting.Indented,
-                new PsbJsonConverter(Consts.JsonArrayCollapse, Consts.JsonUseDoubleOnly,
-                    Consts.JsonUseHexNumber));
+                new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
         }
 
         internal static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbExtractOption extractOption = PsbExtractOption.Original,
@@ -124,8 +129,7 @@ namespace FreeMote.PsBuild
             }
 
             var extraDir = Path.Combine(dirPath, Consts.ExtraResourceFolderName);
-
-
+            
             if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
             {
                 if (psb.Resources.Count != 0)
@@ -134,12 +138,10 @@ namespace FreeMote.PsBuild
                 }
             }
 
-            if (psb.ExtraResources.Count > 0 && !context.UseFlattenArray())
+            if (psb.ExtraResources.Count > 0)
             {
-                if (Directory.Exists(extraDir))
-                {
-                    Directory.CreateDirectory(extraDir);
-                }
+                var extraDic = PsbResHelper.OutputExtraResources(psb, context, name, extraDir, extractOption);
+                resx.ExtraResources = extraDic;
             }
 
             var resDictionary = psb.TypeHandler.OutputResources(psb, context, name, dirPath, extractOption);
@@ -149,11 +151,23 @@ namespace FreeMote.PsBuild
             {
                 resx.Resources = resDictionary;
                 resx.Context = context.Context;
-                File.WriteAllText(Path.ChangeExtension(filePath, ".resx.json"),
-                    JsonConvert.SerializeObject(resx, Formatting.Indented));
+                string json;
+                if (Consts.JsonArrayCollapse)
+                {
+                    json = ArrayCollapseJsonTextWriter.SerializeObject(resx);
+                }
+                else
+                {
+                    json = JsonConvert.SerializeObject(resx, Formatting.Indented);
+                }
+                File.WriteAllText(Path.ChangeExtension(filePath, ".resx.json"), json);
             }
             else
             {
+                if (psb.ExtraResources.Count > 0)
+                {
+                    throw new NotSupportedException("PSBv4 cannot use legacy res.json format.");
+                }
                 File.WriteAllText(Path.ChangeExtension(filePath, ".res.json"),
                     JsonConvert.SerializeObject(resDictionary.Values.ToList(), Formatting.Indented));
             }

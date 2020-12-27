@@ -52,9 +52,9 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="context"></param>
-        /// <param name="name"></param>
-        /// <param name="dirPath"></param>
-        /// <param name="outputUnlinkedPsb"></param>
+        /// <param name="name">resource folder name, could be PSB name itself, or with `-resource` suffix</param>
+        /// <param name="dirPath">resource folder path</param>
+        /// <param name="outputUnlinkedPsb">whether to save the PSB without texture</param>
         /// <param name="order"></param>
         /// <returns>unlinked PSB path</returns>
         void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name);
@@ -64,8 +64,8 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="context"></param>
-        /// <param name="name"></param>
-        /// <param name="dirPath"></param>
+        /// <param name="name">resource folder name, could be PSB name itself, or with `-resource` suffix</param>
+        /// <param name="dirPath">resource folder path</param>
         /// <param name="extractOption"></param>
         /// <returns>(FileName, RelativePath)</returns>
         Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath, PsbExtractOption extractOption = PsbExtractOption.Original);

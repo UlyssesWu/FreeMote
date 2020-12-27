@@ -46,7 +46,8 @@ namespace FreeMote.Tools.PsbDecompile
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
             var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue,
                 true);
-
+            var optDisableFlattenArray = app.Option("-dfa|--disable-flatten-array",
+                "Disable represent extra resource as flatten arrays", CommandOptionType.NoValue, inherited: true);
 
             //args
             var argPath =
@@ -193,6 +194,26 @@ Example:
 
                 archiveCmd.OnExecute(() =>
                 {
+                    if (optOom.HasValue())
+                    {
+                        InMemoryLoading = false;
+                    }
+
+                    if (optArray.HasValue())
+                    {
+                        JsonArrayCollapse = false;
+                    }
+
+                    if (optHex.HasValue())
+                    {
+                        JsonUseHexNumber = true;
+                    }
+
+                    if (optDisableFlattenArray.HasValue())
+                    {
+                        FlattenArrayByDefault = false;
+                    }
+
                     bool extractAll = optExtractAll.HasValue();
                     var outputRaw = optRaw.HasValue();
                     bool enableParallel = FastMode;
@@ -238,6 +259,11 @@ Example:
                 if (optHex.HasValue())
                 {
                     JsonUseHexNumber = true;
+                }
+
+                if (optDisableFlattenArray.HasValue())
+                {
+                    FlattenArrayByDefault = false;
                 }
 
                 bool useRaw = optRaw.HasValue();

@@ -42,12 +42,6 @@ namespace FreeMote.PsBuild
         public bool ExternalTextures { get; set; } = false;
         
         /// <summary>
-        /// Setting Context (mainly for plugins)
-        /// </summary>
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public Dictionary<string, object> Context { get; set; } = new Dictionary<string, object>();
-
-        /// <summary>
         /// Resources
         /// </summary>
         public Dictionary<string, string> Resources { get; set; }
@@ -59,10 +53,11 @@ namespace FreeMote.PsBuild
         public Dictionary<string, string> ExtraResources { get; set; }
 
         /// <summary>
-        /// ExtraResources (FlattenArray)
+        /// Setting Context (mainly for plugins)
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public Dictionary<string, List<float>> ExtraFlattenArrays { get; set; }
+        public Dictionary<string, object> Context { get; set; } = new Dictionary<string, object>();
+
 
         public PsbResourceJson()
         {
