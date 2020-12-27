@@ -1196,7 +1196,7 @@ namespace FreeMote.Psb
                     pStr.WriteTo(bw);
                     return;
                 case PsbResource pRes:
-                    if (pRes.Index == null || pRes.Index >= Resources.Count)
+                    if (pRes.Index == null || (pRes.IsExtra && pRes.Index >= ExtraResources.Count) || (!pRes.IsExtra && pRes.Index >= Resources.Count))
                     {
                         Debug.WriteLine($"Resource index: {pRes.Index} seems to be wrong!");
                     }

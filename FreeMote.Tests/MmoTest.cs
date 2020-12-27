@@ -16,19 +16,8 @@ namespace FreeMote.Tests
         //nekomimi is binded to eyebrow
         //1:gif 2:trialable
         //1:free 2:academy 3:indies 4:commercial 5:common
-        private TestContext testContextInstance;
 
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
+        public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void TestPackMmo()

@@ -130,6 +130,11 @@ namespace FreeMote.PsBuild
 
                     context = FreeMount.CreateContext(resx.Context);
 
+                    if (resx.HasExtraResources)
+                    {
+                        PsbResHelper.LinkExtraResources(psb, context, resx.ExtraResources, resx.ExtraFlattenArrays, baseDir);
+                    }
+
                     if (resx.ExternalTextures)
                     {
 #if DEBUG

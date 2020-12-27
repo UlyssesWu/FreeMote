@@ -1165,7 +1165,7 @@ namespace FreeMote.Psb
             Index = br.ReadCompactUInt((byte) n);
         }
 
-        private string IdentifierChar => IsExtra ? "@" : "#";
+        private char IdentifierChar => IsExtra ? Consts.ExtraResourceIdentifierChar : Consts.ResourceIdentifierChar;
         internal string ResourceIdentifier => IsExtra ? Consts.ExtraResourceIdentifier : Consts.ResourceIdentifier;
 
         public PsbResource(uint? index = null, bool isExtra = false)

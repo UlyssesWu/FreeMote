@@ -32,6 +32,9 @@ namespace FreeMote
         /// </summary>
         public const string ExtraResourceIdentifier = "#resource@";
 
+        public const char ExtraResourceIdentifierChar = '@';
+        public const char ResourceIdentifierChar = '#';
+
         /// <summary>
         /// (string)
         /// </summary>
@@ -73,11 +76,6 @@ namespace FreeMote
         /// </summary>
         public const string Context_UseFlattenArray = "UseFlattenArray";
 
-        /// <summary>
-        /// (Dict) FlattenArray in Context
-        /// </summary>
-        public const string Context_FlattenArray = "FlattenArray";
-        
         /// <summary>
         /// 0x075BCD15
         /// </summary>

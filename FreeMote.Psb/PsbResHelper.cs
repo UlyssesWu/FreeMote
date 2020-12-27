@@ -200,9 +200,61 @@ namespace FreeMote.Psb
             }
         }
 
-        public static void LinkExtraResources(PSB psb, FreeMountContext context)
+        public static void LinkExtraResources(PSB psb, FreeMountContext context, Dictionary<string, string> extraResourcesDictionary, Dictionary<string, float[]> flattenArrays = null, string baseDir = null)
         {
+            for (int i = 0; i < psb.ExtraResources.Count; i++)
+            {
+                var key = $"{Consts.ExtraResourceIdentifierChar}{i}";
+                if (flattenArrays != null && (context.UseFlattenArray() || Consts.FlattenArrayByDefault))
+                {
+                    if (!LinkFromFlattenArray(psb.ExtraResources[i], key))
+                    {
+                        if (!LinkFromFile(psb.ExtraResources[i], key))
+                        {
+                            Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
+                        }
+                    }
+                }
+                else
+                {
+                    if (!LinkFromFile(psb.ExtraResources[i], key))
+                    {
+                        Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
+                    }
+                }
+            }
 
+            bool LinkFromFile(PsbResource res, string key)
+            {
+                if (extraResourcesDictionary.ContainsKey(key) && !string.IsNullOrEmpty(extraResourcesDictionary[key]))
+                {
+                    var path = extraResourcesDictionary[key];
+                    var fullPath = Path.IsPathRooted(path)
+                        ? path
+                        : Path.Combine(baseDir ?? "", path.Replace('/', '\\'));
+                    if (!File.Exists(fullPath))
+                    {
+                        return false;
+                    }
+                    res.Data = File.ReadAllBytes(fullPath);
+                    return true;
+                }
+
+                return false;
+            }
+
+            bool LinkFromFlattenArray(PsbResource res, string key)
+            {
+                if (flattenArrays.ContainsKey(key))
+                {
+                    var floats = flattenArrays[key].AsSpan();
+                    var bytes = MemoryMarshal.Cast<float, byte>(floats);
+                    res.Data = bytes.ToArray();
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -501,9 +553,10 @@ namespace FreeMote.Psb
         }
 
         public static Dictionary<string, string> OutputExtraResources(PSB psb, FreeMountContext context, string name,
-            string dirPath, PsbExtractOption extractOption = PsbExtractOption.Original)
+            string dirPath, out Dictionary<string, float[]> flattenArrays, PsbExtractOption extractOption = PsbExtractOption.Original)
         {
             Dictionary<string, string> extraResDictionary = new Dictionary<string, string>();
+            flattenArrays = null;
 
             if (!context.UseFlattenArray() && !Consts.FlattenArrayByDefault)
             {
@@ -529,8 +582,8 @@ namespace FreeMote.Psb
             }
             else //Extract
             {
-                var dict = new Dictionary<string, float[]>();
-                context.Context[Consts.Context_FlattenArray] = dict;
+                flattenArrays = new Dictionary<string, float[]>();
+                //context.Context[Consts.Context_FlattenArray] = flattenArrays;
                 for (int i = 0; i < psb.ExtraResources.Count; i++)
                 {
                     var relativePath = psb.ExtraResources[i].Index == null ? $"#@{i}.bin" : $"@{psb.ExtraResources[i].Index}.bin";
@@ -539,8 +592,8 @@ namespace FreeMote.Psb
                     if (data.Length % 4 == 0)
                     {
                         var floats = MemoryMarshal.Cast<byte, float>(data.AsSpan());
-                        dict.Add(resName, floats.ToArray());
-                        extraResDictionary.Add(resName, "");
+                        flattenArrays.Add(resName, floats.ToArray());
+                        //extraResDictionary.Add(resName, "");
                     }
                     else
                     {

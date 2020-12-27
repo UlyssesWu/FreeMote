@@ -88,6 +88,16 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestJsonContext()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "dx_ふかみ_駅員服.resx.json");
+            var obj = JsonConvert.DeserializeObject<PsbResourceJson>(File.ReadAllText(path));
+            //var flattenArrays = obj.Context[Consts.Context_FlattenArray];
+            //Console.WriteLine();
+        }
+
+        [TestMethod]
         public void TestCompileKrkr()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

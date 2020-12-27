@@ -19,13 +19,7 @@ namespace FreeMote.Tests
         {
         }
 
-        private TestContext testContextInstance;
-
-        public TestContext TestContext
-        {
-            get { return testContextInstance; }
-            set { testContextInstance = value; }
-        }
+        public TestContext TestContext { get; set; }
 
         #region 附加测试特性
 

@@ -24,17 +24,11 @@ namespace FreeMote.Tests
         {
         }
 
-        private TestContext testContextInstance;
-
         /// <summary>
         ///获取或设置测试上下文，该上下文提供
         ///有关当前测试运行及其功能的信息。
         ///</summary>
-        public TestContext TestContext
-        {
-            get => testContextInstance;
-            set => testContextInstance = value;
-        }
+        public TestContext TestContext { get; set; }
 
         #region 附加测试特性
 

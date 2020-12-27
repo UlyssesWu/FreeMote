@@ -140,8 +140,12 @@ namespace FreeMote.PsBuild
 
             if (psb.ExtraResources.Count > 0)
             {
-                var extraDic = PsbResHelper.OutputExtraResources(psb, context, name, extraDir, extractOption);
+                var extraDic = PsbResHelper.OutputExtraResources(psb, context, name, extraDir, out var flattenArrays, extractOption);
                 resx.ExtraResources = extraDic;
+                if (flattenArrays != null && flattenArrays.Count > 0)
+                {
+                    resx.ExtraFlattenArrays = flattenArrays;
+                }
             }
 
             var resDictionary = psb.TypeHandler.OutputResources(psb, context, name, dirPath, extractOption);
