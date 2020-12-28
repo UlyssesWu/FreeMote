@@ -164,6 +164,11 @@ namespace FreeMote.Psb
                     resMd = resList.FirstOrDefault(r => resxResource.Key == Path.GetFileNameWithoutExtension(r.Name));
                 }
 
+                if (resMd == null && resxResource.Key.StartsWith("##") && int.TryParse(resxResource.Key.Substring(2), out int rIdx))
+                {
+                    resMd = resList[rIdx];
+                }
+
                 if (resMd == null && uint.TryParse(resxResource.Key, out uint rid))
                 {
                     resMd = resList.FirstOrDefault(r => r.Index == rid);
@@ -239,7 +244,7 @@ namespace FreeMote.Psb
                     res.Data = File.ReadAllBytes(fullPath);
                     return true;
                 }
-
+                
                 return false;
             }
 
@@ -366,7 +371,7 @@ namespace FreeMote.Psb
             {
                 for (int i = 0; i < psb.Resources.Count; i++)
                 {
-                    var relativePath = psb.Resources[i].Index == null ? $"##{i}.bin" : $"{psb.Resources[i].Index}.bin";
+                    var relativePath = psb.Resources[i].Index == null ? $"#{Consts.ResourceIdentifierChar}{i}.bin" : $"{psb.Resources[i].Index}.bin";
 
                     File.WriteAllBytes(
                         Path.Combine(dirPath, relativePath),
@@ -496,13 +501,14 @@ namespace FreeMote.Psb
                             throw new ArgumentOutOfRangeException(nameof(currentExtractOption), currentExtractOption, null);
                     }
 
+                    //Determine save name
                     try
                     {
                         bool indexConflict = false;
                         uint conflictedIndex = 0;
-                        if (resource.Resource.Index != null)
+                        if (resource.Resource.Index != null) //try index as name first
                         {
-                            if (resDictionary.ContainsKey(resource.Index.ToString()))
+                            if (resDictionary.ContainsKey(resource.Index.ToString())) //index is used before
                             {
                                 Console.WriteLine(
                                     $"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
@@ -514,14 +520,14 @@ namespace FreeMote.Psb
                         }
                         if (resource.Resource.Index == null)
                         {
-                            if (resDictionary.ContainsKey(friendlyName))
+                            if (resDictionary.ContainsKey(friendlyName)) // friendly name is also used (most likely its the same res reused), no name can be used to save
                             {
                                 Console.WriteLine(
                                     $"[WARN] Resource Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
-                                continue;
+                                continue; //just skip
                             }
 
-                            if (indexConflict)
+                            if (indexConflict) //index is used but friendly name is not (maybe they are different?), save using friendly name
                             {
                                 Console.WriteLine($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
                             }
@@ -572,7 +578,7 @@ namespace FreeMote.Psb
 
                 for (int i = 0; i < psb.ExtraResources.Count; i++)
                 {
-                    var relativePath = psb.ExtraResources[i].Index == null ? $"#@{i}.bin" : $"@{psb.ExtraResources[i].Index}.bin";
+                    var relativePath = psb.ExtraResources[i].Index == null ? $"#{Consts.ExtraResourceIdentifierChar}{i}.bin" : $"{Consts.ExtraResourceIdentifierChar}{psb.ExtraResources[i].Index}.bin";
 
                     File.WriteAllBytes(
                         Path.Combine(dirPath, relativePath),
@@ -586,7 +592,7 @@ namespace FreeMote.Psb
                 //context.Context[Consts.Context_FlattenArray] = flattenArrays;
                 for (int i = 0; i < psb.ExtraResources.Count; i++)
                 {
-                    var relativePath = psb.ExtraResources[i].Index == null ? $"#@{i}.bin" : $"@{psb.ExtraResources[i].Index}.bin";
+                    var relativePath = psb.ExtraResources[i].Index == null ? $"#{Consts.ExtraResourceIdentifierChar}{i}.bin" : $"{Consts.ExtraResourceIdentifierChar}{psb.ExtraResources[i].Index}.bin";
                     var data = psb.ExtraResources[i].Data;
                     var resName = Path.GetFileNameWithoutExtension(relativePath);
                     if (data.Length % 4 == 0)

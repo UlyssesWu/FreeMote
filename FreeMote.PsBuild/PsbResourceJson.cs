@@ -64,6 +64,7 @@ namespace FreeMote.PsBuild
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, float[]> ExtraFlattenArrays { get; set; }
 
+        [JsonIgnore]
         public bool HasExtraResources => (ExtraFlattenArrays != null && ExtraFlattenArrays.Count > 0) ||
                                          (ExtraResources != null && ExtraResources.Count > 0);
 
