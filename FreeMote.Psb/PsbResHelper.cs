@@ -207,14 +207,19 @@ namespace FreeMote.Psb
 
         public static void LinkExtraResources(PSB psb, FreeMountContext context, Dictionary<string, string> extraResourcesDictionary, Dictionary<string, float[]> flattenArrays = null, string baseDir = null)
         {
-            for (int i = 0; i < psb.ExtraResources.Count; i++)
+            foreach (var extraResource in psb.ExtraResources)
             {
-                var key = $"{Consts.ExtraResourceIdentifierChar}{i}";
+                if (extraResource.Index == null)
+                {
+                    Console.WriteLine("[WARN] Found Extra resource without index. Skipped.");
+                    continue;
+                }
+                var key = $"{Consts.ExtraResourceIdentifierChar}{extraResource.Index}";
                 if (flattenArrays != null && (context.UseFlattenArray() || Consts.FlattenArrayByDefault))
                 {
-                    if (!LinkFromFlattenArray(psb.ExtraResources[i], key))
+                    if (!LinkFromFlattenArray(extraResource, key))
                     {
-                        if (!LinkFromFile(psb.ExtraResources[i], key))
+                        if (!LinkFromFile(extraResource, key))
                         {
                             Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
                         }
@@ -222,7 +227,7 @@ namespace FreeMote.Psb
                 }
                 else
                 {
-                    if (!LinkFromFile(psb.ExtraResources[i], key))
+                    if (!LinkFromFile(extraResource, key))
                     {
                         Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
                     }
