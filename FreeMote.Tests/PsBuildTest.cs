@@ -413,7 +413,8 @@ namespace FreeMote.Tests
         public void TestDecompileDullahan()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "ap_bup_yu02_頭部.psb");
+            var path = Path.Combine(resPath, "dx_オリヴィ_制服.psb");
+            //var path = Path.Combine(resPath, "ap_bup_yu02_頭部.psb");
             //var path = Path.Combine(resPath, "dx_真闇_裸_impure.psb");
             var json = PsbDecompiler.Decompile(path, out var psb);
         }

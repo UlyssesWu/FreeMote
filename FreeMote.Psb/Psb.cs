@@ -1536,7 +1536,9 @@ namespace FreeMote.Psb
                 if (array1.Value.Count > 0 && array2.Value.Count > 0)
                 {
                     var currentPos = br.BaseStream.Position;
-                    var shouldBeLength = ExtraChunkOffsets.Value.Max() + ExtraChunkLengths.Value.Max();
+                    //var shouldBeLength = ExtraChunkOffsets.Value.Max() + ExtraChunkLengths.Value.Max();
+                    var lengthOfMaxOffsetItem = ExtraChunkLengths[ExtraChunkOffsets.Value.IndexOf(ExtraChunkOffsets.Value.Max())];
+                    var shouldBeLength = ExtraChunkOffsets.Value.Max() + lengthOfMaxOffsetItem;
                     br.BaseStream.Position = currentPos + shouldBeLength;
                     var detectionArea = br.ReadBytes(detectSize);
                     var detected = false;
@@ -1631,7 +1633,7 @@ namespace FreeMote.Psb
 
                 var currentPos = br.BaseStream.Position;
                 var remainLength = br.BaseStream.Length - currentPos;
-                var lengthOfMaxOffsetItem = ChunkLengths[ChunkLengths.Value.IndexOf(ChunkOffsets.Value.Max())];
+                var lengthOfMaxOffsetItem = ChunkLengths[ChunkOffsets.Value.IndexOf(ChunkOffsets.Value.Max())];
                 var shouldBeLength = ChunkOffsets.Value.Max() + lengthOfMaxOffsetItem;
                 var padding = Math.Max((remainLength - shouldBeLength), 0);
 
