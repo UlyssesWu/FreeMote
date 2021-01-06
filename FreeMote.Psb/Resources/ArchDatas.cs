@@ -217,4 +217,23 @@ namespace FreeMote.Psb
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.Atrac9;
     }
+
+    /// <summary>
+    /// PS VAG
+    /// </summary>
+    public class VagArchData : IArchData
+    {
+        public PsbResource Data { get; set; }
+        public PsbDictionary PsbArchData { get; set; }
+
+        public IPsbValue ToPsbArchData()
+        {
+            return Data;
+        }
+
+        public uint Index => Data.Index ?? uint.MaxValue;
+        public string Extension => Format.DefaultExtension();
+        public string WaveExtension { get; set; } = ".wav";
+        public PsbAudioFormat Format => PsbAudioFormat.VAG;
+    }
 }

@@ -214,6 +214,11 @@ namespace FreeMote.Psb
                 }
             }
 
+            if (TypeHandler == null)
+            {
+                TypeHandler = TypeHandlers[PsbType.PSB];
+            }
+
             return PsbType.PSB;
         }
 

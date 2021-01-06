@@ -155,6 +155,8 @@ namespace FreeMote
                     return ".opus";
                 case PsbAudioFormat.XWMA:
                     return ".xwma";
+                case PsbAudioFormat.VAG:
+                    return ".vag";
                 default:
                     return $".{audioFormat.ToString().ToLowerInvariant()}";
             }

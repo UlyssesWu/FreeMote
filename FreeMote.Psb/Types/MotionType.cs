@@ -21,8 +21,11 @@ namespace FreeMote.Psb.Types
                 ? new List<T>()
                 : new List<T>(psb.Resources.Count);
 
-            FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
-
+            if (psb.Objects != null && psb.Objects.ContainsKey(MotionSourceKey))
+            {
+                FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
+            }
+            
             return resourceList;
         }
 

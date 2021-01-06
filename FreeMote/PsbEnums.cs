@@ -239,6 +239,7 @@ namespace FreeMote
         Atrac9,
         OPUS,
         XWMA,
+        VAG,
     }
 
     public enum EncodeMode

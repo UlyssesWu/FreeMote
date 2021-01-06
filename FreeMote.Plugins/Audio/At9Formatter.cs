@@ -112,12 +112,15 @@ namespace FreeMote.Plugins.Audio
             {
                 if (dic.Count == 1 && dic["archData"] is PsbResource res)
                 {
-                    data = new Atrac9ArchData
+                    if (res.Data.AsciiEqual("RIFF"))
                     {
-                        Data = res
-                    };
+                        data = new Atrac9ArchData
+                        {
+                            Data = res
+                        };
 
-                    return true;
+                        return true;
+                    }
                 }
 
                 return false;
