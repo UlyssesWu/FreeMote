@@ -75,7 +75,6 @@ namespace FreeMote.Psb
     {
         internal static readonly Dictionary <PsbType, IPsbType> TypeHandlers = new Dictionary<PsbType, IPsbType>()
         {
-            {PsbType.PSB, new MotionType()}, //assume as motion type by default
             {PsbType.Motion, new MotionType()},
             {PsbType.Scn, new ScnType()},
             {PsbType.Tachie, new ImageType()},
@@ -83,8 +82,9 @@ namespace FreeMote.Psb
             {PsbType.Mmo, new MmoType()},
             {PsbType.ArchiveInfo, new ArchiveType()},
             {PsbType.SoundArchive, new SoundArchiveType()},
-            {PsbType.BmpFont, new FontType()}
-        };
+            {PsbType.BmpFont, new FontType()},
+            {PsbType.PSB, new MotionType()}, //assume as motion type by default, must put this after Motion
+    };
         
     }
 }

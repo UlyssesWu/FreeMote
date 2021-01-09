@@ -230,6 +230,10 @@ namespace FreeMote
         /// RGBA5650 with Swizzle for vita
         /// </summary>
         RGBA5650_SW,
+        /// <summary>
+        /// A8L8 with Swizzle for vita
+        /// </summary>
+        A8L8_SW,
     }
 
     public enum PsbAudioFormat

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
@@ -200,6 +201,8 @@ namespace FreeMote
                     return PsbPixelFormat.LeRGBA4444_SW;
                 case "A8L8":
                     return PsbPixelFormat.A8L8;
+                case "A8L8_SW":
+                    return PsbPixelFormat.A8L8_SW;
                 case "RGBA5650":
                     return PsbPixelFormat.RGBA5650;
                 case "RGBA5650_SW":
@@ -297,6 +300,16 @@ namespace FreeMote
             var str = Consts.PsbEncoding.GetString(br.ReadBytes(length));
             br.ReadByte(); //skip \0 - fail if end without \0
             return str;
+        }
+
+        public static uint ReadUInt32BE(this BinaryReader br)
+        {
+            return BinaryPrimitives.ReadUInt32BigEndian(br.ReadBytes(4));
+        }
+
+        public static int ReadInt32BE(this BinaryReader br)
+        {
+            return BinaryPrimitives.ReadInt32BigEndian(br.ReadBytes(4));
         }
 
         public static void WriteStringZeroTrim(this BinaryWriter bw, string str)

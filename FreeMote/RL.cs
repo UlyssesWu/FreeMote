@@ -46,6 +46,10 @@ namespace FreeMote
                 case PsbPixelFormat.A8L8:
                     data = ReadA8L8(data, width, height);
                     break;
+                case PsbPixelFormat.A8L8_SW:
+                    data = ReadA8L8(data, width, height);
+                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    break;
                 case PsbPixelFormat.DXT5:
                     data = DxtUtil.DecompressDxt5(data, width, height);
                     Switch_0_2(ref data); //DXT5(for win) need conversion
@@ -131,6 +135,10 @@ namespace FreeMote
                     Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.A8L8:
+                    result = Argb2A8L8(result);
+                    break;
+                case PsbPixelFormat.A8L8_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb2A8L8(result);
                     break;
                 case PsbPixelFormat.DXT5:
