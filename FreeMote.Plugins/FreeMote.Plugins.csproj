@@ -69,7 +69,7 @@
   <ItemGroup>
     <Compile Include="Audio\At9Formatter.cs" />
     <Compile Include="Audio\OpusFormatter.cs" />
-    <Compile Include="Audio\VagDecoder.cs" />
+    <Compile Include="Audio\VagFile.cs" />
     <Compile Include="Audio\VagFormatter.cs" />
     <Compile Include="Audio\XwmaFormatter.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

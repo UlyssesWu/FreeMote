@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using FreeMote.Psb;
@@ -39,21 +40,68 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
-            if (File.Exists(ToolPath))
+            if (!File.Exists(ToolPath))
             {
-                return true;
+                return false;
             }
-            return false;
+
+            return true;
         }
 
         public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
         {
+            VagFile vag = new VagFile();
+            if (vag.LoadFromStream(new MemoryStream(archData.Data.Data)))
+            {
+                return vag.ToWave().ToArray();
+            }
+
             return null;
         }
 
         public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
         {
-            return null;
+            if (!File.Exists(ToolPath))
+            {
+                return null;
+            }
+
+            var tempFile = Path.GetTempFileName();
+            File.WriteAllBytes(tempFile, wave);
+            var tempOutFile = Path.ChangeExtension(tempFile, ".vag");
+
+            byte[] outBytes = null;
+            try
+            {
+                ProcessStartInfo info = new ProcessStartInfo(ToolPath, $"\"{tempFile}\"")
+                {
+                    UseShellExecute = false,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true
+                };
+                Process process = Process.Start(info);
+                process?.WaitForExit();
+                if (!File.Exists(tempOutFile) || process?.ExitCode != 0)
+                {
+                    Console.WriteLine("[ERROR] VAG convert failed.");
+                    return null;
+                }
+
+                outBytes = File.ReadAllBytes(tempOutFile);
+                File.Delete(tempFile);
+                File.Delete(tempOutFile);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            var arch = new VagArchData
+            {
+                Data = new PsbResource { Data = outBytes }
+            };
+
+            return arch;
         }
 
         public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data)

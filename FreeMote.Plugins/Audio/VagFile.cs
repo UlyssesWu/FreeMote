@@ -1,4 +1,5 @@
-﻿// Originally by SilicaAndPina & daemon1, modified by UlyssesWu
+﻿// HEVAG decoder, Originally by SilicaAndPina & daemon1, modified by UlyssesWu
+// normal VAG (non-HE) is not supported for now
 // References:
 // https://github.com/vgmstream/vgmstream/blob/9e971af29239e79c387ea709ccebd9d72bb12ce9/src/meta/vag.c 
 // https://bitbucket.org/SilicaAndPina/cxml-decompiler/raw/7a0e1a553bfdad369cf09957652b652ab1452d3f/AppInfoCli/VAG.cs
@@ -11,7 +12,7 @@ using FreeMote.Psb;
 
 namespace FreeMote.Plugins.Audio
 {
-    class VagFile
+    public class VagFile
     {
         //In fact there are many variations with different signatures. If someday I have to support them but I get bored, I will make a wrapper for vgmstream
         private static readonly byte[] Signature = { (byte)'V', (byte)'A', (byte)'G', (byte)'p' }; 
@@ -173,14 +174,11 @@ namespace FreeMote.Plugins.Audio
             FilePath = path;
         }
 
-        public bool Load()
+        public VagFile(){}
+        
+        public bool LoadFromStreamLegacy(Stream stream)
         {
-            if (!File.Exists(FilePath))
-            {
-                return false;
-            }
-
-            using BinaryReader br = new BinaryReader(File.OpenRead(FilePath));
+            using BinaryReader br = new BinaryReader(stream);
             if (!br.ReadBytes(4).SequenceEqual(Signature)) //0x00
             {
                 //throw new Exception("Not a VAG file.");
@@ -198,6 +196,11 @@ namespace FreeMote.Plugins.Audio
             br.ReadByte(); //0x1F, reserved
             FileName = Encoding.ASCII.GetString(br.ReadBytes(16)); //0x20-0x30, file name
             br.ReadBytes(16); //0x30-0x40, usually 0
+
+            if (IsStereo)
+            {
+                Console.WriteLine("[WARN] Stereo VAG is not supported. Please provide the sample for research.");
+            }
 
             // Get PCM data
             int Hist = 0;
@@ -283,6 +286,151 @@ namespace FreeMote.Plugins.Audio
             return true;
         }
 
+        public bool LoadFromStream(Stream stream)
+        {
+            using BinaryReader br = new BinaryReader(stream);
+            if (!br.ReadBytes(4).SequenceEqual(Signature)) //0x00
+            {
+                //throw new Exception("Not a VAG file.");
+                return false;
+            }
+
+            var fileSize = br.BaseStream.Length;
+
+            Version = br.ReadUInt32BE(); //0x04
+            br.ReadBytes(4); //0x08, reserved
+            WaveformDataSize = br.ReadUInt32BE(); //0x0c
+            SampleRate = br.ReadUInt32BE(); //0x10
+            br.ReadBytes(10); //0x14-0x1D, reserved
+            ChannelCount = br.ReadByte(); //0x1E, reserved
+            br.ReadByte(); //0x1F, reserved
+            FileName = Encoding.ASCII.GetString(br.ReadBytes(16)); //0x20-0x30, file name
+            //br.ReadBytes(16); //0x30-0x40, usually 0
+
+            if (IsStereo)
+            {
+                Console.WriteLine("[WARN] Stereo VAG is not supported. Please provide the sample for research.");
+            }
+
+            // Get PCM data
+            int Hist = 0;
+            int Hist2 = 0;
+            int Hist3 = 0;
+            int Hist4 = 0;
+
+            /* external interleave (fixed size), mono */
+            var bytesPerFrame = 0x10;
+            var samplesPerFrame = (bytesPerFrame - 0x02) * 2; /* always 28 */
+            
+            using MemoryStream PCMStream = new MemoryStream();
+            using BinaryWriter PCMWriter = new BinaryWriter(PCMStream);
+
+            while (br.BaseStream.Position < fileSize)
+            {
+                byte decodingCoefficent = br.ReadByte();
+                int shiftFactor = decodingCoefficent & 0xf;
+                int coefIndex = (decodingCoefficent >> 0x4) & 0xf;
+                byte loopData = br.ReadByte();
+                coefIndex |= loopData & 0xF0;
+                int loopFlag = loopData & 0xf;
+
+                if (coefIndex > 127)
+                {
+                    coefIndex = 127;
+                }
+
+                if (shiftFactor > 12)
+                {
+                    shiftFactor = 9;
+                }
+
+                shiftFactor = 20 - shiftFactor;
+
+                if (loopFlag == 0x7)
+                {
+                    br.BaseStream.Seek(14, SeekOrigin.Current);
+                    for (int i = 0; i < 28; i++)
+                    {
+                        PCMWriter.Write((short)0);
+                    }
+                    //Hist = 0;
+                    //Hist2 = 0;
+                    //Hist3 = 0;
+                    //Hist4 = 0;
+                }
+                else
+                {
+                    for (int i = 0; i < 14; i++)
+                    {
+                        byte adpcmData = br.ReadByte();
+
+                        for (int j = 0; j < 2; j++)
+                        {
+                            var coefficent = Hist * HEVAGCoeffTable[coefIndex, 0] + Hist2 * HEVAGCoeffTable[coefIndex, 1] + Hist3 * HEVAGCoeffTable[coefIndex, 2] + Hist4 * HEVAGCoeffTable[coefIndex, 3];
+                            var sample = ((j & 1) != 0 ? GetHighNibbleSigned(adpcmData) : GetLowNibbleSigned(adpcmData)) << shiftFactor;
+                            sample = (coefficent >> 5) + sample;
+                            sample >>= 8;
+
+                            PCMWriter.Write(Clamp16(sample));
+
+                            Hist4 = Hist3;
+                            Hist3 = Hist2;
+                            Hist2 = Hist;
+                            Hist = sample;
+                        }
+                    }
+                }
+
+                /* TODO:
+                 * Arg im mad because i know how to get left/right channels
+                 * But i have no idea how to combine them
+                 * So lets just get one and call it a day.
+                 */
+
+                if (IsStereo)
+                {
+                    br.BaseStream.Seek(16, SeekOrigin.Current);
+                }
+            }
+
+
+            PCMStream.Seek(0x00, SeekOrigin.Begin);
+            PcmData = PCMStream.ToArray();
+            return true;
+        }
+
+        /* signed nibbles come up a lot */
+        static int[] _nibbleToInt = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, -8, -7, -6, -5, -4, -3, -2, -1 };
+
+        static int GetHighNibbleSigned(byte n)
+        { 
+            /*return ((n&0x70)-(n&0x80))>>4;*/
+            return _nibbleToInt[n >> 4];
+        }
+        
+        static int GetLowNibbleSigned(byte n)
+        {
+            /*return (n&7)-(n&8);*/
+            return _nibbleToInt[n & 0xf];
+        }
+
+        static short Clamp16(int val)
+        {
+            if (val > 32767) return 32767;
+            if (val < -32768) return -32768;
+            else return (short)val;
+        }
+
+        public bool Load()
+        {
+            if (!File.Exists(FilePath))
+            {
+                return false;
+            }
+
+            return LoadFromStream(File.OpenRead(FilePath));
+        }
+
         public void WriteToWavFile(string path)
         {
             var stream = ToWave();
@@ -316,8 +464,8 @@ namespace FreeMote.Plugins.Audio
             var channelCount = ChannelCount > 1 ? 2 : 1;
             bw.Write((short)channelCount);
             bw.Write(SampleRate);
-            bw.Write((SampleRate * 16 * channelCount) / 8);
-            bw.Write((short)(16 * channelCount));
+            bw.Write((uint) ((SampleRate * 16 * channelCount) / 8)); //4 bytes, must convert
+            bw.Write((short)(16 * channelCount / 8)); //ref: https://blog.csdn.net/xcgspring/article/details/4671221
             bw.Write((short)16);
 
             bw.WriteUTF8("data");

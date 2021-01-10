@@ -56,6 +56,10 @@ namespace FreeMote.Psb
                     var at9Arch = (Atrac9ArchData) ChannelList[0];
                     at9Arch.Data.Data = File.ReadAllBytes(fullPath);
                     break;
+                case ".vag":
+                    var vagArch = (VagArchData)ChannelList[0];
+                    vagArch.Data.Data = File.ReadAllBytes(fullPath);
+                    break;
                 case ".xwma":
                     var xwmaArch = (XwmaArchData) ChannelList[0];
                     xwmaArch.ReadFromXwma(File.OpenRead(fullPath));

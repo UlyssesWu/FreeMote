@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FreeMote.Plugins.Audio;
 using FreeMote.Plugins.Shells;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -262,6 +263,15 @@ namespace FreeMote.Tests
             }
         }
 
+        [TestMethod]
+        public void TestVagDecode()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "pm_a01_01_eru0000.psb.pure", "pm_a01_01_eru0000.vag");
+            var vag = new VagFile(path);
+            vag.Load();
+            vag.WriteToWavFile("test.wav");
+        }
         //[TestMethod]
         //public void TestTlgNative()
         //{
