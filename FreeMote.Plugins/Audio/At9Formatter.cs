@@ -105,12 +105,12 @@ namespace FreeMote.Plugins.Audio
             return arch;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data)
+        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
             if (psb.Platform == PsbSpec.ps4 || psb.Platform == PsbSpec.vita)
             {
-                if (dic.Count == 1 && dic["archData"] is PsbResource res)
+                if (dic.Count == 1 && dic["archData"] is PsbResource res && res.Data != null && res.Data.Length > 0)
                 {
                     if (res.Data.AsciiEqual("RIFF"))
                     {

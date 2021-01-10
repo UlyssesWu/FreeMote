@@ -41,7 +41,7 @@ namespace FreeMote.Plugins
 
         public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData)
         {
-            return FreeMount._.TryGetArchData(psb, voice, out archData);
+            return FreeMount._.TryGetArchData(psb, voice, out archData, Context);
         }
 
         /// <summary>

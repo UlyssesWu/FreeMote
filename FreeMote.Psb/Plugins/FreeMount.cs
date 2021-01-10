@@ -280,12 +280,12 @@ namespace FreeMote.Plugins
             return AudioFormatters[ext].ToArchData(wave, waveExt, context);
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData)
+        public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData, Dictionary<string, object> context = null)
         {
             archData = null;
             foreach (var audioFormatter in AudioFormatters)
             {
-                if (audioFormatter.Value.TryGetArchData(psb, voice, out archData))
+                if (audioFormatter.Value.TryGetArchData(psb, voice, out archData, context))
                 {
                     return true;
                 }

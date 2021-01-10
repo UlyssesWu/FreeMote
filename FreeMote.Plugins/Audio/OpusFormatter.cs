@@ -55,7 +55,7 @@ namespace FreeMote.Plugins.Audio
             return archData;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data)
+        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
             //if (psb.Platform != PsbSpec.nx)
