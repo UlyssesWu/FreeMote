@@ -304,11 +304,11 @@ namespace FreeMote
                     var srcIndex = (y * width) + x;
                     var srcPosition = srcIndex / scale;
                     var srcSubIndex = srcIndex % scale; 
-                    var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
+                    var srcData = srcSubIndex == 1 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
                     var dstPosition = i / scale;
                     var dstSubIndex = i % scale;
-                    // 这里是大端，dstSubIndex = 0, 则设置大端前2字节
-                    swizzled[dstPosition] = dstSubIndex == 1 ? (byte)((swizzled[dstPosition] & 0xF0) | srcData) : (byte)((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                    //Inverse the order comparing to Unswizzle
+                    swizzled[dstPosition] = dstSubIndex == 0 ? (byte)((swizzled[dstPosition] & 0xF0) | srcData) : (byte)((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
                 }
                 else
                 {
