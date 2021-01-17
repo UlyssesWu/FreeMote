@@ -27,7 +27,7 @@ namespace FreeMote
                 bytes[i * 4 + 1] = color.G;
                 bytes[i * 4 + 2] = color.R;
                 bytes[i * 4 + 3] = color.A;
-                var bt = BitConverter.GetBytes(color.ToArgb());
+                //var bt = BitConverter.GetBytes(color.ToArgb());
             }
 
             switch (palettePixelFormat)
@@ -91,6 +91,7 @@ namespace FreeMote
             switch (format)
             {
                 case PsbPixelFormat.CI8_SW:
+                case PsbPixelFormat.CI4_SW:
                     return true;
                 default:
                     return false;
@@ -180,6 +181,8 @@ namespace FreeMote
             {
                 case "L8_SW":
                     return PsbPixelFormat.L8_SW;
+                case "CI4_SW":
+                    return PsbPixelFormat.CI4_SW;
                 case "CI8_SW":
                     return PsbPixelFormat.CI8_SW;
                 case "DXT5":

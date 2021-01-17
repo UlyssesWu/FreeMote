@@ -169,6 +169,9 @@ namespace FreeMote
                 case PsbPixelFormat.CI8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
+                case PsbPixelFormat.CI4_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
                 case PsbPixelFormat.L8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb2L8(result);
@@ -205,17 +208,34 @@ namespace FreeMote
             switch (colorFormat)
             {
                 case PsbPixelFormat.CI8_SW:
-                    bmp = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
-                    bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
-                        ImageLockMode.WriteOnly, bmp.PixelFormat);
-                    ColorPalette pal = bmp.Palette;
-                    for (int i = 0; i < 256; i++)
-                        pal.Entries[i] = Color.FromArgb(BitConverter.ToInt32(palette, i * 4));
-                    // Assign the edited palette to the bitmap.
-                    bmp.Palette = pal;
+                    {
+                        bmp = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
+                        bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
+                            ImageLockMode.WriteOnly, bmp.PixelFormat);
+                        ColorPalette pal = bmp.Palette;
+                        for (int i = 0; i < 256; i++)
+                            pal.Entries[i] = Color.FromArgb(BitConverter.ToInt32(palette, i * 4));
+                        // Assign the edited palette to the bitmap.
+                        bmp.Palette = pal;
 
-                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    //Switch_0_2(ref data);
+                        data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                        //Switch_0_2(ref data);
+                    }
+
+                    break;
+                case PsbPixelFormat.CI4_SW:
+                    {
+                        bmp = new Bitmap(width, height, PixelFormat.Format4bppIndexed); //ここ重要
+                        bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
+                            ImageLockMode.WriteOnly, bmp.PixelFormat);
+                        ColorPalette pal = bmp.Palette;
+                        for (int i = 0; i < 16; i++)
+                            pal.Entries[i] = Color.FromArgb(BitConverter.ToInt32(palette, i * 4));
+                        // Assign the edited palette to the bitmap.
+                        bmp.Palette = pal;
+                        //data.Length * 2 = 8bppBmp.Width * 8bppBmp.Height
+                        data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    }
                     break;
                 default:
                     return ConvertToImage(data, height, width, colorFormat);
@@ -230,6 +250,7 @@ namespace FreeMote
             {
                 Marshal.Copy(data, 0, iptr, data.Length);
                 bmp.UnlockBits(bmpData); // 解锁内存区域
+                
                 return bmp;
             }
 

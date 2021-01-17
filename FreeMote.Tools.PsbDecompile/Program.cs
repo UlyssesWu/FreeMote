@@ -48,6 +48,8 @@ namespace FreeMote.Tools.PsbDecompile
                 true);
             var optDisableFlattenArray = app.Option("-dfa|--disable-flatten-array",
                 "Disable represent extra resource as flatten arrays", CommandOptionType.NoValue, inherited: true);
+            var optType = app.Option<PsbType>("-t|--type <TYPE>", "Set PSB type manually",
+                CommandOptionType.SingleValue, inherited: true);
 
             //args
             var argPath =
@@ -270,18 +272,23 @@ Example:
                 //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
 
+                PsbType type = PsbType.PSB;
+                if (optType.HasValue())
+                {
+                    type = optType.ParsedValue;
+                }
                 foreach (var s in argPath.Values)
                 {
                     if (File.Exists(s))
                     {
-                        Decompile(s, useRaw, PsbImageFormat.png , key);
+                        Decompile(s, useRaw, PsbImageFormat.png, key, type);
                     }
                     else if (Directory.Exists(s))
                     {
                         foreach (var file in PsbExtension.GetFiles(s,
                             new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
-                            Decompile(s, useRaw, PsbImageFormat.png, key);
+                            Decompile(s, useRaw, PsbImageFormat.png, key, type);
                         }
                     }
                 }
@@ -321,7 +328,7 @@ Example:
         }
 
         static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.png,
-            uint? key = null)
+            uint? key = null, PsbType type = PsbType.PSB)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");
@@ -332,11 +339,11 @@ Example:
             {
                 if (keepRaw)
                 {
-                    PsbDecompiler.DecompileToFile(path, key: key);
+                    PsbDecompiler.DecompileToFile(path, key: key, type: type);
                 }
                 else
                 {
-                    PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key);
+                    PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type);
                 }
             }
 #if !DEBUG

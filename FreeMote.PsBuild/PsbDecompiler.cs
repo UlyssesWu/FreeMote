@@ -34,8 +34,9 @@ namespace FreeMote.PsBuild
         /// <param name="path"></param>
         /// <param name="psb"></param>
         /// <param name="context"></param>
+        /// <param name="psbType"></param>
         /// <returns></returns>
-        public static string Decompile(string path, out PSB psb, Dictionary<string, object> context = null)
+        public static string Decompile(string path, out PSB psb, Dictionary<string, object> context = null, PsbType psbType = PsbType.PSB)
         {
             using (var fs = File.OpenRead(path))
             {
@@ -98,6 +99,11 @@ namespace FreeMote.PsBuild
                             throw;
                         }
                     }
+                }
+
+                if (psbType != PsbType.PSB)
+                {
+                    psb.Type = psbType;
                 }
 
                 return Decompile(psb);
@@ -209,8 +215,9 @@ namespace FreeMote.PsBuild
         /// <param name="extractFormat">if extract, what format do you want</param>
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
+        /// <param name="type">Specify PSB type, if not set, infer type automatically</param>
         public static void DecompileToFile(string inputPath, PsbExtractOption extractOption = PsbExtractOption.Original,
-            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null)
+            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null, PsbType type = PsbType.PSB)
         {
             var context = FreeMount.CreateContext();
             if (key != null)

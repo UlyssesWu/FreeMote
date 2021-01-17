@@ -629,14 +629,21 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="d">PsbObject which contains "pixel"</param>
         /// <param name="r">Resource</param>
-        /// <param name="duplicatePalette"></param>
+        /// <param name="duplicatePalette">When set to true, Pal.Data may not be set!</param>
         /// <returns></returns>
         internal static ImageMetadata GenerateImageMetadata(PsbDictionary d, PsbResource r = null,
             bool duplicatePalette = false)
         {
             if (r == null)
             {
-                r = d.Values.FirstOrDefault(v => v is PsbResource) as PsbResource;
+                if (d.ContainsKey(Consts.ResourceKey) && d[Consts.ResourceKey] is PsbResource rr)
+                {
+                    r = rr;
+                }
+                else //this may find Pal
+                {
+                    r = d.Values.FirstOrDefault(v => v is PsbResource) as PsbResource;
+                }
             }
 
             bool is2D = false;

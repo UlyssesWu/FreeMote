@@ -131,9 +131,72 @@ namespace FreeMote
             return Compact1By1(code >> 1);
         }
 
+        public static void SwitchPixel(this Bitmap bmp, int x1, int y1, int x2, int y2)
+        {
+            var c1 = bmp.GetPixel(x1, y1);
+            var c2 = bmp.GetPixel(x2, y2);
+            bmp.SetPixel(x2,y2, c1);
+            bmp.SetPixel(x1,y1, c2);
+        }
+
+        /// <summary>
+        /// Unswizzle, this is much slower than <seealso cref="UnswizzleTexture"/>
+        /// </summary>
+        /// <param name="bmp"></param>
+        public static void Swizzle(this Bitmap bmp)
+        {
+            var width = bmp.Width;
+            var height = bmp.Height;
+
+            int min = width < height ? width : height;
+            int k = (int)Math.Log(min, 2);
+
+            for (int i = 0; i < width * height; i++)
+            {
+                int x, y;
+                if (height < width)
+                {
+                    // XXXyxyxyx → XXXxxxyyy
+                    int j = i >> (2 * k) << (2 * k)
+                            | (DecodeMorton2Y(i) & (min - 1)) << k
+                            | (DecodeMorton2X(i) & (min - 1)) << 0;
+                    x = j / height;
+                    y = j % height;
+                }
+                else
+                {
+                    // YYYyxyxyx → YYYyyyxxx
+                    int j = i >> (2 * k) << (2 * k)
+                            | (DecodeMorton2X(i) & (min - 1)) << k
+                            | (DecodeMorton2Y(i) & (min - 1)) << 0;
+                    x = j % width;
+                    y = j / width;
+                }
+
+                if (y >= height || x >= width) continue;
+
+                var oriX = i % width;
+                var oriY = i / width;
+
+                bmp.SwitchPixel(oriX, oriY, x, y);
+            }
+        }
+
         public static byte[] UnswizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
         {
-            int bytesPerPixel = (Image.GetPixelFormatSize(pixelFormat) / 8);
+            var scale = 1;
+            var pixelFormatSize = Image.GetPixelFormatSize(pixelFormat);
+            bool compactMode = false;
+            int bytesPerPixel = pixelFormatSize / 8;
+            if (bytesPerPixel == 0) //less than 8
+            {
+                compactMode = true;
+                scale = 8 / pixelFormatSize;
+                if (scale != 2)
+                {
+                    throw new NotSupportedException("BytesPerPixel must >= 0.5");
+                }
+            }
             byte[] unswizzled = new byte[pixelData.Length];
             int min = width < height ? width : height;
             int k = (int)Math.Log(min, 2);
@@ -162,18 +225,52 @@ namespace FreeMote
 
                 if (y >= height || x >= width) continue;
 
-                Buffer.BlockCopy(pixelData, i * bytesPerPixel, unswizzled, ((y * width) + x) * bytesPerPixel,
-                    bytesPerPixel);
+                /*
+                   0    1    2
+                   +---------+
+                   |    |**  |
+                   |    |    |
+                   +----+----+
+                    1234 1234
+                    0 1  2 3             
+                 */
+
+                if (compactMode)
+                {
+                    var srcPosition = i / scale;
+                    var srcSubIndex = i % scale;
+                    var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
+                    var dstIndex = (y * width) + x;
+                    var dstPosition = dstIndex / scale;
+                    var dstSubIndex = dstIndex % scale;
+                    // 这里是大端，dstSubIndex = 0, 则设置大端前2字节
+                    unswizzled[dstPosition] = dstSubIndex == 1 ? (byte)((unswizzled[dstPosition] & 0xF0) | srcData) : (byte)((unswizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                }
+                else
+                {
+                    Buffer.BlockCopy(pixelData, i * bytesPerPixel, unswizzled, ((y * width) + x) * bytesPerPixel,
+                        bytesPerPixel);
+                }
             }
 
             return unswizzled;
         }
-
-        #endregion
-
+        
         public static byte[] SwizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
         {
-            int bytesPerPixel = (Image.GetPixelFormatSize(pixelFormat) / 8);
+            var scale = 1;
+            var pixelFormatSize = Image.GetPixelFormatSize(pixelFormat);
+            bool compactMode = false;
+            int bytesPerPixel = pixelFormatSize / 8;
+            if (bytesPerPixel == 0) //less than 8
+            {
+                compactMode = true;
+                scale = 8 / pixelFormatSize;
+                if (scale != 2)
+                {
+                    throw new NotSupportedException("BytesPerPixel must >= 0.5");
+                }
+            }
             byte[] swizzled = new byte[pixelData.Length];
             int min = width < height ? width : height;
             int k = (int) Math.Log(min, 2);
@@ -202,11 +299,28 @@ namespace FreeMote
 
                 if (y >= height || x >= width) continue;
 
-                Buffer.BlockCopy(pixelData, ((y * width) + x) * bytesPerPixel, swizzled, i * bytesPerPixel,
-                    bytesPerPixel);
+                if (compactMode)
+                {
+                    var srcIndex = (y * width) + x;
+                    var srcPosition = srcIndex / scale;
+                    var srcSubIndex = srcIndex % scale; 
+                    var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
+                    var dstPosition = i / scale;
+                    var dstSubIndex = i % scale;
+                    // 这里是大端，dstSubIndex = 0, 则设置大端前2字节
+                    swizzled[dstPosition] = dstSubIndex == 1 ? (byte)((swizzled[dstPosition] & 0xF0) | srcData) : (byte)((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                }
+                else
+                {
+                    Buffer.BlockCopy(pixelData, ((y * width) + x) * bytesPerPixel, swizzled, i * bytesPerPixel,
+                        bytesPerPixel);
+                }
             }
 
             return swizzled;
         }
+
+        #endregion
+
     }
 }
