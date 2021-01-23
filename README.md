@@ -23,8 +23,6 @@ External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMot
 
 ### FreeMote.Purify (Unreleased)
 Infer and calculate the key used by EMT PSB file just from the PSB file (rather than get from engine).
-### DualVectorFoil (Unrealistic)
-PSB <-> MOC conversion.
 
 ## Tools
 ### EmtConvert (FreeMote.Tools.EmtConvert)
@@ -47,6 +45,11 @@ To install our own nuget packages, add this feed to VS:
 
 `https://www.myget.org/F/monarchsolutions/api/v3/index.json`
 
+
+## Test
+Get PSB samples for test and research from [FreeMote.Samples](https://github.com/Dual-Vector-Foil/FreeMote.Samples).
+
+Thanks for everyone who provided these samples!
 
 ---
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA

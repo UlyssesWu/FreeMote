@@ -166,6 +166,31 @@ namespace FreeMote
             }
         }
 
+        // Yet another PSB bad design: some types do not have a type id while others do.
+
+        public static string DefaultTypeId(this PsbType type)
+        {
+            switch (type)
+            {
+                case PsbType.Tachie:
+                    return "image";
+                case PsbType.ArchiveInfo:
+                    return "archive";
+                case PsbType.BmpFont:
+                    return "font";
+                case PsbType.Motion:
+                    return "motion";
+                case PsbType.SoundArchive:
+                    return "sound_archive";
+                case PsbType.PSB:
+                case PsbType.Mmo:
+                case PsbType.Scn:
+                case PsbType.Pimg:
+                default:
+                    return "";
+            }
+        }
+
         /// <summary>
         /// Get <see cref="PsbPixelFormat"/> from string and <see cref="PsbSpec"/>
         /// </summary>
