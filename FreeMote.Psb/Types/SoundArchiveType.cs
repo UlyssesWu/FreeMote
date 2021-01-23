@@ -161,6 +161,7 @@ namespace FreeMote.Psb.Types
         public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
             PsbLinkOrderBy order = PsbLinkOrderBy.Name)
         {
+            //TODO:
         }
 
         public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
@@ -188,7 +189,7 @@ namespace FreeMote.Psb.Types
                     if (resource.ChannelList.Count == 1)
                     {
                         var bts = resource.ChannelList[0].TryToWave(context);
-                        var relativePath = resource.GetFileName(resource.ChannelList[0].WaveExtension); //WaveExtension may change after ToWave
+                        var relativePath = resource.GetFileName(resource.ChannelList[0].Extension + resource.ChannelList[0].WaveExtension); //WaveExtension may change after ToWave
                         if (bts != null)
                         {
                             File.WriteAllBytes(Path.Combine(dirPath, relativePath), bts);
@@ -201,7 +202,7 @@ namespace FreeMote.Psb.Types
                         {
                             var waveChannel = resource.ChannelList[j];
                             var bts = waveChannel.TryToWave(context);
-                            var relativePath = resource.GetFileName($"-{j}{waveChannel.WaveExtension}");
+                            var relativePath = resource.GetFileName($"-{j}{waveChannel.Extension}{waveChannel.WaveExtension}");
                             if (bts != null)
                             {
                                 File.WriteAllBytes(Path.Combine(dirPath, relativePath), bts);

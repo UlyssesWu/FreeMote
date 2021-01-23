@@ -270,14 +270,14 @@ namespace FreeMote.Plugins
             return ImageFormatters[ext].ToBytes(bitmap, context);
         }
 
-        public IArchData WaveToArchData(string ext, in byte[] wave, string waveExt, Dictionary<string, object> context = null)
+        public IArchData WaveToArchData(string ext, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToArchData(wave))
             {
                 return null;
             }
 
-            return AudioFormatters[ext].ToArchData(wave, waveExt, context);
+            return AudioFormatters[ext].ToArchData(wave, fileName, waveExt, context);
         }
 
         public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData, Dictionary<string, object> context = null)

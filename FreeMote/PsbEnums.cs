@@ -242,7 +242,7 @@ namespace FreeMote
 
     public enum PsbAudioFormat
     {
-        None = 0,
+        Unknown = 0,
         WAV,
         Atrac9,
         OPUS,

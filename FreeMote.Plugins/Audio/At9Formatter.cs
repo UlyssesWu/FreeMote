@@ -44,15 +44,21 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            if (archData is Atrac9ArchData)
+            if (archData is PsArchData psArch)
             {
-                return true;
+                if (psArch.Data?.Data != null && psArch.Data.Data.Length > 4)
+                {
+                    if (psArch.Data.Data.AsciiEqual("RIFF"))
+                    {
+                        return true;
+                    }
+                }
             }
 
             return false;
         }
 
-        public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {
@@ -97,9 +103,10 @@ namespace FreeMote.Plugins.Audio
                 Console.WriteLine(e);
             }
 
-            var arch = new Atrac9ArchData
+            var arch = new PsArchData
             {
-                Data = new PsbResource {Data = outBytes}
+                Data = new PsbResource {Data = outBytes},
+                Format = PsbAudioFormat.Atrac9
             };
 
             return arch;
@@ -110,17 +117,30 @@ namespace FreeMote.Plugins.Audio
             data = null;
             if (psb.Platform == PsbSpec.ps4 || psb.Platform == PsbSpec.vita)
             {
-                if (dic.Count == 1 && dic["archData"] is PsbResource res && res.Data != null && res.Data.Length > 0)
+                if (dic.Count == 1 && dic["archData"] is PsbResource res)
                 {
-                    if (res.Data.AsciiEqual("RIFF"))
+                    if (res.Data != null && res.Data.Length > 0) //res data exists
                     {
-                        data = new Atrac9ArchData
+                        if (res.Data.AsciiEqual("RIFF"))
                         {
-                            Data = res
-                        };
+                            data = new PsArchData
+                            {
+                                Data = res,
+                                Format = PsbAudioFormat.Atrac9
+                            };
+                            return true;
+                        }
 
-                        return true;
+                        //...but the data is other format (vag)
+                        return false;
                     }
+
+                    //res data is null, maybe linking
+                    data = new PsArchData
+                    {
+                        Data = res
+                    };
+                    return true;
                 }
 
                 return false;

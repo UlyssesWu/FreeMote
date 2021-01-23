@@ -784,6 +784,10 @@ namespace FreeMote.Psb
                                     return sameDataRes; //merge resource correctly!
                                 }
                             }
+                            else
+                            {
+                                resList.Add(r);
+                            }
                         }
                         else
                         {

@@ -82,7 +82,7 @@ namespace FreeMote.Plugins.Audio
             return outBytes;
         }
         
-        public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {

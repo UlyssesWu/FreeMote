@@ -34,9 +34,9 @@ namespace FreeMote.Plugins
             return FreeMount._.ArchDataToWave(ext, archData, Context);
         }
 
-        public IArchData WaveToArchData(string ext, in byte[] wave, string waveExt = ".wav")
+        public IArchData WaveToArchData(string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
         {
-            return FreeMount._.WaveToArchData(ext, wave, waveExt,  Context);
+            return FreeMount._.WaveToArchData(ext, wave, fileName, waveExt,  Context);
         }
 
         public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData)

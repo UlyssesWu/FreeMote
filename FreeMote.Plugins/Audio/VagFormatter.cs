@@ -17,6 +17,7 @@ namespace FreeMote.Plugins.Audio
         public List<string> Extensions { get; } = new List<string> { ".vag" };
 
         private const string EncoderTool = "vagconv2.exe";
+        private const string DecoderTool = "vgmstream.exe";
 
         public string ToolPath { get; set; } = null;
 
@@ -30,9 +31,15 @@ namespace FreeMote.Plugins.Audio
         }
         public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            if (archData is VagArchData)
+            if (archData is PsArchData psArch)
             {
-                return true;
+                if (psArch.Data?.Data != null && psArch.Data.Data.Length > 4)
+                {
+                    if (psArch.Data.Data.AsciiEqual("VAGp"))
+                    {
+                        return true;
+                    }
+                }
             }
 
             return false;
@@ -59,14 +66,19 @@ namespace FreeMote.Plugins.Audio
             return null;
         }
 
-        public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {
                 return null;
             }
 
-            var tempFile = Path.GetTempFileName();
+            var tempPath = Path.GetTempPath();
+            var tempFile = Path.Combine(tempPath, fileName);
+            if (tempFile.EndsWith(".vag"))
+            {
+                tempFile = Path.ChangeExtension(tempFile, "");
+            }
             File.WriteAllBytes(tempFile, wave);
             var tempOutFile = Path.ChangeExtension(tempFile, ".vag");
 
@@ -96,9 +108,10 @@ namespace FreeMote.Plugins.Audio
                 Console.WriteLine(e);
             }
 
-            var arch = new VagArchData
+            var arch = new PsArchData
             {
-                Data = new PsbResource { Data = outBytes }
+                Data = new PsbResource { Data = outBytes },
+                Format = PsbAudioFormat.VAG
             };
 
             return arch;
@@ -109,20 +122,32 @@ namespace FreeMote.Plugins.Audio
             data = null;
             if (psb.Platform == PsbSpec.ps4 || psb.Platform == PsbSpec.vita)
             {
-                if (dic.Count == 1 && dic["archData"] is PsbResource res && res.Data != null && res.Data.Length > 0)
+                if (dic.Count == 1 && dic["archData"] is PsbResource res)
                 {
-                    if (res.Data.AsciiEqual("VAGp"))
+                    if (res.Data != null && res.Data.Length > 0) //res data exists
                     {
-                        data = new VagArchData
+                        if (res.Data.AsciiEqual("VAGp"))
                         {
-                            Data = res
-                        };
+                            data = new PsArchData
+                            {
+                                Data = res,
+                                Format = PsbAudioFormat.VAG
+                            };
+                            return true;
+                        }
 
-                        return true;
+                        //...but the data is other format (at9)
+                        return false;
                     }
+
+                    //res data is null, maybe linking
+                    data = new PsArchData
+                    {
+                        Data = res
+                    };
+                    return true;
                 }
-                
-                //TODO: default audio type, or record type for every resource
+
                 return false;
             }
 

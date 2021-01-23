@@ -1157,7 +1157,7 @@ namespace FreeMote.Psb
     /// Resource: Reference type
     /// </summary>
     [Serializable]
-    [DebuggerDisplay("Resource[{Data?.Length}]({" + nameof(IdentifierChar) + ",nq}{" + nameof(Index) + "})")]
+    [DebuggerDisplay("Resource[{Data?.Length}]({" + nameof(IdentifierCharString) + ",nq}{" + nameof(Index) + "})")]
     public class PsbResource : IPsbValue, IPsbIndexed, IPsbWrite, IPsbSingleton
     {
         internal PsbResource(int n, BinaryReader br)
@@ -1166,6 +1166,10 @@ namespace FreeMote.Psb
         }
 
         private char IdentifierChar => IsExtra ? Consts.ExtraResourceIdentifierChar : Consts.ResourceIdentifierChar;
+
+        private string IdentifierCharString => IdentifierChar.ToString();
+
+
         internal string ResourceIdentifier => IsExtra ? Consts.ExtraResourceIdentifier : Consts.ResourceIdentifier;
 
         public PsbResource(uint? index = null, bool isExtra = false)

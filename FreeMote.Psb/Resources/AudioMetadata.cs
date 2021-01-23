@@ -39,7 +39,7 @@ namespace FreeMote.Psb
         /// </summary>
         public string FileString { get; set; }
 
-        public PsbAudioFormat AudioFormat => ChannelList.Count > 0 ? ChannelList[0].Format : PsbAudioFormat.None;
+        public PsbAudioFormat AudioFormat => ChannelList.Count > 0 ? ChannelList[0].Format : PsbAudioFormat.Unknown;
         public PsbSpec Spec { get; set; } = PsbSpec.other;
         
         public void Link(string fullPath, FreeMountContext context)
@@ -53,11 +53,13 @@ namespace FreeMote.Psb
             switch (ext)
             {
                 case ".at9":
-                    var at9Arch = (Atrac9ArchData) ChannelList[0];
+                    var at9Arch = (PsArchData) ChannelList[0];
+                    at9Arch.Format = PsbAudioFormat.Atrac9;
                     at9Arch.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 case ".vag":
-                    var vagArch = (VagArchData)ChannelList[0];
+                    var vagArch = (PsArchData) ChannelList[0];
+                    vagArch.Format = PsbAudioFormat.VAG;
                     vagArch.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 case ".xwma":
@@ -66,7 +68,20 @@ namespace FreeMote.Psb
                     break;
                 case ".wav":
                 case ".ogg":
-                    var newArch = context.WaveToArchData(ChannelList[0].Extension, File.ReadAllBytes(fullPath),
+                    var realExt = ChannelList[0].Extension;
+                    var fileName = Path.GetFileNameWithoutExtension(fullPath);
+                    var secondExt = Path.GetExtension(fileName).ToLowerInvariant();
+                    if (string.IsNullOrEmpty(realExt) && !string.IsNullOrEmpty(secondExt))
+                    {
+                        realExt = secondExt;
+                        var secondFileName = Path.GetFileNameWithoutExtension(fileName);
+                        if (!string.IsNullOrEmpty(secondFileName))
+                        {
+                            fileName = secondFileName;
+                        }
+                    }
+
+                    var newArch = context.WaveToArchData(realExt, File.ReadAllBytes(fullPath), fileName,
                         ChannelList[0].WaveExtension);
                     if (newArch != null)
                     {
@@ -113,8 +128,8 @@ namespace FreeMote.Psb
                     }
 
                     break;
-                case Atrac9ArchData at9:
-                    at9.Data.Data = File.ReadAllBytes(fullPath);
+                case PsArchData ps:
+                    ps.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 case OpusArchData opus:
                     opus.Data.Data = File.ReadAllBytes(fullPath);
@@ -127,6 +142,11 @@ namespace FreeMote.Psb
             channel.SetPsbArchData(channel.ToPsbArchData());
         }
 
+        /// <summary>
+        /// Get Audio FileName for save
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <returns></returns>
         public string GetFileName(string ext = ".wav")
         {
             if (string.IsNullOrWhiteSpace(ext))

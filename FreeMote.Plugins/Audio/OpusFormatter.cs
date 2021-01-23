@@ -36,7 +36,7 @@ namespace FreeMote.Plugins.Audio
             return oms.ToArray();
         }
 
-        public IArchData ToArchData(byte[] wave, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             WaveReader reader = new WaveReader();
             var data = reader.Read(wave);

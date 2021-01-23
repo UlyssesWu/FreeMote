@@ -199,10 +199,48 @@ namespace FreeMote.Psb
         public PsbAudioFormat Format => PsbAudioFormat.OPUS;
     }
 
+    ///// <summary>
+    ///// PS AT9
+    ///// </summary>
+    //public class Atrac9ArchData : IArchData
+    //{
+    //    public PsbResource Data { get; set; }
+    //    public PsbDictionary PsbArchData { get; set; }
+
+    //    public IPsbValue ToPsbArchData()
+    //    {
+    //        return Data;
+    //    }
+
+    //    public uint Index => Data.Index ?? uint.MaxValue;
+    //    public string Extension => Format.DefaultExtension();
+    //    public string WaveExtension { get; set; } = ".wav";
+    //    public PsbAudioFormat Format => PsbAudioFormat.Atrac9;
+    //}
+
+    ///// <summary>
+    ///// PS VAG
+    ///// </summary>
+    //public class VagArchData : IArchData
+    //{
+    //    public PsbResource Data { get; set; }
+    //    public PsbDictionary PsbArchData { get; set; }
+
+    //    public IPsbValue ToPsbArchData()
+    //    {
+    //        return Data;
+    //    }
+
+    //    public uint Index => Data.Index ?? uint.MaxValue;
+    //    public string Extension => Format.DefaultExtension();
+    //    public string WaveExtension { get; set; } = ".wav";
+    //    public PsbAudioFormat Format => PsbAudioFormat.VAG;
+    //}
+
     /// <summary>
-    /// PS AT9
+    /// PS Base (VAG / AT9)
     /// </summary>
-    public class Atrac9ArchData : IArchData
+    public class PsArchData : IArchData
     {
         public PsbResource Data { get; set; }
         public PsbDictionary PsbArchData { get; set; }
@@ -215,25 +253,6 @@ namespace FreeMote.Psb
         public uint Index => Data.Index ?? uint.MaxValue;
         public string Extension => Format.DefaultExtension();
         public string WaveExtension { get; set; } = ".wav";
-        public PsbAudioFormat Format => PsbAudioFormat.Atrac9;
-    }
-
-    /// <summary>
-    /// PS VAG
-    /// </summary>
-    public class VagArchData : IArchData
-    {
-        public PsbResource Data { get; set; }
-        public PsbDictionary PsbArchData { get; set; }
-
-        public IPsbValue ToPsbArchData()
-        {
-            return Data;
-        }
-
-        public uint Index => Data.Index ?? uint.MaxValue;
-        public string Extension => Format.DefaultExtension();
-        public string WaveExtension { get; set; } = ".wav";
-        public PsbAudioFormat Format => PsbAudioFormat.VAG;
+        public PsbAudioFormat Format { get; set; } = PsbAudioFormat.Unknown;
     }
 }
