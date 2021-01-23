@@ -75,4 +75,5 @@ Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and a
 * @xdaniel & @FireyFly for [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
 * @Nyerguds for [BitmapHelper](https://stackoverflow.com/a/45100442) code.
 * @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/), @skilittle as sponsors!
+* [vgmstream](https://github.com/vgmstream/vgmstream) and @SilicaAndPina for VAG related code.
 * All nuget references used in this project.
