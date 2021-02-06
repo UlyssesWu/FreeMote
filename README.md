@@ -5,6 +5,17 @@ Managed EMT/PSB tool libs.
 
 [Download FreeMote Toolkit](https://github.com/UlyssesWu/FreeMote/releases)
 
+## About PSB
+FreeMote is a set of tool/libs for `M2 Packaged Struct Binary` file format. The file header usually starts with `PSB`/`PSZ`/`mdf`, 
+and the file extensions usually are `.psb|.psz|.mdf|.pimg|.scn|.mmo|.emtbytes|.mtn|.dpak`.
+
+However, there are some other file formats using the same extensions. They are NOT supported:
+* `.psb`: PlayStation Binary (PS3) | PhotoShop Big (Photoshop)
+* `.mdf`: Mirror Disc File (Alcohol 120%) | Primary Data File (MSSQL)
+* `.mtn`: Motion File (Live2D)
+
+Before submitting an issue or asking a question, please check your PSB file header with a hex editor.
+
 ## Components
 ### FreeMote
 Basic functions. Decrypt or encrypt EMT PSB files.
