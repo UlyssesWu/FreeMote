@@ -21,5 +21,5 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("FreeMote.Editor")]
 
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.8.0.0")]
-[assembly: AssemblyFileVersion("2.8.0.0")]
+[assembly: AssemblyVersion("2.9.0.0")]
+[assembly: AssemblyFileVersion("2.9.0.0")]

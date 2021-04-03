@@ -196,6 +196,7 @@ namespace FreeMote.Psb
     public enum PsbNumberType
     {
         Int,
+        Long,
         Float,
         Double,
     }
@@ -213,8 +214,6 @@ namespace FreeMote.Psb
 
         internal PsbNumber(PsbObjType objType, BinaryReader br)
         {
-            NumberType = PsbNumberType.Int;
-
             switch (objType)
             {
                 case PsbObjType.NumberN0:
@@ -222,17 +221,22 @@ namespace FreeMote.Psb
                 case PsbObjType.NumberN2:
                 case PsbObjType.NumberN3:
                 case PsbObjType.NumberN4:
+                    NumberType = PsbNumberType.Int;
                     Data = new byte[4];
                     break;
                 case PsbObjType.NumberN5:
                 case PsbObjType.NumberN6:
                 case PsbObjType.NumberN7:
                 case PsbObjType.NumberN8:
+                    NumberType = PsbNumberType.Long;
                     Data = new byte[8];
                     break;
                 case PsbObjType.Float0:
                 case PsbObjType.Float:
+                    NumberType = PsbNumberType.Float;
+                    break;
                 case PsbObjType.Double:
+                    NumberType = PsbNumberType.Double;
                     break;
                 default:
                     break;
@@ -269,15 +273,12 @@ namespace FreeMote.Psb
                     br.ReadAndUnzip(8, Data);
                     return;
                 case PsbObjType.Float0:
-                    NumberType = PsbNumberType.Float;
                     Data = BitConverter.GetBytes(0.0f);
                     return;
                 case PsbObjType.Float:
-                    NumberType = PsbNumberType.Float;
                     Data = br.ReadBytes(4);
                     return;
                 case PsbObjType.Double:
-                    NumberType = PsbNumberType.Double;
                     Data = br.ReadBytes(8);
                     return;
             }
@@ -286,7 +287,7 @@ namespace FreeMote.Psb
         public PsbNumber()
         {
             Data = new byte[8];
-            NumberType = PsbNumberType.Int;
+            NumberType = PsbNumberType.Long;
         }
 
         public PsbNumber(byte[] data, PsbNumberType type)
@@ -331,13 +332,13 @@ namespace FreeMote.Psb
         /// <param name="val"></param>
         public PsbNumber(uint val)
         {
-            NumberType = PsbNumberType.Int;
-            IntValue = (int) val;
+            NumberType = PsbNumberType.Long;
+            LongValue = val;
         }
 
         public PsbNumber(long val)
         {
-            NumberType = PsbNumberType.Int;
+            NumberType = PsbNumberType.Long;
             LongValue = val;
         }
 
@@ -357,6 +358,8 @@ namespace FreeMote.Psb
                         return FloatValue;
                     case PsbNumberType.Double:
                         return DoubleValue;
+                    case PsbNumberType.Long:
+                        return LongValue;
                     default:
                         return LongValue;
                 }
@@ -378,6 +381,8 @@ namespace FreeMote.Psb
                         return (int) FloatValue;
                     case PsbNumberType.Double:
                         return (int) DoubleValue;
+                    case PsbNumberType.Long:
+                        return (int) LongValue;
                     default:
                         return (int) LongValue;
                 }
@@ -386,6 +391,31 @@ namespace FreeMote.Psb
             {
                 NumberType = PsbNumberType.Int;
                 IntValue = value;
+            }
+        }
+
+        public long AsLong
+        {
+            get
+            {
+                switch (NumberType)
+                {
+                    case PsbNumberType.Int:
+                        return IntValue;
+                    case PsbNumberType.Float:
+                        return (long)FloatValue;
+                    case PsbNumberType.Double:
+                        return (long)DoubleValue;
+                    case PsbNumberType.Long:
+                        return LongValue;
+                    default:
+                        return LongValue;
+                }
+            }
+            set
+            {
+                NumberType = PsbNumberType.Long;
+                LongValue = value;
             }
         }
 
@@ -401,6 +431,8 @@ namespace FreeMote.Psb
                         return FloatValue;
                     case PsbNumberType.Double:
                         return (float) DoubleValue;
+                    case PsbNumberType.Long:
+                        return (float) LongValue;
                     default:
                         return (float) LongValue;
                 }
@@ -424,6 +456,8 @@ namespace FreeMote.Psb
                         return (double) FloatValue;
                     case PsbNumberType.Double:
                         return DoubleValue;
+                    case PsbNumberType.Long:
+                        return (double) LongValue;
                     default:
                         return (double) LongValue;
                 }
@@ -477,9 +511,27 @@ namespace FreeMote.Psb
                     return (int) p.FloatValue;
                 case PsbNumberType.Double:
                     return (int) p.DoubleValue;
+                case PsbNumberType.Long:
+                    return (int) p.LongValue;
                 case PsbNumberType.Int:
                 default:
                     return p.IntValue;
+            }
+        }
+
+        public static explicit operator long(PsbNumber p)
+        {
+            switch (p.NumberType)
+            {
+                case PsbNumberType.Float:
+                    return (long)p.FloatValue;
+                case PsbNumberType.Double:
+                    return (long)p.DoubleValue;
+                case PsbNumberType.Int:
+                    return p.IntValue;
+                case PsbNumberType.Long:
+                default:
+                    return p.LongValue;
             }
         }
 
@@ -491,6 +543,8 @@ namespace FreeMote.Psb
                     return (float) p.IntValue;
                 case PsbNumberType.Double:
                     return (float) p.DoubleValue;
+                case PsbNumberType.Long:
+                    return (float) p.LongValue;
                 case PsbNumberType.Float:
                 default:
                     return p.FloatValue;
@@ -505,6 +559,8 @@ namespace FreeMote.Psb
                     return (double) p.IntValue;
                 case PsbNumberType.Float:
                     return (double) p.FloatValue;
+                case PsbNumberType.Long:
+                    return (double) p.LongValue;
                 case PsbNumberType.Double:
                 default:
                     return p.DoubleValue;
@@ -526,6 +582,11 @@ namespace FreeMote.Psb
             return new PsbNumber(n);
         }
 
+        public static implicit operator PsbNumber(long n)
+        {
+            return new PsbNumber(n);
+        }
+
         public PsbObjType Type
         {
             get
@@ -533,6 +594,7 @@ namespace FreeMote.Psb
                 switch (NumberType)
                 {
                     case PsbNumberType.Int:
+                    case PsbNumberType.Long:
                         switch (LongValue.GetSize())
                         {
                             case 0:
@@ -593,7 +655,9 @@ namespace FreeMote.Psb
                     {
                         bw.Write(IsNumber32 ? IntValue.ZipNumberBytes() : LongValue.ZipNumberBytes());
                     }
-
+                    break;
+                case PsbNumberType.Long:
+                    bw.Write(LongValue.ZipNumberBytes());
                     break;
                 case PsbNumberType.Float:
                     if (Type != PsbObjType.Float0)
@@ -622,6 +686,8 @@ namespace FreeMote.Psb
                     }
 
                     return new byte[0];
+                case PsbNumberType.Long:
+                    return LongValue.ZipNumberBytes();
                 case PsbNumberType.Float:
                     if (Type != PsbObjType.Float0)
                     {

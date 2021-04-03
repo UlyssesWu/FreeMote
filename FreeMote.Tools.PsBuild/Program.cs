@@ -363,19 +363,6 @@ Example:
             sb.AppendLine(@"Examples: 
   PsBuild -v 4 -k 123456789 -p krkr sample.psb.json");
             return sb.ToString();
-
-//            Console.WriteLine("Usage: .exe [Param] <PSB json path>");
-//            Console.WriteLine(@"Param:
-//-v<VerNumber> : Set compile version from [2,4] . Default: 3.
-//-k<CryptKey> : Set CryptKey. Default: none(Pure PSB). Requirement: uint, dec.
-//-p<Platform> : Set platform. Default: keep original platform. Support: krkr/win/common/ems.
-//    Warning: Platform ONLY works with .bmp/.png format textures.
-//-no-shell : Do not compress PSB to shell types even if shell type is specified in resx.json.
-//-no-rename : Compiled filename will be same as the json filename (with .psb extension).
-//    Warning: This setting may overwrite your original PSB files!
-//");
-////-no-key : Ignore any key setting and output pure PSB.
-            //Console.WriteLine("Example: PsBuild -v4 -k123456789 -pkrkr sample.psb.json");
         }
 
         /// <summary>

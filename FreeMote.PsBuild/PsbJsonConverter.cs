@@ -47,6 +47,9 @@ namespace FreeMote.PsBuild
                         case PsbNumberType.Int:
                             writer.WriteValue(num.IntValue);
                             break;
+                        case PsbNumberType.Long:
+                            writer.WriteValue(num.LongValue);
+                            break;
                         case PsbNumberType.Float:
                             if (num.FloatValue.IsFinite() && !UseHexNumber)
                             {
