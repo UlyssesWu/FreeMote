@@ -14,6 +14,7 @@ using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
+using static FreeMote.Psb.PsbExtension;
 
 namespace FreeMote.Tools.PsBuild
 {
@@ -238,43 +239,6 @@ Example:
             Console.WriteLine("Done.");
         }
 
-        private static string ArchiveInfoPsbGetFileName(string fileName, string suffix)
-        {
-            if (string.IsNullOrEmpty(suffix))
-            {
-                return fileName;
-            }
-
-            if (fileName.EndsWith(suffix, true, CultureInfo.InvariantCulture))
-            {
-                return fileName.Remove(fileName.Length - suffix.Length, suffix.Length);
-            }
-
-            return fileName;
-        }
-
-        private static List<string> ArchiveInfoPsbCollectFiles(PSB psb, string suffix)
-        {
-            if (psb.Objects.ContainsKey("file_info") && psb.Objects["file_info"] is PsbDictionary fileInfo)
-            {
-                return fileInfo.Keys.Select(name => name + suffix).ToList();
-            }
-
-            return null;
-        }
-
-        private static string ArchiveInfoPsbGetSuffix(PSB psb)
-        {
-            var suffix = "";
-            if (psb.Objects.ContainsKey("expire_suffix_list") &&
-                psb.Objects["expire_suffix_list"] is PsbList col && col[0] is PsbString s)
-            {
-                suffix = s;
-            }
-
-            return suffix;
-        }
-
         private static void Port(string s, PsbSpec portSpec)
         {
             var name = Path.GetFileNameWithoutExtension(s);
@@ -427,11 +391,11 @@ Example:
 
             var baseDir = Path.GetDirectoryName(jsonPath);
             var files = new Dictionary<string, (string Path, ProcessMethod Method)>();
-            var suffix = ArchiveInfoPsbGetSuffix(infoPsb);
+            var suffix = ArchiveInfoGetSuffix(infoPsb);
             List<string> filter = null;
-            if (intersect)
+            if (intersect) //only collect files appeared in json
             {
-                filter = ArchiveInfoPsbCollectFiles(infoPsb, suffix);
+                filter = ArchiveInfoCollectFiles(infoPsb, suffix).ToList();
             }
 
             void CollectFiles(string targetDir)
@@ -447,17 +411,17 @@ Example:
                     {
                         continue;
                     }
-                    else if (f.EndsWith(".json", true, CultureInfo.InvariantCulture))
+                    else if (f.EndsWith(".json", true, CultureInfo.InvariantCulture)) //json source, need compile
                     {
                         var name = Path.GetFileNameWithoutExtension(f);
                         if (preferPacked && files.ContainsKey(name) &&
-                            files[name].Method != ProcessMethod.Compile)
+                            files[name].Method != ProcessMethod.Compile) //it's always right no matter set or replace
                         {
                             //ignore
                         }
                         else
                         {
-                            if (intersect && filter != null && !filter.Contains(name))
+                            if (intersect && filter != null && !filter.Contains(name)) //this file is not appeared in json
                             {
                                 //ignore
                             }
@@ -509,7 +473,7 @@ Example:
             var bodyBinFileName = Path.GetFileName(jsonPath);
             var packageName = Path.GetFileNameWithoutExtension(bodyBinFileName);
 
-            var coreName = PsbExtension.ArchiveInfoGetPackageName(packageName);
+            var coreName = ArchiveInfoGetPackageName(packageName);
             bodyBinFileName = string.IsNullOrEmpty(coreName) ? packageName + "_body.bin" : coreName + "_body.bin";
 
             //using var mmFile =
@@ -523,7 +487,8 @@ Example:
                 var contents = new ConcurrentBag<(string Name, Stream Content)>();
                 Parallel.ForEach(files, (kv) =>
                 {
-                    var fileNameWithoutSuffix = ArchiveInfoPsbGetFileName(kv.Key, suffix);
+                    var fileNameWithoutSuffix = ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+
                     if (kv.Value.Method == ProcessMethod.None)
                     {
                         contents.Add((fileNameWithoutSuffix, File.OpenRead(kv.Value.Path)));
@@ -534,12 +499,11 @@ Example:
                     var context = FreeMount.CreateContext(mdfContext);
                     if (!string.IsNullOrEmpty(key))
                     {
-                        mdfContext[Context_MdfKey] = key + fileNameWithoutSuffix + suffix;
+                        mdfContext[Context_MdfKey] = key + kv.Key;
                     }
                     else if (resx.Context[Context_MdfMtKey] is string mtKey)
                     {
-                        mdfContext[Context_MdfKey] =
-                            mtKey + fileNameWithoutSuffix + suffix;
+                        mdfContext[Context_MdfKey] = mtKey + kv.Key;
                     }
                     else
                     {
@@ -591,7 +555,7 @@ Example:
                 //using var ms = mmFile.CreateViewStream();
                 foreach (var kv in files.OrderBy(f => f.Key, StringComparer.Ordinal))
                 {
-                    var fileNameWithoutSuffix = ArchiveInfoPsbGetFileName(kv.Key, suffix);
+                    var fileNameWithoutSuffix = ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
                     if (kv.Value.Method == ProcessMethod.None)
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
@@ -605,12 +569,11 @@ Example:
                     {
                         if (!string.IsNullOrEmpty(key))
                         {
-                            fmContext.Context[Context_MdfKey] = key + fileNameWithoutSuffix + suffix;
+                            fmContext.Context[Context_MdfKey] = key + kv.Key;
                         }
                         else if (resx.Context[Context_MdfMtKey] is string mtKey)
                         {
-                            fmContext.Context[Context_MdfKey] =
-                                mtKey + fileNameWithoutSuffix + suffix;
+                            fmContext.Context[Context_MdfKey] = mtKey + kv.Key;
                         }
                         else
                         {
@@ -628,7 +591,7 @@ Example:
                         var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
                         if (!string.IsNullOrEmpty(key))
                         {
-                            fmContext.Context[Context_MdfKey] = key + fileNameWithoutSuffix + suffix;
+                            fmContext.Context[Context_MdfKey] = key + kv.Key;
                         }
                         else
                         {

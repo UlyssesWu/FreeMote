@@ -168,7 +168,7 @@ namespace FreeMote.PsBuild
                 {
                     json = JsonConvert.SerializeObject(resx, Formatting.Indented);
                 }
-                File.WriteAllText(Path.ChangeExtension(filePath, ".resx.json"), json);
+                File.WriteAllText(ChangeExtensionForOutputJson(filePath, ".resx.json"), json);
             }
             else
             {
@@ -176,9 +176,23 @@ namespace FreeMote.PsBuild
                 {
                     throw new NotSupportedException("PSBv4 cannot use legacy res.json format.");
                 }
-                File.WriteAllText(Path.ChangeExtension(filePath, ".res.json"),
+                File.WriteAllText(ChangeExtensionForOutputJson(filePath, ".res.json"),
                     JsonConvert.SerializeObject(resDictionary.Values.ToList(), Formatting.Indented));
             }
+        }
+
+        private static string ChangeExtensionForOutputJson(string inputPath, string extension = ".json")
+        {
+            if (!extension.StartsWith("."))
+            {
+                extension = "." + extension;
+            }
+            if (inputPath.EndsWith(".m")) //special handle for .m
+            {
+                return inputPath + extension;
+            }
+
+            return Path.ChangeExtension(inputPath, extension);
         }
 
         /// <summary>
@@ -223,8 +237,7 @@ namespace FreeMote.PsBuild
                 context.Context[Consts.Context_CryptKey] = key;
             }
 
-            File.WriteAllText(Path.ChangeExtension(inputPath, ".json"),
-                Decompile(inputPath, out var psb, context.Context)); //MARK: breaking change for json path
+            File.WriteAllText(ChangeExtensionForOutputJson(inputPath, ".json"), Decompile(inputPath, out var psb, context.Context));
 
             OutputResources(psb, context, inputPath, extractOption, extractFormat, useResx);
         }

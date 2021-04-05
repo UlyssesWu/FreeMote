@@ -10,6 +10,7 @@ using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
+using static FreeMote.Psb.PsbExtension;
 
 namespace FreeMote.Tools.PsbDecompile
 {
@@ -378,7 +379,7 @@ Example:
                 context[Context_MdfKey] = key + fileName;
 
                 var dir = Path.GetDirectoryName(Path.GetFullPath(filePath));
-                var name = PsbExtension.ArchiveInfoGetPackageName(fileName);
+                var name = ArchiveInfoGetPackageName(fileName);
                 if (name == null)
                 {
                     Console.WriteLine($"File name incorrect: {fileName}");
@@ -455,17 +456,17 @@ Example:
                             var bodyBytes = new byte[len];
                             mmAccessor.ReadArray(0, bodyBytes, 0, len);
 
+                            var fileNameWithSuffix = ArchiveInfoGetFileNameAppendSuffix(pair.Key, suffix);
                             if (outputRaw)
                             {
-                                File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
-                                    bodyBytes);
+                                File.WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), bodyBytes);
                                 return;
                             }
 
                             using var ms = MsManager.GetStream(bodyBytes);
                             var bodyContext = new Dictionary<string, object>(context)
                             {
-                                [Context_MdfKey] = key + pair.Key + suffix
+                                [Context_MdfKey] = key + fileNameWithSuffix
                             };
                             bodyContext.Remove(Context_ArchiveSource);
                             using var mms = MdfConvert(ms, shellType, bodyContext);
@@ -475,19 +476,19 @@ Example:
                                 {
                                     PSB bodyPsb = new PSB(mms);
                                     PsbDecompiler.DecompileToFile(bodyPsb,
-                                        Path.Combine(extractDir, pair.Key + suffix + ".json"),
+                                        Path.Combine(extractDir, fileNameWithSuffix + ".json"), //important, must keep suffix for rebuild
                                         bodyContext, PsbExtractOption.Extract);
                                 }
                                 catch (Exception e)
                                 {
                                     Console.WriteLine($"Decompile failed: {pair.Key}");
-                                    WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                    WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), mms);
                                     //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                 }
                             }
                             else
                             {
-                                WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), mms);
                                 //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                             }
                         });
@@ -513,16 +514,17 @@ Example:
                             var bodyBytes = new byte[len];
                             mmAccessor.ReadArray(0, bodyBytes, 0, len);
 
+                            var fileNameWithSuffix = ArchiveInfoGetFileNameAppendSuffix(pair.Key, suffix);
                             if (outputRaw)
                             {
-                                File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
+                                File.WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix),
                                     bodyBytes.AsSpan().Slice(start, len).ToArray());
                                 continue;
                             }
 
                             using (var ms = MsManager.GetStream(bodyBytes))
                             {
-                                context[Context_MdfKey] = key + pair.Key + suffix;
+                                context[Context_MdfKey] = key + fileNameWithSuffix;
                                 var mms = MdfConvert(ms, shellType, context);
                                 if (extractAll)
                                 {
@@ -530,19 +532,19 @@ Example:
                                     {
                                         PSB bodyPsb = new PSB(mms);
                                         PsbDecompiler.DecompileToFile(bodyPsb,
-                                            Path.Combine(extractDir, pair.Key + suffix + ".json"), context,
+                                            Path.Combine(extractDir, fileNameWithSuffix + ".json"), context,
                                             PsbExtractOption.Extract);
                                     }
                                     catch (Exception e)
                                     {
                                         Console.WriteLine($"Decompile failed: {pair.Key}");
-                                        WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                        WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), mms);
                                         //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                     }
                                 }
                                 else
                                 {
-                                    WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                    WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), mms);
                                     //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                 }
                             }

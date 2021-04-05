@@ -43,7 +43,7 @@ namespace FreeMote
         /// <summary>
         /// Get shell type from suffix
         /// </summary>
-        /// <param name="suffixString">e.g. .xxx.m</param>
+        /// <param name="suffixString">e.g. xxx.xxx.m will return "MDF"</param>
         /// <returns></returns>
         public static string DefaultShellType(this string suffixString)
         {
@@ -389,31 +389,6 @@ namespace FreeMote
                         return hNext - h;
                 return -1;
             }
-        }
-
-        /// <summary>
-        /// Get package name from a string like {package name}_info.psb.m
-        /// </summary>
-        /// <param name="fileName">e.g. {package name}_info.psb.m</param>
-        /// <returns>{package name}, can be null if failed</returns>
-        public static string ArchiveInfoGetPackageName(string fileName)
-        {
-            var nameSlicePos = fileName.IndexOf("_info.", StringComparison.Ordinal);
-            string name = null;
-            if (nameSlicePos > 0)
-            {
-                name = fileName.Substring(0, nameSlicePos);
-            }
-            else
-            {
-                nameSlicePos = fileName.IndexOf(".", StringComparison.Ordinal);
-                if (nameSlicePos > 0)
-                {
-                    name = fileName.Substring(0, nameSlicePos);
-                }
-            }
-
-            return name;
         }
 
         // Takes same patterns, and executes in parallel

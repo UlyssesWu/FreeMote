@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -906,6 +907,107 @@ namespace FreeMote.Psb
             }
 
             return MemoryMarshal.Read<uint>(span);
+        }
+
+        #endregion
+
+        #region Archive
+
+        /// <summary>
+        /// Remove suffix for file name in archive info file_info
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="suffix"></param>
+        /// <returns></returns>
+        public static string ArchiveInfoGetFileNameRemoveSuffix(string fileName, string suffix)
+        {
+            if (string.IsNullOrEmpty(suffix))
+            {
+                return fileName;
+            }
+
+            if (fileName.EndsWith(suffix, true, CultureInfo.InvariantCulture))
+            {
+                return fileName.Remove(fileName.Length - suffix.Length, suffix.Length);
+            }
+
+            return fileName;
+        }
+
+
+        /// <summary>
+        /// Append suffix for file name in archive info file_info
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="suffix"></param>
+        /// <returns></returns>
+        public static string ArchiveInfoGetFileNameAppendSuffix(string name, string suffix)
+        {
+            if (!name.Contains("."))
+            {
+                return name + suffix;
+            }
+
+            return name;
+        }
+
+        /// <summary>
+        /// Collect file names in archive info file_info
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="suffix"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> ArchiveInfoCollectFiles(PSB psb, string suffix)
+        {
+            if (psb.Objects.ContainsKey("file_info") && psb.Objects["file_info"] is PsbDictionary fileInfo)
+            {
+                foreach (var name in fileInfo.Keys)
+                {
+                    yield return ArchiveInfoGetFileNameAppendSuffix(name, suffix);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get suffix in archive info
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
+        public static string ArchiveInfoGetSuffix(PSB psb)
+        {
+            var suffix = "";
+            if (psb.Objects.ContainsKey("expire_suffix_list") &&
+                psb.Objects["expire_suffix_list"] is PsbList col && col[0] is PsbString s)
+            {
+                suffix = s;
+            }
+
+            return suffix;
+        }
+        
+        /// <summary>
+        /// Get package name from a string like {package name}_info.psb.m
+        /// </summary>
+        /// <param name="fileName">e.g. {package name}_info.psb.m</param>
+        /// <returns>{package name}, can be null if failed</returns>
+        public static string ArchiveInfoGetPackageName(string fileName)
+        {
+            var nameSlicePos = fileName.IndexOf("_info.", StringComparison.Ordinal);
+            string name = null;
+            if (nameSlicePos > 0)
+            {
+                name = fileName.Substring(0, nameSlicePos);
+            }
+            else
+            {
+                nameSlicePos = fileName.IndexOf(".", StringComparison.Ordinal);
+                if (nameSlicePos > 0)
+                {
+                    name = fileName.Substring(0, nameSlicePos);
+                }
+            }
+
+            return name;
         }
 
         #endregion
