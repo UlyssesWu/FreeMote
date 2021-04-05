@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.IO;
 
 // ReSharper disable InconsistentNaming
 
@@ -8,6 +9,11 @@ namespace FreeMote
 {
     public static class Consts
     {
+        /// <summary>
+        /// Recyclable MemoryStream Manager
+        /// </summary>
+        public static readonly RecyclableMemoryStreamManager MsManager = new RecyclableMemoryStreamManager();
+
         /// <summary>
         /// delimiter for output texture filename
         /// </summary>

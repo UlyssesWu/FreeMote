@@ -171,7 +171,8 @@ namespace FreeMote.PsBuild
 
             if (context.HasShell && keepShell)
             {
-                bytes = context.PackToShell(new MemoryStream(bytes)).ToArray();
+                using var outStream = context.PackToShell(new MemoryStream(bytes));
+                bytes = outStream.ToArray();
             }
 
             return bytes;
@@ -351,7 +352,7 @@ namespace FreeMote.PsBuild
             using var psbFs = File.OpenRead(psbPath);
 
             var ctx = FreeMount.CreateContext();
-            var psbStream = ctx.OpenStreamFromPsbFile(psbPath);
+            using var psbStream = ctx.OpenStreamFromPsbFile(psbPath);
             var psb = new PSB(psbStream);
 
             if (jsonPsb.Resources.Count != psb.Resources.Count)

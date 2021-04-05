@@ -36,12 +36,19 @@ namespace FreeMote
         /// <param name="stream"></param>
         public void Update(Stream stream)
         {
-            byte[] bytes;
+            byte[] bytes = new byte[128 * 1024]; //128KB for each round
             using (BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                bytes = br.ReadBytes((int) (stream.Length - stream.Position));
+                while (stream.Length - stream.Position > 0)
+                {
+                    var readCount = br.Read(bytes, 0, bytes.Length);
+                    if (readCount == 0)
+                    {
+                        break;
+                    }
+                    adler = UpdateBytes(adler, bytes, 0, readCount);
+                }
             }
-            adler = UpdateBytes(adler, bytes, 0, bytes.Length);
         }
 
         /// <summary>

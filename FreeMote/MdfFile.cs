@@ -54,19 +54,26 @@ namespace FreeMote
             return ZlibCompress.DecompressToStream(input, size);
         }
 
-        public static Stream CompressPsbToMdfStream(Stream input, bool fast = true)
+        /// <summary>
+        /// [RequireUsing]
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="fast"></param>
+        /// <returns></returns>
+        public static MemoryStream CompressPsbToMdfStream(Stream input, bool fast = true)
         {
             var pos = input.Position;
-            Adler32 checksumer = new Adler32();
-            checksumer.Update(input);
-            var checksum = (uint) checksumer.Checksum;
-            checksumer = null;
+            Adler32 adler32 = new Adler32();
+            adler32.Update(input);
+            var checksum = (uint) adler32.Checksum;
+            adler32 = null;
             input.Position = pos;
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
             bw.WriteStringZeroTrim(Signature);
             bw.Write((uint) input.Length);
-            bw.Write(ZlibCompress.Compress(input, fast));
+            //bw.Write(ZlibCompress.Compress(input, fast));
+            ZlibCompress.CompressToBinaryWriter(bw, input, fast);
             bw.WriteBE(checksum);
             bw.Flush();
             bw.Dispose();
@@ -77,17 +84,18 @@ namespace FreeMote
         public static void CompressToMdfFile(this PsbFile psbFile, string outputPath = null, bool fast = true)
         {
             var bytes = File.ReadAllBytes(psbFile.Path);
-            Adler32 checksumer = new Adler32();
-            checksumer.Update(bytes);
-            var checksum = (uint) checksumer.Checksum;
-            checksumer = null;
-            MemoryStream ms = new MemoryStream(bytes);
+            Adler32 adler32 = new Adler32();
+            adler32.Update(bytes);
+            var checksum = (uint) adler32.Checksum;
+            adler32 = null;
+            MemoryStream ms = Consts.MsManager.GetStream(bytes);
             using (FileStream fs = new FileStream(outputPath ?? psbFile.Path + ".mdf", FileMode.Create))
             {
                 BinaryWriter bw = new BinaryWriter(fs);
                 bw.WriteStringZeroTrim(Signature);
                 bw.Write((uint) ms.Length);
-                bw.Write(ZlibCompress.Compress(ms, fast));
+                //bw.Write(ZlibCompress.Compress(ms, fast));
+                ZlibCompress.CompressToBinaryWriter(bw, ms, fast);
                 bw.WriteBE(checksum);
                 ms.Dispose();
                 bw.Flush();

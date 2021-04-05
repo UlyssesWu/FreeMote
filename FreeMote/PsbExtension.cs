@@ -392,10 +392,10 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Get package name from {package name}_info.psb.m
+        /// Get package name from a string like {package name}_info.psb.m
         /// </summary>
         /// <param name="fileName">e.g. {package name}_info.psb.m</param>
-        /// <returns>can be null if failed</returns>
+        /// <returns>{package name}, can be null if failed</returns>
         public static string ArchiveInfoGetPackageName(string fileName)
         {
             var nameSlicePos = fileName.IndexOf("_info.", StringComparison.Ordinal);

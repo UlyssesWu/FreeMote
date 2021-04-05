@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -130,7 +131,8 @@ Example:
   PsBuild info-psb sample_info.psb.m.json (Key specified in resx.json)
   PsBuild info-psb -k 1234567890ab -l 131 sample_info.psb.m.json (Must keep every filename correct)
   Hint: Always keep file names correct. A file name in source folder must match a name kept in .m.json
-  If there are both `.m` and `.m.json` in the source folder, `.json` will be used (unless using `-p`).
+  If there are both `.m` and `.m.json` in the source folder, `.json` will be used (unless using `--packed`).
+  If you don't have enough RAM to keep the whole output, use `-1by1` and wait patiently.
 ";
                 //options
                 //var optMdfSeed = archiveCmd.Option("-s|--seed <SEED>",
@@ -169,10 +171,13 @@ Example:
 
                     int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 131;
 
+                    Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
                         PackArchive(s, key, intersect, preferPacked, enableParallel, keyLen);
                     }
+                    sw.Stop();
+                    Console.WriteLine($"Process time: {sw.Elapsed:g}");
                 });
             });
 
@@ -494,20 +499,25 @@ Example:
             }
 
             //Collect files
+            Console.WriteLine("Collecting files ...");
             foreach (var sourceDir in sourceDirs)
             {
                 CollectFiles(Path.IsPathRooted(sourceDir) ? sourceDir : Path.Combine(baseDir, sourceDir));
             }
 
-            var fileName = Path.GetFileName(jsonPath);
-            var packageName = Path.GetFileNameWithoutExtension(fileName);
+            Console.WriteLine($"Packing {files.Count} files ...");
+            var bodyBinFileName = Path.GetFileName(jsonPath);
+            var packageName = Path.GetFileNameWithoutExtension(bodyBinFileName);
 
             var coreName = PsbExtension.ArchiveInfoGetPackageName(packageName);
-            fileName = string.IsNullOrEmpty(coreName) ? packageName + "_body.bin" : coreName + "_body.bin";
+            bodyBinFileName = string.IsNullOrEmpty(coreName) ? packageName + "_body.bin" : coreName + "_body.bin";
 
+            //using var mmFile =
+            //    MemoryMappedFile.CreateFromFile(bodyBinFileName, FileMode.Create, coreName, );
+            using var bodyFs = File.OpenWrite(bodyBinFileName);
             var fileInfoDic = new PsbDictionary(files.Count);
             var fmContext = FreeMount.CreateContext(resx.Context);
-            byte[] bodyBin = null;
+            //byte[] bodyBin = null;
             if (enableParallel)
             {
                 var contents = new ConcurrentBag<(string Name, Stream Content)>();
@@ -540,57 +550,56 @@ Example:
 
                     if (kv.Value.Method == ProcessMethod.EncodeMdf)
                     {
-                        contents.Add((fileNameWithoutSuffix, context.PackToShell(
-                            File.OpenRead(kv.Value.Path), "MDF")));
+                        using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
+                        
+                        //using var fs = File.OpenRead(kv.Value.Path);
+                        contents.Add((fileNameWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(), "MDF"))); //disposed later
                     }
                     else
                     {
                         var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
 
-                        var outputMdf = context.PackToShell(content.Psb.ToStream(), "MDF");
+                        var outputMdf = context.PackToShell(content.Psb.ToStream(), "MDF"); //disposed later
                         contents.Add((fileNameWithoutSuffix, outputMdf));
                     }
                 });
 
-                Console.WriteLine($"{contents.Count} files collected.");
-                using (var ms = new MemoryStream())
-                {
-                    foreach (var item in contents.OrderBy(item => item.Name, StringComparer.Ordinal))
-                    {
-                        fileInfoDic.Add(item.Name,
-                            new PsbList
-                                {new PsbNumber((int) ms.Position), new PsbNumber(item.Content.Length)});
-                        if (item.Content is MemoryStream ims)
-                        {
-                            ims.WriteTo(ms);
-                        }
-                        else
-                        {
-                            item.Content.CopyTo(ms);
-                        }
+                Console.WriteLine($"{contents.Count} files packed, now merging...");
 
-                        item.Content.Dispose();
+                //using var ms = mmFile.CreateViewStream();
+                foreach (var item in contents.OrderBy(item => item.Name, StringComparer.Ordinal))
+                {
+                    fileInfoDic.Add(item.Name,
+                        new PsbList
+                            {new PsbNumber(bodyFs.Position), new PsbNumber(item.Content.Length)});
+                    if (item.Content is MemoryStream ims)
+                    {
+                        ims.WriteTo(bodyFs);
+                    }
+                    else
+                    {
+                        item.Content.CopyTo(bodyFs);
                     }
 
-                    bodyBin = ms.ToArray();
+                    item.Content.Dispose(); //Remember to dispose!
                 }
+
+                //bodyBin = ms.ToArray();
             }
             else //non-parallel
             {
-                //TODO: support pack 2GB+ archive. Does anyone even need this?
-                using var ms = new MemoryStream();
+                //using var ms = mmFile.CreateViewStream();
                 foreach (var kv in files.OrderBy(f => f.Key, StringComparer.Ordinal))
                 {
                     var fileNameWithoutSuffix = ArchiveInfoPsbGetFileName(kv.Key, suffix);
                     if (kv.Value.Method == ProcessMethod.None)
                     {
-                        using (var fs = File.OpenRead(kv.Value.Path))
-                        {
-                            fs.CopyTo(
-                                ms); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
-                            fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
-                                {new PsbNumber((int) ms.Position), new PsbNumber(fs.Length)});
-                        }
+                        using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
+                        //using var fs = File.OpenRead(kv.Value.Path);
+                        var fs = mmFs.CreateViewStream();
+                        fs.CopyTo(bodyFs); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
+                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
+                            {new PsbNumber(bodyFs.Position), new PsbNumber(fs.Length)});
                     }
                     else if (kv.Value.Method == ProcessMethod.EncodeMdf)
                     {
@@ -608,11 +617,11 @@ Example:
                             fmContext.Context.Remove(Context_MdfKey);
                         }
 
-                        var outputMdf = fmContext.PackToShell(File.OpenRead(kv.Value.Path), "MDF");
-                        outputMdf.WriteTo(ms);
+                        using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
+                        using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(), "MDF");
+                        outputMdf.WriteTo(bodyFs);
                         fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
-                            {new PsbNumber((int) ms.Position), new PsbNumber(outputMdf.Length)});
-                        outputMdf.Dispose();
+                            {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
                     }
                     else
                     {
@@ -626,18 +635,20 @@ Example:
                             fmContext.Context = content.Context;
                         }
 
-                        var outputMdf = fmContext.PackToShell(content.Psb.ToStream(), "MDF");
-                        outputMdf.WriteTo(ms);
+                        using var outputMdf = fmContext.PackToShell(content.Psb.ToStream(), "MDF");
+                        outputMdf.WriteTo(bodyFs);
                         fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
-                            {new PsbNumber((int) ms.Position), new PsbNumber(outputMdf.Length)});
-                        outputMdf.Dispose();
+                            {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
                     }
                 }
 
-                bodyBin = ms.ToArray();
+                bodyFs.Flush();
+                //bodyBin = ms.ToArray();
             }
 
             //Write
+            bodyFs.Dispose();
+
             infoPsb.Objects["file_info"] = fileInfoDic;
 
             infoPsb.Merge();
@@ -654,11 +665,11 @@ Example:
                 fmContext.Context.Remove(Context_MdfKey);
             }
 
-            var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), "MDF");
+            using var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), "MDF");
             File.WriteAllBytes(packageName, infoMdf.ToArray());
             infoMdf.Dispose();
 
-            File.WriteAllBytes(fileName, bodyBin);
+            //File.WriteAllBytes(bodyBinFileName, bodyBin);
         }
     }
 }

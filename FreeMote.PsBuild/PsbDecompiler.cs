@@ -38,76 +38,74 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         public static string Decompile(string path, out PSB psb, Dictionary<string, object> context = null, PsbType psbType = PsbType.PSB)
         {
-            using (var fs = File.OpenRead(path))
+            using var fs = File.OpenRead(path);
+            var ctx = FreeMount.CreateContext(context);
+            string type = null;
+            Stream stream = fs;
+            using var ms = ctx.OpenFromShell(fs, ref type);
+            if (ms != null)
             {
-                var ctx = FreeMount.CreateContext(context);
-                string type = null;
-                Stream stream = fs;
-                var ms = ctx.OpenFromShell(fs, ref type);
-                if (ms != null)
+                ctx.Context[Consts.Context_PsbShellType] = type;
+                fs.Dispose();
+                stream = ms;
+            }
+
+            try
+            {
+                psb = new PSB(stream, false);
+            }
+            catch (PsbBadFormatException e) when (e.Reason == PsbBadFormatReason.Header ||
+                                                  e.Reason == PsbBadFormatReason.Array ||
+                                                  e.Reason == PsbBadFormatReason.Body) //maybe encrypted
+            {
+                stream.Position = 0;
+                uint? key = null;
+                if (ctx.Context.ContainsKey(Consts.Context_CryptKey))
                 {
-                    ctx.Context[Consts.Context_PsbShellType] = type;
-                    fs.Dispose();
-                    stream = ms;
+                    key = ctx.Context[Consts.Context_CryptKey] as uint?;
+                }
+                else
+                {
+                    key = ctx.GetKey(stream);
                 }
 
-                try
+                stream.Position = 0;
+                if (key != null) //try use key
                 {
-                    psb = new PSB(stream, false);
-                }
-                catch (PsbBadFormatException e) when (e.Reason == PsbBadFormatReason.Header ||
-                                                      e.Reason == PsbBadFormatReason.Array ||
-                                                      e.Reason == PsbBadFormatReason.Body) //maybe encrypted
-                {
-                    stream.Position = 0;
-                    uint? key = null;
-                    if (ctx.Context.ContainsKey(Consts.Context_CryptKey))
+                    try
                     {
-                        key = ctx.Context[Consts.Context_CryptKey] as uint?;
+                        using (var mms = new MemoryStream((int) stream.Length))
+                        {
+                            PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
+                            stream.Dispose();
+                            psb = new PSB(mms);
+                            ctx.Context[Consts.Context_CryptKey] = key;
+                        }
+                    }
+                    catch
+                    {
+                        throw e;
+                    }
+                }
+                else //key = null
+                {
+                    if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array) //now try Dullahan loading
+                    {
+                        psb = PSB.DullahanLoad(stream);
                     }
                     else
                     {
-                        key = ctx.GetKey(stream);
-                    }
-
-                    stream.Position = 0;
-                    if (key != null) //try use key
-                    {
-                        try
-                        {
-                            using (var mms = new MemoryStream((int) stream.Length))
-                            {
-                                PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
-                                stream.Dispose();
-                                psb = new PSB(mms);
-                                ctx.Context[Consts.Context_CryptKey] = key;
-                            }
-                        }
-                        catch
-                        {
-                            throw e;
-                        }
-                    }
-                    else //key = null
-                    {
-                        if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array) //now try Dullahan loading
-                        {
-                            psb = PSB.DullahanLoad(stream);
-                        }
-                        else
-                        {
-                            throw;
-                        }
+                        throw;
                     }
                 }
-
-                if (psbType != PsbType.PSB)
-                {
-                    psb.Type = psbType;
-                }
-
-                return Decompile(psb);
             }
+
+            if (psbType != PsbType.PSB)
+            {
+                psb.Type = psbType;
+            }
+
+            return Decompile(psb);
         }
 
         public static string Decompile(PSB psb)

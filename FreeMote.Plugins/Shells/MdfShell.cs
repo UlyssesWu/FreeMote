@@ -65,7 +65,14 @@ namespace FreeMote.Plugins.Shells
 
             return MdfFile.DecompressToPsbStream(stream, size) as MemoryStream;
         }
-
+        
+        /// <summary>
+        /// Decode/encode MDF used in archive PSB.
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="key"></param>
+        /// <param name="keyLength"></param>
+        /// <returns></returns>
         internal MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength)
         {
             //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
@@ -76,11 +83,11 @@ namespace FreeMote.Plugins.Shells
             seeds[2] = BitConverter.ToUInt32(bts, 2 * 4);
             seeds[3] = BitConverter.ToUInt32(bts, 3 * 4);
 
-            MemoryStream ms = new MemoryStream((int) stream.Length);
+            MemoryStream ms = new MemoryStream((int) stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
             var gen = new MT19937Generator(seeds);
 
-            BinaryReader br = new BinaryReader(stream);
-            BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            using BinaryReader br = new BinaryReader(stream);
+            using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
             bw.Write(br.ReadBytes(8));
             //uint count = 0;
             List<byte> keys = new List<byte>();
@@ -122,7 +129,7 @@ namespace FreeMote.Plugins.Shells
 
             return ms;
         }
-
+        
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             bool fast = true; //mdf use fast mode by default
@@ -131,7 +138,7 @@ namespace FreeMote.Plugins.Shells
                 fast = (bool) context[Context_PsbZlibFastCompress];
             }
 
-            var ms = MdfFile.CompressPsbToMdfStream(stream, fast) as MemoryStream;
+            var ms = MdfFile.CompressPsbToMdfStream(stream, fast);
 
             if (context != null && context.ContainsKey(Context_MdfKey))
             {
@@ -145,7 +152,9 @@ namespace FreeMote.Plugins.Shells
                     keyLength = (uint?) null;
                 }
 
-                ms = EncodeMdf(ms, (string) context[Context_MdfKey], keyLength);
+                var mms = EncodeMdf(ms, (string)context[Context_MdfKey], keyLength);
+                ms?.Dispose(); //ms disposed
+                ms = mms;
             }
 
             return ms;

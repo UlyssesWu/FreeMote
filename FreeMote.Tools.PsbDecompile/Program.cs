@@ -175,7 +175,6 @@ Example:
   PsbDecompile info-psb -k 1234567890ab sample_info.psb.m
   PsbDecompile info-psb -k 1234567890ab -l 131 -a sample_info.psb.m
   Hint: The body.bin should exist in the same folder and keep both file names correct.
-  Todo: Pack body.bin which larger than 2GB is not supported currently.
 ";
                 //options
                 //var optMdfSeed = archiveCmd.Option("-s|--seed <SEED>",
@@ -239,10 +238,13 @@ Example:
                         context[Context_MdfKeyLength] = (uint) keyLen;
                     }
 
+                    Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
                         ExtractArchive(s, key, context, outputRaw, extractAll, enableParallel);
                     }
+                    sw.Stop();
+                    Console.WriteLine($"Process time: {sw.Elapsed:g}");
                 });
             });
 
@@ -315,6 +317,13 @@ Example:
             return sb.ToString();
         }
 
+        /// <summary>
+        /// [RequireUsing]
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="shellType"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         private static MemoryStream MdfConvert(Stream stream, string shellType, Dictionary<string, object> context = null)
         {
             var ctx = FreeMount.CreateContext(context);
@@ -352,6 +361,12 @@ Example:
                 Console.WriteLine(e);
             }
 #endif
+        }
+
+        static void WriteAllBytes(string path, MemoryStream ms)
+        {
+            using var fs = new FileStream(path, FileMode.Create);
+            ms.WriteTo(fs);
         }
 
         static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, bool outputRaw = true,
@@ -421,11 +436,7 @@ Example:
                     {
                         Directory.CreateDirectory(extractDir);
                     }
-
-#if DEBUG
-                    Stopwatch sw = Stopwatch.StartNew();
-#endif
-
+                    
                     if (enableParallel) //parallel!
                     {
                         int count = 0;
@@ -451,13 +462,13 @@ Example:
                                 return;
                             }
 
-                            using var ms = new MemoryStream(bodyBytes);
+                            using var ms = MsManager.GetStream(bodyBytes);
                             var bodyContext = new Dictionary<string, object>(context)
                             {
                                 [Context_MdfKey] = key + pair.Key + suffix
                             };
                             bodyContext.Remove(Context_ArchiveSource);
-                            var mms = MdfConvert(ms, shellType, bodyContext);
+                            using var mms = MdfConvert(ms, shellType, bodyContext);
                             if (extractAll)
                             {
                                 try
@@ -470,14 +481,14 @@ Example:
                                 catch (Exception e)
                                 {
                                     Console.WriteLine($"Decompile failed: {pair.Key}");
-                                    File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
-                                        mms.ToArray());
+                                    WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                    //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                 }
                             }
                             else
                             {
-                                File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
-                                    mms.ToArray());
+                                WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                             }
                         });
 
@@ -509,7 +520,7 @@ Example:
                                 continue;
                             }
 
-                            using (var ms = new MemoryStream(bodyBytes))
+                            using (var ms = MsManager.GetStream(bodyBytes))
                             {
                                 context[Context_MdfKey] = key + pair.Key + suffix;
                                 var mms = MdfConvert(ms, shellType, context);
@@ -525,14 +536,14 @@ Example:
                                     catch (Exception e)
                                     {
                                         Console.WriteLine($"Decompile failed: {pair.Key}");
-                                        File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
-                                            mms.ToArray());
+                                        WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                        //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                     }
                                 }
                                 else
                                 {
-                                    File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix),
-                                        mms.ToArray());
+                                    WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms);
+                                    //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                 }
                             }
                         }
@@ -542,10 +553,7 @@ Example:
                     resx.Context[Context_ArchiveSource] = new List<string> {name};
                     resx.Context[Context_MdfMtKey] = key;
                     File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
-#if DEBUG
-                    sw.Stop();
-                    Console.WriteLine($"Process time: {sw.Elapsed:g}");
-#endif
+                    
                 }
                 catch (Exception e)
                 {

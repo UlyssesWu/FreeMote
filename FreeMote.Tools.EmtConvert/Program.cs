@@ -467,19 +467,37 @@ Example:
         {
             try
             {
-                using (var fs = File.OpenRead(path))
+                using var fs = File.OpenRead(path);
+                var ctx = FreeMount.CreateContext(context);
+                string currentType = null;
+                using var ms = ctx.OpenFromShell(fs, ref currentType);
+                if (ms == null) // no shell, compress
                 {
-                    var ctx = FreeMount.CreateContext(context);
-                    string currentType = null;
-                    var ms = ctx.OpenFromShell(fs, ref currentType);
-                    if (ms == null) // no shell, compress
+                    if (string.IsNullOrEmpty(type))
                     {
-                        if (string.IsNullOrEmpty(type))
-                        {
-                            return false;
-                        }
+                        return false;
+                    }
 
-                        var mms = ctx.PackToShell(fs, type);
+                    using var mms = ctx.PackToShell(fs, type);
+                    if (mms == null)
+                    {
+                        Console.WriteLine($"Shell type unsupported: {type}");
+                        return false;
+                    }
+
+                    Console.WriteLine($"[{type}] Shell applied for {path}");
+                    File.WriteAllBytes(path + "." + type, mms.ToArray());
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(type) || currentType == type)
+                    {
+                        Console.WriteLine($"Shell Type [{currentType}] detected for {path}");
+                        File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
+                    }
+                    else
+                    {
+                        using var mms = ctx.PackToShell(ms, type);
                         if (mms == null)
                         {
                             Console.WriteLine($"Shell type unsupported: {type}");
@@ -487,27 +505,7 @@ Example:
                         }
 
                         Console.WriteLine($"[{type}] Shell applied for {path}");
-                        File.WriteAllBytes(path + "." + type, mms.ToArray());
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(type) || currentType == type)
-                        {
-                            Console.WriteLine($"Shell Type [{currentType}] detected for {path}");
-                            File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
-                        }
-                        else
-                        {
-                            var mms = ctx.PackToShell(ms, type);
-                            if (mms == null)
-                            {
-                                Console.WriteLine($"Shell type unsupported: {type}");
-                                return false;
-                            }
-
-                            Console.WriteLine($"[{type}] Shell applied for {path}");
-                            File.WriteAllBytes(Path.ChangeExtension(path, $".compressed.{type}"), mms.ToArray());
-                        }
+                        File.WriteAllBytes(Path.ChangeExtension(path, $".compressed.{type}"), mms.ToArray());
                     }
                 }
             }
@@ -581,71 +579,69 @@ Example:
 
             try
             {
-                using (var fs = new FileStream(path, FileMode.Open))
+                using var fs = new FileStream(path, FileMode.Open);
+                Stream stream = fs;
+                string type = null;
+                using var ms = FreeMount.CreateContext().OpenFromShell(fs, ref type);
+                bool hasShell = false;
+                if (ms != null)
                 {
-                    Stream stream = fs;
-                    string type = null;
-                    var ms = FreeMount.CreateContext().OpenFromShell(fs, ref type);
-                    bool hasShell = false;
-                    if (ms != null)
-                    {
-                        Console.WriteLine($"Shell type: {type}");
-                        stream = ms;
-                        hasShell = true;
-                    }
+                    Console.WriteLine($"Shell type: {type}");
+                    stream = ms;
+                    hasShell = true;
+                }
 
-                    BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
-                    if (!key.HasValue)
+                BinaryReader br = new BinaryReader(stream, Encoding.UTF8);
+                if (!key.HasValue)
+                {
+                    var k = FreeMount.CreateContext().GetKey(stream);
+                    if (k != null)
                     {
-                        var k = FreeMount.CreateContext().GetKey(stream);
-                        if (k != null)
+                        key = k;
+                        Console.WriteLine($"Using key: {key}");
+                    }
+                    else if (hasShell)
+                    {
+                        File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("No Key and No Shell.");
+                        return false;
+                    }
+                }
+
+                var header = PsbHeader.Load(br);
+
+                using (var outMs = new MemoryStream((int) stream.Length))
+                {
+                    if (header.Version > 2)
+                    {
+                        if (PsbFile.TestHeaderEncrypted(stream, header)) //Decrypt
                         {
-                            key = k;
-                            Console.WriteLine($"Using key: {key}");
-                        }
-                        else if (hasShell)
-                        {
-                            File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
-                            return true;
+                            //psb.EncodeToFile(key.Value, path + ".decrypted", EncodeMode.Decrypt);
+                            PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
+                            File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
                         }
                         else
                         {
-                            Console.WriteLine("No Key and No Shell.");
-                            return false;
+                            //psb.EncodeToFile(key.Value, path + ".encrypted", EncodeMode.Encrypt);
+                            PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
+                            File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
                         }
                     }
-
-                    var header = PsbHeader.Load(br);
-
-                    using (var outMs = new MemoryStream((int) stream.Length))
+                    else
                     {
-                        if (header.Version > 2)
+                        if (PsbFile.TestBodyEncrypted(br, header)) //Decrypt
                         {
-                            if (PsbFile.TestHeaderEncrypted(stream, header)) //Decrypt
-                            {
-                                //psb.EncodeToFile(key.Value, path + ".decrypted", EncodeMode.Decrypt);
-                                PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
-                            }
-                            else
-                            {
-                                //psb.EncodeToFile(key.Value, path + ".encrypted", EncodeMode.Encrypt);
-                                PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
-                            }
+                            PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
+                            File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
                         }
                         else
                         {
-                            if (PsbFile.TestBodyEncrypted(br, header)) //Decrypt
-                            {
-                                PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
-                            }
-                            else
-                            {
-                                PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
-                                File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
-                            }
+                            PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
+                            File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
                         }
                     }
                 }

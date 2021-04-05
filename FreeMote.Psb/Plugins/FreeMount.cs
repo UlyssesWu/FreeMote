@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using FreeMote.Psb;
+using Microsoft.IO;
 
 namespace FreeMote.Plugins
 {

@@ -87,7 +87,7 @@ namespace FreeMote.Tools.Viewer
                             var oriPath = Core.PsbPaths[i];
                             using var fs = File.OpenRead(oriPath);
                             string currentType = null;
-                            var ms = ctx.OpenFromShell(fs, ref currentType);
+                            using var ms = ctx.OpenFromShell(fs, ref currentType);
                             var psb = ms != null ? new PSB(ms) : new PSB(fs);
 
                             if (psb.Platform == PsbSpec.krkr)
@@ -106,7 +106,6 @@ namespace FreeMote.Tools.Viewer
                             File.WriteAllBytes(tempFile, psb.Build());
                             Core.PsbPaths[i] = tempFile;
                             Core.NeedRemoveTempFile = true;
-                            ms?.Dispose();
                         }
                         
                         GC.Collect(); //Can save memory from 700MB to 400MB

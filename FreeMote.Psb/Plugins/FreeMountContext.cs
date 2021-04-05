@@ -67,20 +67,20 @@ namespace FreeMote.Plugins
         }
 
         /// <summary>
-        /// Use plugins to decompress shell types to PSB
+        /// [RequireUsing] Use plugins to decompress shell types to PSB
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="stream">the input stream won't be disposed automatically</param>
         /// <param name="type"></param>
-        /// <returns></returns>
+        /// <returns>unpacked stream, remember to dispose!</returns>
         public MemoryStream OpenFromShell(Stream stream, ref string type)
         {
             return FreeMount._.OpenFromShell(stream, ref type, Context);
         }
 
         /// <summary>
-        /// Use plugins to compress PSB to shell type
+        /// [RequireUsing] Use plugins to compress PSB to shell type
         /// </summary>
-        /// <param name="input"></param>
+        /// <param name="input">The input stream. Might be disposed!</param>
         /// <param name="type"></param>
         /// <returns></returns>
         public MemoryStream PackToShell(Stream input, string type = null)
@@ -99,7 +99,7 @@ namespace FreeMote.Plugins
         }
 
         /// <summary>
-        /// Open stream from PSB file, unpack the shell if exists
+        /// [RequireUsing] Open stream from PSB file, unpack the shell if exists
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>

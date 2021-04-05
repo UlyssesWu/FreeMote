@@ -1240,7 +1240,7 @@ namespace FreeMote.Psb
             bw.Write((byte)pDic.Type);
             var namesList = new List<uint>(pDic.Count);
             var indexList = new List<uint>(pDic.Count);
-            using (var ms = new MemoryStream())
+            using (var ms = Consts.MsManager.GetStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms, Encoding);
                 if (Consts.PsbObjectOrderByKey)
@@ -1296,7 +1296,7 @@ namespace FreeMote.Psb
         {
             bw.Write((byte)pCol.Type);
             var indexList = new List<uint>(pCol.Count);
-            using (var ms = new MemoryStream())
+            using (var ms = Consts.MsManager.GetStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms, Encoding);
 
