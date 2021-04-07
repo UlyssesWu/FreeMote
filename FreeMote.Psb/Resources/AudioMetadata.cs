@@ -19,7 +19,7 @@ namespace FreeMote.Psb
         {
             get
             {
-                if (ChannelList == null)
+                if (ChannelList == null || ChannelList.Count == 0)
                 {
                     return uint.MaxValue;
                 }

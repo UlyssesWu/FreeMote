@@ -65,7 +65,7 @@ namespace FreeMote.Plugins.Shells
 
             PsbPainter painter = new PsbPainter(psb);
 
-            if (TryGetCanvasSize)
+            if (TryGetCanvasSize && painter.Resources.Count > 0)
             {
                 if (psb.TryGetCanvasSize(out var cw, out var ch))
                 {
