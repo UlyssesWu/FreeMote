@@ -7,6 +7,9 @@ using Microsoft.IO;
 
 namespace FreeMote
 {
+    /// <summary>
+    /// Constants and Global Settings
+    /// </summary>
     public static class Consts
     {
         /// <summary>
@@ -153,6 +156,11 @@ namespace FreeMote
         /// Use managed code rather than external/native if possible
         /// </summary>
         public static bool PreferManaged { get; set; } = false;
+
+        /// <summary>
+        /// If the audio have 2 channels, try to combine them when output wave
+        /// </summary>
+        public static bool CombineAudioChannels { get; set; } = false;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

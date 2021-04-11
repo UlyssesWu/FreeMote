@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\At9Formatter.cs" />
+    <Compile Include="Audio\NxAdpcmFormatter.cs" />
     <Compile Include="Audio\OpusFormatter.cs" />
     <Compile Include="Audio\VagFile.cs" />
     <Compile Include="Audio\VagFormatter.cs" />
@@ -108,7 +109,7 @@
       <Version>5.0.1</Version>
     </PackageReference>
     <PackageReference Include="VGAudio">
-      <Version>2.2.1-CI00001</Version>
+      <Version>2.2.1-CI00002</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

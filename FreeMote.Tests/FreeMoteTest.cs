@@ -9,6 +9,8 @@ using System.Text;
 using FreeMote.Plugins.Audio;
 using FreeMote.Plugins.Shells;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using VGAudio.Containers.Dsp;
+using VGAudio.Containers.Wave;
 
 
 namespace FreeMote.Tests
@@ -271,6 +273,19 @@ namespace FreeMote.Tests
             var vag = new VagFile(path);
             vag.Load();
             vag.WriteToWavFile("test.wav");
+        }
+
+        [TestMethod]
+        public void TestDspDecode()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "[nx][adpcm]syssearc", "1.raw");
+            DspReader reader = new DspReader();
+            var data = reader.Read(File.ReadAllBytes(path));
+            using MemoryStream oms = new MemoryStream();
+            WaveWriter writer = new WaveWriter();
+            writer.WriteToStream(data, oms, new WaveConfiguration { Codec = WaveCodec.Pcm16Bit }); //only 16Bit supported
+            File.WriteAllBytes(path + ".wav", oms.ToArray());
         }
         //[TestMethod]
         //public void TestTlgNative()

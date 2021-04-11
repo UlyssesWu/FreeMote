@@ -19,6 +19,7 @@ namespace FreeMote.Psb
         /// </summary>
         string WaveExtension { get; set; }
         PsbAudioFormat Format { get; }
+        PsbAudioPan ChannelPan { get; }
         PsbResource Data { get; }
         PsbDictionary PsbArchData { get; set; }
 

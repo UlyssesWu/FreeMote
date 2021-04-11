@@ -33,7 +33,7 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            return true;
+            return archData is XwmaArchData;
         }
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
@@ -44,7 +44,7 @@ namespace FreeMote.Plugins.Audio
                 return false;
             }
 
-            return true;
+            return wave != null;
         }
 
         public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)

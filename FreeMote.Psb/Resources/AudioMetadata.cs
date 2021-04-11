@@ -41,10 +41,52 @@ namespace FreeMote.Psb
 
         public PsbAudioFormat AudioFormat => ChannelList.Count > 0 ? ChannelList[0].Format : PsbAudioFormat.Unknown;
         public PsbSpec Spec { get; set; } = PsbSpec.other;
-        
+
+        public PsbAudioPan Pan
+        {
+            get
+            {
+                if (ChannelList == null || ChannelList.Count == 0)
+                {
+                    return PsbAudioPan.Mono;
+                }
+
+                if (ChannelList.Count == 1)
+                {
+                    if (ChannelList[0].ChannelPan == PsbAudioPan.Stereo)
+                    {
+                        return PsbAudioPan.Stereo;
+                    }
+
+                    return PsbAudioPan.Mono;
+                }
+
+                if (ChannelList.Count == 2)
+                {
+                    if (ChannelList[0].ChannelPan == PsbAudioPan.Left && ChannelList[1].ChannelPan == PsbAudioPan.Right)
+                    {
+                        return PsbAudioPan.LeftRight;
+                    }
+
+                    if (ChannelList[0].ChannelPan == PsbAudioPan.Right && ChannelList[1].ChannelPan == PsbAudioPan.Left)
+                    {
+                        ////switch
+                        //var temp = ChannelList[1];
+                        //ChannelList[1] = ChannelList[0];
+                        //ChannelList[0] = temp;
+                        return PsbAudioPan.LeftRight;
+                    }
+
+                    return PsbAudioPan.Multiple;
+                }
+
+                return PsbAudioPan.Multiple;
+            }
+        }
+
         public void Link(string fullPath, FreeMountContext context)
         {
-            if (ChannelList.Count > 1)
+            if (ChannelList.Count > 1 && AudioFormat != PsbAudioFormat.Unknown && AudioFormat != PsbAudioFormat.ADPCM)
             {
                 Console.WriteLine("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
             }
@@ -68,19 +110,20 @@ namespace FreeMote.Psb
                     break;
                 case ".wav":
                 case ".ogg":
-                    var realExt = ChannelList[0].Extension;
-                    var fileName = Path.GetFileNameWithoutExtension(fullPath);
-                    var secondExt = Path.GetExtension(fileName).ToLowerInvariant();
-                    if (string.IsNullOrEmpty(realExt) && !string.IsNullOrEmpty(secondExt))
+                    //fullPath: audio.vag.wav
+                    var realExt = ChannelList[0].Extension; //.vag
+                    var fileName = Path.GetFileNameWithoutExtension(fullPath); //audio.vag
+                    var secondExt = Path.GetExtension(fileName).ToLowerInvariant(); //.vag
+                    if (string.IsNullOrEmpty(realExt) && !string.IsNullOrEmpty(secondExt)) //use extension from file - .vag
                     {
                         realExt = secondExt;
-                        var secondFileName = Path.GetFileNameWithoutExtension(fileName);
+                        var secondFileName = Path.GetFileNameWithoutExtension(fileName); //audio
                         if (!string.IsNullOrEmpty(secondFileName))
                         {
                             fileName = secondFileName;
                         }
                     }
-
+                    
                     var newArch = context.WaveToArchData(this, realExt, File.ReadAllBytes(fullPath), fileName,
                         ChannelList[0].WaveExtension);
                     if (newArch != null)
@@ -131,7 +174,7 @@ namespace FreeMote.Psb
                 case PsArchData ps:
                     ps.Data.Data = File.ReadAllBytes(fullPath);
                     break;
-                case OpusArchData opus:
+                case NxArchData opus:
                     opus.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 default:

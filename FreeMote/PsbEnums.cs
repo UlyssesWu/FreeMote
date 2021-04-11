@@ -248,6 +248,35 @@ namespace FreeMote
         OPUS,
         XWMA,
         VAG,
+        ADPCM,
+    }
+
+    public enum PsbAudioPan
+    {
+        /// <summary>
+        /// 1 Channel
+        /// </summary>
+        Mono,
+        /// <summary>
+        /// Left Channel
+        /// </summary>
+        Left,
+        /// <summary>
+        /// Right Channel
+        /// </summary>
+        Right,
+        /// <summary>
+        /// 2 channels, first is Left, second is Right
+        /// </summary>
+        LeftRight,
+        /// <summary>
+        /// Stereo (in 1 Channel)
+        /// </summary>
+        Stereo,
+        /// <summary>
+        /// Multiple Channels (2+)
+        /// </summary>
+        Multiple,
     }
 
     public enum EncodeMode

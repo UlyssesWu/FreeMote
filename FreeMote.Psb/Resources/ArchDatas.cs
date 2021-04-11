@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace FreeMote.Psb
@@ -9,6 +10,7 @@ namespace FreeMote.Psb
         public string Extension => ".wav";
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.WAV;
+        public PsbAudioPan ChannelPan => PsbAudioPan.Mono;
 
 
         private PsbResource _fmt;
@@ -173,7 +175,8 @@ namespace FreeMote.Psb
         public string Extension => Format.DefaultExtension();
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.XWMA;
-
+        public PsbAudioPan ChannelPan => PsbAudioPan.Mono;
+        
         public byte[] ToXwma()
         {
             using MemoryStream ms =
@@ -267,9 +270,9 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
-    /// NX OPUS
+    /// NX Base (Opus / ADPCM)
     /// </summary>
-    public class OpusArchData : IArchData
+    public class NxArchData : IArchData
     {
         public PsbResource Data { get; set; }
         public PsbDictionary PsbArchData { get; set; }
@@ -282,13 +285,18 @@ namespace FreeMote.Psb
                 {"ext", Extension.ToPsbString()},
                 {"samprate", SampRate.ToPsbNumber()}
             };
-            var body = new PsbDictionary
+
+            if (Format == PsbAudioFormat.OPUS)
             {
-                {"data", Data},
-                {"sampleCount", SampleCount.ToPsbNumber()}
-            };
-            body.Parent = archData;
-            archData.Add("body", body);
+                var body = new PsbDictionary
+                {
+                    {"data", Data},
+                    {"sampleCount", SampleCount.ToPsbNumber()}
+                };
+                body.Parent = archData;
+                archData.Add("body", body);
+            }
+
             return archData;
         }
 
@@ -300,10 +308,14 @@ namespace FreeMote.Psb
         public int ChannelCount { get; set; } = 1;
         public int SampRate { get; set; } = 48000;
 
+        public PsbList Pan { get; set; }
+        
         public uint Index => Data.Index ?? uint.MaxValue;
         public string Extension => Format.DefaultExtension();
         public string WaveExtension { get; set; } = ".wav";
-        public PsbAudioFormat Format => PsbAudioFormat.OPUS;
+        public PsbAudioFormat Format { get; set; } = PsbAudioFormat.Unknown;
+
+        public PsbAudioPan ChannelPan { get; set; } = PsbAudioPan.Mono;
     }
 
     ///// <summary>
@@ -361,5 +373,6 @@ namespace FreeMote.Psb
         public string Extension => Format.DefaultExtension();
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format { get; set; } = PsbAudioFormat.Unknown;
+        public PsbAudioPan ChannelPan => PsbAudioPan.Mono;
     }
 }
