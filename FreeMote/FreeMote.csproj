@@ -54,7 +54,7 @@
     <Compile Include="DxtUtil.cs" />
     <Compile Include="MdfFile.cs" />
     <Compile Include="PostProcessing.cs" />
-    <Compile Include="PsbExtension.cs" />
+    <Compile Include="FreeMoteExtension.cs" />
     <Compile Include="RleCompress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Consts.cs" />

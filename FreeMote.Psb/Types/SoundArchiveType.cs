@@ -55,9 +55,18 @@ namespace FreeMote.Psb.Types
                 md.FileString = fileStr;
             }
 
-            if (voice["loopStr"] is PsbString loopStr)
+            if (voice["loopstr"] is PsbString loopstr) //Another bad design. channel[L]ist vs loop[s]tr. WTF M2??
+            {
+                md.LoopStr = loopstr;
+            }
+            else if(voice["loopStr"] is PsbString loopStr) 
             {
                 md.LoopStr = loopStr;
+            }
+
+            if (md.LoopStr != null)
+            {
+                context.Context["loopstr"] = md.LoopStr.Value;
             }
 
             if (voice["loop"] is PsbNumber loopNum)

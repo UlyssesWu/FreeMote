@@ -29,19 +29,40 @@ namespace FreeMote.Plugins
             return FreeMount._.AudioFormatters.ContainsKey(ext);
         }
 
+        /// <summary>
+        /// <inheritdoc cref="FreeMount.ArchDataToWave"/>
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <param name="archData"></param>
+        /// <returns></returns>
         public byte[] ArchDataToWave(string ext, IArchData archData)
         {
             return FreeMount._.ArchDataToWave(ext, archData, Context);
         }
 
-        public IArchData WaveToArchData(string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
+        /// <summary>
+        /// <inheritdoc cref="FreeMount.WaveToArchData"/>
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <param name="wave"></param>
+        /// <param name="fileName"></param>
+        /// <param name="waveExt"></param>
+        /// <returns></returns>
+        public IArchData WaveToArchData(AudioMetadata md, string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
         {
-            return FreeMount._.WaveToArchData(ext, wave, fileName, waveExt,  Context);
+            return FreeMount._.WaveToArchData(md, ext, wave, fileName, waveExt, Context);
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData)
+        /// <summary>
+        /// <inheritdoc cref="FreeMount.TryGetArchData"/>
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="channel"><inheritdoc cref="FreeMount.TryGetArchData"/></param>
+        /// <param name="archData"></param>
+        /// <returns></returns>
+        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData archData)
         {
-            return FreeMount._.TryGetArchData(psb, voice, out archData, Context);
+            return FreeMount._.TryGetArchData(psb, channel, out archData, Context);
         }
 
         /// <summary>

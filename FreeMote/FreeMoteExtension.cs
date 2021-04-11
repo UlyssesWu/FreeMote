@@ -8,7 +8,7 @@ using System.Text;
 
 namespace FreeMote
 {
-    public static class PsbExtension
+    public static class FreeMoteExtension
     {
         /// <summary>
         /// Get RGBA bytes from palette

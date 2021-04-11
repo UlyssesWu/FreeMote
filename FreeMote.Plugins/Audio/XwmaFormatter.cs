@@ -38,11 +38,13 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
-            if (File.Exists(ToolPath))
+            if (!File.Exists(ToolPath))
             {
-                return true;
+                Console.WriteLine($"[WARN] Cannot convert without {EncoderTool}");
+                return false;
             }
-            return false;
+
+            return true;
         }
 
         public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
@@ -82,7 +84,7 @@ namespace FreeMote.Plugins.Audio
             return outBytes;
         }
         
-        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {
@@ -128,12 +130,12 @@ namespace FreeMote.Plugins.Audio
             return data;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
             if (psb.Platform == PsbSpec.win)
             {
-                if (dic.Count == 1 && dic["archData"] is PsbDictionary archDic && archDic["data"] is PsbResource aData && archDic["dpds"] is PsbResource aDpds && archDic["fmt"] is PsbResource aFmt && archDic["wav"] is PsbString aWav)
+                if (channel.Count == 1 && channel["archData"] is PsbDictionary archDic && archDic["data"] is PsbResource aData && archDic["dpds"] is PsbResource aDpds && archDic["fmt"] is PsbResource aFmt && archDic["wav"] is PsbString aWav)
                 {
                     data = new XwmaArchData()
                     {

@@ -49,6 +49,7 @@ namespace FreeMote.Plugins.Audio
         {
             if (!File.Exists(ToolPath))
             {
+                Console.WriteLine($"[WARN] Cannot convert without {EncoderTool}");
                 return false;
             }
 
@@ -66,7 +67,7 @@ namespace FreeMote.Plugins.Audio
             return null;
         }
 
-        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {
@@ -117,12 +118,12 @@ namespace FreeMote.Plugins.Audio
             return arch;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
             if (psb.Platform == PsbSpec.ps4 || psb.Platform == PsbSpec.vita)
             {
-                if (dic.Count == 1 && dic["archData"] is PsbResource res)
+                if (channel.Count == 1 && channel["archData"] is PsbResource res)
                 {
                     if (res.Data != null && res.Data.Length > 0) //res data exists
                     {

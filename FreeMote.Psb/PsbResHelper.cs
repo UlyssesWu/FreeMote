@@ -13,6 +13,45 @@ namespace FreeMote.Psb
     public static class PsbResHelper
     {
         /// <summary>
+        /// Parse loopstr like "range:0,123456" to a <see cref="PsbList"/>
+        /// </summary>
+        /// <param name="loopStr"></param>
+        /// <returns></returns>
+        public static PsbList ParseLoopStr(string loopStr)
+        {
+            if (string.IsNullOrWhiteSpace(loopStr) || loopStr == "none")
+            {
+                return null;
+            }
+
+            if (loopStr.StartsWith("range:"))
+            {
+                loopStr = loopStr.Substring(6);
+                var loopPoints = loopStr.Split(',');
+                PsbList list = new PsbList();
+                foreach (var loopPoint in loopPoints)
+                {
+                    if (int.TryParse(loopPoint, out var loopInt))
+                    {
+                        list.Add(new PsbNumber(loopInt));
+                    }
+                    else if (double.TryParse(loopPoint, out var loopNum))
+                    {
+                        list.Add(new PsbNumber(loopNum));
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+
+                return list;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Convert <see cref="IArchData"/> to Wave
         /// </summary>
         /// <param name="archData"></param>

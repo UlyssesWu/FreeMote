@@ -58,6 +58,9 @@ namespace FreeMote.Tools.PsBuild
             var optNoShell = app.Option("-no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
             var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)",
                 CommandOptionType.NoValue, true);
+            //var optOutputPath =
+            //  app.Option<string>("-o|--output", "(TODO:)Set output directory or file name.", CommandOptionType.SingleValue);
+            //TODO: If set dir, ok; if set filename, only works for the first
 
             //args
             var argPath =

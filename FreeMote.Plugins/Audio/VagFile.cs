@@ -458,15 +458,15 @@ namespace FreeMote.Plugins.Audio
 
             bw.WriteUTF8("WAVE");
             bw.WriteUTF8("fmt ");
-            bw.Write(16);
+            bw.Write(16); //SubChunk Size, usually 0x12 ?
 
-            bw.Write((short)1);
-            var channelCount = ChannelCount > 1 ? 2 : 1;
-            bw.Write((short)channelCount);
-            bw.Write(SampleRate);
-            bw.Write((uint) ((SampleRate * 16 * channelCount) / 8)); //4 bytes, must convert
-            bw.Write((short)(16 * channelCount / 8)); //ref: https://blog.csdn.net/xcgspring/article/details/4671221
-            bw.Write((short)16);
+            bw.Write((short)1); //Audio Format, 1=PCM loss-less
+            var channelCount = ChannelCount > 1 ? 2 : 1; 
+            bw.Write((short)channelCount); //Channel Count
+            bw.Write(SampleRate); //Sample Rate
+            bw.Write((uint) ((SampleRate * 16 * channelCount) / 8)); //Byte Rate, 4 bytes, must convert
+            bw.Write((short)(16 * channelCount / 8)); //BlockAlign, ref: https://blog.csdn.net/xcgspring/article/details/4671221
+            bw.Write((short)16); //Bits Per Sample, can be 8,16,32
 
             bw.WriteUTF8("data");
             bw.Write(fileSize);

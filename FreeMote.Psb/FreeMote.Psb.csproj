@@ -58,7 +58,7 @@
     <Compile Include="Plugins\IPsbShell.cs" />
     <Compile Include="Plugins\IPsbSpecialType.cs" />
     <Compile Include="PSB.cs" />
-    <Compile Include="PsbHelper.cs" />
+    <Compile Include="PsbExtension.cs" />
     <Compile Include="PsbPainter.cs" />
     <Compile Include="PsbResHelper.cs" />
     <Compile Include="PsbValues.cs" />
@@ -66,6 +66,7 @@
     <Compile Include="Resources\FlattenArrayMetadata.cs" />
     <Compile Include="Resources\IArchData.cs" />
     <Compile Include="Resources\ImageMetadata.cs" />
+    <Compile Include="Resources\WavFormatter.cs" />
     <Compile Include="Types\ArchiveType.cs" />
     <Compile Include="Types\BaseImageType.cs" />
     <Compile Include="Types\FontType.cs" />

@@ -7,6 +7,8 @@ using System.Reflection;
 using FreeMote.Psb;
 using VGAudio.Containers.At9;
 using VGAudio.Containers.Wave;
+using VGAudio.Formats;
+using VGAudio.Formats.Pcm16;
 
 namespace FreeMote.Plugins.Audio
 {
@@ -35,11 +37,13 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
         {
-            if (File.Exists(ToolPath))
+            if (!File.Exists(ToolPath))
             {
-                return true;
+                Console.WriteLine($"[WARN] Cannot convert without {EncoderTool}");
+                return false;
             }
-            return false;
+
+            return true;
         }
 
         public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
@@ -58,7 +62,7 @@ namespace FreeMote.Plugins.Audio
             return false;
         }
 
-        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {
@@ -112,12 +116,12 @@ namespace FreeMote.Plugins.Audio
             return arch;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
             if (psb.Platform == PsbSpec.ps4 || psb.Platform == PsbSpec.vita)
             {
-                if (dic.Count == 1 && dic["archData"] is PsbResource res)
+                if (channel.Count == 1 && channel["archData"] is PsbResource res)
                 {
                     if (res.Data != null && res.Data.Length > 0) //res data exists
                     {

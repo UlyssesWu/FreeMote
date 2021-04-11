@@ -36,7 +36,7 @@ namespace FreeMote.Plugins.Audio
             return oms.ToArray();
         }
 
-        public IArchData ToArchData(in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             WaveReader reader = new WaveReader();
             var data = reader.Read(wave);
@@ -55,14 +55,14 @@ namespace FreeMote.Plugins.Audio
             return archData;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary dic, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
             //if (psb.Platform != PsbSpec.nx)
             //{
             //    return false;
             //}
-            if (dic.Count != 1 || !(dic["archData"] is PsbDictionary archDic))
+            if (channel.Count != 1 || !(channel["archData"] is PsbDictionary archDic))
             {
                 return false;
             }

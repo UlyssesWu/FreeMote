@@ -90,7 +90,7 @@ Example:
                         }
                         else if (Directory.Exists(psbPath))
                         {
-                            var files = PsbExtension.GetFiles(psbPath, new[] {"*.psb", "*.pimg", "*.m", "*.bytes"});
+                            var files = FreeMoteExtension.GetFiles(psbPath, new[] {"*.psb", "*.pimg", "*.m", "*.bytes"});
 
                             if (enableParallel)
                             {
@@ -288,7 +288,7 @@ Example:
                     }
                     else if (Directory.Exists(s))
                     {
-                        foreach (var file in PsbExtension.GetFiles(s,
+                        foreach (var file in FreeMoteExtension.GetFiles(s,
                             new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
                             Decompile(s, useRaw, PsbImageFormat.png, key, type);

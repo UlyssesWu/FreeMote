@@ -10,12 +10,119 @@ namespace FreeMote.Psb
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.WAV;
 
-        public PsbResource Data { get; set; }
+
+        private PsbResource _fmt;
+        private PsbResource _data;
+
+        public PsbResource Data
+        {
+            get => _data;
+            set => _data = value;
+        }
+
+        public PsbResource Fmt
+        {
+            get => _fmt;
+            set => _fmt = value;
+        }
+        
+        public string Wav { get; set; }
+        public PsbList Loop { get; set; }
+
         public PsbDictionary PsbArchData { get; set; }
 
         public IPsbValue ToPsbArchData()
         {
-            return Data;
+            return new PsbDictionary
+            {
+                {"data", Data},
+                {"fmt", Fmt},
+                {"loop", Loop},
+                {"wav", Wav.ToPsbString()}
+            };
+        }
+
+        public byte[] ToWav()
+        {
+            using MemoryStream ms = new MemoryStream();
+            using BinaryWriter writer = new BinaryWriter(ms);
+            writer.WriteUTF8("RIFF");
+            writer.Write(0);
+
+            writer.WriteUTF8("WAVE");
+
+            writer.WriteUTF8("fmt ");
+            writer.Write(Fmt.Data.Length);
+            writer.Write(Fmt.Data);
+
+            writer.WriteUTF8("data");
+            writer.Write(Data.Data.Length);
+            writer.Write(Data.Data);
+
+            //Write length at position 4
+            var len = (uint)writer.BaseStream.Length;
+            writer.Seek(4, SeekOrigin.Begin);
+            writer.Write(len - 8);
+
+            return ms.ToArray();
+        }
+
+        /// <summary>
+        /// This will close the stream
+        /// </summary>
+        /// <param name="ms"></param>
+        public void ReadFromWav(Stream ms)
+        {
+            using BinaryReader br = new BinaryReader(ms, Encoding.ASCII, false);
+
+            var sig = new string(br.ReadChars(4));
+            if (sig != "RIFF")
+            {
+                return;
+            }
+
+            var totalChunkSize = br.ReadUInt32();
+            sig = new string(br.ReadChars(4));
+            //if (sig != "XWMA" && sig != "xWMA")
+            //{
+            //    return;
+            //}
+            byte[] fmt = null, data = null;
+
+            while (br.BaseStream.Position < br.BaseStream.Length && (fmt == null || data == null))
+            {
+                sig = new string(br.ReadChars(4));
+                var chunkSize = br.ReadInt32();
+                var chunk = br.ReadBytes(chunkSize);
+                switch (sig)
+                {
+                    case "fmt ":
+                        fmt = chunk;
+                        break;
+                    case "data":
+                        data = chunk;
+                        break;
+                    default:
+                        continue;
+                }
+            }
+
+            Apply(ref _data, data);
+            Apply(ref _fmt, fmt);
+        }
+
+
+        private static void Apply(ref PsbResource res, byte[] resData)
+        {
+            if (resData == null) return;
+            if (res == null)
+            {
+                res = new PsbResource { Data = resData };
+            }
+            else
+            {
+                res.Data = resData;
+            }
         }
     }
 
@@ -104,7 +211,7 @@ namespace FreeMote.Psb
         /// <param name="ms"></param>
         public void ReadFromXwma(Stream ms)
         {
-            BinaryReader br = new BinaryReader(ms, Encoding.ASCII, false);
+            using BinaryReader br = new BinaryReader(ms, Encoding.ASCII, false);
             var sig = new string(br.ReadChars(4));
             if (sig != "RIFF")
             {
@@ -143,18 +250,18 @@ namespace FreeMote.Psb
             Apply(ref _data, data);
             Apply(ref _fmt, fmt);
             Apply(ref _dpds, dpds);
+        }
 
-            static void Apply(ref PsbResource res, byte[] resData)
+        private static void Apply(ref PsbResource res, byte[] resData)
+        {
+            if (resData == null) return;
+            if (res == null)
             {
-                if (resData == null) return;
-                if (res == null)
-                {
-                    res = new PsbResource {Data = resData};
-                }
-                else
-                {
-                    res.Data = resData;
-                }
+                res = new PsbResource {Data = resData};
+            }
+            else
+            {
+                res.Data = resData;
             }
         }
     }

@@ -61,6 +61,15 @@ namespace FreeMote.Plugins
         public static IPsbKeyProvider KeyProvider => _._keyProvider?.Value;
 
         /// <summary>
+        /// Add inherit plugins
+        /// </summary>
+        /// <param name="catalog"></param>
+        private void AddDefaultCatalogs(AggregateCatalog catalog)
+        {
+            catalog.Catalogs.Add(new TypeCatalog(typeof(WavFormatter))); //Wav
+        }
+
+        /// <summary>
         /// Init Plugins
         /// <para>Must be called before using FreeMount features</para>
         /// <param name="path">Base path to find plugins</param>
@@ -122,6 +131,8 @@ namespace FreeMote.Plugins
 
             //An aggregate catalog that combines multiple catalogs
             var catalog = new AggregateCatalog();
+            AddDefaultCatalogs(catalog);
+
             //Adds all the parts found in the same assembly as the Program class
             AddCatalog(Path.Combine(CurrentPath, PLUGIN_DLL), catalog);
             AddCatalog(Path.Combine(CurrentPath, LIB_DIR, PLUGIN_DLL), catalog); //Allow load in lib folder
@@ -153,6 +164,8 @@ namespace FreeMote.Plugins
             Shells = new Dictionary<string, IPsbShell>();
             SpecialTypes = new Dictionary<string, IPsbSpecialType>();
             ImageFormatters = new Dictionary<string, IPsbImageFormatter>();
+            AudioFormatters = new Dictionary<string, IPsbAudioFormatter>();
+
             foreach (var shell in _shells)
             {
                 if (shell.Value.Signature?.Length > _maxShellSigLength)
@@ -160,14 +173,22 @@ namespace FreeMote.Plugins
                     _maxShellSigLength = shell.Value.Signature.Length;
                 }
 
-                _plugins.Add(shell.Value, shell.Metadata);
-                Shells.Add(shell.Value.Name, shell.Value);
+                if (!_plugins.ContainsKey(shell.Value))
+                {
+                    _plugins.Add(shell.Value, shell.Metadata);
+                }
+                if (!Shells.ContainsKey(shell.Value.Name))
+                {
+                    Shells.Add(shell.Value.Name, shell.Value);
+                }
             }
 
             foreach (var type in _specialTypes)
             {
-                _plugins.Add(type.Value, type.Metadata);
-                SpecialTypes.Add(type.Value.TypeId, type.Value);
+                if (!_plugins.ContainsKey(type.Value))
+                    _plugins.Add(type.Value, type.Metadata);
+                if (!SpecialTypes.ContainsKey(type.Value.TypeId))
+                    SpecialTypes.Add(type.Value.TypeId, type.Value);
             }
 
             foreach (var imageFormatter in _imageFormatters)
@@ -181,7 +202,10 @@ namespace FreeMote.Plugins
 
             foreach (var audioFormatter in _audioFormatters)
             {
-                _plugins.Add(audioFormatter.Value, audioFormatter.Metadata);
+                if (!_plugins.ContainsKey(audioFormatter.Value))
+                {
+                    _plugins.Add(audioFormatter.Value, audioFormatter.Metadata);
+                }
                 foreach (var extension in audioFormatter.Value.Extensions)
                 {
                     AudioFormatters[extension] = audioFormatter.Value;
@@ -241,6 +265,13 @@ namespace FreeMote.Plugins
             _plugins.Remove(plugin);
         }
 
+        /// <summary>
+        /// <inheritdoc cref="IPsbImageFormatter.ToBitmap"/>
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <param name="data"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public Bitmap ResourceToBitmap(string ext, in byte[] data, Dictionary<string, object> context = null)
         {
             if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBitmap(data))
@@ -251,6 +282,13 @@ namespace FreeMote.Plugins
             return ImageFormatters[ext].ToBitmap(data, context);
         }
 
+        /// <summary>
+        /// <inheritdoc cref="IPsbAudioFormatter.ToWave"/>
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <param name="archData"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public byte[] ArchDataToWave(string ext, IArchData archData, Dictionary<string, object> context = null)
         {
             if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToWave(archData, context))
@@ -261,6 +299,13 @@ namespace FreeMote.Plugins
             return AudioFormatters[ext].ToWave(archData, context);
         }
 
+        /// <summary>
+        /// <inheritdoc cref="IPsbImageFormatter.ToBytes"/>
+        /// </summary>
+        /// <param name="ext"></param>
+        /// <param name="bitmap"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public byte[] BitmapToResource(string ext, Bitmap bitmap, Dictionary<string, object> context = null)
         {
             if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBytes(bitmap))
@@ -271,22 +316,40 @@ namespace FreeMote.Plugins
             return ImageFormatters[ext].ToBytes(bitmap, context);
         }
 
-        public IArchData WaveToArchData(string ext, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        /// <summary>
+        /// <inheritdoc cref="IPsbAudioFormatter.ToArchData"/>
+        /// </summary>
+        /// <param name="md"></param>
+        /// <param name="ext"></param>
+        /// <param name="wave"></param>
+        /// <param name="fileName"></param>
+        /// <param name="waveExt"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public IArchData WaveToArchData(AudioMetadata md, string ext, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToArchData(wave))
             {
                 return null;
             }
 
-            return AudioFormatters[ext].ToArchData(wave, fileName, waveExt, context);
+            return AudioFormatters[ext].ToArchData(md, wave, fileName, waveExt, context);
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary voice, out IArchData archData, Dictionary<string, object> context = null)
+        /// <summary>
+        /// <inheritdoc cref="IPsbAudioFormatter.TryGetArchData"/>
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="channel"><inheritdoc cref="IPsbAudioFormatter.TryGetArchData"/></param>
+        /// <param name="archData"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData archData, Dictionary<string, object> context = null)
         {
             archData = null;
             foreach (var audioFormatter in AudioFormatters)
             {
-                if (audioFormatter.Value.TryGetArchData(psb, voice, out archData, context))
+                if (audioFormatter.Value.TryGetArchData(psb, channel, out archData, context))
                 {
                     return true;
                 }

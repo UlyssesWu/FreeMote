@@ -48,7 +48,7 @@ namespace FreeMote.Psb
             {
                 Console.WriteLine("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
             }
-
+            
             var ext = Path.GetExtension(fullPath).ToLowerInvariant();
             switch (ext)
             {
@@ -81,7 +81,7 @@ namespace FreeMote.Psb
                         }
                     }
 
-                    var newArch = context.WaveToArchData(realExt, File.ReadAllBytes(fullPath), fileName,
+                    var newArch = context.WaveToArchData(this, realExt, File.ReadAllBytes(fullPath), fileName,
                         ChannelList[0].WaveExtension);
                     if (newArch != null)
                     {
