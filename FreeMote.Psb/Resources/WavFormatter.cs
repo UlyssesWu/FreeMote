@@ -47,16 +47,21 @@ namespace FreeMote.Psb
             data = null;
             if (psb.Platform == PsbSpec.win)
             {
-                if (channel.Count == 1 && channel["archData"] is PsbDictionary archDic && !archDic.ContainsKey("dpds") && archDic["data"] is PsbResource aData && archDic["loop"] is PsbList aLoop && archDic["fmt"] is PsbResource aFmt && archDic["wav"] is PsbString aWav)
+                if (channel.Count == 1 && channel["archData"] is PsbDictionary archDic && !archDic.ContainsKey("dpds") && archDic["data"] is PsbResource aData && archDic["fmt"] is PsbResource aFmt && archDic["wav"] is PsbString aWav)
                 {
-                    data = new WavArchData
+                    var newData = new WavArchData
                     {
                         Data = aData,
                         Fmt = aFmt,
-                        Loop = aLoop,
                         Wav = aWav.Value
                     };
 
+                    if (archDic["loop"] is PsbList aLoop)
+                    {
+                        newData.Loop = aLoop;
+                    }
+
+                    data = newData;
                     return true;
                 }
 

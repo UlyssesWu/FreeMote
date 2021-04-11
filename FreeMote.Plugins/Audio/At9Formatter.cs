@@ -7,8 +7,6 @@ using System.Reflection;
 using FreeMote.Psb;
 using VGAudio.Containers.At9;
 using VGAudio.Containers.Wave;
-using VGAudio.Formats;
-using VGAudio.Formats.Pcm16;
 
 namespace FreeMote.Plugins.Audio
 {
