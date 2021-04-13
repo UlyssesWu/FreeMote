@@ -5,7 +5,7 @@
 namespace FreeMote.Psb
 {
     /// <summary>
-    /// Audio Arch Data
+    /// Audio Arch Data (usually a Channel)
     /// </summary>
     public interface IArchData
     {
@@ -21,6 +21,9 @@ namespace FreeMote.Psb
         PsbAudioFormat Format { get; }
         PsbAudioPan ChannelPan { get; }
         PsbResource Data { get; }
+        /// <summary>
+        /// PSB object "archData" value
+        /// </summary>
         PsbDictionary PsbArchData { get; set; }
 
         /// <summary>

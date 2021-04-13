@@ -47,8 +47,7 @@ namespace FreeMote.Psb.Types
 
         internal AudioMetadata GenerateAudioMetadata(PSB psb, string name, PsbDictionary voice, FreeMountContext context)
         {
-            var md = new AudioMetadata();
-            md.Name = name;
+            var md = new AudioMetadata {Name = name};
 
             if (voice["file"] is PsbString fileStr)
             {
@@ -136,7 +135,7 @@ namespace FreeMote.Psb.Types
                 resMd.Link(fullPath, context);
             }
         }
-
+        
         public void Link(PSB psb, FreeMountContext context, IDictionary<string, string> resPaths, string baseDir = null)
         {
             var rawResList = psb.CollectResources<AudioMetadata>();
@@ -207,15 +206,60 @@ namespace FreeMote.Psb.Types
                     }
                     else if (resource.ChannelList.Count > 1)
                     {
-                        for (var j = 0; j < resource.ChannelList.Count; j++)
+                        if (resource.Pan == PsbAudioPan.LeftRight) //load audio.vag.l.wav & audio.vag.r.wav
                         {
-                            var waveChannel = resource.ChannelList[j];
-                            var bts = waveChannel.TryToWave(context);
-                            var relativePath = resource.GetFileName($"-{j}{waveChannel.Extension}{waveChannel.WaveExtension}");
-                            if (bts != null)
+                            var left = resource.GetLeftChannel();
+                            var relativePathL = resource.GetFileName($"{left.Extension}.l{left.WaveExtension}");
+                            var btsL = left.TryToWave(context);
+                            if (btsL != null)
                             {
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePath), bts);
-                                resDictionary.Add(resource.Name, $"{name}/{relativePath}");
+                                File.WriteAllBytes(Path.Combine(dirPath, relativePathL), btsL);
+                            }
+                            else
+                            {
+                                relativePathL = resource.GetFileName($"{left.Extension}.l{left.Extension}");
+                                File.WriteAllBytes(Path.Combine(dirPath, relativePathL), left.Data.Data);
+                                resDictionary.Add(resource.Name, $"{name}/{relativePathL}");
+                            }
+
+                            var right = resource.GetRightChannel();
+                            var relativePathR = resource.GetFileName($"{right.Extension}.r{right.WaveExtension}");
+                            var btsR = right.TryToWave(context);
+                            if (btsR != null)
+                            {
+                                File.WriteAllBytes(Path.Combine(dirPath, relativePathR), btsR);
+                            }
+                            else
+                            {
+                                relativePathR = resource.GetFileName($"{right.Extension}.r{right.Extension}");
+                                File.WriteAllBytes(Path.Combine(dirPath, relativePathR), right.Data.Data);
+                                resDictionary.Add(resource.Name, $"{name}/{relativePathR}");
+                            }
+
+                            if (btsL != null && btsR != null)
+                            {
+                                var relativePath = resource.GetFileName($"{left.Extension}{left.WaveExtension}");
+                                resDictionary.Add(resource.Name, $"{name}/{relativePath}"); //a virtual file path
+                            }
+                        }
+                        else //not LeftRight
+                        {
+                            for (var j = 0; j < resource.ChannelList.Count; j++) //load audio.vag.1.wav etc.
+                            {
+                                var waveChannel = resource.ChannelList[j];
+                                if (waveChannel.Data.Index == null)
+                                {
+                                    Console.WriteLine($"[WARN] Channel {j} is not linked with a Resource.");
+                                    continue;
+                                }
+                                var bts = waveChannel.TryToWave(context);
+                                var noStr = waveChannel.Data.Index == null ? $".@{j}" : $".#{waveChannel.Data.Index.Value}"; //TODO: handle @ - channel internal No.
+                                var relativePath = resource.GetFileName($"{waveChannel.Extension}{noStr}{waveChannel.WaveExtension}");
+                                if (bts != null)
+                                {
+                                    File.WriteAllBytes(Path.Combine(dirPath, relativePath), bts);
+                                    resDictionary.Add(resource.Name, $"{name}/{relativePath}");
+                                }
                             }
                         }
                     }

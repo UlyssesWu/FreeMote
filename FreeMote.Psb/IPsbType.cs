@@ -33,7 +33,7 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="context"></param>
-        /// <param name="resPaths"></param>
+        /// <param name="resPaths">(legacy) res.json style resource list</param>
         /// <param name="baseDir"></param>
         /// <param name="order"></param>
         void Link(PSB psb, FreeMountContext context, IList<string> resPaths, string baseDir = null, PsbLinkOrderBy order = PsbLinkOrderBy.Convention);

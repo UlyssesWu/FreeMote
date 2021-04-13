@@ -158,7 +158,7 @@ namespace FreeMote
         public static bool PreferManaged { get; set; } = false;
 
         /// <summary>
-        /// If the audio have 2 channels, try to combine them when output wave
+        /// (not implemented yet) If the audio have 2 channels, try to combine them when output wave
         /// </summary>
         public static bool CombineAudioChannels { get; set; } = false;
     }

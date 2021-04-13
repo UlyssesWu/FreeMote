@@ -15,6 +15,8 @@ namespace FreeMote.Psb
     {
         public string Name { get; set; }
 
+        public List<IArchData> ChannelList { get; set; } = new List<IArchData>();
+
         public uint Index
         {
             get
@@ -84,36 +86,77 @@ namespace FreeMote.Psb
             }
         }
 
+        /// <summary>
+        /// Link an audio file into PSB
+        /// <para>Have special handling for multiple channels</para>
+        /// </summary>
+        /// <param name="fullPath"></param>
+        /// <param name="context"></param>
         public void Link(string fullPath, FreeMountContext context)
         {
+            if (ChannelList == null || ChannelList.Count == 0)
+            {
+                return;
+            }
             if (ChannelList.Count > 1 && AudioFormat != PsbAudioFormat.Unknown && AudioFormat != PsbAudioFormat.ADPCM)
             {
                 Console.WriteLine("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
             }
-            
-            var ext = Path.GetExtension(fullPath).ToLowerInvariant();
+            //audio.vag.l.wav
+            var ext = Path.GetExtension(fullPath).ToLowerInvariant(); //.wav
+            var fileName = Path.GetFileNameWithoutExtension(fullPath); //audio.vag
+            var secondExt = Path.GetExtension(fileName).ToLowerInvariant(); //.vag
+            var targetChannel = ChannelList[0];
+            if (!string.IsNullOrEmpty(secondExt))
+            {
+                if (secondExt == ".l")
+                {
+                    targetChannel = GetLeftChannel();
+                }
+                else if (secondExt == ".r")
+                {
+                    targetChannel = GetRightChannel();
+                }
+                else if (secondExt.StartsWith(".#"))
+                {
+                    var no = secondExt.Substring(2);
+                    if (int.TryParse(no, out var n))
+                    {
+                        if (ChannelList.Count > n)
+                        {
+                            Console.WriteLine("[WARN] Channel index is out of range.");
+                        }
+                        targetChannel = ChannelList[n];
+                    }
+                    else
+                    {
+                        Console.WriteLine("[WARN] Cannot parse channel index.");
+                    }
+                }
+            }
             switch (ext)
             {
                 case ".at9":
-                    var at9Arch = (PsArchData) ChannelList[0];
+                    var at9Arch = (PsArchData)targetChannel;
                     at9Arch.Format = PsbAudioFormat.Atrac9;
                     at9Arch.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 case ".vag":
-                    var vagArch = (PsArchData) ChannelList[0];
+                    var vagArch = (PsArchData)targetChannel;
                     vagArch.Format = PsbAudioFormat.VAG;
                     vagArch.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 case ".xwma":
-                    var xwmaArch = (XwmaArchData) ChannelList[0];
+                    var xwmaArch = (XwmaArchData)targetChannel;
                     xwmaArch.ReadFromXwma(File.OpenRead(fullPath));
+                    break;
+                case ".adpcm":
+                    var adpcmArch = (NxArchData)targetChannel;
+                    adpcmArch.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 case ".wav":
                 case ".ogg":
-                    //fullPath: audio.vag.wav
-                    var realExt = ChannelList[0].Extension; //.vag
-                    var fileName = Path.GetFileNameWithoutExtension(fullPath); //audio.vag
-                    var secondExt = Path.GetExtension(fileName).ToLowerInvariant(); //.vag
+                    var realExt = targetChannel.Extension; //.vag
                     if (string.IsNullOrEmpty(realExt) && !string.IsNullOrEmpty(secondExt)) //use extension from file - .vag
                     {
                         realExt = secondExt;
@@ -123,31 +166,48 @@ namespace FreeMote.Psb
                             fileName = secondFileName;
                         }
                     }
-                    
-                    var newArch = context.WaveToArchData(this, realExt, File.ReadAllBytes(fullPath), fileName,
-                        ChannelList[0].WaveExtension);
-                    if (newArch != null)
+
+                    if (!File.Exists(fullPath)) //file not exist...
                     {
-                        ChannelList[0].SetPsbArchData(newArch.ToPsbArchData());
-                    }
-                    else
-                    {
-                        if (ChannelList[0].Extension == ext)
+                        if (Pan == PsbAudioPan.LeftRight) //maybe left and right...
                         {
-                            LoadFromRawFile(ChannelList[0], fullPath);
+                            var leftWav = Path.ChangeExtension(fullPath, ".l" + ext);
+                            var rightWav = Path.ChangeExtension(fullPath, ".r" + ext);
+                            if (File.Exists(leftWav) && File.Exists(rightWav))
+                            {
+                                LoadFileToChannel(GetLeftChannel(), leftWav, fileName, ext, realExt, context);
+                                LoadFileToChannel(GetRightChannel(), rightWav, fileName, ext, realExt, context);
+                            }
                         }
-                        else
+
+                        if (Pan == PsbAudioPan.Multiple) //maybe multi channel...
                         {
-                            Console.WriteLine(
-                                $"[WARN] There is no encoder for {ChannelList[0].Extension}! {fullPath} is not used.");
+                            foreach (var channel in ChannelList)
+                            {
+                                if (channel.Data.Index == null)
+                                {
+                                    Console.WriteLine($"[WARN] Channel is not loaded: Channel resource don't have a Index.");
+                                    continue;
+                                }
+                                var channelFileName = Path.ChangeExtension(fullPath, $".{channel.Data.Index.Value}{ext}");
+                                if (!File.Exists(channelFileName))
+                                {
+                                    Console.WriteLine($"[WARN] Channel is not loaded: Failed to find Channel resource from {channelFileName}");
+                                    continue;
+                                }
+
+                                LoadFileToChannel(channel, channelFileName, fileName, ext, realExt, context);
+                            }
                         }
                     }
+
+                    LoadFileToChannel(targetChannel, fullPath, fileName, ext, realExt, context);
 
                     break;
                 case ".bin":
                 case ".raw":
                 default:
-                    LoadFromRawFile(ChannelList[0], fullPath);
+                    LoadFromRawFile(targetChannel, fullPath);
                     break;
             }
         }
@@ -183,6 +243,37 @@ namespace FreeMote.Psb
                     break;
             }
             channel.SetPsbArchData(channel.ToPsbArchData());
+        }
+
+        /// <summary>
+        /// Load a common audio file into a channel
+        /// </summary>
+        /// <param name="channel">target channel</param>
+        /// <param name="fullPath">path to load audio file</param>
+        /// <param name="fileName">used in some audio types to keep file name</param>
+        /// <param name="fileExt">common audio extension like "wav"</param>
+        /// <param name="encodeExt">encode audio extension like "vag"</param>
+        /// <param name="context"></param>
+        private void LoadFileToChannel(IArchData channel, string fullPath, string fileName, string fileExt, string encodeExt, FreeMountContext context)
+        {
+            var newArch = context.WaveToArchData(this, encodeExt, File.ReadAllBytes(fullPath), fileName,
+                channel.WaveExtension);
+            if (newArch != null)
+            {
+                channel.SetPsbArchData(newArch.ToPsbArchData());
+            }
+            else
+            {
+                if (channel.Extension == fileExt)
+                {
+                    LoadFromRawFile(channel, fullPath);
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $"[WARN] There is no encoder for {channel.Extension}! {fullPath} is not used.");
+                }
+            }
         }
 
         /// <summary>
@@ -235,7 +326,26 @@ namespace FreeMote.Psb
             return result;
         }
 
-        public List<IArchData> ChannelList { get; set; } = new List<IArchData>();
+        internal IArchData GetLeftChannel()
+        {
+            if (Pan != PsbAudioPan.LeftRight)
+            {
+                return null;
+            }
+
+            return ChannelList.First(c => c.ChannelPan == PsbAudioPan.Left);
+        }
+
+        internal IArchData GetRightChannel()
+        {
+            if (Pan != PsbAudioPan.LeftRight)
+            {
+                return null;
+            }
+
+            return ChannelList.First(c => c.ChannelPan == PsbAudioPan.Right);
+        }
+
     }
 
 

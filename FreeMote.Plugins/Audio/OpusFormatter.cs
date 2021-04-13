@@ -75,8 +75,8 @@ namespace FreeMote.Plugins.Audio
                 data = new NxArchData
                 {
                     Data = aData,
-                    SampRate = sampRate.IntValue,
-                    SampleCount = sampleCount.IntValue,
+                    SampRate = sampRate.AsInt,
+                    SampleCount = sampleCount.AsInt,
                     Format = PsbAudioFormat.OPUS
                 };
 

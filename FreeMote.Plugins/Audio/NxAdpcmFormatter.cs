@@ -70,16 +70,15 @@ namespace FreeMote.Plugins.Audio
                 return false;
             }
 
-            if (archDic["body"] is PsbDictionary body &&
-                body["data"] is PsbResource aData && body["sampleCount"] is PsbNumber sampleCount
+            if (!archDic.ContainsKey("body") &&
+                archDic["data"] is PsbResource aData
                 && archDic["ext"] is PsbString ext && ext.Value == Extensions[0] &&
                 archDic["samprate"] is PsbNumber sampRate)
             {
                 var newData = new NxArchData
                 {
                     Data = aData,
-                    SampRate = sampRate.IntValue,
-                    SampleCount = sampleCount.IntValue,
+                    SampRate = sampRate.AsInt,
                     Format = PsbAudioFormat.ADPCM
                 };
 
