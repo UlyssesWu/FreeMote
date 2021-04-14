@@ -156,6 +156,8 @@ Example:
                     CommandOptionType.SingleValue);
                 var optInfoOom = archiveCmd.Option("-1by1|--enumerate",
                     "Disable parallel processing (can be slow but save a lot memory)", CommandOptionType.NoValue);
+                var optInfoRaw = archiveCmd.Option("-raw|--raw",
+                    "Keep all sources raw (don't compile jsons or pack MDF shell)", CommandOptionType.NoValue);
 
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB .json paths", true);
@@ -165,9 +167,15 @@ Example:
                     bool intersect = optIntersect.HasValue();
                     bool preferPacked = optPacked.HasValue();
                     bool enableParallel = FastMode;
+                    bool keepRaw = false;
                     if (optInfoOom.HasValue())
                     {
                         enableParallel = false;
+                    }
+
+                    if (optInfoRaw.HasValue())
+                    {
+                        keepRaw = true;
                     }
 
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
@@ -178,7 +186,7 @@ Example:
                     Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
-                        PackArchive(s, key, intersect, preferPacked, enableParallel, keyLen);
+                        PackArchive(s, key, intersect, preferPacked, enableParallel, keyLen, keepRaw);
                     }
                     sw.Stop();
                     Console.WriteLine($"Process time: {sw.Elapsed:g}");
@@ -346,8 +354,9 @@ Example:
         /// <param name="preferPacked">Prefer using PSB files rather than json files in source folder</param>
         /// <param name="enableParallel">parallel process</param>
         /// <param name="keyLen">key length</param>
+        /// <param name="keepRaw">Do not try to compile json or pack MDF</param>
         public static void PackArchive(string jsonPath, string key, bool intersect, bool preferPacked, bool enableParallel = true,
-            int keyLen = 131)
+            int keyLen = 131, bool keepRaw = false)
         {
             if (!File.Exists(jsonPath)) return;
             PSB infoPsb = PsbCompiler.LoadPsbFromJsonFile(jsonPath);
@@ -430,7 +439,7 @@ Example:
                             }
                             else
                             {
-                                files[name] = (f, ProcessMethod.Compile);
+                                files[name] = (f, keepRaw? ProcessMethod.None: ProcessMethod.Compile);
                             }
                         }
                     }
@@ -453,7 +462,7 @@ Example:
                                 using var fs = File.OpenRead(f);
                                 if (!MdfFile.IsSignatureMdf(fs) && name.DefaultShellType() == "MDF")
                                 {
-                                    files[name] = (f, ProcessMethod.EncodeMdf);
+                                    files[name] = (f, keepRaw? ProcessMethod.None: ProcessMethod.EncodeMdf);
                                 }
                                 else
                                 {
