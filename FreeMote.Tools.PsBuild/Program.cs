@@ -525,9 +525,13 @@ Example:
                     else
                     {
                         var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
-
-                        var outputMdf = context.PackToShell(content.Psb.ToStream(), "MDF"); //disposed later
-                        contents.Add((fileNameWithoutSuffix, outputMdf));
+                        var stream = content.Psb.ToStream();
+                        var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
+                        if (!string.IsNullOrEmpty(shellType))
+                        {
+                            stream = context.PackToShell(stream, shellType); //disposed later
+                        }
+                        contents.Add((fileNameWithoutSuffix, stream));
                     }
                 });
 

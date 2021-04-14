@@ -189,7 +189,7 @@ namespace FreeMote.Psb
                                     Console.WriteLine($"[WARN] Channel is not loaded: Channel resource don't have a Index.");
                                     continue;
                                 }
-                                var channelFileName = Path.ChangeExtension(fullPath, $".{channel.Data.Index.Value}{ext}");
+                                var channelFileName = Path.ChangeExtension(fullPath, $".#{channel.Data.Index.Value}{ext}");
                                 if (!File.Exists(channelFileName))
                                 {
                                     Console.WriteLine($"[WARN] Channel is not loaded: Failed to find Channel resource from {channelFileName}");
