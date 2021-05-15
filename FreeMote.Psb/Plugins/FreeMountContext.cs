@@ -33,11 +33,13 @@ namespace FreeMote.Plugins
         /// <inheritdoc cref="FreeMount.ArchDataToWave"/>
         /// </summary>
         /// <param name="ext"></param>
+        /// <param name="metadata"></param>
         /// <param name="archData"></param>
+        /// <param name="fileName">desired output file name hint (used to determine channel/pan)</param>
         /// <returns></returns>
-        public byte[] ArchDataToWave(string ext, IArchData archData)
+        public byte[] ArchDataToWave(string ext, AudioMetadata metadata, IArchData archData, string fileName = "")
         {
-            return FreeMount._.ArchDataToWave(ext, archData, Context);
+            return FreeMount._.ArchDataToWave(ext, metadata, archData, fileName, Context);
         }
 
         /// <summary>
@@ -46,23 +48,23 @@ namespace FreeMote.Plugins
         /// <param name="ext"></param>
         /// <param name="wave"></param>
         /// <param name="fileName"></param>
-        /// <param name="waveExt"></param>
+        /// <param name="waveExt">"ext" in ArchData</param>
         /// <returns></returns>
-        public IArchData WaveToArchData(AudioMetadata md, string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
+        public bool WaveToArchData(AudioMetadata md, IArchData archData, string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
         {
-            return FreeMount._.WaveToArchData(md, ext, wave, fileName, waveExt, Context);
+            return FreeMount._.WaveToArchData(md, archData, ext, wave, fileName, waveExt, Context);
         }
 
         /// <summary>
         /// <inheritdoc cref="FreeMount.TryGetArchData"/>
         /// </summary>
-        /// <param name="psb"></param>
+        /// <param name="md"></param>
         /// <param name="channel"><inheritdoc cref="FreeMount.TryGetArchData"/></param>
         /// <param name="archData"></param>
         /// <returns></returns>
-        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData archData)
+        public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData archData)
         {
-            return FreeMount._.TryGetArchData(psb, channel, out archData, Context);
+            return FreeMount._.TryGetArchData(md, channel, out archData, Context);
         }
 
         /// <summary>

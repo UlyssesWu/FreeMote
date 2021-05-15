@@ -56,7 +56,7 @@ namespace FreeMote.Plugins.Audio
             return true;
         }
 
-        public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
+        public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
             VagFile vag = new VagFile();
             if (vag.LoadFromStream(new MemoryStream(archData.Data.Data)))
@@ -67,11 +67,16 @@ namespace FreeMote.Plugins.Audio
             return null;
         }
 
-        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public bool ToArchData(AudioMetadata md, IArchData archData, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {
-                return null;
+                return false;
+            }
+
+            if (archData is not PsArchData data)
+            {
+                return false;
             }
 
             var tempPath = Path.GetTempPath();
@@ -97,7 +102,7 @@ namespace FreeMote.Plugins.Audio
                 if (!File.Exists(tempOutFile) || process?.ExitCode != 0)
                 {
                     Console.WriteLine("[ERROR] VAG convert failed.");
-                    return null;
+                    return false;
                 }
 
                 outBytes = File.ReadAllBytes(tempOutFile);
@@ -109,19 +114,23 @@ namespace FreeMote.Plugins.Audio
                 Console.WriteLine(e);
             }
 
-            var arch = new PsArchData
+            if (data.Data == null)
             {
-                Data = new PsbResource { Data = outBytes },
-                Format = PsbAudioFormat.VAG
-            };
+                data.Data = new PsbResource { Data = outBytes };
+            }
+            else
+            {
+                data.Data.Data = outBytes;
+            }
+            data.Format = PsbAudioFormat.VAG;
 
-            return arch;
+            return true;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
-            if (psb.Platform == PsbSpec.ps4 || psb.Platform == PsbSpec.vita)
+            if (md.Spec == PsbSpec.ps4 || md.Spec == PsbSpec.vita)
             {
                 if (channel.Count == 1 && channel["archData"] is PsbResource res)
                 {

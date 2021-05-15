@@ -55,11 +55,13 @@ namespace FreeMote.Psb
         /// Convert <see cref="IArchData"/> to Wave
         /// </summary>
         /// <param name="archData"></param>
+        /// <param name="metadata"></param>
+        /// <param name="fileName"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static byte[] TryToWave(this IArchData archData, FreeMountContext context)
+        public static byte[] TryToWave(this IArchData archData, AudioMetadata metadata, FreeMountContext context, string fileName = "")
         {
-            return context?.ArchDataToWave(archData.Extension, archData);
+            return context?.ArchDataToWave(archData.Extension, metadata, archData, fileName);
         }
 
         /// <summary>

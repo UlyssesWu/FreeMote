@@ -277,6 +277,18 @@ namespace FreeMote
         /// Multiple Channels (2+)
         /// </summary>
         Multiple,
+        /// <summary>
+        /// Intro (for Loop)
+        /// </summary>
+        Intro,
+        /// <summary>
+        /// Body (for Loop)
+        /// </summary>
+        Body,
+        /// <summary>
+        /// Intro + Body (NX OPUS)
+        /// </summary>
+        IntroBody,
     }
 
     public enum EncodeMode

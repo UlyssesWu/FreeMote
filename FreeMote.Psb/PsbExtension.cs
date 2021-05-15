@@ -1011,6 +1011,17 @@ namespace FreeMote.Psb
         }
 
         #endregion
+
+        /// <summary>
+        /// Get the second file name extension.
+        /// <example>e.g. get ".vag" from "audio.vag.wav"</example>
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>null if input is null; <see cref="String.Empty"/> if no second extension</returns>
+        internal static string GetSecondExtension(this string path)
+        {
+           return Path.GetExtension(Path.GetFileNameWithoutExtension(path))?.ToLowerInvariant();
+        }
     }
 
     public class ByteListComparer : IComparer<IList<byte>>

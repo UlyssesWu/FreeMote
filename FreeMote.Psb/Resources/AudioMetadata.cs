@@ -60,6 +60,11 @@ namespace FreeMote.Psb
                         return PsbAudioPan.Stereo;
                     }
 
+                    if (ChannelList[0].ChannelPan == PsbAudioPan.IntroBody)
+                    {
+                        return PsbAudioPan.IntroBody;
+                    }
+
                     return PsbAudioPan.Mono;
                 }
 
@@ -105,7 +110,8 @@ namespace FreeMote.Psb
             //audio.vag.l.wav
             var ext = Path.GetExtension(fullPath).ToLowerInvariant(); //.wav
             var fileName = Path.GetFileNameWithoutExtension(fullPath); //audio.vag
-            var secondExt = Path.GetExtension(fileName).ToLowerInvariant(); //.vag
+            //var secondExt = Path.GetExtension(fileName).ToLowerInvariant();
+            var secondExt = fullPath.GetSecondExtension(); //.vag
             var targetChannel = ChannelList[0];
             if (!string.IsNullOrEmpty(secondExt))
             {
@@ -151,7 +157,7 @@ namespace FreeMote.Psb
                     xwmaArch.ReadFromXwma(File.OpenRead(fullPath));
                     break;
                 case ".adpcm":
-                    var adpcmArch = (NxArchData)targetChannel;
+                    var adpcmArch = (OpusArchData)targetChannel;
                     adpcmArch.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 case ".wav":
@@ -234,7 +240,11 @@ namespace FreeMote.Psb
                 case PsArchData ps:
                     ps.Data.Data = File.ReadAllBytes(fullPath);
                     break;
-                case NxArchData opus:
+                case OpusArchData opus:
+                    if (opus.ChannelPan == PsbAudioPan.IntroBody)
+                    {
+                        throw new FormatException("Cannot load OPUS with body+intro channels");
+                    }
                     opus.Data.Data = File.ReadAllBytes(fullPath);
                     break;
                 default:
@@ -256,11 +266,11 @@ namespace FreeMote.Psb
         /// <param name="context"></param>
         private void LoadFileToChannel(IArchData channel, string fullPath, string fileName, string fileExt, string encodeExt, FreeMountContext context)
         {
-            var newArch = context.WaveToArchData(this, encodeExt, File.ReadAllBytes(fullPath), fileName,
+            var result = context.WaveToArchData(this, channel, encodeExt, File.ReadAllBytes(fullPath), fileName,
                 channel.WaveExtension);
-            if (newArch != null)
+            if (result)
             {
-                channel.SetPsbArchData(newArch.ToPsbArchData());
+                channel.SetPsbArchData(channel.ToPsbArchData());
             }
             else
             {
@@ -300,31 +310,31 @@ namespace FreeMote.Psb
             //return string.IsNullOrEmpty(fileName) ? Name : fileName.EndsWith(ext) ? fileName : fileName + ext;
         }
 
-        public bool TryToWave(FreeMountContext context, out List<byte[]> waveChannels)
-        {
-            waveChannels = null;
-            if (context == null)
-            {
-                return false;
-            }
+        //public bool TryToWave(FreeMountContext context, out List<byte[]> waveChannels)
+        //{
+        //    waveChannels = null;
+        //    if (context == null)
+        //    {
+        //        return false;
+        //    }
 
-            waveChannels = new List<byte[]>(ChannelList.Count);
-            var result = true;
-            foreach (var channel in ChannelList)
-            {
-                var bytes = channel.TryToWave(context);
-                if (bytes == null)
-                {
-                    result = false;
-                }
-                else
-                {
-                    waveChannels.Add(bytes);
-                }
-            }
+        //    waveChannels = new List<byte[]>(ChannelList.Count);
+        //    var result = true;
+        //    foreach (var channel in ChannelList)
+        //    {
+        //        var bytes = channel.TryToWave(context);
+        //        if (bytes == null)
+        //        {
+        //            result = false;
+        //        }
+        //        else
+        //        {
+        //            waveChannels.Add(bytes);
+        //        }
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
 
         internal IArchData GetLeftChannel()
         {
@@ -345,7 +355,6 @@ namespace FreeMote.Psb
 
             return ChannelList.First(c => c.ChannelPan == PsbAudioPan.Right);
         }
-
     }
 
 

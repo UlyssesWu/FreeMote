@@ -47,7 +47,7 @@ namespace FreeMote.Plugins.Audio
             return wave != null;
         }
 
-        public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
+        public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
             if (string.IsNullOrEmpty(ToolPath))
             {
@@ -84,11 +84,16 @@ namespace FreeMote.Plugins.Audio
             return outBytes;
         }
         
-        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public bool ToArchData(AudioMetadata md, IArchData archData, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!File.Exists(ToolPath))
             {
-                return null;
+                return false;
+            }
+
+            if (archData is not XwmaArchData xwma)
+            {
+                return false;
             }
 
             var tempFile = Path.GetTempFileName();
@@ -120,20 +125,19 @@ namespace FreeMote.Plugins.Audio
 
             if (oms == null)
             {
-                return null;
+                return false;
             }
             
-            XwmaArchData data = new XwmaArchData();
-            data.ReadFromXwma(oms);
+            xwma.ReadFromXwma(oms);
             oms.Dispose();
             
-            return data;
+            return true;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
-            if (psb.Platform == PsbSpec.win)
+            if (md.Spec == PsbSpec.win)
             {
                 if (channel.Count == 1 && channel["archData"] is PsbDictionary archDic && archDic["data"] is PsbResource aData && archDic["dpds"] is PsbResource aDpds && archDic["fmt"] is PsbResource aFmt && archDic["wav"] is PsbString aWav)
                 {

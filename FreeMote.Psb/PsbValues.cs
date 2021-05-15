@@ -1118,7 +1118,7 @@ namespace FreeMote.Psb
     /// psb_objects_t: {key: value}
     /// </summary>
     [Serializable]
-    public class PsbDictionary : Dictionary<string, IPsbValue>, IPsbValue, IPsbCollection
+    public class PsbDictionary : Dictionary<string, IPsbValue>, IPsbCollection
     {
         public PsbDictionary(int capacity) : base(capacity)
         {
@@ -1184,7 +1184,7 @@ namespace FreeMote.Psb
     /// [value1, value2...]
     /// </summary>
     [Serializable]
-    public class PsbList : List<IPsbValue>, IPsbValue, IPsbCollection
+    public class PsbList : List<IPsbValue>, IPsbCollection
     {
         public PsbList(int capacity) : base(capacity)
         {

@@ -286,17 +286,19 @@ namespace FreeMote.Plugins
         /// <inheritdoc cref="IPsbAudioFormatter.ToWave"/>
         /// </summary>
         /// <param name="ext"></param>
+        /// <param name="metadata"></param>
         /// <param name="archData"></param>
+        /// <param name="fileName">desired output file name hint (used to determine channel/pan)</param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public byte[] ArchDataToWave(string ext, IArchData archData, Dictionary<string, object> context = null)
+        public byte[] ArchDataToWave(string ext, AudioMetadata metadata, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
             if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToWave(archData, context))
             {
                 return null;
             }
 
-            return AudioFormatters[ext].ToWave(archData, context);
+            return AudioFormatters[ext].ToWave(metadata, archData, fileName, context);
         }
 
         /// <summary>
@@ -320,20 +322,21 @@ namespace FreeMote.Plugins
         /// <inheritdoc cref="IPsbAudioFormatter.ToArchData"/>
         /// </summary>
         /// <param name="md"></param>
+        /// <param name="archData"></param>
         /// <param name="ext"></param>
         /// <param name="wave"></param>
         /// <param name="fileName"></param>
         /// <param name="waveExt"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public IArchData WaveToArchData(AudioMetadata md, string ext, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public bool WaveToArchData(AudioMetadata md, IArchData archData, string ext, byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
             if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToArchData(wave))
             {
-                return null;
+                return false;
             }
 
-            return AudioFormatters[ext].ToArchData(md, wave, fileName, waveExt, context);
+            return AudioFormatters[ext].ToArchData(md, archData, wave, fileName, waveExt, context);
         }
 
         /// <summary>
@@ -344,12 +347,12 @@ namespace FreeMote.Plugins
         /// <param name="archData"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData archData, Dictionary<string, object> context = null)
+        public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData archData, Dictionary<string, object> context = null)
         {
             archData = null;
             foreach (var audioFormatter in AudioFormatters)
             {
-                if (audioFormatter.Value.TryGetArchData(psb, channel, out archData, context))
+                if (audioFormatter.Value.TryGetArchData(md, channel, out archData, context))
                 {
                     return true;
                 }

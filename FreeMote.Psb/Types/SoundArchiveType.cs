@@ -47,7 +47,7 @@ namespace FreeMote.Psb.Types
 
         internal AudioMetadata GenerateAudioMetadata(PSB psb, string name, PsbDictionary voice, FreeMountContext context)
         {
-            var md = new AudioMetadata {Name = name};
+            var md = new AudioMetadata {Name = name, Spec = psb.Platform};
 
             if (voice["file"] is PsbString fileStr)
             {
@@ -63,10 +63,10 @@ namespace FreeMote.Psb.Types
                 md.LoopStr = loopStr;
             }
 
-            if (md.LoopStr != null)
-            {
-                context.Context["loopstr"] = md.LoopStr.Value;
-            }
+            //if (md.LoopStr != null)
+            //{
+            //    context.Context["loopstr"] = md.LoopStr.Value;
+            //}
 
             if (voice["loop"] is PsbNumber loopNum)
             {
@@ -94,7 +94,7 @@ namespace FreeMote.Psb.Types
                 {
                     if (channel is PsbDictionary channelDic)
                     {
-                        if (context.TryGetArchData(psb, channelDic, out var archData))
+                        if (context.TryGetArchData(md, channelDic, out var archData))
                         {
                             archData.PsbArchData = channelDic;
                             md.ChannelList.Add(archData);
@@ -106,6 +106,14 @@ namespace FreeMote.Psb.Types
             return md;
         }
 
+        /// <summary>
+        /// Link by old res.json, not used actually
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <param name="context"></param>
+        /// <param name="resPaths"></param>
+        /// <param name="baseDir"></param>
+        /// <param name="order"></param>
         public void Link(PSB psb, FreeMountContext context, IList<string> resPaths, string baseDir = null,
             PsbLinkOrderBy order = PsbLinkOrderBy.Convention)
         {
@@ -169,7 +177,36 @@ namespace FreeMote.Psb.Types
         public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
             PsbLinkOrderBy order = PsbLinkOrderBy.Name)
         {
+            Console.WriteLine("Unlink is not supported for sound_archive type.");
             //TODO:
+        }
+
+        /// <summary>
+        /// Save sub channel
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <param name="archData"></param>
+        /// <param name="secondExt"></param>
+        /// <param name="baseDir"></param>
+        /// <param name="psbName"></param>
+        /// <param name="resDictionary"></param>
+        /// <param name="context"></param>
+        /// <returns>true if TryToWave succeed; false if raw data is saved</returns>
+        private static bool SaveSubChannel(AudioMetadata resource, IArchData archData, string secondExt, string baseDir, string psbName, Dictionary<string, string> resDictionary, FreeMountContext context)
+        {
+            var relativePath = resource.GetFileName($"{archData.Extension}{secondExt}{archData.WaveExtension}");
+            var bts = archData.TryToWave(resource, context, relativePath);
+            relativePath = resource.GetFileName($"{archData.Extension}{secondExt}{archData.WaveExtension}");
+            if (bts != null)
+            {
+                File.WriteAllBytes(Path.Combine(baseDir, relativePath), bts);
+                return true;
+            }
+
+            relativePath = resource.GetFileName($"{archData.Extension}{secondExt}{archData.Extension}");
+            File.WriteAllBytes(Path.Combine(baseDir, relativePath), archData.Data.Data);
+            resDictionary.Add(resource.Name, $"{psbName}/{relativePath}");
+            return false;
         }
 
         public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
@@ -196,8 +233,9 @@ namespace FreeMote.Psb.Types
                 {
                     if (resource.ChannelList.Count == 1)
                     {
-                        var bts = resource.ChannelList[0].TryToWave(context);
                         var relativePath = resource.GetFileName(resource.ChannelList[0].Extension + resource.ChannelList[0].WaveExtension); //WaveExtension may change after ToWave
+                        var bts = resource.ChannelList[0].TryToWave(resource, context, relativePath);
+                        relativePath = resource.GetFileName(resource.ChannelList[0].Extension + resource.ChannelList[0].WaveExtension); //WaveExtension may change after ToWave
                         if (bts != null)
                         {
                             File.WriteAllBytes(Path.Combine(dirPath, relativePath), bts);
@@ -209,38 +247,20 @@ namespace FreeMote.Psb.Types
                         if (resource.Pan == PsbAudioPan.LeftRight) //load audio.vag.l.wav & audio.vag.r.wav
                         {
                             var left = resource.GetLeftChannel();
-                            var relativePathL = resource.GetFileName($"{left.Extension}.l{left.WaveExtension}");
-                            var btsL = left.TryToWave(context);
-                            if (btsL != null)
-                            {
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePathL), btsL);
-                            }
-                            else
-                            {
-                                relativePathL = resource.GetFileName($"{left.Extension}.l{left.Extension}");
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePathL), left.Data.Data);
-                                resDictionary.Add(resource.Name, $"{name}/{relativePathL}");
-                            }
+                            var lOK = SaveSubChannel(resource, left, ".l", dirPath, name, resDictionary, context);
 
                             var right = resource.GetRightChannel();
-                            var relativePathR = resource.GetFileName($"{right.Extension}.r{right.WaveExtension}");
-                            var btsR = right.TryToWave(context);
-                            if (btsR != null)
-                            {
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePathR), btsR);
-                            }
-                            else
-                            {
-                                relativePathR = resource.GetFileName($"{right.Extension}.r{right.Extension}");
-                                File.WriteAllBytes(Path.Combine(dirPath, relativePathR), right.Data.Data);
-                                resDictionary.Add(resource.Name, $"{name}/{relativePathR}");
-                            }
-
-                            if (btsL != null && btsR != null)
+                            var rOK = SaveSubChannel(resource, right, ".r", dirPath, name, resDictionary, context);
+                            
+                            if (lOK && rOK)
                             {
                                 var relativePath = resource.GetFileName($"{left.Extension}{left.WaveExtension}");
                                 resDictionary.Add(resource.Name, $"{name}/{relativePath}"); //a virtual file path
                             }
+                        }
+                        else if (resource.Pan == PsbAudioPan.IntroBody)
+                        {
+                            //TODO: get channel?
                         }
                         else //not LeftRight
                         {
@@ -252,7 +272,8 @@ namespace FreeMote.Psb.Types
                                     Console.WriteLine($"[WARN] Channel {j} is not linked with a Resource.");
                                     continue;
                                 }
-                                var bts = waveChannel.TryToWave(context);
+                                //TODO: handle channel no.
+                                var bts = waveChannel.TryToWave(resource, context, j.ToString());
                                 var noStr = waveChannel.Data.Index == null ? $".@{j}" : $".#{waveChannel.Data.Index.Value}"; //TODO: handle @ - channel internal No.
                                 var relativePath = resource.GetFileName($"{waveChannel.Extension}{noStr}{waveChannel.WaveExtension}");
                                 if (bts != null)

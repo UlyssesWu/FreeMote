@@ -21,7 +21,7 @@ namespace FreeMote.Plugins.Audio
         public List<string> Extensions { get; } = new List<string> { ".adpcm" };
         public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            return archData is NxArchData;
+            return archData is OpusArchData;
         }
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
@@ -29,7 +29,7 @@ namespace FreeMote.Plugins.Audio
             return wave != null;
         }
 
-        public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
+        public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
             DspReader reader = new DspReader();
             var data = reader.Read(archData.Data.Data);
@@ -39,26 +39,28 @@ namespace FreeMote.Plugins.Audio
             return oms.ToArray();
         }
 
-        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public bool ToArchData(AudioMetadata md, IArchData archData, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
+            if (archData is not AdpcmArchData data)
+            {
+                return false;
+            }
             WaveReader reader = new WaveReader();
-            var data = reader.Read(wave);
+            var rawData = reader.Read(wave);
             using MemoryStream oms = new MemoryStream();
             DspWriter writer = new DspWriter();
-            writer.WriteToStream(data, oms, new DspConfiguration {Endianness = Endianness.LittleEndian});
-            NxArchData archData = new NxArchData { Data = new PsbResource { Data = oms.ToArray() } };
-            var format = data.GetAllFormats().FirstOrDefault();
+            writer.WriteToStream(rawData, oms, new DspConfiguration {Endianness = Endianness.LittleEndian});
+            data.Data = new PsbResource {Data = oms.ToArray()};
+            var format = rawData.GetAllFormats().FirstOrDefault();
             if (format != null)
             {
-                archData.SampleCount = format.SampleCount;
-                archData.SampRate = format.SampleRate;
-                archData.ChannelCount = format.ChannelCount;
+                data.SampRate = format.SampleRate;
             }
 
-            return archData;
+            return true;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
             //if (psb.Platform != PsbSpec.nx)
@@ -75,7 +77,7 @@ namespace FreeMote.Plugins.Audio
                 && archDic["ext"] is PsbString ext && ext.Value == Extensions[0] &&
                 archDic["samprate"] is PsbNumber sampRate)
             {
-                var newData = new NxArchData
+                var newData = new AdpcmArchData
                 {
                     Data = aData,
                     SampRate = sampRate.AsInt,

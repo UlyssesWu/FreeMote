@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,8 @@ using VGAudio.Containers.Wave;
 
 namespace FreeMote.Plugins.Audio
 {
+    //This is the worst design for sound_archive PSB
+    //2 channels set in 1 archData? What's the meaning of "channelList"?
     [Export(typeof(IPsbAudioFormatter))]
     [ExportMetadata("Name", "FreeMote.NxOpus")]
     [ExportMetadata("Author", "Ulysses")]
@@ -18,7 +21,7 @@ namespace FreeMote.Plugins.Audio
 
         public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            return archData is NxArchData;
+            return archData is OpusArchData;
         }
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)
@@ -26,64 +29,138 @@ namespace FreeMote.Plugins.Audio
             return wave != null;
         }
 
-        public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
+        public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
             NxOpusReader reader = new NxOpusReader();
-            var data = reader.Read(archData.Data.Data);
+            byte[] rawData = archData.Data?.Data;
+
+            if (archData is OpusArchData data)
+            {
+                if (fileName == ".intro")
+                {
+                    rawData = data.Intro.Data.Data;
+                }
+                else if (fileName == ".body")
+                {
+                    rawData = data.Body.Data.Data;
+                }
+            }
+
+            if (rawData == null)
+            {
+                return null;
+            }
+
+            var audioData = reader.Read(rawData);
             using MemoryStream oms = new MemoryStream();
             WaveWriter writer = new WaveWriter();
-            writer.WriteToStream(data, oms, new WaveConfiguration {Codec = WaveCodec.Pcm16Bit}); //only 16Bit supported
+            writer.WriteToStream(audioData, oms, new WaveConfiguration {Codec = WaveCodec.Pcm16Bit}); //only 16Bit supported
             return oms.ToArray();
         }
 
-        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public bool ToArchData(AudioMetadata md, IArchData archData, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
+            if (archData is not OpusArchData data)
+            {
+                return false;
+            }
             WaveReader reader = new WaveReader();
-            var data = reader.Read(wave);
+            var rawData = reader.Read(wave);
             using MemoryStream oms = new MemoryStream();
             NxOpusWriter writer = new NxOpusWriter();
-            writer.WriteToStream(data, oms, new NxOpusConfiguration());
-            NxArchData archData = new NxArchData {Data = new PsbResource {Data = oms.ToArray()}};
-            var format = data.GetAllFormats().FirstOrDefault();
-            if (format != null)
+            writer.WriteToStream(rawData, oms, new NxOpusConfiguration());
+
+            ChannelClip clip = null;
+
+            if (fileName == ".intro")
             {
-                archData.SampleCount = format.SampleCount;
-                archData.SampRate = format.SampleRate;
-                archData.ChannelCount = format.ChannelCount;
+                clip = data.Intro;
+
             }
-
-            return archData;
-        }
-
-        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
-        {
-            data = null;
-            //if (psb.Platform != PsbSpec.nx)
-            //{
-            //    return false;
-            //}
-            if (channel.Count != 1 || !(channel["archData"] is PsbDictionary archDic))
+            else if (fileName == ".body")
+            {
+                clip = data.Body;
+            }
+            else
             {
                 return false;
             }
 
-            if (archDic["body"] is PsbDictionary body &&
-                body["data"] is PsbResource aData && body["sampleCount"] is PsbNumber sampleCount
-                && archDic["ext"] is PsbString ext && ext.Value == Extensions[0] &&
-                archDic["samprate"] is PsbNumber sampRate)
+            if (clip.Data != null)
             {
-                data = new NxArchData
-                {
-                    Data = aData,
-                    SampRate = sampRate.AsInt,
-                    SampleCount = sampleCount.AsInt,
-                    Format = PsbAudioFormat.OPUS
-                };
-
-                return true;
+                clip.Data.Data = oms.ToArray();
+            }
+            else
+            {
+                clip.Data = new PsbResource { Data = oms.ToArray() };
             }
 
-            return false;
+            //OpusArchData archData = new OpusArchData {Data = new PsbResource {Data = oms.ToArray()}};
+            var format = rawData.GetAllFormats().FirstOrDefault();
+            if (format != null)
+            {
+                clip.SampleCount = format.SampleCount;
+                data.SampRate = format.SampleRate;
+                //data.ChannelCount = format.ChannelCount; //good, M2, now tell me where should I put this
+            }
+
+            return true;
+        }
+
+        public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
+        {
+            data = null;
+            //if (md.Spec != PsbSpec.nx)
+            //{
+            //    return false;
+            //}
+            if (channel.Count != 1 || channel["archData"] is not PsbDictionary archDic || !(archDic["ext"] is PsbString ext && ext.Value == Extensions[0]))
+            {
+                return false;
+            }
+
+            var opus = new OpusArchData()
+            {
+                Format = PsbAudioFormat.OPUS,
+                ChannelPan = PsbAudioPan.IntroBody
+            };
+
+            if (archDic["body"] is PsbDictionary body &&
+                body["data"] is PsbResource bData && body["sampleCount"] is PsbNumber bSampleCount)
+            {
+                int skipSampleCount = 0;
+                if (body["skipSampleCount"] is PsbNumber bSkipSampleCount)
+                {
+                    skipSampleCount = bSkipSampleCount.AsInt;
+                }
+
+                opus.Body = new ChannelClip {Data = bData, Name = md.Name + ".body", SampleCount = bSampleCount.AsInt, SkipSampleCount = skipSampleCount};
+            }
+
+            if (archDic["intro"] is PsbDictionary intro &&
+                intro["data"] is PsbResource iData && intro["sampleCount"] is PsbNumber iSampleCount)
+            {
+                int skipSampleCount = 0;
+                if (intro["skipSampleCount"] is PsbNumber iSkipSampleCount)
+                {
+                    skipSampleCount = iSkipSampleCount.AsInt;
+                }
+
+                opus.Intro = new ChannelClip { Data = iData, Name = md.Name + ".body", SampleCount = iSampleCount.AsInt, SkipSampleCount = skipSampleCount };
+            }
+
+            //if (opus.Body != null && opus.Intro == null)
+            //{
+            //    opus.Data = opus.Body.Data;
+            //}
+
+            if (archDic["samprate"] is PsbNumber sampRate)
+            {
+                opus.SampRate = sampRate.AsInt;
+            }
+
+            data = opus;
+            return true;
         }
     }
 }

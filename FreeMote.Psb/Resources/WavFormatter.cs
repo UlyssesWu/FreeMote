@@ -22,15 +22,19 @@ namespace FreeMote.Psb
             return wave != null;
         }
 
-        public byte[] ToWave(IArchData archData, Dictionary<string, object> context = null)
+        public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
             WavArchData arch = archData as WavArchData;
             return arch?.ToWav();
         }
 
-        public IArchData ToArchData(AudioMetadata md, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
+        public bool ToArchData(AudioMetadata md, IArchData archData, in byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
-            WavArchData arch = new WavArchData();
+            if (archData is not WavArchData data)
+            {
+                return false;
+            }
+            WavArchData arch = data;
 
             using var oms = new MemoryStream(wave);
             arch.ReadFromWav(oms);
@@ -39,13 +43,13 @@ namespace FreeMote.Psb
                 arch.Loop = PsbResHelper.ParseLoopStr(md.LoopStr.Value);
             }
 
-            return arch;
+            return true;
         }
 
-        public bool TryGetArchData(PSB psb, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
+        public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
-            if (psb.Platform == PsbSpec.win)
+            if (md.Spec == PsbSpec.win)
             {
                 if (channel.Count == 1 && channel["archData"] is PsbDictionary archDic && !archDic.ContainsKey("dpds") && archDic["data"] is PsbResource aData && archDic["fmt"] is PsbResource aFmt && archDic["wav"] is PsbString aWav)
                 {

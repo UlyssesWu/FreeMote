@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace FreeMote.Psb
@@ -22,12 +24,14 @@ namespace FreeMote.Psb
             set => _data = value;
         }
 
+        public IList<PsbResource> DataList => new List<PsbResource> { _data };
+
         public PsbResource Fmt
         {
             get => _fmt;
             set => _fmt = value;
         }
-        
+
         public string Wav { get; set; }
         public PsbList Loop { get; set; }
 
@@ -142,6 +146,8 @@ namespace FreeMote.Psb
             get => _data;
             set => _data = value;
         }
+        public IList<PsbResource> DataList => new List<PsbResource> { _data };
+
 
         public PsbDictionary PsbArchData { get; set; }
 
@@ -176,7 +182,7 @@ namespace FreeMote.Psb
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.XWMA;
         public PsbAudioPan ChannelPan => PsbAudioPan.Mono;
-        
+
         public byte[] ToXwma()
         {
             using MemoryStream ms =
@@ -201,7 +207,7 @@ namespace FreeMote.Psb
             writer.Write(Data.Data.Length);
             writer.Write(Data.Data);
 
-            var len = (uint) writer.BaseStream.Length;
+            var len = (uint)writer.BaseStream.Length;
             writer.Seek(4, SeekOrigin.Begin);
             writer.Write(len - 8);
 
@@ -260,7 +266,7 @@ namespace FreeMote.Psb
             if (resData == null) return;
             if (res == null)
             {
-                res = new PsbResource {Data = resData};
+                res = new PsbResource { Data = resData };
             }
             else
             {
@@ -270,11 +276,94 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
-    /// NX Base (Opus / ADPCM)
+    /// Clip (parts of a channel) used in NX OPUS
     /// </summary>
-    public class NxArchData : IArchData
+    internal class ChannelClip
     {
+        public string Name { get; set; }
         public PsbResource Data { get; set; }
+        public int SampleCount { get; set; } = 0;
+        public int SkipSampleCount { get; set; } = 0;
+
+        public PsbDictionary ToPsbArchData()
+        {
+            var body = new PsbDictionary
+            {
+                {"data", Data},
+                {"sampleCount", SampleCount.ToPsbNumber()}
+            };
+
+            if (SkipSampleCount != 0)
+            {
+                body["skipSampleCount"] = SkipSampleCount.ToPsbNumber();
+            }
+
+            return body;
+        }
+    }
+
+    /// <summary>
+    /// NX ADPCM
+    /// </summary>
+    public class AdpcmArchData : IArchData
+    {
+        internal ChannelClip Body { get; set; }
+
+        public PsbResource Data
+        {
+            get => Body?.Data;
+            set
+            {
+                if (Body != null)
+                {
+                    Body.Data = value;
+                }
+            }
+        }
+
+        public IList<PsbResource> DataList => new List<PsbResource> { Body?.Data };
+
+
+        public PsbDictionary PsbArchData { get; set; }
+
+        public IPsbValue ToPsbArchData()
+        {
+            var archData = new PsbDictionary
+            {
+                {"data", Data},
+                {"ext", Extension.ToPsbString()},
+                {"samprate", SampRate.ToPsbNumber()}
+            };
+
+            return archData;
+        }
+
+        public int SampRate { get; set; } = 48000;
+
+        public uint Index => Data.Index ?? uint.MaxValue;
+        public string Extension => Format.DefaultExtension();
+        public string WaveExtension { get; set; } = ".wav";
+        public PsbAudioFormat Format { get; set; } = PsbAudioFormat.ADPCM;
+
+        public PsbAudioPan ChannelPan { get; set; } = PsbAudioPan.IntroBody;
+
+        public bool Loop { get; set; } = false;
+        public PsbList Pan { get; set; }
+    }
+
+    /// <summary>
+    /// NX OPUS (one channel may have 2 resource)
+    /// </summary>
+    public class OpusArchData : IArchData
+    {
+        internal ChannelClip Body { get; set; }
+        internal ChannelClip Intro { get; set; }
+
+        public PsbResource Data { get; set; }
+
+        public IList<PsbResource> DataList => new List<PsbResource> { Body?.Data, Intro?.Data };
+
+
         public PsbDictionary PsbArchData { get; set; }
 
         public IPsbValue ToPsbArchData()
@@ -288,34 +377,56 @@ namespace FreeMote.Psb
 
             if (Format == PsbAudioFormat.OPUS)
             {
-                var body = new PsbDictionary
+                if (Body != null)
                 {
-                    {"data", Data},
-                    {"sampleCount", SampleCount.ToPsbNumber()}
-                };
-                body.Parent = archData;
-                archData.Add("body", body);
+                    var dict = Body.ToPsbArchData();
+                    dict.Parent = archData;
+                    archData.Add("body", dict);
+                }
+
+                if (Intro != null)
+                {
+                    var dict = Intro.ToPsbArchData();
+                    dict.Parent = archData;
+                    archData.Add("intro", dict);
+                }
             }
 
             return archData;
         }
 
-        /// <summary>
-        /// (Set after link)
-        /// </summary>
-        public int SampleCount { get; set; }
+        //public int ChannelCount { get; set; } = 1; //WTF M2? You put ChannelCount in a Channel??
+        public int ChannelCount //WTF M2? You put ChannelCount in a Channel??
+        {
+            get
+            {
+                if (Body != null && Intro != null)
+                {
+                    return 2;
+                }
 
-        public int ChannelCount { get; set; } = 1;
+                if (Body == null && Intro == null)
+                {
+                    return 0;
+                }
+                
+                return 1;
+            }
+        } 
+
         public int SampRate { get; set; } = 48000;
 
-        public PsbList Pan { get; set; }
-        
+        public int BodySkipSampleCount { get; set; } = 0;
+        public int IntroSkipSampleCount { get; set; } = 0;
+
         public uint Index => Data.Index ?? uint.MaxValue;
         public string Extension => Format.DefaultExtension();
         public string WaveExtension { get; set; } = ".wav";
-        public PsbAudioFormat Format { get; set; } = PsbAudioFormat.Unknown;
+        public PsbAudioFormat Format { get; set; } = PsbAudioFormat.OPUS;
 
-        public PsbAudioPan ChannelPan { get; set; } = PsbAudioPan.Mono;
+        public PsbAudioPan ChannelPan { get; set; } = PsbAudioPan.IntroBody;
+
+        public bool Loop { get; set; } = false;
     }
 
     ///// <summary>
@@ -362,6 +473,7 @@ namespace FreeMote.Psb
     public class PsArchData : IArchData
     {
         public PsbResource Data { get; set; }
+        public IList<PsbResource> DataList => new List<PsbResource> { Data };
         public PsbDictionary PsbArchData { get; set; }
 
         public IPsbValue ToPsbArchData()
