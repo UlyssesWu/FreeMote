@@ -194,13 +194,18 @@ namespace FreeMote.Psb.Types
         /// <returns>true if TryToWave succeed; false if raw data is saved</returns>
         private static bool SaveSubChannel(AudioMetadata resource, IArchData archData, string secondExt, string baseDir, string psbName, Dictionary<string, string> resDictionary, FreeMountContext context)
         {
+            //var relativePath = resource.GetFileName($"{archData.Extension}{secondExt}{archData.WaveExtension}");
+            var bts = archData.TryToWave(resource, context, secondExt);
             var relativePath = resource.GetFileName($"{archData.Extension}{secondExt}{archData.WaveExtension}");
-            var bts = archData.TryToWave(resource, context, relativePath);
-            relativePath = resource.GetFileName($"{archData.Extension}{secondExt}{archData.WaveExtension}");
             if (bts != null)
             {
                 File.WriteAllBytes(Path.Combine(baseDir, relativePath), bts);
                 return true;
+            }
+
+            if (archData.Data?.Data == null)
+            {
+                return false;
             }
 
             relativePath = resource.GetFileName($"{archData.Extension}{secondExt}{archData.Extension}");
@@ -258,9 +263,31 @@ namespace FreeMote.Psb.Types
                                 resDictionary.Add(resource.Name, $"{name}/{relativePath}"); //a virtual file path
                             }
                         }
-                        else if (resource.Pan == PsbAudioPan.IntroBody)
+                        else if (resource.Pan == PsbAudioPan.IntroBody) // intro & body
                         {
-                            //TODO: get channel?
+                            var channel = resource.ChannelList[0] as OpusArchData;
+                            if (channel == null)
+                            {
+                                continue;
+                            }
+
+                            bool bodyOK = false, introOK = false;
+
+                            if (channel.ChannelPan is PsbAudioPan.Body or PsbAudioPan.IntroBody)
+                            {
+                                bodyOK = SaveSubChannel(resource, channel, ".body", dirPath, name, resDictionary, context);
+                            }
+
+                            if (channel.ChannelPan is PsbAudioPan.Intro or PsbAudioPan.IntroBody)
+                            {
+                                introOK = SaveSubChannel(resource, channel, ".intro", dirPath, name, resDictionary, context);
+                            }
+
+                            if (bodyOK || introOK)
+                            {
+                                var relativePath = resource.GetFileName($"{channel.Extension}{channel.WaveExtension}");
+                                resDictionary.Add(resource.Name, $"{name}/{relativePath}"); //a virtual file path
+                            }
                         }
                         else //not LeftRight
                         {

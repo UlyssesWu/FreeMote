@@ -424,7 +424,24 @@ namespace FreeMote.Psb
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format { get; set; } = PsbAudioFormat.OPUS;
 
-        public PsbAudioPan ChannelPan { get; set; } = PsbAudioPan.IntroBody;
+        //public PsbAudioPan ChannelPan { get; set; } = PsbAudioPan.IntroBody;
+        public PsbAudioPan ChannelPan
+        {
+            get
+            {
+                if (Body != null && Intro != null)
+                {
+                    return PsbAudioPan.IntroBody;
+                }
+
+                if (Body == null && Intro == null)
+                {
+                    return PsbAudioPan.IntroBody;
+                }
+
+                return Body == null ? PsbAudioPan.Intro : PsbAudioPan.Body;
+            }
+        }
 
         public bool Loop { get; set; } = false;
     }

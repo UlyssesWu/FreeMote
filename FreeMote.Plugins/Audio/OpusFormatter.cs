@@ -121,9 +121,11 @@ namespace FreeMote.Plugins.Audio
 
             var opus = new OpusArchData()
             {
-                Format = PsbAudioFormat.OPUS,
-                ChannelPan = PsbAudioPan.IntroBody
+                Format = PsbAudioFormat.OPUS
+                //ChannelPan = PsbAudioPan.IntroBody
             };
+
+            bool hasBody = false, hasIntro = false;
 
             if (archDic["body"] is PsbDictionary body &&
                 body["data"] is PsbResource bData && body["sampleCount"] is PsbNumber bSampleCount)
@@ -135,6 +137,7 @@ namespace FreeMote.Plugins.Audio
                 }
 
                 opus.Body = new ChannelClip {Data = bData, Name = md.Name + ".body", SampleCount = bSampleCount.AsInt, SkipSampleCount = skipSampleCount};
+                hasBody = true;
             }
 
             if (archDic["intro"] is PsbDictionary intro &&
@@ -147,6 +150,7 @@ namespace FreeMote.Plugins.Audio
                 }
 
                 opus.Intro = new ChannelClip { Data = iData, Name = md.Name + ".body", SampleCount = iSampleCount.AsInt, SkipSampleCount = skipSampleCount };
+                hasIntro = true;
             }
 
             //if (opus.Body != null && opus.Intro == null)

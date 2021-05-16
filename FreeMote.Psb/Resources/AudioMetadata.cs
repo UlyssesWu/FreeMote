@@ -173,7 +173,11 @@ namespace FreeMote.Psb
                         }
                     }
 
-                    if (!File.Exists(fullPath)) //file not exist...
+                    if (File.Exists(fullPath))
+                    {
+                        LoadFileToChannel(targetChannel, fullPath, fileName, ext, realExt, context);
+                    }
+                    else
                     {
                         if (Pan == PsbAudioPan.LeftRight) //maybe left and right...
                         {
@@ -186,6 +190,24 @@ namespace FreeMote.Psb
                             }
                         }
 
+                        if (Pan is PsbAudioPan.Body or PsbAudioPan.IntroBody)
+                        {
+                            var bodyWav = Path.ChangeExtension(fullPath, ".body" + ext);
+                            if (File.Exists(bodyWav))
+                            {
+                                LoadFileToChannel(ChannelList[0], bodyWav, ".body", ext, realExt, context);
+                            }
+                        }
+
+                        if (Pan is PsbAudioPan.Intro or PsbAudioPan.IntroBody)
+                        {
+                            var introWav = Path.ChangeExtension(fullPath, ".intro" + ext);
+                            if (File.Exists(introWav))
+                            {
+                                LoadFileToChannel(ChannelList[0], introWav, ".intro", ext, realExt, context);
+                            }
+                        }
+
                         if (Pan == PsbAudioPan.Multiple) //maybe multi channel...
                         {
                             foreach (var channel in ChannelList)
@@ -195,10 +217,12 @@ namespace FreeMote.Psb
                                     Console.WriteLine($"[WARN] Channel is not loaded: Channel resource don't have a Index.");
                                     continue;
                                 }
+
                                 var channelFileName = Path.ChangeExtension(fullPath, $".#{channel.Data.Index.Value}{ext}");
                                 if (!File.Exists(channelFileName))
                                 {
-                                    Console.WriteLine($"[WARN] Channel is not loaded: Failed to find Channel resource from {channelFileName}");
+                                    Console.WriteLine(
+                                        $"[WARN] Channel is not loaded: Failed to find Channel resource from {channelFileName}");
                                     continue;
                                 }
 
@@ -206,8 +230,6 @@ namespace FreeMote.Psb
                             }
                         }
                     }
-
-                    LoadFileToChannel(targetChannel, fullPath, fileName, ext, realExt, context);
 
                     break;
                 case ".bin":
