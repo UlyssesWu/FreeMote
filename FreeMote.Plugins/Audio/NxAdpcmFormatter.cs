@@ -21,7 +21,7 @@ namespace FreeMote.Plugins.Audio
         public List<string> Extensions { get; } = new List<string> { ".adpcm" };
         public bool CanToWave(IArchData archData, Dictionary<string, object> context = null)
         {
-            return archData is OpusArchData;
+            return archData is AdpcmArchData;
         }
 
         public bool CanToArchData(byte[] wave, Dictionary<string, object> context = null)

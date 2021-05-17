@@ -182,10 +182,14 @@ namespace FreeMote.Psb
                         if (Pan == PsbAudioPan.LeftRight) //maybe left and right...
                         {
                             var leftWav = Path.ChangeExtension(fullPath, ".l" + ext);
-                            var rightWav = Path.ChangeExtension(fullPath, ".r" + ext);
-                            if (File.Exists(leftWav) && File.Exists(rightWav))
+                            if (File.Exists(leftWav))
                             {
                                 LoadFileToChannel(GetLeftChannel(), leftWav, fileName, ext, realExt, context);
+                            }
+
+                            var rightWav = Path.ChangeExtension(fullPath, ".r" + ext);
+                            if (File.Exists(rightWav))
+                            {
                                 LoadFileToChannel(GetRightChannel(), rightWav, fileName, ext, realExt, context);
                             }
                         }

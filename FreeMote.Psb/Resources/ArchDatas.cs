@@ -307,21 +307,9 @@ namespace FreeMote.Psb
     /// </summary>
     public class AdpcmArchData : IArchData
     {
-        internal ChannelClip Body { get; set; }
+        public PsbResource Data { get; set; }
 
-        public PsbResource Data
-        {
-            get => Body?.Data;
-            set
-            {
-                if (Body != null)
-                {
-                    Body.Data = value;
-                }
-            }
-        }
-
-        public IList<PsbResource> DataList => new List<PsbResource> { Body?.Data };
+        public IList<PsbResource> DataList => new List<PsbResource> { Data };
 
 
         public PsbDictionary PsbArchData { get; set; }
