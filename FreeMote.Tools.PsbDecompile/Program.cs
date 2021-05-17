@@ -366,8 +366,18 @@ Example:
 
         static void WriteAllBytes(string path, MemoryStream ms)
         {
+            EnsureDirectory(path);
             using var fs = new FileStream(path, FileMode.Create);
             ms.WriteTo(fs);
+        }
+
+        static void EnsureDirectory(string path)
+        {
+            var baseDir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrWhiteSpace(baseDir) && !Directory.Exists(baseDir))
+            {
+                Directory.CreateDirectory(baseDir);
+            }
         }
 
         static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, bool outputRaw = true,
@@ -407,7 +417,7 @@ Example:
                     PsbResourceJson resx = new PsbResourceJson(psb, context);
 
                     var dic = psb.Objects["file_info"] as PsbDictionary;
-                    var suffixList = ((PsbList) psb.Objects["expire_suffix_list"]);
+                    var suffixList = (PsbList) psb.Objects["expire_suffix_list"];
                     var suffix = "";
                     if (suffixList.Count > 0)
                     {
@@ -459,14 +469,16 @@ Example:
                             var fileNameWithSuffix = ArchiveInfoGetFileNameAppendSuffix(pair.Key, suffix);
                             if (outputRaw)
                             {
-                                File.WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), bodyBytes);
+                                var path = Path.Combine(extractDir, fileNameWithSuffix);
+                                EnsureDirectory(path);
+                                File.WriteAllBytes(path, bodyBytes);
                                 return;
                             }
 
                             using var ms = MsManager.GetStream(bodyBytes);
                             var bodyContext = new Dictionary<string, object>(context)
                             {
-                                [Context_MdfKey] = key + fileNameWithSuffix
+                                [Context_MdfKey] = key + Path.GetFileName(fileNameWithSuffix)
                             };
                             bodyContext.Remove(Context_ArchiveSource);
                             using var mms = MdfConvert(ms, shellType, bodyContext);
@@ -517,20 +529,23 @@ Example:
                             var fileNameWithSuffix = ArchiveInfoGetFileNameAppendSuffix(pair.Key, suffix);
                             if (outputRaw)
                             {
-                                File.WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix),
-                                    bodyBytes.AsSpan().Slice(start, len).ToArray());
+                                var path = Path.Combine(extractDir, fileNameWithSuffix);
+                                EnsureDirectory(path);
+                                File.WriteAllBytes(path, bodyBytes.AsSpan().Slice(start, len).ToArray());
                                 continue;
                             }
 
                             using (var ms = MsManager.GetStream(bodyBytes))
                             {
-                                context[Context_MdfKey] = key + fileNameWithSuffix;
+                                context[Context_MdfKey] = key + Path.GetFileName(fileNameWithSuffix);
                                 var mms = MdfConvert(ms, shellType, context);
+                                var path = Path.Combine(extractDir, fileNameWithSuffix);
                                 if (extractAll)
                                 {
                                     try
                                     {
                                         PSB bodyPsb = new PSB(mms);
+                                        EnsureDirectory(path);
                                         PsbDecompiler.DecompileToFile(bodyPsb,
                                             Path.Combine(extractDir, fileNameWithSuffix + ".json"), context,
                                             PsbExtractOption.Extract);
@@ -538,13 +553,13 @@ Example:
                                     catch (Exception e)
                                     {
                                         Console.WriteLine($"Decompile failed: {pair.Key}");
-                                        WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), mms);
+                                        WriteAllBytes(path, mms);
                                         //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                     }
                                 }
                                 else
                                 {
-                                    WriteAllBytes(Path.Combine(extractDir, fileNameWithSuffix), mms);
+                                    WriteAllBytes(path, mms);
                                     //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                 }
                             }
