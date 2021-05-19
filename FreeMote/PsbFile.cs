@@ -613,7 +613,7 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Test if the first 4 bytes are correct
+        /// Test if the first 4 bytes belong to a correct PSB header
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>

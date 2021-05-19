@@ -128,14 +128,14 @@ Example:
             app.Command("info-psb", archiveCmd =>
             {
                 //help
-                archiveCmd.Description = "Pack files to info.psb.m & body.bin (FreeMote.Plugins required)";
+                archiveCmd.Description = "Pack files to info.psb.m & body.bin (FreeMote.Plugins required).";
                 archiveCmd.HelpOption();
                 archiveCmd.ExtendedHelpText = @"
 Example:
   PsBuild info-psb sample_info.psb.m.json (Key specified in resx.json)
   PsBuild info-psb -k 1234567890ab -l 131 sample_info.psb.m.json (Must keep every filename correct)
   Hint: Always keep file names correct. A file name in source folder must match a name kept in .m.json
-  If there are both `.m` and `.m.json` in the source folder, `.json` will be used (unless using `--packed`).
+  If there are both `a.psb.m` and `a.psb.m.json` in the source folder, `.json` will be used (unless using `--packed`).
   If you don't have enough RAM to keep the whole output, use `-1by1` and wait patiently.
 ";
                 //options
@@ -148,6 +148,8 @@ Example:
                 var optPacked = archiveCmd.Option("-p|--packed",
                     "Prefer using PSB files rather than json files in source folder",
                     CommandOptionType.NoValue);
+                var optNoFolder = archiveCmd.Option("-nf|--no-folder",
+                    "Find files in source folder root at first, even if they should exist in other folders. Usually use with --intersect", CommandOptionType.NoValue);
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
                     "Set key (get file name from input path)",
                     CommandOptionType.SingleValue);
@@ -164,6 +166,7 @@ Example:
 
                 archiveCmd.OnExecute(() =>
                 {
+                    bool noFolder = optNoFolder.HasValue();
                     bool intersect = optIntersect.HasValue();
                     bool preferPacked = optPacked.HasValue();
                     bool enableParallel = FastMode;

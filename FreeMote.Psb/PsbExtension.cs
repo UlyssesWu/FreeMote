@@ -933,8 +933,7 @@ namespace FreeMote.Psb
 
             return fileName;
         }
-
-
+        
         /// <summary>
         /// Append suffix for file name in archive info file_info
         /// </summary>
@@ -943,7 +942,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static string ArchiveInfoGetFileNameAppendSuffix(string name, string suffix)
         {
-            if (!name.EndsWith(".m")) //if a file name ends with .m, it's a naughty bad file with its own suffix //TODO:FIXME
+            if (!name.EndsWith(".m") && !name.EndsWith(".psb")) //if a file name ends with .m, it's a naughty bad file with its own suffix
             {
                 return name + suffix;
             }

@@ -325,7 +325,7 @@ Example:
                     "Set key (Infer file name from path)",
                     CommandOptionType.SingleValue);
                 var optMdfKeyLen = mdfCmd.Option<uint>("-l|--length <LEN>",
-                    "Set key length (not required if decrypt all bytes). Usually use 131.",
+                    "Set key length. Usually use 131. If not set, it will be the length of the file (usually you don't expect this).",
                     CommandOptionType.SingleValue);
                 //args
                 var argPsbPaths = mdfCmd.Argument("PSB", "PSB Paths", true);
