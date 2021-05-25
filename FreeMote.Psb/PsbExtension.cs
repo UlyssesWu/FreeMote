@@ -168,7 +168,7 @@ namespace FreeMote.Psb
 
         public static PsbNumber ToPsbNumber(this int i)
         {
-            return new PsbNumber(i);
+            return new(i);
         }
 
         internal static void WriteUTF8(this BinaryWriter bw, string value)
@@ -215,7 +215,6 @@ namespace FreeMote.Psb
         /// Quickly fetch number (use at your own risk)
         /// </summary>
         /// <param name="col"></param>
-        /// <param name="name"></param>
         /// <returns></returns>
         public static int GetInt(this IPsbValue col)
         {
@@ -226,7 +225,6 @@ namespace FreeMote.Psb
         /// Quickly fetch number (use at your own risk)
         /// </summary>
         /// <param name="col"></param>
-        /// <param name="name"></param>
         /// <returns></returns>
         public static float GetFloat(this IPsbValue col)
         {
@@ -237,7 +235,6 @@ namespace FreeMote.Psb
         /// Quickly fetch number (use at your own risk)
         /// </summary>
         /// <param name="col"></param>
-        /// <param name="name"></param>
         /// <returns></returns>
         public static double GetDouble(this IPsbValue col)
         {
@@ -280,12 +277,9 @@ namespace FreeMote.Psb
                 {
                     if (pos == path.Length - 1) //end
                     {
-                        if (psbObj is PsbDictionary dic)
+                        foreach (var dicValue in psbObj.Values)
                         {
-                            foreach (var dicValue in dic.Values)
-                            {
-                                yield return dicValue;
-                            }
+                            yield return dicValue;
                         }
                     }
 

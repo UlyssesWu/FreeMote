@@ -148,8 +148,8 @@ Example:
                 var optPacked = archiveCmd.Option("-p|--packed",
                     "Prefer using PSB files rather than json files in source folder",
                     CommandOptionType.NoValue);
-                var optNoFolder = archiveCmd.Option("-nf|--no-folder",
-                    "Find files in source folder root at first, even if they should exist in other folders. Usually use with --intersect", CommandOptionType.NoValue);
+                //var optNoFolder = archiveCmd.Option("-nf|--no-folder",
+                //    "Find files in source folder root at first, even if they should exist in other folders. Usually use with --intersect", CommandOptionType.NoValue);
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
                     "Set key (get file name from input path)",
                     CommandOptionType.SingleValue);
@@ -166,7 +166,8 @@ Example:
 
                 archiveCmd.OnExecute(() =>
                 {
-                    bool noFolder = optNoFolder.HasValue();
+                    //bool noFolder = optNoFolder.HasValue();
+                    bool noFolder = false; //not worth time to support it for now
                     bool intersect = optIntersect.HasValue();
                     bool preferPacked = optPacked.HasValue();
                     bool enableParallel = FastMode;
@@ -189,7 +190,7 @@ Example:
                     Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
-                        PackArchive(s, key, intersect, preferPacked, enableParallel, keyLen, keepRaw);
+                        PackArchive(s, key, intersect, preferPacked, noFolder, enableParallel, keyLen, keepRaw);
                     }
                     sw.Stop();
                     Console.WriteLine($"Process time: {sw.Elapsed:g}");
@@ -355,10 +356,11 @@ Example:
         /// <param name="key">crypt key</param>
         /// <param name="intersect">Only pack files which existed in info.psb.m</param>
         /// <param name="preferPacked">Prefer using PSB files rather than json files in source folder</param>
+        /// <param name="noFolder">Always try searching files at source root path at first</param>
         /// <param name="enableParallel">parallel process</param>
         /// <param name="keyLen">key length</param>
         /// <param name="keepRaw">Do not try to compile json or pack MDF</param>
-        public static void PackArchive(string jsonPath, string key, bool intersect, bool preferPacked, bool enableParallel = true,
+        public static void PackArchive(string jsonPath, string key, bool intersect, bool preferPacked, bool noFolder = false, bool enableParallel = true,
             int keyLen = 131, bool keepRaw = false)
         {
             if (!File.Exists(jsonPath)) return;
@@ -410,7 +412,32 @@ Example:
             List<string> filter = null;
             if (intersect) //only collect files appeared in json
             {
-                filter = ArchiveInfoCollectFiles(infoPsb, suffix).ToList();
+                filter = ArchiveInfoCollectFiles(infoPsb, suffix).Select(p => p.Replace('\\','/')).ToList();
+            }
+
+            void CollectFilesFromList(string targetDir, List<string> infoFiles)
+            {
+                if (!Directory.Exists(targetDir))
+                {
+                    return;
+                }
+
+                foreach (var infoFile in infoFiles)
+                {
+                    var f = Path.Combine(targetDir, infoFile);
+                    var source = Path.Combine(targetDir, infoFile + ".json");
+                    if (preferPacked)
+                    {
+                        if (File.Exists(f)) //no need to compile
+                        {
+                            files[infoFile] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.Compile);
+                        }
+                        else if(File.Exists(source))
+                        {
+                            files[infoFile] = (f, ProcessMethod.Compile);
+                        }
+                    }
+                }
             }
 
             void CollectFiles(string targetDir)
@@ -420,15 +447,29 @@ Example:
                     return;
                 }
 
-                foreach (var f in Directory.EnumerateFiles(targetDir))
+                HashSet<string> skipDirs = new HashSet<string>();
+                foreach (var file in Directory.EnumerateFiles(targetDir, "*.resx.json", SearchOption.AllDirectories)) //every resx.json disables a folder
                 {
+                    skipDirs.Add(file.Remove(file.Length - ".resx.json".Length));
+                }
+
+                foreach (var f in Directory.EnumerateFiles(targetDir, "*", SearchOption.AllDirectories))
+                {
+                    if (skipDirs.Contains(Path.GetDirectoryName(f))) //this dir is a source dir for json, just skip
+                    { 
+                        continue;
+                    }
+
                     if (f.EndsWith(".resx.json", true, CultureInfo.InvariantCulture))
                     {
                         continue;
                     }
-                    else if (f.EndsWith(".json", true, CultureInfo.InvariantCulture)) //json source, need compile
+
+                    var relativePath = PathNetCore.GetRelativePath(targetDir, f).Replace('\\', '/');
+
+                    if (f.EndsWith(".json", true, CultureInfo.InvariantCulture)) //json source, need compile
                     {
-                        var name = Path.GetFileNameWithoutExtension(f);
+                        var name = Path.ChangeExtension(relativePath, null); //Path.GetFileNameWithoutExtension(f);
                         if (preferPacked && files.ContainsKey(name) &&
                             files[name].Method != ProcessMethod.Compile) //it's always right no matter set or replace
                         {
@@ -448,7 +489,7 @@ Example:
                     }
                     else
                     {
-                        var name = Path.GetFileName(f);
+                        var name = relativePath;
                         if (!preferPacked && files.ContainsKey(name) &&
                             files[name].Method == ProcessMethod.Compile)
                         {
@@ -481,7 +522,15 @@ Example:
             Console.WriteLine("Collecting files ...");
             foreach (var sourceDir in sourceDirs)
             {
-                CollectFiles(Path.IsPathRooted(sourceDir) ? sourceDir : Path.Combine(baseDir, sourceDir));
+                var targetDir = Path.IsPathRooted(sourceDir) ? sourceDir : Path.Combine(baseDir, sourceDir);
+                if (intersect)
+                {
+                    CollectFilesFromList(targetDir, filter);
+                }
+                else
+                {
+                    CollectFiles(targetDir);
+                }
             }
 
             Console.WriteLine($"Packing {files.Count} files ...");
@@ -502,11 +551,12 @@ Example:
                 var contents = new ConcurrentBag<(string Name, Stream Content)>();
                 Parallel.ForEach(files, (kv) =>
                 {
-                    var fileNameWithoutSuffix = ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+                    var relativePathWithoutSuffix = ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+                    var fileNameWithSuffix = Path.GetFileName(kv.Key);
 
                     if (kv.Value.Method == ProcessMethod.None)
                     {
-                        contents.Add((fileNameWithoutSuffix, File.OpenRead(kv.Value.Path)));
+                        contents.Add((relativePathWithoutSuffix, File.OpenRead(kv.Value.Path)));
                         return;
                     }
 
@@ -514,11 +564,11 @@ Example:
                     var context = FreeMount.CreateContext(mdfContext);
                     if (!string.IsNullOrEmpty(key))
                     {
-                        mdfContext[Context_MdfKey] = key + kv.Key;
+                        mdfContext[Context_MdfKey] = key + fileNameWithSuffix;
                     }
                     else if (resx.Context[Context_MdfMtKey] is string mtKey)
                     {
-                        mdfContext[Context_MdfKey] = mtKey + kv.Key;
+                        mdfContext[Context_MdfKey] = mtKey + fileNameWithSuffix;
                     }
                     else
                     {
@@ -532,7 +582,7 @@ Example:
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         
                         //using var fs = File.OpenRead(kv.Value.Path);
-                        contents.Add((fileNameWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(), "MDF"))); //disposed later
+                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(), "MDF"))); //disposed later
                     }
                     else
                     {
@@ -543,7 +593,7 @@ Example:
                         {
                             stream = context.PackToShell(stream, shellType); //disposed later
                         }
-                        contents.Add((fileNameWithoutSuffix, stream));
+                        contents.Add((relativePathWithoutSuffix, stream));
                     }
                 });
 
@@ -574,25 +624,27 @@ Example:
                 //using var ms = mmFile.CreateViewStream();
                 foreach (var kv in files.OrderBy(f => f.Key, StringComparer.Ordinal))
                 {
-                    var fileNameWithoutSuffix = ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+                    Console.WriteLine($"Packing {kv.Key} ...");
+                    var relativePathWithoutSuffix = ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+                    var fileNameWithSuffix = Path.GetFileName(kv.Key);
                     if (kv.Value.Method == ProcessMethod.None)
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         //using var fs = File.OpenRead(kv.Value.Path);
                         var fs = mmFs.CreateViewStream();
-                        fs.CopyTo(bodyFs); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
-                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
+                        fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
                             {new PsbNumber(bodyFs.Position), new PsbNumber(fs.Length)});
+                        fs.CopyTo(bodyFs); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
                     }
                     else if (kv.Value.Method == ProcessMethod.EncodeMdf)
                     {
                         if (!string.IsNullOrEmpty(key))
                         {
-                            fmContext.Context[Context_MdfKey] = key + kv.Key;
+                            fmContext.Context[Context_MdfKey] = key + fileNameWithSuffix;
                         }
                         else if (resx.Context[Context_MdfMtKey] is string mtKey)
                         {
-                            fmContext.Context[Context_MdfKey] = mtKey + kv.Key;
+                            fmContext.Context[Context_MdfKey] = mtKey + fileNameWithSuffix;
                         }
                         else
                         {
@@ -601,16 +653,16 @@ Example:
 
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(), "MDF");
-                        outputMdf.WriteTo(bodyFs);
-                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
+                        fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
                             {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
+                        outputMdf.WriteTo(bodyFs);
                     }
                     else
                     {
                         var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
                         if (!string.IsNullOrEmpty(key))
                         {
-                            fmContext.Context[Context_MdfKey] = key + kv.Key;
+                            fmContext.Context[Context_MdfKey] = key + fileNameWithSuffix;
                         }
                         else
                         {
@@ -618,9 +670,9 @@ Example:
                         }
 
                         using var outputMdf = fmContext.PackToShell(content.Psb.ToStream(), "MDF");
-                        outputMdf.WriteTo(bodyFs);
-                        fileInfoDic.Add(fileNameWithoutSuffix, new PsbList
+                        fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
                             {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
+                        outputMdf.WriteTo(bodyFs);
                     }
                 }
 

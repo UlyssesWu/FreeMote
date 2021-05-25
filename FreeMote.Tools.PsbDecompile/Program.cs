@@ -191,7 +191,7 @@ Example:
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
                 var optNoFolder = archiveCmd.Option("-nf|--no-folder",
-                    "extract all files into the same source folder, ignore the folder structure described in info.psb. May overwrite files!",
+                    "extract all files into source folder root, ignore the folder structure described in info.psb. May overwrite files; Won't be able to repack.",
                     CommandOptionType.NoValue);
 
                 //args
