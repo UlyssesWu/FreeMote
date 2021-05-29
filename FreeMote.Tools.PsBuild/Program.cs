@@ -591,7 +591,9 @@ Example:
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
                         if (!string.IsNullOrEmpty(shellType))
                         {
-                            stream = context.PackToShell(stream, shellType); //disposed later
+                            var packedStream = context.PackToShell(stream, shellType); //disposed later
+                            stream.Dispose();
+                            stream = packedStream;
                         }
                         contents.Add((relativePathWithoutSuffix, stream));
                     }
@@ -669,10 +671,19 @@ Example:
                             fmContext.Context = content.Context;
                         }
 
-                        using var outputMdf = fmContext.PackToShell(content.Psb.ToStream(), "MDF");
+                        var stream = content.Psb.ToStream();
+                        var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
+                        if (!string.IsNullOrEmpty(shellType))
+                        {
+                            var packedStream = fmContext.PackToShell(stream, shellType); //disposed later
+                            stream.Dispose();
+                            stream = packedStream;
+                        }
+
                         fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
-                            {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
-                        outputMdf.WriteTo(bodyFs);
+                            {new PsbNumber(bodyFs.Position), new PsbNumber(stream.Length)});
+                        stream.WriteTo(bodyFs);
+                        stream.Dispose();
                     }
                 }
 

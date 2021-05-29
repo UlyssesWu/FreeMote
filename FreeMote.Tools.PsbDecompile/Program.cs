@@ -384,7 +384,7 @@ Example:
             }
         }
 
-        /* the design of archive psb is just a piece of s***. Look at these:
+        /* the "amazing" design of archive psb:
         "expire_suffix_list": [".psb.m"]
         "image/man003" -> packed with key man003.psb.m
         "scenario/ca01_06.txt.scn.m" -> packed with key ca01_06.txt.scn.m (?)
@@ -471,13 +471,10 @@ Example:
                     
                     if (enableParallel) //parallel!
                     {
-                        int count = 0;
-
                         using var mmFile =
                             MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
                         Parallel.ForEach(dic, pair =>
                         {
-                            count++;
                             //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
                             var range = ((PsbList) pair.Value);
                             var start = ((PsbNumber) range[0]).UIntValue;
@@ -535,7 +532,7 @@ Example:
                             }
                         });
 
-                        Console.WriteLine($"{count} files extracted.");
+                        Console.WriteLine($"{dic.Count} files extracted.");
                     }
                     else
                     {
