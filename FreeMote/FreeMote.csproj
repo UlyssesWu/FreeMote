@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Adler32.cs" />
+    <Compile Include="AstcDecoder.cs" />
     <Compile Include="BitmapHelper.cs" />
     <Compile Include="BTree.cs" />
     <Compile Include="DxtCodec.cs" />

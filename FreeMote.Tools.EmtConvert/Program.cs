@@ -33,7 +33,7 @@ namespace FreeMote.Tools.EmtConvert
         /// <summary>
         /// Convert color to L8 style GrayScale
         /// </summary>
-        LeARGB_TO_L8Grayscale,
+        LeARGB_To_L8Grayscale,
         /// <summary>
         /// Untitle
         /// </summary>
@@ -153,7 +153,7 @@ Example:
                             case PsbImageConvertMethod.LeARGB_4To8:
                                 bts = RL.Argb428(bts);
                                 break;
-                            case PsbImageConvertMethod.LeARGB_TO_L8Grayscale:
+                            case PsbImageConvertMethod.LeARGB_To_L8Grayscale:
                                 bts = RL.Argb2L8(bts);
                                 bts = RL.ReadL8(bts, height, width);
                                 break;
