@@ -57,6 +57,11 @@ namespace FreeMote.Psb
         Tlg,
 
         /// <summary>
+        /// ASTC
+        /// </summary>
+        Astc,
+
+        /// <summary>
         /// By extension
         /// </summary>
         ByName,

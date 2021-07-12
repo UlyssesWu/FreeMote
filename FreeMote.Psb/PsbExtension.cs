@@ -31,6 +31,26 @@ namespace FreeMote.Psb
             }
         }
 
+        /// <summary>
+        /// <paramref name="compress"/> to its file extension
+        /// </summary>
+        /// <param name="compress"></param>
+        /// <returns></returns>
+        public static string ToExtensionString(this PsbCompressType compress)
+        {
+            switch (compress)
+            {
+                case PsbCompressType.Tlg:
+                    return ".tlg";
+                case PsbCompressType.Astc:
+                    return ".astc";
+                case PsbCompressType.RL:
+                    return ".rl";
+                default:
+                    return "";
+            }
+        }
+
         private static bool ApplyDefaultMotionMetadata(PSB psb, PsbDictionary metadata)
         {
             List<(string Chara, string Motion)> knownMotions = new List<(string Chara, string Motion)>
@@ -74,7 +94,7 @@ namespace FreeMote.Psb
                 }
 
                 var realMotion = realChara["motion"] as PsbDictionary;
- 
+
                 if (realMotion == null || realMotion.Count == 0) //motion not exist and nothing can replace it
                 {
                     return ApplyDefaultMotionMetadata(psb, dic);
@@ -109,8 +129,8 @@ namespace FreeMote.Psb
                 && pm["boundsBottom"] is PsbNumber b && pm["boundsTop"] is PsbNumber t &&
                 pm["boundsLeft"] is PsbNumber l && pm["boundsRight"] is PsbNumber r)
             {
-                height = (int) Math.Abs(b.AsFloat - t.AsFloat);
-                width = (int) Math.Abs(r.AsFloat - l.AsFloat);
+                height = (int)Math.Abs(b.AsFloat - t.AsFloat);
+                width = (int)Math.Abs(r.AsFloat - l.AsFloat);
                 return true;
             }
 
@@ -218,7 +238,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static int GetInt(this IPsbValue col)
         {
-            return ((PsbNumber) col).AsInt;
+            return ((PsbNumber)col).AsInt;
         }
 
         /// <summary>
@@ -453,7 +473,7 @@ namespace FreeMote.Psb
             {
                 //var dd = dic.Value.FirstOrDefault();
                 var children =
-                    (PsbList) (dic.ContainsKey("layerChildren") ? dic["layerChildren"] : dic["children"]);
+                    (PsbList)(dic.ContainsKey("layerChildren") ? dic["layerChildren"] : dic["children"]);
                 currentObj = children.FirstOrDefault(c =>
                     c is PsbDictionary d && d.ContainsKey("label") && d["label"] is PsbString s &&
                     s.Value == current);
@@ -547,7 +567,7 @@ namespace FreeMote.Psb
             if (key == null)
             {
                 adler.Update(bytes);
-                checksum = (uint) adler.Checksum;
+                checksum = (uint)adler.Checksum;
             }
 
             MemoryStream ms = new MemoryStream(bytes);
@@ -555,19 +575,19 @@ namespace FreeMote.Psb
             {
                 if (key != null)
                 {
-                    MemoryStream nms = new MemoryStream((int) ms.Length);
+                    MemoryStream nms = new MemoryStream((int)ms.Length);
                     PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
                     ms.Dispose();
                     ms = nms;
                     var pos = ms.Position;
                     adler.Update(ms);
-                    checksum = (uint) adler.Checksum;
+                    checksum = (uint)adler.Checksum;
                     ms.Position = pos;
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
                 bw.WriteStringZeroTrim(MdfFile.Signature);
-                bw.Write((uint) ms.Length);
+                bw.Write((uint)ms.Length);
                 //bw.Write(ZlibCompress.Compress(ms));
                 ZlibCompress.CompressToBinaryWriter(bw, ms);
                 bw.WriteBE(checksum);
@@ -591,7 +611,7 @@ namespace FreeMote.Psb
             if (key == null)
             {
                 adler.Update(bytes);
-                checksum = (uint) adler.Checksum;
+                checksum = (uint)adler.Checksum;
             }
 
             MemoryStream ms = new MemoryStream(bytes);
@@ -599,19 +619,19 @@ namespace FreeMote.Psb
             {
                 if (key != null)
                 {
-                    MemoryStream nms = new MemoryStream((int) ms.Length);
+                    MemoryStream nms = new MemoryStream((int)ms.Length);
                     PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, ms, nms);
                     ms.Dispose();
                     ms = nms;
                     var pos = ms.Position;
                     adler.Update(ms);
-                    checksum = (uint) adler.Checksum;
+                    checksum = (uint)adler.Checksum;
                     ms.Position = pos;
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
                 bw.WriteStringZeroTrim(MdfFile.Signature);
-                bw.Write((uint) ms.Length);
+                bw.Write((uint)ms.Length);
                 //bw.Write(ZlibCompress.Compress(ms));
                 ZlibCompress.CompressToBinaryWriter(bw, ms);
                 bw.WriteBE(checksum);
@@ -723,7 +743,7 @@ namespace FreeMote.Psb
             //FIXED: Treat uint as int to prevent overconfidence
             if (i <= Int32.MaxValue)
             {
-                return GetSize((int) i);
+                return GetSize((int)i);
             }
 
             var l = i.ToString("X").Length;
@@ -895,7 +915,7 @@ namespace FreeMote.Psb
 
             //optimized with Span<T>
             Span<byte> span = stackalloc byte[4];
-            for (int i = 0; i < Math.Min(size, (byte) 4); i++)
+            for (int i = 0; i < Math.Min(size, (byte)4); i++)
             {
                 span[i] = b[start + i];
             }
@@ -927,7 +947,7 @@ namespace FreeMote.Psb
 
             return fileName;
         }
-        
+
         /// <summary>
         /// Append suffix for file name in archive info file_info
         /// </summary>
@@ -977,7 +997,7 @@ namespace FreeMote.Psb
 
             return suffix;
         }
-        
+
         /// <summary>
         /// Get package name from a string like {package name}_info.psb.m
         /// </summary>
@@ -1013,7 +1033,7 @@ namespace FreeMote.Psb
         /// <returns>null if input is null; <see cref="String.Empty"/> if no second extension</returns>
         internal static string GetSecondExtension(this string path)
         {
-           return Path.GetExtension(Path.GetFileNameWithoutExtension(path))?.ToLowerInvariant();
+            return Path.GetExtension(Path.GetFileNameWithoutExtension(path))?.ToLowerInvariant();
         }
     }
 

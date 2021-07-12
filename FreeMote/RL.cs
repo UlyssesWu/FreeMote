@@ -24,6 +24,14 @@ namespace FreeMote
             return ConvertToImage(data.ToArray(), height, width, colorFormat);
         }
 
+        /// <summary>
+        /// Convert a special format image to common image for extract
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="height"></param>
+        /// <param name="width"></param>
+        /// <param name="colorFormat"></param>
+        /// <returns></returns>
         public static Bitmap ConvertToImage(byte[] data, int height, int width,
             PsbPixelFormat colorFormat = PsbPixelFormat.None)
         {
@@ -91,6 +99,9 @@ namespace FreeMote
                     data = ReadRgba5650(data);
                     data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
+                case PsbPixelFormat.ASTC_8BPP:
+                    data = AstcDecoder.DecodeASTC(data, width, height, 4, 4);
+                    break;
             }
 
             int stride = bmpData.Stride; // 扫描线的宽度
@@ -108,6 +119,12 @@ namespace FreeMote
             throw new BadImageFormatException("data may not corresponding");
         }
 
+        /// <summary>
+        /// Convert a common image to special format image for build
+        /// </summary>
+        /// <param name="bmp"></param>
+        /// <param name="pixelFormat"></param>
+        /// <returns></returns>
         private static byte[] PixelBytesFromImage(Bitmap bmp, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),

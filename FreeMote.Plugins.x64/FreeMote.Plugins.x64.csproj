@@ -7,7 +7,7 @@
     <ProjectGuid>{7B5BAE81-6779-4404-9E6E-512BE4471AB9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FreeMote.Plugins.x64</RootNamespace>
+    <RootNamespace>FreeMote.Plugins</RootNamespace>
     <AssemblyName>FreeMote.Plugins.x64</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

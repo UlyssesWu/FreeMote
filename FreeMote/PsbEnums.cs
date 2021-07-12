@@ -238,6 +238,10 @@ namespace FreeMote
         /// CI4 with Swizzle for vita
         /// </summary>
         CI4_SW,
+        /// <summary>
+        /// ASTC with block 4x4 for nx
+        /// </summary>
+        ASTC_8BPP,
     }
 
     public enum PsbAudioFormat

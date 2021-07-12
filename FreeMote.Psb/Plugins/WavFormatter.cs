@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using FreeMote.Plugins;
+using FreeMote.Psb;
 
-namespace FreeMote.Psb
+namespace FreeMote.Plugins
 {
     [Export(typeof(IPsbAudioFormatter))]
     [ExportMetadata("Name", "FreeMote.Wav")]

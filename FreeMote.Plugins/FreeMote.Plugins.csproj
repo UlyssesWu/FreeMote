@@ -73,6 +73,7 @@
     <Compile Include="Audio\VagFile.cs" />
     <Compile Include="Audio\VagFormatter.cs" />
     <Compile Include="Audio\XwmaFormatter.cs" />
+    <Compile Include="Images\AstcFormatter.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -118,9 +119,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Images\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>echo There is a bug that some nuget package dll may not have edit date so it won't be copied. If it happens, remove /D and try again.

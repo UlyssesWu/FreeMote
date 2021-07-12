@@ -214,19 +214,37 @@ namespace FreeMote.Psb
         /// <param name="bmp"></param>
         public void SetData(Bitmap bmp)
         {
-            switch (Compress)
+            bool converted = false;
+
+            switch (PixelFormat)
             {
-                case PsbCompressType.RL:
-                    Data = RL.CompressImage(bmp, PixelFormat);
-                    break;
-                case PsbCompressType.Tlg:
-                    Data = FreeMount.CreateContext().BitmapToResource(".tlg", bmp);
-                    break;
-                default:
-                    Data = RL.GetPixelBytesFromImage(bmp, PixelFormat);
+                case PsbPixelFormat.ASTC_8BPP:
+                    Data = FreeMount.CreateContext().BitmapToResource(PsbCompressType.Astc.ToExtensionString(), bmp);
+                    if (Data != null)
+                    {
+                        converted = true;
+                    }
                     break;
             }
 
+            if (!converted)
+            {
+                switch (Compress)
+                {
+                    case PsbCompressType.RL:
+                        Data = RL.CompressImage(bmp, PixelFormat);
+                        break;
+                    case PsbCompressType.Tlg:
+                        Data = FreeMount.CreateContext().BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), bmp);
+                        break;
+                    case PsbCompressType.Astc:
+                        Data = FreeMount.CreateContext().BitmapToResource(PsbCompressType.Astc.ToExtensionString(), bmp);
+                        break;
+                    default:
+                        Data = RL.GetPixelBytesFromImage(bmp, PixelFormat);
+                        break;
+                }
+            }
             if (PixelFormat.UsePalette())
             {
                 PalData = bmp.Palette.GetPaletteBytes(PalettePixelFormat);

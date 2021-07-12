@@ -32,17 +32,15 @@ namespace FreeMote.Plugins
 
         [Import(AllowDefault = true)] private Lazy<IPsbKeyProvider, IPsbPluginInfo> _keyProvider;
 
-        public Dictionary<string, IPsbShell> Shells { get; private set; } = new Dictionary<string, IPsbShell>();
-        public Dictionary<string, IPsbSpecialType> SpecialTypes { get; private set; } = new Dictionary<string, IPsbSpecialType>();
+        public Dictionary<string, IPsbShell> Shells { get; private set; } = new();
+        public Dictionary<string, IPsbSpecialType> SpecialTypes { get; private set; } = new();
 
-        public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } =
-            new Dictionary<string, IPsbImageFormatter>();
+        public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } = new();
 
-        public Dictionary<string, IPsbAudioFormatter> AudioFormatters { get; private set; } =
-            new Dictionary<string, IPsbAudioFormatter>();
+        public Dictionary<string, IPsbAudioFormatter> AudioFormatters { get; private set; } = new();
 
         private CompositionContainer _container;
-        private Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new Dictionary<IPsbPlugin, IPsbPluginInfo>();
+        private readonly Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new();
         private int _maxShellSigLength = 4;
 
         private static FreeMount _mount = null;
