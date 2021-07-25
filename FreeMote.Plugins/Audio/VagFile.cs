@@ -8,7 +8,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FreeMote.Psb;
 
 namespace FreeMote.Plugins.Audio
 {

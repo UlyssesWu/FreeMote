@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace FreeMote
 {
@@ -64,9 +63,23 @@ namespace FreeMote
             set => value.CopyTo(Data.AsSpan(13, 3));
         }
 
-        public int Width => DimX[0] << 16 | DimX[1] << 8 | DimX[2];
-        public int Height => DimY[0] << 16 | DimY[1] << 8 | DimY[2];
-        public int Depth => DimZ[0] << 16 | DimZ[1] << 8 | DimZ[2];
+        public int Width
+        {
+            get => DimX[0] << 16 | DimX[1] << 8 | DimX[2];
+            set => BitConverter.GetBytes(value).AsSpan(0, 3).CopyTo(Data.AsSpan(7, 3));
+        }
+
+        public int Height
+        {
+            get => DimY[0] << 16 | DimY[1] << 8 | DimY[2];
+            set => BitConverter.GetBytes(value).AsSpan(0, 3).CopyTo(Data.AsSpan(10, 3));
+        }
+
+        public int Depth
+        {
+            get => DimZ[0] << 16 | DimZ[1] << 8 | DimZ[2];
+            set => BitConverter.GetBytes(value).AsSpan(0, 3).CopyTo(Data.AsSpan(13, 3));
+        }
     }
 
     public static class AstcFile
@@ -159,6 +172,11 @@ namespace FreeMote
             stream.Position = pos;
 
             return bytes.SequenceEqual(AstcHeader.Magic);
+        }
+
+        public static byte[] CutHeader(byte[] bts)
+        {
+            return IsAstcHeader(bts) ? bts.AsSpan(AstcHeader.Length).ToArray() : bts;
         }
     }
 }

@@ -513,7 +513,7 @@ namespace FreeMote.Psb
 
                             break;
                         case PsbExtractOption.Original:
-                            if (resources[i].Compress == PsbCompressType.RL)
+                            if (resource.Compress == PsbCompressType.RL)
                             {
                                 relativePath += ".rl";
                                 relativePath = CheckPath(relativePath, i);

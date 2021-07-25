@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb
@@ -189,11 +188,6 @@ namespace FreeMote.Psb
         public static PsbNumber ToPsbNumber(this int i)
         {
             return new(i);
-        }
-
-        internal static void WriteUTF8(this BinaryWriter bw, string value)
-        {
-            bw.Write(Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>

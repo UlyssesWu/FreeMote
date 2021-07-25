@@ -361,6 +361,11 @@ namespace FreeMote
             bw.Write(BitConverter.GetBytes(num).Reverse().ToArray());
         }
 
+        public static void WriteUTF8(this BinaryWriter bw, string value)
+        {
+            bw.Write(Encoding.UTF8.GetBytes(value));
+        }
+
         public static void Pad(this BinaryWriter bw, int length, byte paddingByte = 0x0)
         {
             if (length <= 0)

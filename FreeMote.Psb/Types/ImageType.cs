@@ -115,7 +115,12 @@ namespace FreeMote.Psb.Types
                 Part = label,
                 Resource = r,
             };
-            
+
+            if (md.PixelFormat == PsbPixelFormat.ASTC_8BPP)
+            {
+                md.Compress = PsbCompressType.Astc;
+            }
+
             return md;
         }
     }

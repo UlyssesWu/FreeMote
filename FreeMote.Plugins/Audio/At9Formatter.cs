@@ -102,6 +102,11 @@ namespace FreeMote.Plugins.Audio
                 process?.WaitForExit();
 
                 outBytes = File.ReadAllBytes(tempOutFile);
+                if (outBytes.Length == 0)
+                {
+                    Console.WriteLine("[WARN] AT9 encoder output length is 0");
+                }
+
                 File.Delete(tempFile);
                 File.Delete(tempOutFile);
             }

@@ -301,7 +301,13 @@ namespace FreeMote.Psb
                 case ".tlg" when Compress == PsbCompressType.Tlg:
                     return File.ReadAllBytes(path);
                 case ".tlg":
-                    image = context.ResourceToBitmap(".tlg", File.ReadAllBytes(path));
+                    image = context.ResourceToBitmap(PsbCompressType.Tlg.ToExtensionString(), File.ReadAllBytes(path));
+                    break;
+                //astc
+                case ".astc" when Compress == PsbCompressType.Astc:
+                    return AstcFile.CutHeader(File.ReadAllBytes(path));
+                case ".astc":
+                    image = context.ResourceToBitmap(PsbCompressType.Astc.ToExtensionString(), File.ReadAllBytes(path));
                     break;
                 //rl
                 case ".rl" when Compress == PsbCompressType.RL:
@@ -315,6 +321,8 @@ namespace FreeMote.Psb
                 //raw
                 case ".raw" when Compress == PsbCompressType.None:
                     return File.ReadAllBytes(path);
+                case ".raw" when Compress == PsbCompressType.Astc:
+                    return File.ReadAllBytes(path);
                 case ".raw" when Compress == PsbCompressType.RL:
                     return RL.Compress(File.ReadAllBytes(path));
                 case ".raw":
@@ -323,6 +331,10 @@ namespace FreeMote.Psb
                     break;
                 //bin
                 case ".bin":
+                    if (!File.Exists(path) && File.Exists(Path.ChangeExtension(path, ".raw"))) //fallback
+                    {
+                        return File.ReadAllBytes(Path.ChangeExtension(path, ".raw"));
+                    }
                     return File.ReadAllBytes(path);
                 //image
                 default:
@@ -352,13 +364,24 @@ namespace FreeMote.Psb
                     break;
             }
 
+            switch (PixelFormat)
+            {
+                case PsbPixelFormat.ASTC_8BPP:
+                    data = context.BitmapToResource(PsbCompressType.Astc.ToExtensionString(), image);
+                    if (data != null)
+                    {
+                        return data;
+                    }
+                    break;
+            }
+
             switch (Compress)
             {
                 case PsbCompressType.RL:
                     data = RL.CompressImage(image, PixelFormat);
                     break;
                 case PsbCompressType.Tlg:
-                    data = context.BitmapToResource(".tlg", image);
+                    data = context.BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), image);
                     if (data == null)
                     {
                         var tlgPath = Path.ChangeExtension(path, ".tlg");
@@ -370,10 +393,26 @@ namespace FreeMote.Psb
                         else
                         {
                             Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
-                            data = File.ReadAllBytes(path);
+                            //data = File.ReadAllBytes(path);
                         }
                     }
-
+                    break;
+                case PsbCompressType.Astc:
+                    data = context.BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), image);
+                    if (data == null)
+                    {
+                        var astcPath = Path.ChangeExtension(path, ".astc");
+                        if (File.Exists(astcPath))
+                        {
+                            Console.WriteLine($"[WARN] Can not encode TLG, using {astcPath}");
+                            data = AstcFile.CutHeader(File.ReadAllBytes(astcPath));
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] Can not convert image to ASTC: {path}");
+                            //data = File.ReadAllBytes(path);
+                        }
+                    }
                     break;
                 case PsbCompressType.ByName:
                     var imgExt = Path.GetExtension(Name);
@@ -386,7 +425,6 @@ namespace FreeMote.Psb
                         Console.WriteLine($"[WARN] Unsupported image: {path}");
                         data = File.ReadAllBytes(path);
                     }
-
                     break;
                 case PsbCompressType.None:
                 default:
