@@ -18,22 +18,28 @@ namespace FreeMote.Plugins.Shells
     {
         public string Name => "MDF";
 
+        public List<byte[]> Signatures = new()
+            {new byte[] {(byte) 'm', (byte) 'd', (byte) 'f', 0}, new byte[] {(byte) 'm', (byte) 'f', (byte) 'l', 0}};
+
         public bool IsInShell(Stream stream, Dictionary<string, object> context = null)
         {
             var header = new byte[4];
             var pos = stream.Position;
             stream.Read(header, 0, 4);
             stream.Position = pos;
-            if (header.SequenceEqual(Signature))
+            foreach (var signature in Signatures)
             {
-                if (context != null)
+                if (header.SequenceEqual(signature))
                 {
-                    context[Context_PsbShellType] = Name;
+                    if (context != null)
+                    {
+                        context[Context_PsbShellType] = Name;
+                    }
+
+                    return true;
                 }
-
-                return true;
             }
-
+            
             return false;
         }
 
@@ -160,6 +166,6 @@ namespace FreeMote.Plugins.Shells
             return ms;
         }
 
-        public byte[] Signature { get; } = {(byte) 'm', (byte) 'd', (byte) 'f', 0};
+        public byte[] Signature { get; } = null;
     }
 }

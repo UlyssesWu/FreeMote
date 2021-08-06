@@ -107,7 +107,7 @@ namespace FreeMote
                 OffsetNames = br.ReadUInt32()
             };
             var sig = new string(header.Signature).ToUpperInvariant();
-            if (sig.StartsWith("MDF"))
+            if (sig.StartsWith("MDF") || sig.StartsWith("MFL"))
             {
                 throw new PsbBadFormatException(PsbBadFormatReason.IsMdf, "Maybe a MDF file");
             }
