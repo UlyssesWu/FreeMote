@@ -31,14 +31,12 @@ namespace FreeMote.Psb
         private PsbArray Charset;
         private PsbArray NamesData;
         private PsbArray NameIndexes;
-
         /// <summary>
         /// Names
         /// </summary>
         public List<string> Names { get; internal set; }
 
         private PsbArray StringOffsets;
-
         /// <summary>
         /// Strings
         /// </summary>
@@ -46,7 +44,6 @@ namespace FreeMote.Psb
 
         internal PsbArray ChunkOffsets;
         internal PsbArray ChunkLengths;
-
         /// <summary>
         /// Resource Chunk
         /// </summary>
@@ -57,14 +54,11 @@ namespace FreeMote.Psb
         /// </summary>
         internal PsbArray ExtraChunkOffsets = null;
         internal PsbArray ExtraChunkLengths = null;
-
-
         /// <summary>
         /// Extra Resources
         /// </summary>
         public List<PsbResource> ExtraResources { get; internal set; }
-
-
+        
         /// <summary>
         /// Objects (Entries)
         /// </summary>
@@ -93,7 +87,6 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// PSB Target Platform (Spec)
-        /// <remarks>If there is no "spec" in Objects, setter is invalid</remarks>
         /// </summary>
         public PsbSpec Platform
         {
@@ -109,9 +102,9 @@ namespace FreeMote.Psb
             }
             set
             {
-                if (Objects.ContainsKey("spec"))
+                if (Objects != null)
                 {
-                    Objects["spec"] = new PsbString(value.ToString());
+                    Objects["spec"] = value.ToString().ToPsbString();
                 }
             }
         }
