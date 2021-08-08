@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -134,8 +135,10 @@ namespace FreeMote.Tools.Viewer
 
         private void MainWindow_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+#if DEBUG
             var p = e.GetPosition(this);
-            Console.WriteLine(WindowWorldToCharacterWorld(p.X, p.Y));
+            Debug.WriteLine(WindowWorldToCharacterWorld(p.X, p.Y));
+#endif
         }
 
         private async void OnKeyDown(object sender, KeyEventArgs keyEventArgs)
@@ -353,7 +356,7 @@ namespace FreeMote.Tools.Viewer
             }
             else
             {
-                Console.WriteLine("{0:x8}", _emote.D3DTestCooperativeLevel());
+                Debug.WriteLine("{0:x8}", _emote.D3DTestCooperativeLevel());
             }
         }
 
@@ -415,7 +418,7 @@ namespace FreeMote.Tools.Viewer
             var count = _player.CountMainTimelines();
             for (uint i = 0; i < count; i++)
             {
-                //Console.WriteLine(_player.GetDiffTimelineLabelAt(i));
+                //Debug.WriteLine(_player.GetDiffTimelineLabelAt(i));
                 Button btn = new Button
                 {
                     //Name = _player.GetDiffTimelineLabelAt(i),
@@ -438,7 +441,7 @@ namespace FreeMote.Tools.Viewer
             count = _player.CountDiffTimelines();
             for (uint i = 0; i < count; i++)
             {
-                //Console.WriteLine(_player.GetDiffTimelineLabelAt(i));
+                //Debug.WriteLine(_player.GetDiffTimelineLabelAt(i));
                 Button btn = new Button
                 {
                     //Name = _player.GetDiffTimelineLabelAt(i),

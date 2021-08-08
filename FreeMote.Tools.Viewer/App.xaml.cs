@@ -24,7 +24,7 @@ namespace FreeMote.Tools.Viewer
     class Program
     {
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        static extern bool FreeConsole();
+        private static extern bool FreeConsole();
 
         [STAThread]
         static void Main(string[] args)
