@@ -47,7 +47,7 @@ namespace FreeMote.Psb.Types
 
         internal AudioMetadata GenerateAudioMetadata(PSB psb, string name, PsbDictionary voice, FreeMountContext context)
         {
-            var md = new AudioMetadata {Name = name, Spec = psb.Platform};
+            var md = new AudioMetadata { Name = name, Spec = psb.Platform, PsbType = psb.Type };
 
             if (voice["file"] is PsbString fileStr)
             {

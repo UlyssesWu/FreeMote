@@ -43,6 +43,7 @@ namespace FreeMote.Psb
 
         public PsbAudioFormat AudioFormat => ChannelList.Count > 0 ? ChannelList[0].Format : PsbAudioFormat.Unknown;
         public PsbSpec Spec { get; set; } = PsbSpec.other;
+        public PsbType PsbType { get; set; } = PsbType.SoundArchive;
 
         public PsbAudioPan Pan
         {

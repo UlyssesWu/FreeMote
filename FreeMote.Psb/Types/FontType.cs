@@ -37,13 +37,15 @@ namespace FreeMote.Psb.Types
 
             foreach (var item in list)
             {
-                if (!(item is PsbDictionary obj))
+                if (item is not PsbDictionary obj)
                 {
                     continue;
                 }
 
                 //TODO: deDuplication for resource (besides pal)
                 var md = PsbResHelper.GenerateImageMetadata(obj, null);
+                md.PsbType = PsbType.BmpFont;
+                md.Spec = psb.Platform;
                 resList.Add(md);
             }
 

@@ -14,16 +14,15 @@ namespace FreeMote.Psb.Textures
         /// </summary>
         /// <param name="psb">Image (image) type PSB</param>
         /// <returns></returns>
-        public static Dictionary<string, Bitmap> CombineTachie(PSB psb)
+        public static Dictionary<string, (Bitmap CombinedImage, List<ImageMetadata> Parts)> CombineTachie(PSB psb)
         {
             if (psb.Type != PsbType.Tachie)
             {
                 throw new NotSupportedException("PSB is not image type");
             }
 
-            Dictionary<string, Bitmap> images = new Dictionary<string, Bitmap>();
-            PsbList imageList = psb.Objects["imageList"] as PsbList;
-            if (imageList == null)
+            Dictionary<string, (Bitmap CombinedImage, List<ImageMetadata> Parts)> images = new();
+            if (psb.Objects["imageList"] is not PsbList imageList)
             {
                 return images;
             }
@@ -43,6 +42,7 @@ namespace FreeMote.Psb.Textures
                 var label = imageItem["label"].ToString();
 
                 Bitmap img = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                List<ImageMetadata> parts = new List<ImageMetadata>(texture.Count);
                 using (var f = img.FastLock())
                 {
                     foreach (var texObj in texture)
@@ -50,17 +50,20 @@ namespace FreeMote.Psb.Textures
                         var tex = (PsbDictionary)texObj;
                         var md = PsbResHelper.GenerateImageMetadata(tex.Children("image") as PsbDictionary);
                         md.Spec = psb.Platform;
+                        md.PsbType = PsbType.Tachie;
+                        md.Part = label;
+                        parts.Add(md);
 
                         var left = tex["left"].GetInt();
                         var top = tex["top"].GetInt();
                         var tHeight = tex["height"].GetInt();
                         var tWidth = tex["width"].GetInt();
 
-                        f.CopyRegion(md.ToImage(), new Rectangle(0,0, md.Width, md.Height), new Rectangle(left, top, tWidth, tHeight));
+                        f.CopyRegion(md.ToImage(), new Rectangle(0, 0, md.Width, md.Height), new Rectangle(left, top, tWidth, tHeight));
                     }
                 }
-                
-                images.Add(label, img);
+
+                images.Add(label, (img, parts));
             }
 
             return images;
@@ -96,7 +99,7 @@ namespace FreeMote.Psb.Textures
             var bitmaps = CombineTachie(psb);
             foreach (var kv in bitmaps)
             {
-                kv.Value.Save(Path.Combine(dirPath, $"{kv.Key}.{extractFormat}"), extractFormat.ToImageFormat());
+                kv.Value.CombinedImage.Save(Path.Combine(dirPath, $"{kv.Key}.{extractFormat}"), extractFormat.ToImageFormat());
             }
         }
 

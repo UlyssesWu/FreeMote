@@ -86,6 +86,11 @@ namespace FreeMote
         public const string Context_UseFlattenArray = "UseFlattenArray";
 
         /// <summary>
+        /// (bool) (for <see cref="PsbType.Tachie"/>) If set, always use chunk (piece) images to compile rather than use the combined one
+        /// </summary>
+        public const string Context_DisableCombinedImage = "DisableCombinedImage";
+
+        /// <summary>
         /// 0x075BCD15
         /// </summary>
         public const uint Key1 = 123456789;

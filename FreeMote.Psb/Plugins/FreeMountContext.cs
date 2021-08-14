@@ -17,6 +17,28 @@ namespace FreeMote.Plugins
             Context = context;
         }
 
+        public bool TryGet<T>(string key, out T result)
+        {
+            result = default;
+            if (Context == null)
+            {
+                return false;
+            }
+
+            if (!Context.ContainsKey(key))
+            {
+                return false;
+            }
+
+            if (Context[key] is not T)
+            {
+                return false;
+            }
+
+            result = (T)Context[key];
+            return true;
+        }
+
         public bool HasShell => Context.ContainsKey(Consts.Context_PsbShellType) && Context[Consts.Context_PsbShellType] != null && !string.IsNullOrEmpty(Context[Consts.Context_PsbShellType].ToString());
 
         public bool SupportImageExt(string ext)

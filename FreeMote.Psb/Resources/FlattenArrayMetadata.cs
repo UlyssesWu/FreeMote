@@ -43,6 +43,8 @@ namespace FreeMote.Psb
         public Span<float> FloatValues => MemoryMarshal.Cast<byte, float>(Data.AsSpan());
 
         public PsbSpec Spec { get; set; }
+        public PsbType PsbType { get; set; }
+
         public void Link(string fullPath, FreeMountContext context)
         {
             Data = File.ReadAllBytes(fullPath);

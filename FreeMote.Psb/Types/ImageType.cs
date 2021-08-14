@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using FreeMote.Plugins;
 using FreeMote.Psb.Textures;
 
@@ -13,10 +15,11 @@ namespace FreeMote.Psb.Types
         {
             return psb.TypeId == "image"; //&& psb.Objects.ContainsKey("imageList")
         }
-        
+
         public override Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
             PsbExtractOption extractOption = PsbExtractOption.Original)
         {
+            bool allExtracted = true;
             //Extra Extract
             if (extractOption == PsbExtractOption.Extract)
             {
@@ -25,8 +28,36 @@ namespace FreeMote.Psb.Types
                     var bitmaps = TextureCombiner.CombineTachie(psb);
                     foreach (var kv in bitmaps)
                     {
-                        kv.Value.Save(Path.Combine(dirPath, $"{kv.Key}{context.ImageFormat.DefaultExtension()}"), context.ImageFormat.ToImageFormat());
+                        kv.Value.CombinedImage.Save(Path.Combine(dirPath, $"{kv.Key}{context.ImageFormat.DefaultExtension()}"), context.ImageFormat.ToImageFormat());
                     }
+
+                    //Only output combined image
+                    context.TryGet(Consts.Context_DisableCombinedImage, out bool disableCombinedImage);
+                    if (!disableCombinedImage)
+                    {
+                        Dictionary<string, string> resources = new Dictionary<string, string>();
+                        var images = psb.CollectResources<ImageMetadata>();
+                        foreach (var md in images)
+                        {
+                            if (bitmaps.ContainsKey(md.Part))
+                            {
+                                if (!bitmaps[md.Part].Parts.Any(p => p.Resource.Index != null && p.Index == md.Index))
+                                {
+                                    Console.WriteLine($"[WARN] Image is not fully combined: {md}");
+                                    allExtracted = false;
+                                    break;
+                                }
+                                resources.Add(md.Index.ToString(), $"{name}/{md.Part}{context.ImageFormat.DefaultExtension()}");
+                            }
+                        }
+
+                        if (allExtracted)
+                        {
+                            return resources;
+                        }
+                    }
+
+                    Console.WriteLine("[WARN] Combined image won't be used when compiling. Now extracting all chunks...");
                 }
             }
 
@@ -114,6 +145,7 @@ namespace FreeMote.Psb.Types
                 Name = r.Index.ToString(),
                 Part = label,
                 Resource = r,
+                PsbType = PsbType.Tachie
             };
 
             if (md.PixelFormat == PsbPixelFormat.ASTC_8BPP)

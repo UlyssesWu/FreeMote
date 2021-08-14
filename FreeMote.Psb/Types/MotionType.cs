@@ -25,7 +25,13 @@ namespace FreeMote.Psb.Types
             {
                 FindMotionResources(resourceList, psb.Objects[MotionSourceKey], deDuplication);
             }
-            
+
+            resourceList.ForEach(r =>
+            {
+                r.PsbType = psb.Type;
+                r.Spec = psb.Platform;
+            });
+
             return resourceList;
         }
 

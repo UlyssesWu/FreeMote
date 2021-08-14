@@ -47,10 +47,12 @@ namespace FreeMote.Tools.PsbDecompile
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
             var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue,
                 true);
-            var optDisableFlattenArray = app.Option("-dfa|--disable-flatten-array",
-                "Disable represent extra resource as flatten arrays", CommandOptionType.NoValue, inherited: true);
             var optType = app.Option<PsbType>("-t|--type <TYPE>", "Set PSB type manually",
                 CommandOptionType.SingleValue, inherited: true);
+            var optDisableFlattenArray = app.Option("-dfa|--disable-flatten-array",
+                "Disable represent extra resource as flatten arrays", CommandOptionType.NoValue, inherited: true);
+            var optDisableCombinedImage = app.Option("-dci|--disable-combined-image",
+                "Output chunk images (pieces) for image (Tachie) PSB (legacy behaviour)", CommandOptionType.NoValue);
 
             //args
             var argPath =
@@ -275,6 +277,13 @@ Example:
                     FlattenArrayByDefault = false;
                 }
 
+                Dictionary<string, object> context = null;
+
+                if (optDisableCombinedImage.HasValue())
+                {
+                    context = new Dictionary<string, object>() { { Context_DisableCombinedImage, true } };
+                }
+
                 bool useRaw = optRaw.HasValue();
                 //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
@@ -288,14 +297,14 @@ Example:
                 {
                     if (File.Exists(s))
                     {
-                        Decompile(s, useRaw, PsbImageFormat.png, key, type);
+                        Decompile(s, useRaw, PsbImageFormat.png, key, type, context);
                     }
                     else if (Directory.Exists(s))
                     {
                         foreach (var file in FreeMoteExtension.GetFiles(s,
                             new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
-                            Decompile(s, useRaw, PsbImageFormat.png, key, type);
+                            Decompile(s, useRaw, PsbImageFormat.png, key, type, context);
                         }
                     }
                 }
@@ -342,7 +351,7 @@ Example:
         }
 
         static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.png,
-            uint? key = null, PsbType type = PsbType.PSB)
+            uint? key = null, PsbType type = PsbType.PSB, Dictionary<string, object> context = null)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");
@@ -357,7 +366,8 @@ Example:
                 }
                 else
                 {
-                    PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type);
+                    PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type,
+                        contextDic: context);
                 }
             }
 #if !DEBUG

@@ -23,6 +23,11 @@ namespace FreeMote.Psb.Types
             FindMmoResources(resourceList, psb.Objects[MmoBgSourceKey], MmoBgSourceKey, deDuplication);
             FindMmoResources(resourceList, psb.Objects[MmoSourceKey], MmoSourceKey, deDuplication);
 
+            resourceList.ForEach(r =>
+            {
+                r.PsbType = PsbType.Mmo;
+                r.Spec = psb.Platform;
+            });
             return resourceList;
         }
         

@@ -197,7 +197,7 @@ namespace FreeMote.Psb
         }
 
         internal static void LinkImages(PSB psb, FreeMountContext context, IDictionary<string, string> resources,
-            string baseDir = null)
+            string baseDir = null, bool overwrite = true)
         {
             var resList = psb.CollectResources<ImageMetadata>();
 
@@ -241,7 +241,15 @@ namespace FreeMote.Psb
 
                 if (resMd == null)
                 {
-                    Console.WriteLine($"[WARN]{resxResource.Key} is not used.");
+                    if (overwrite)
+                    {
+                        Console.WriteLine($"[WARN]{resxResource.Key} is not used.");
+                    }
+                    continue;
+                }
+
+                if (!overwrite && resMd.Data is { Length: > 0 }) //skip if resource is already filled and we don't want not overwrite
+                {
                     continue;
                 }
 

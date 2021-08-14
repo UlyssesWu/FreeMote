@@ -35,7 +35,9 @@ namespace FreeMote.Psb.Types
                 {
                     Name = k.Key,
                     Resource = k.Value as PsbResource,
-                    Compress = k.Key.EndsWith(".tlg", true, null) ? PsbCompressType.Tlg : PsbCompressType.ByName
+                    Compress = k.Key.EndsWith(".tlg", true, null) ? PsbCompressType.Tlg : PsbCompressType.ByName,
+                    PsbType = PsbType.Pimg,
+                    Spec = psb.Platform
                 }).Cast<T>());
             FindPimgResources(resourceList, psb.Objects[PimgSourceKey], deDuplication);
 

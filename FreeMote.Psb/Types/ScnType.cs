@@ -32,7 +32,9 @@ namespace FreeMote.Psb.Types
                 {
                     Name = k.Key,
                     Resource = k.Value as PsbResource,
-                    Compress = k.Key.EndsWith(".tlg", true, null) ? PsbCompressType.Tlg : PsbCompressType.ByName
+                    Compress = k.Key.EndsWith(".tlg", true, null) ? PsbCompressType.Tlg : PsbCompressType.ByName,
+                    Spec = psb.Platform,
+                    PsbType = PsbType.Scn
                 }).Cast<T>());
 
             return resourceList;

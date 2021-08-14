@@ -228,10 +228,11 @@ namespace FreeMote.PsBuild
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
         /// <param name="type">Specify PSB type, if not set, infer type automatically</param>
+        /// <param name="contextDic">Context, used to set some configurations</param>
         public static void DecompileToFile(string inputPath, PsbExtractOption extractOption = PsbExtractOption.Original,
-            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null, PsbType type = PsbType.PSB)
+            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null, PsbType type = PsbType.PSB, Dictionary<string, object> contextDic = null)
         {
-            var context = FreeMount.CreateContext();
+            var context = FreeMount.CreateContext(contextDic);
             if (key != null)
             {
                 context.Context[Consts.Context_CryptKey] = key;
@@ -326,7 +327,7 @@ namespace FreeMote.PsBuild
                 var bitmaps = TextureCombiner.CombineTachie(psb);
                 foreach (var kv in bitmaps)
                 {
-                    kv.Value.Save(Path.Combine(dirPath, $"{kv.Key}{texExt}"), texFormat);
+                    kv.Value.CombinedImage.Save(Path.Combine(dirPath, $"{kv.Key}{texExt}"), texFormat);
                 }
                 return;
             }

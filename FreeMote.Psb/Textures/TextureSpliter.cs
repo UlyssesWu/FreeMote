@@ -15,7 +15,7 @@ namespace FreeMote.Psb.Textures
     public static class TextureSpliter
     {
         /// <summary>
-        /// <see cref="PsbResHelper.CollectResources"/> for packed-texture specs, like <see cref="PsbSpec.win"/>
+        /// <see cref="PsbResHelper.CollectResources"/> for packed-texture specs, especially for <see cref="PsbSpec.win"/>
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
@@ -59,7 +59,7 @@ namespace FreeMote.Psb.Textures
             Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>(icon.Count);
 
             var pixel = texture[Consts.ResourceKey];
-            if (pixel == null || !(pixel is PsbResource pixelRes))
+            if (pixel is not PsbResource pixelRes)
             {
                 throw new PsbBadFormatException(PsbBadFormatReason.Resources,
                     "External Texture PSB is not supported. Please Link textures into PSB.");

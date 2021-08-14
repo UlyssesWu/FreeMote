@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using FastBitmapLib;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb
@@ -170,6 +171,8 @@ namespace FreeMote.Psb
         /// </summary>
         public PsbSpec Spec { get; set; } = PsbSpec.other;
 
+        public PsbType PsbType { get; set; } = PsbType.Motion;
+
         /// <summary>
         /// Check if the <see cref="Data"/> looks correct
         /// </summary>
@@ -198,6 +201,11 @@ namespace FreeMote.Psb
             return (true, string.Empty);
         }
 
+        /// <summary>
+        /// Load <see cref="Data"/> and <see cref="PalData"/> from image file
+        /// </summary>
+        /// <param name="fullPath"></param>
+        /// <param name="context"></param>
         public void Link(string fullPath, FreeMountContext context)
         {
             Data = LoadImageBytes(fullPath, context, out var palette);
@@ -247,6 +255,7 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Set Image to <see cref="PsbResource.Data"/>
+        /// <para>(in memory version of <seealso cref="Link"/>)</para>
         /// </summary>
         /// <param name="bmp"></param>
         public void SetData(Bitmap bmp)
@@ -399,6 +408,34 @@ namespace FreeMote.Psb
                     }
 
                     break;
+            }
+
+            //From now we have get the image, now fetch pixel data
+            context.TryGet(Consts.Context_DisableCombinedImage, out bool disableCombinedImage);
+            if (PsbType == PsbType.Tachie && !disableCombinedImage) //Let's split Tachie
+            {
+                static bool IsPowOf2(int n)
+                {
+                    return n >= 2 && (n & (n - 1)) == 0;
+                }
+
+                //Check if the source image is a combined image
+                if (image.Width == Width && image.Height == Height && IsPowOf2(Width) && IsPowOf2(Height))
+                {
+                    //it's not a combined image, do nothing
+                }
+                else if((image.Width >= Width || image.Height >= Height) && image.Width >= Left && image.Height >= Height)
+                {
+                    Bitmap chunk = new Bitmap(Width, Height, image.PixelFormat);
+                    //it should be a combined image
+                    using (FastBitmap f = chunk.FastLock())
+                    {
+                        f.CopyRegion(image, new Rectangle(Left, Top, Width, Height), new Rectangle(0, 0, Width, Height));
+                    }
+
+                    image.Dispose();
+                    image = chunk;
+                }
             }
 
             switch (PixelFormat)
