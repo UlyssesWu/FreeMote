@@ -74,13 +74,11 @@ namespace FreeMote.PsBuild
                 {
                     try
                     {
-                        using (var mms = new MemoryStream((int) stream.Length))
-                        {
-                            PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
-                            stream.Dispose();
-                            psb = new PSB(mms);
-                            ctx.Context[Consts.Context_CryptKey] = key;
-                        }
+                        using var mms = new MemoryStream((int)stream.Length);
+                        PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
+                        stream.Dispose();
+                        psb = new PSB(mms);
+                        ctx.Context[Consts.Context_CryptKey] = key;
                     }
                     catch
                     {
@@ -125,7 +123,7 @@ namespace FreeMote.PsBuild
             var name = Path.GetFileNameWithoutExtension(filePath);
             var dirPath = Path.Combine(Path.GetDirectoryName(filePath), name);
             PsbResourceJson resx = new PsbResourceJson(psb, context.Context);
-            
+
             if (File.Exists(dirPath))
             {
                 name += "-resources";
@@ -133,7 +131,7 @@ namespace FreeMote.PsBuild
             }
 
             var extraDir = Path.Combine(dirPath, Consts.ExtraResourceFolderName);
-            
+
             if (!Directory.Exists(dirPath)) //ensure there is no file with same name!
             {
                 if (psb.Resources.Count != 0)
@@ -333,7 +331,7 @@ namespace FreeMote.PsBuild
             }
 
             var texs = PsbResHelper.UnlinkImages(psb);
-            
+
             foreach (var tex in texs)
             {
                 tex.Save(Path.Combine(dirPath, tex.Tag + texExt), texFormat);

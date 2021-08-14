@@ -15,8 +15,8 @@ namespace FreeMote.Psb
     [DebuggerDisplay("{" + nameof(DebuggerString) + "}")]
     public class ImageMetadata : IResourceMetadata
     {
-        private static readonly List<string> SupportedImageExt = new List<string> {".png", ".bmp", ".jpg", ".jpeg"};
-        
+        private static readonly List<string> SupportedImageExt = new List<string> { ".png", ".bmp", ".jpg", ".jpeg" };
+
         /// <summary>
         /// Name 1
         /// </summary>
@@ -424,7 +424,7 @@ namespace FreeMote.Psb
                 {
                     //it's not a combined image, do nothing
                 }
-                else if((image.Width >= Width || image.Height >= Height) && image.Width >= Left && image.Height >= Height)
+                else if ((image.Width >= Width || image.Height >= Height) && image.Width >= Left && image.Height >= Height)
                 {
                     Bitmap chunk = new Bitmap(Width, Height, image.PixelFormat);
                     //it should be a combined image

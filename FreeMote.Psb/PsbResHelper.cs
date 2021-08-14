@@ -81,12 +81,12 @@ namespace FreeMote.Psb
             {
                 resourceList = new List<T>();
                 if (psb.Resources != null)
-                    resourceList.AddRange(psb.Resources.Select(r => new ImageMetadata {Resource = r}).Cast<T>());
+                    resourceList.AddRange(psb.Resources.Select(r => new ImageMetadata { Resource = r }).Cast<T>());
             }
 
             //Set Spec
             resourceList.ForEach(r => r.Spec = psb.Platform);
-            resourceList.Sort((md1, md2) => (int) (md1.Index - md2.Index));
+            resourceList.Sort((md1, md2) => (int)(md1.Index - md2.Index));
 
             return resourceList;
         }
@@ -123,7 +123,7 @@ namespace FreeMote.Psb
                 }
 
                 resList.Sort((md1, md2) =>
-                    (int) (((ImageMetadata) md1).TextureIndex ?? 0) - (int) (((ImageMetadata) md2).TextureIndex ?? 0));
+                    (int)(((ImageMetadata)md1).TextureIndex ?? 0) - (int)(((ImageMetadata)md2).TextureIndex ?? 0));
             }
 
             for (var i = 0; i < resPaths.Count; i++)
@@ -165,7 +165,7 @@ namespace FreeMote.Psb
                             continue;
                         }
 
-                        resMd = resList[(int) texIdx.Value];
+                        resMd = resList[(int)texIdx.Value];
                     }
                 }
                 else //if (order == PsbLinkOrderBy.Convention)
@@ -248,7 +248,7 @@ namespace FreeMote.Psb
                     continue;
                 }
 
-                if (!overwrite && resMd.Data is { Length: > 0 }) //skip if resource is already filled and we don't want not overwrite
+                if (!overwrite && resMd.Data is { Length: > 0 }) //skip if resource is already filled and we don't want to overwrite
                 {
                     continue;
                 }
@@ -304,7 +304,7 @@ namespace FreeMote.Psb
                     res.Data = File.ReadAllBytes(fullPath);
                     return true;
                 }
-                
+
                 return false;
             }
 
@@ -710,10 +710,10 @@ namespace FreeMote.Psb
             {
                 is2D = true;
                 clip = RectangleF.FromLTRB(
-                    left: clipDic["left"] == null ? 0f : (float) (PsbNumber) clipDic["left"],
-                    top: clipDic["top"] == null ? 0f : (float) (PsbNumber) clipDic["top"],
-                    right: clipDic["right"] == null ? 1f : (float) (PsbNumber) clipDic["right"],
-                    bottom: clipDic["bottom"] == null ? 1f : (float) (PsbNumber) clipDic["bottom"]
+                    left: clipDic["left"] == null ? 0f : (float)(PsbNumber)clipDic["left"],
+                    top: clipDic["top"] == null ? 0f : (float)(PsbNumber)clipDic["top"],
+                    right: clipDic["right"] == null ? 1f : (float)(PsbNumber)clipDic["right"],
+                    bottom: clipDic["bottom"] == null ? 1f : (float)(PsbNumber)clipDic["bottom"]
                 );
             }
 
@@ -732,25 +732,25 @@ namespace FreeMote.Psb
             if (d["width"] is PsbNumber nw)
             {
                 is2D = true;
-                width = (int) nw;
+                width = (int)nw;
             }
 
             if (d["height"] is PsbNumber nh)
             {
                 is2D = true;
-                height = (int) nh;
+                height = (int)nh;
             }
 
             if (d["originX"] is PsbNumber nx)
             {
                 is2D = true;
-                originX = (float) nx;
+                originX = (float)nx;
             }
 
             if (d["originY"] is PsbNumber ny)
             {
                 is2D = true;
-                originY = (float) ny;
+                originY = (float)ny;
             }
 
             PsbString typeString = null;
@@ -763,13 +763,13 @@ namespace FreeMote.Psb
             if (d["top"] is PsbNumber nt)
             {
                 is2D = true;
-                top = (int) nt;
+                top = (int)nt;
             }
 
             if (d["left"] is PsbNumber nl)
             {
                 is2D = true;
-                left = (int) nl;
+                left = (int)nl;
             }
 
             PsbResource palResource = null;

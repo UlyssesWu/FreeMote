@@ -92,7 +92,7 @@ Example:
                         }
                         else if (Directory.Exists(psbPath))
                         {
-                            var files = FreeMoteExtension.GetFiles(psbPath, new[] {"*.psb", "*.pimg", "*.m", "*.bytes"});
+                            var files = FreeMoteExtension.GetFiles(psbPath, new[] { "*.psb", "*.pimg", "*.m", "*.bytes" });
 
                             if (enableParallel)
                             {
@@ -242,7 +242,7 @@ Example:
 
                     if (keyLen >= 0)
                     {
-                        context[Context_MdfKeyLength] = (uint) keyLen;
+                        context[Context_MdfKeyLength] = (uint)keyLen;
                     }
 
                     Stopwatch sw = Stopwatch.StartNew();
@@ -286,7 +286,7 @@ Example:
 
                 bool useRaw = optRaw.HasValue();
                 //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
-                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
+                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?)null;
 
                 PsbType type = PsbType.PSB;
                 if (optType.HasValue())
@@ -302,7 +302,7 @@ Example:
                     else if (Directory.Exists(s))
                     {
                         foreach (var file in FreeMoteExtension.GetFiles(s,
-                            new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
+                            new[] { "*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m" }))
                         {
                             Decompile(s, useRaw, PsbImageFormat.png, key, type, context);
                         }
@@ -450,17 +450,17 @@ Example:
                     PsbResourceJson resx = new PsbResourceJson(psb, context);
 
                     var dic = psb.Objects["file_info"] as PsbDictionary;
-                    var suffixList = (PsbList) psb.Objects["expire_suffix_list"];
+                    var suffixList = (PsbList)psb.Objects["expire_suffix_list"];
                     var suffix = "";
                     if (suffixList.Count > 0)
                     {
                         suffix = suffixList[0] as PsbString ?? "";
                     }
-                    
+
                     if (!hasBody)
                     {
                         //Write resx.json
-                        resx.Context[Context_ArchiveSource] = new List<string> {name};
+                        resx.Context[Context_ArchiveSource] = new List<string> { name };
                         File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
                         return;
                     }
@@ -478,7 +478,7 @@ Example:
                     {
                         Directory.CreateDirectory(extractDir);
                     }
-                    
+
                     if (enableParallel) //parallel!
                     {
                         using var mmFile =
@@ -486,9 +486,9 @@ Example:
                         Parallel.ForEach(dic, pair =>
                         {
                             //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
-                            var range = ((PsbList) pair.Value);
-                            var start = ((PsbNumber) range[0]).UIntValue;
-                            var len = ((PsbNumber) range[1]).IntValue;
+                            var range = ((PsbList)pair.Value);
+                            var start = ((PsbNumber)range[0]).UIntValue;
+                            var len = ((PsbNumber)range[1]).IntValue;
 
                             using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
                             var bodyBytes = new byte[len];
@@ -555,9 +555,9 @@ Example:
                         {
                             Console.WriteLine(
                                 $"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
-                            var range = ((PsbList) pair.Value);
-                            var start = ((PsbNumber) range[0]).IntValue;
-                            var len = ((PsbNumber) range[1]).IntValue;
+                            var range = ((PsbList)pair.Value);
+                            var start = ((PsbNumber)range[0]).IntValue;
+                            var len = ((PsbNumber)range[1]).IntValue;
 
                             using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
                             var bodyBytes = new byte[len];
@@ -581,7 +581,7 @@ Example:
                             {
                                 context[Context_MdfKey] = key + fileNameWithSuffix;
                                 var shellType = relativePathWithSuffix.DefaultShellType();
-                                var mms = string.IsNullOrEmpty(shellType)? ms : MdfConvert(ms, shellType, context);
+                                var mms = string.IsNullOrEmpty(shellType) ? ms : MdfConvert(ms, shellType, context);
                                 if (extractAll && PsbFile.CheckSignature(mms))
                                 {
                                     try
@@ -611,11 +611,11 @@ Example:
                     }
 
                     //Write resx.json
-                    resx.Context[Context_ArchiveSource] = new List<string> {name};
+                    resx.Context[Context_ArchiveSource] = new List<string> { name };
                     resx.Context[Context_MdfMtKey] = key;
                     resx.Context[Context_MdfKey] = archiveMdfKey;
                     File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
-                    
+
                 }
                 catch (Exception e)
                 {

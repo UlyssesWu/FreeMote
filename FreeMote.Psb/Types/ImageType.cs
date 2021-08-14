@@ -63,9 +63,8 @@ namespace FreeMote.Psb.Types
 
             return base.OutputResources(psb, context, name, dirPath, extractOption);
         }
-
-
-        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T: IResourceMetadata
+        
+        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : IResourceMetadata
         {
             List<T> resourceList = psb.Resources == null
                 ? new List<T>()
@@ -76,7 +75,7 @@ namespace FreeMote.Psb.Types
             return resourceList;
         }
 
-        private static void FindTachieResources<T>(List<T> list, IPsbValue obj, string currentLabel = "") where T: IResourceMetadata
+        private static void FindTachieResources<T>(List<T> list, IPsbValue obj, string currentLabel = "") where T : IResourceMetadata
         {
             switch (obj)
             {

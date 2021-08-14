@@ -231,9 +231,9 @@ Example:
                     JsonUseDoubleOnly = true;
                 }
 
-                ushort? ver = optVer.HasValue() ? optVer.ParsedValue : (ushort?) null;
-                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
-                PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : (PsbSpec?) null;
+                ushort? ver = optVer.HasValue() ? optVer.ParsedValue : null;
+                uint? key = optKey.HasValue() ? optKey.ParsedValue : null;
+                PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : null;
                 var canRename = !optNoRename.HasValue();
                 var canPack = !optNoShell.HasValue();
 
@@ -393,7 +393,7 @@ Example:
             List<string> sourceDirs = null;
             if (resx.Context[Context_ArchiveSource] is string path)
             {
-                sourceDirs = new List<string> {path};
+                sourceDirs = new List<string> { path };
             }
             else if (resx.Context[Context_ArchiveSource] is IList paths)
             {
@@ -412,7 +412,7 @@ Example:
             List<string> filter = null;
             if (intersect) //only collect files appeared in json
             {
-                filter = ArchiveInfoCollectFiles(infoPsb, suffix).Select(p => p.Replace('\\','/')).ToList();
+                filter = ArchiveInfoCollectFiles(infoPsb, suffix).Select(p => p.Replace('\\', '/')).ToList();
             }
 
             void CollectFilesFromList(string targetDir, List<string> infoFiles)
@@ -432,7 +432,7 @@ Example:
                         {
                             files[infoFile] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.Compile);
                         }
-                        else if(File.Exists(source))
+                        else if (File.Exists(source))
                         {
                             files[infoFile] = (f, ProcessMethod.Compile);
                         }
@@ -456,7 +456,7 @@ Example:
                 foreach (var f in Directory.EnumerateFiles(targetDir, "*", SearchOption.AllDirectories))
                 {
                     if (skipDirs.Contains(Path.GetDirectoryName(f))) //this dir is a source dir for json, just skip
-                    { 
+                    {
                         continue;
                     }
 
@@ -483,7 +483,7 @@ Example:
                             }
                             else
                             {
-                                files[name] = (f, keepRaw? ProcessMethod.None: ProcessMethod.Compile);
+                                files[name] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.Compile);
                             }
                         }
                     }
@@ -506,7 +506,7 @@ Example:
                                 using var fs = File.OpenRead(f);
                                 if (!MdfFile.IsSignatureMdf(fs) && name.DefaultShellType() == "MDF")
                                 {
-                                    files[name] = (f, keepRaw? ProcessMethod.None: ProcessMethod.EncodeMdf);
+                                    files[name] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.EncodeMdf);
                                 }
                                 else
                                 {
@@ -580,7 +580,7 @@ Example:
                     if (kv.Value.Method == ProcessMethod.EncodeMdf)
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
-                        
+
                         //using var fs = File.OpenRead(kv.Value.Path);
                         contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(), "MDF"))); //disposed later
                     }
