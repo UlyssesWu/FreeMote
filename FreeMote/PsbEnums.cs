@@ -178,9 +178,9 @@ namespace FreeMote
         /// </summary>
         BeRGBA4444,
         /// <summary>
-        /// Big Endian DXT5
+        /// RGBA5650
         /// </summary>
-        DXT5,
+        RGBA5650,
         /// <summary>
         /// A8L8
         /// </summary>
@@ -193,18 +193,45 @@ namespace FreeMote
         /// A8
         /// </summary>
         A8,
+
+        //SW and Tile
+
         /// <summary>
-        /// RGBA8_SW (Swizzle) for vita
+        /// BeRGBA8_SW (Swizzle) for vita
         /// </summary>
         RGBA8_SW,
         /// <summary>
-        /// RGBA8_SW (Tile) for PS4
+        /// LeRGBA8_SW (Tile) for PS4
         /// </summary>
         TileRGBA8_SW,
+        /// <summary>
+        /// Little Endian RGBA4444 with Swizzle for vita
+        /// </summary>
+        LeRGBA4444_SW,
+        /// <summary>
+        /// RGBA5650 with Swizzle for vita
+        /// </summary>
+        RGBA5650_SW,
+        /// <summary>
+        /// RGBA5650 with Tile for PS4
+        /// </summary>
+        TileRGBA5650_SW,
+        /// <summary>
+        /// A8L8 with Swizzle for vita
+        /// </summary>
+        A8L8_SW,
+        /// <summary>
+        /// A8L8_SW (Tile) for PS4
+        /// </summary>
+        TileA8L8_SW,
         /// <summary>
         /// L8 with Swizzle for vita
         /// </summary>
         L8_SW,
+        /// <summary>
+        /// L8_SW (Tile) for PS4
+        /// </summary>
+        TileL8_SW,
         /// <summary>
         /// A8_SW (Swizzle)
         /// </summary>
@@ -219,25 +246,16 @@ namespace FreeMote
         /// REF: http://wiki.tockdom.com/wiki/Image_Formats#C8_.28CI8.29
         CI8_SW,
         /// <summary>
-        /// Little Endian RGBA4444 with Swizzle for vita
-        /// </summary>
-        LeRGBA4444_SW,
-        /// <summary>
-        /// RGBA5650
-        /// </summary>
-        RGBA5650,
-        /// <summary>
-        /// RGBA5650 with Swizzle for vita
-        /// </summary>
-        RGBA5650_SW,
-        /// <summary>
-        /// A8L8 with Swizzle for vita
-        /// </summary>
-        A8L8_SW,
-        /// <summary>
         /// CI4 with Swizzle for vita
         /// </summary>
         CI4_SW,
+
+        //Special
+
+        /// <summary>
+        /// Big Endian DXT5
+        /// </summary>
+        DXT5,
         /// <summary>
         /// ASTC with block 4x4 for nx
         /// </summary>

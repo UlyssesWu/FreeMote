@@ -51,6 +51,10 @@ namespace FreeMote
                 case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref data);
                     break;
+                case PsbPixelFormat.DXT5:
+                    data = DxtUtil.DecompressDxt5(data, width, height);
+                    Switch_0_2(ref data); //DXT5(for win) need conversion
+                    break;
                 case PsbPixelFormat.A8L8:
                     data = ReadA8L8(data, width, height);
                     break;
@@ -58,9 +62,9 @@ namespace FreeMote
                     data = ReadA8L8(data, width, height);
                     data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
-                case PsbPixelFormat.DXT5:
-                    data = DxtUtil.DecompressDxt5(data, width, height);
-                    Switch_0_2(ref data); //DXT5(for win) need conversion
+                case PsbPixelFormat.TileA8L8_SW:
+                    data = ReadA8L8(data, width, height);
+                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
                 case PsbPixelFormat.RGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
@@ -92,12 +96,20 @@ namespace FreeMote
                     data = ReadL8(data, height, width);
                     data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
+                case PsbPixelFormat.TileL8_SW:
+                    data = ReadL8(data, height, width);
+                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    break;
                 case PsbPixelFormat.RGBA5650:
                     data = ReadRgba5650(data);
                     break;
                 case PsbPixelFormat.RGBA5650_SW:
                     data = ReadRgba5650(data);
                     data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    break;
+                case PsbPixelFormat.TileRGBA5650_SW:
+                    data = ReadRgba5650(data);
+                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
                 case PsbPixelFormat.ASTC_8BPP:
                     data = AstcDecoder.DecodeASTC(data, width, height, 4, 4);
@@ -127,6 +139,7 @@ namespace FreeMote
         /// <returns></returns>
         private static byte[] PixelBytesFromImage(Bitmap bmp, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
+            //var bitsPerPixel = Image.GetPixelFormatSize(bmp.PixelFormat); //TODO: Check input bpp and convert?
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
                 ImageLockMode.ReadOnly, bmp.PixelFormat);
 
@@ -156,6 +169,10 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.A8L8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Argb2A8L8(result);
+                    break;
+                case PsbPixelFormat.TileA8L8_SW:
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb2A8L8(result);
                     break;
                 case PsbPixelFormat.DXT5:
@@ -193,6 +210,10 @@ namespace FreeMote
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb2L8(result);
                     break;
+                case PsbPixelFormat.TileL8_SW:
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Argb2L8(result);
+                    break;
                 case PsbPixelFormat.LeRGBA4444_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb428(result, false);
@@ -202,6 +223,10 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.RGBA5650_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Argb2Rgba5650(result);
+                    break;
+                case PsbPixelFormat.TileRGBA5650_SW:
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb2Rgba5650(result);
                     break;
             }

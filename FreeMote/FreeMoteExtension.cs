@@ -98,6 +98,40 @@ namespace FreeMote
             }
         }
 
+        /// <summary>
+        /// Whether the <see cref="PsbSpec"/> should use <see cref="PostProcessing.TileTexture"/>
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static bool UseTile(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.ps4:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Whether the <see cref="PsbSpec"/> should use BigEndian
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public static bool UseBigEndian(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.common:
+                case PsbSpec.ems:
+                //case PsbSpec.vita: //TODO: is vita BigEndian?
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public static int? GetBitDepth(this PsbPixelFormat format) =>
             format switch
             {
@@ -146,7 +180,7 @@ namespace FreeMote
                     return PsbPixelFormat.None;
             }
         }
-
+        
         public static ImageFormat ToImageFormat(this PsbImageFormat imageFormat)
         {
             switch (imageFormat)
@@ -233,39 +267,41 @@ namespace FreeMote
                 return PsbPixelFormat.None;
             }
 
+            bool useTile = spec.UseTile();
+
             switch (typeStr.ToUpperInvariant())
             {
-                case "L8_SW":
-                    return PsbPixelFormat.L8_SW;
                 case "CI4_SW":
                     return PsbPixelFormat.CI4_SW;
                 case "CI8_SW":
                     return PsbPixelFormat.CI8_SW;
                 case "DXT5":
                     return PsbPixelFormat.DXT5;
-                case "RGBA8":
-                    if (spec == PsbSpec.common || spec == PsbSpec.ems || spec == PsbSpec.vita)
-                        return PsbPixelFormat.BeRGBA8;
-                    else
-                        return PsbPixelFormat.LeRGBA8;
-                case "RGBA8_SW":
-                    return spec == PsbSpec.ps4 ? PsbPixelFormat.TileRGBA8_SW : PsbPixelFormat.RGBA8_SW;
-                case "A8_SW":
-                    return spec == PsbSpec.ps4 ? PsbPixelFormat.TileA8_SW : PsbPixelFormat.A8_SW;
                 case "RGBA4444":
-                    if (spec == PsbSpec.common || spec == PsbSpec.ems)
+                    if (spec.UseBigEndian())
                         return PsbPixelFormat.BeRGBA4444;
                     return PsbPixelFormat.LeRGBA4444;
                 case "RGBA4444_SW":
                     return PsbPixelFormat.LeRGBA4444_SW;
+                case "RGBA8":
+                    if (spec.UseBigEndian() || spec == PsbSpec.vita)
+                        return PsbPixelFormat.BeRGBA8;
+                    else
+                        return PsbPixelFormat.LeRGBA8;
+                case "RGBA8_SW":
+                    return useTile ? PsbPixelFormat.TileRGBA8_SW : PsbPixelFormat.RGBA8_SW;
+                case "A8_SW":
+                    return useTile ? PsbPixelFormat.TileA8_SW : PsbPixelFormat.A8_SW;
+                case "L8_SW":
+                    return useTile ? PsbPixelFormat.TileL8_SW : PsbPixelFormat.L8_SW;
                 case "A8L8":
                     return PsbPixelFormat.A8L8;
                 case "A8L8_SW":
-                    return PsbPixelFormat.A8L8_SW;
+                    return useTile ? PsbPixelFormat.TileA8L8_SW : PsbPixelFormat.A8L8_SW;
                 case "RGBA5650":
                     return PsbPixelFormat.RGBA5650;
                 case "RGBA5650_SW":
-                    return PsbPixelFormat.RGBA5650_SW;
+                    return useTile ? PsbPixelFormat.TileRGBA5650_SW : PsbPixelFormat.RGBA5650_SW;
                 case "ASTC_8BPP":
                     return PsbPixelFormat.ASTC_8BPP;
                 default:
