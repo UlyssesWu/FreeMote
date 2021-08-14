@@ -118,6 +118,11 @@ namespace FreeMote
         public static bool FastMode { get; set; } = true;
 
         /// <summary>
+        /// Use more strict checks and if conditions are not met, just terminate
+        /// </summary>
+        public static bool StrictMode { get; set; } = false;
+
+        /// <summary>
         /// Use hex numbers in json to keep all float numbers correct
         /// </summary>
         public static bool JsonUseHexNumber { get; set; } = false;

@@ -98,6 +98,33 @@ namespace FreeMote
             }
         }
 
+        public static int? GetBitDepth(this PsbPixelFormat format) =>
+            format switch
+            {
+                PsbPixelFormat.None => null,
+                PsbPixelFormat.LeRGBA8 => 32,
+                PsbPixelFormat.BeRGBA8 => 32,
+                PsbPixelFormat.LeRGBA4444 => 16,
+                PsbPixelFormat.BeRGBA4444 => 16,
+                PsbPixelFormat.DXT5 => null,
+                PsbPixelFormat.A8L8 => 16,
+                PsbPixelFormat.L8 => 8,
+                PsbPixelFormat.A8 => 8,
+                PsbPixelFormat.RGBA8_SW => 32,
+                PsbPixelFormat.TileRGBA8_SW => 32,
+                PsbPixelFormat.L8_SW => 8,
+                PsbPixelFormat.A8_SW => 8,
+                PsbPixelFormat.TileA8_SW => 8,
+                PsbPixelFormat.CI8_SW => 8,
+                PsbPixelFormat.LeRGBA4444_SW => 16,
+                PsbPixelFormat.RGBA5650 => 16,
+                PsbPixelFormat.RGBA5650_SW => 16,
+                PsbPixelFormat.A8L8_SW => 16,
+                PsbPixelFormat.CI4_SW => 4,
+                PsbPixelFormat.ASTC_8BPP => null,
+                _ => null
+            };
+
         /// <summary>
         /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
         /// </summary>
@@ -259,7 +286,7 @@ namespace FreeMote
                     return "RGBA4444";
                 default:
                     return pixelFormat.ToString();
-                //throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
+                    //throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
             }
         }
 
@@ -348,7 +375,7 @@ namespace FreeMote
         {
             //bw.Write(str.ToCharArray());
             bw.Write(Consts.PsbEncoding.GetBytes(str));
-            bw.Write((byte) 0);
+            bw.Write((byte)0);
         }
 
         /// <summary>
@@ -391,9 +418,9 @@ namespace FreeMote
             fixed (byte* h = haystack) fixed (byte* n = needle)
             {
                 for (byte* hNext = h + startOffset, hEnd = h + haystack.LongLength + 1 - needle.LongLength, nEnd = n + needle.LongLength; hNext < hEnd; hNext++)
-                for (byte* hInc = hNext, nInc = n; *nInc == *hInc; hInc++)
-                    if (++nInc == nEnd)
-                        return hNext - h;
+                    for (byte* hInc = hNext, nInc = n; *nInc == *hInc; hInc++)
+                        if (++nInc == nEnd)
+                            return hNext - h;
                 return -1;
             }
         }
@@ -407,7 +434,7 @@ namespace FreeMote
                 .SelectMany(searchPattern =>
                     Directory.EnumerateFiles(path, searchPattern, searchOption));
         }
-        
+
         /// <summary>
         /// Print byte array in Hex
         /// </summary>

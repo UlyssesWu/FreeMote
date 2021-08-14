@@ -23,8 +23,8 @@ namespace FreeMote.PsBuild.Converters
         /// If true, it is an EmsWinConverter
         /// </summary>
         public bool EmsAsCommon { get; set; } = false;
-        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> {PsbSpec.win, PsbSpec.common, PsbSpec.ems};
-        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> {PsbSpec.common, PsbSpec.win, PsbSpec.ems};
+        public IList<PsbSpec> FromSpec { get; } = new List<PsbSpec> { PsbSpec.win, PsbSpec.common, PsbSpec.ems };
+        public IList<PsbSpec> ToSpec { get; } = new List<PsbSpec> { PsbSpec.common, PsbSpec.win, PsbSpec.ems };
         public void Convert(PSB psb)
         {
             if (!FromSpec.Contains(psb.Platform))
@@ -50,7 +50,7 @@ namespace FreeMote.PsBuild.Converters
                 if (resMd.PixelFormat == PsbPixelFormat.DXT5)
                 {
                     resourceData = RL.GetPixelBytesFromImage(
-                        DxtUtil.Dxt5Decode(resourceData, resMd.Width, resMd.Height),toPixelFormat);
+                        DxtUtil.Dxt5Decode(resourceData, resMd.Width, resMd.Height), toPixelFormat);
                     resMd.TypeString.Value = toPixelFormat.ToStringForPsb();
                 }
                 else

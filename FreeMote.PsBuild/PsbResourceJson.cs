@@ -40,7 +40,7 @@ namespace FreeMote.PsBuild
         /// Whether to use external textures
         /// </summary>
         public bool ExternalTextures { get; set; } = false;
-
+        
         /// <summary>
         /// Setting Context (mainly for plugins)
         /// </summary>

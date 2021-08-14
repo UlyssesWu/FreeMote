@@ -170,10 +170,47 @@ namespace FreeMote.Psb
         /// </summary>
         public PsbSpec Spec { get; set; } = PsbSpec.other;
 
+        /// <summary>
+        /// Check if the <see cref="Data"/> looks correct
+        /// </summary>
+        /// <returns>Whether check is ok, and error message</returns>
+        public (bool Valid, string CheckResult) Validate()
+        {
+            if (Data == null)
+            {
+                return (false, "Data is null");
+            }
+
+            if (Compress == PsbCompressType.None)
+            {
+                var bitDepth = PixelFormat.GetBitDepth();
+                if (bitDepth != null)
+                {
+                    var shouldBeLength = Math.Ceiling(Width * Height * (bitDepth.Value / 8.0));
+                    if (Math.Abs(shouldBeLength - Data.Length) > 1)
+                    {
+                        return (false,
+                            $"Data length check failed: Loaded content size = {Data.Length}, expected size = {shouldBeLength}");
+                    }
+                }
+            }
+
+            return (true, string.Empty);
+        }
+
         public void Link(string fullPath, FreeMountContext context)
         {
             Data = LoadImageBytes(fullPath, context, out var palette);
             PalData = palette;
+            var (valid, checkResult) = Validate();
+            if (!valid)
+            {
+                Console.WriteLine($"[WARN] Validation failed when linking {fullPath} . {checkResult}");
+                if (Consts.StrictMode)
+                {
+                    throw new FormatException(checkResult);
+                }
+            }
             //return Data;
         }
 

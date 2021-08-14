@@ -123,11 +123,6 @@ namespace FreeMote.Tools.Viewer
             BeginRenderingScene();
         }
 
-        private string PrintHelp()
-        {
-            return "";
-        }
-
         private void LoadModel()
         {
             //TODO:
