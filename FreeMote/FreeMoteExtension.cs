@@ -132,32 +132,43 @@ namespace FreeMote
             }
         }
 
-        public static int? GetBitDepth(this PsbPixelFormat format) =>
-            format switch
+        public static int? GetBitDepth(this PsbPixelFormat format)
+        {
+            switch (format) //sadly, missing case won't be hinted when using switch expression 
             {
-                PsbPixelFormat.None => null,
-                PsbPixelFormat.LeRGBA8 => 32,
-                PsbPixelFormat.BeRGBA8 => 32,
-                PsbPixelFormat.LeRGBA4444 => 16,
-                PsbPixelFormat.BeRGBA4444 => 16,
-                PsbPixelFormat.DXT5 => null,
-                PsbPixelFormat.A8L8 => 16,
-                PsbPixelFormat.L8 => 8,
-                PsbPixelFormat.A8 => 8,
-                PsbPixelFormat.RGBA8_SW => 32,
-                PsbPixelFormat.TileRGBA8_SW => 32,
-                PsbPixelFormat.L8_SW => 8,
-                PsbPixelFormat.A8_SW => 8,
-                PsbPixelFormat.TileA8_SW => 8,
-                PsbPixelFormat.CI8_SW => 8,
-                PsbPixelFormat.LeRGBA4444_SW => 16,
-                PsbPixelFormat.RGBA5650 => 16,
-                PsbPixelFormat.RGBA5650_SW => 16,
-                PsbPixelFormat.A8L8_SW => 16,
-                PsbPixelFormat.CI4_SW => 4,
-                PsbPixelFormat.ASTC_8BPP => null,
-                _ => null
-            };
+                case PsbPixelFormat.None:
+                    return null;
+                case PsbPixelFormat.LeRGBA8:
+                case PsbPixelFormat.BeRGBA8:
+                case PsbPixelFormat.RGBA8_SW:
+                case PsbPixelFormat.TileRGBA8_SW:
+                    return 32;
+                case PsbPixelFormat.LeRGBA4444:
+                case PsbPixelFormat.LeRGBA4444_SW:
+                case PsbPixelFormat.BeRGBA4444:
+                case PsbPixelFormat.RGBA5650:
+                case PsbPixelFormat.RGBA5650_SW:
+                case PsbPixelFormat.TileRGBA5650_SW:
+                case PsbPixelFormat.A8L8:
+                case PsbPixelFormat.A8L8_SW:
+                case PsbPixelFormat.TileA8L8_SW:
+                    return 16;
+                case PsbPixelFormat.L8:
+                case PsbPixelFormat.L8_SW:
+                case PsbPixelFormat.TileL8_SW:
+                case PsbPixelFormat.A8:
+                case PsbPixelFormat.A8_SW:
+                case PsbPixelFormat.TileA8_SW:
+                case PsbPixelFormat.CI8_SW:
+                    return 8;
+                case PsbPixelFormat.CI4_SW:
+                    return 4;
+                case PsbPixelFormat.ASTC_8BPP:
+                case PsbPixelFormat.DXT5:
+                default:
+                    return null;
+            }
+        }
 
         /// <summary>
         /// Get <see cref="PsbSpec"/>'s default <see cref="PsbPixelFormat"/>
