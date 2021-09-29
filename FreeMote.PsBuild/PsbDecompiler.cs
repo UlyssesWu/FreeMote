@@ -110,10 +110,10 @@ namespace FreeMote.PsBuild
         {
             if (Consts.JsonArrayCollapse)
             {
-                return ArrayCollapseJsonTextWriter.SerializeObject(psb.Objects,
+                return ArrayCollapseJsonTextWriter.SerializeObject(psb.Root,
                     new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
             }
-            return JsonConvert.SerializeObject(psb.Objects, Formatting.Indented,
+            return JsonConvert.SerializeObject(psb.Root, Formatting.Indented,
                 new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
         }
 

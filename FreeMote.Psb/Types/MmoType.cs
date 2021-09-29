@@ -11,6 +11,10 @@ namespace FreeMote.Psb.Types
         public PsbType PsbType => PsbType.Mmo;
         public bool IsThisType(PSB psb)
         {
+            if (psb.Objects == null)
+            {
+                return false;
+            }
             return psb.Objects.ContainsKey("objectChildren") && psb.Objects.ContainsKey("sourceChildren");
         }
 

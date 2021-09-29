@@ -11,6 +11,11 @@ namespace FreeMote.Psb.Types
         public PsbType PsbType => PsbType.Pimg;
         public bool IsThisType(PSB psb)
         {
+            if (psb.Objects == null)
+            {
+                return false;
+            }
+
             if (psb.Objects.ContainsKey("layers") && psb.Objects.ContainsKey("height") && psb.Objects.ContainsKey("width"))
             {
                 return true;
