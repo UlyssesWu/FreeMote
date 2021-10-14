@@ -400,6 +400,7 @@ Example:
         "scenario/ca01_06.txt.scn.m" -> packed with key ca01_06.txt.scn.m (?)
         "script/ikusei.nut.m" -> packed with key ikusei.nut.m (ok fine)
         "sound/bgm.psb" -> not packed (??)
+        "bg_c_whit.m" -> packed with key bg_c_whit.m.psb.m (???)
          */
 
         /// <summary>

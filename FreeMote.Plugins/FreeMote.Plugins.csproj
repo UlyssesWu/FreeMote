@@ -98,7 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="K4os.Compression.LZ4.Streams">
-      <Version>1.2.8-beta</Version>
+      <Version>1.2.13</Version>
     </PackageReference>
     <PackageReference Include="Paint.NET.PhotoShop">
       <Version>2.5.0-CI00007</Version>
