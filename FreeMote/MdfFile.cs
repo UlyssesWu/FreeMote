@@ -30,6 +30,39 @@ namespace FreeMote
             return false;
         }
 
+        public static bool IsSignatureMdf(byte[] header)
+        {
+            if (header.Length < 4)
+            {
+                return false;
+            }
+            if (header[0] == 'm' && header[1] == 'd' && header[2] == 'f' && header[3] == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check if it's a MT19937 MDF (Warning: the result is not always correct)
+        /// </summary>
+        /// <param name="header"></param>
+        /// <returns>if <c>true</c>, it's an encrypted MDF or wrong format; if <c>false</c>, most probably it's a pure mdf</returns>
+        public static bool IsEncryptedMdf(byte[] header)
+        {
+            if (header.Length < 10)
+            {
+                return false;
+            }
+            if (header[8] == 0x78 && (header[9] == 0x9C || header[9] == 0xDA))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public static int MdfGetOriginalLength(this Stream stream)
         {
             var pos = stream.Position;

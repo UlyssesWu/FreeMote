@@ -13,6 +13,7 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json.Linq;
 using static FreeMote.Consts;
 using static FreeMote.Psb.PsbExtension;
 
@@ -409,13 +410,21 @@ Example:
             var baseDir = Path.GetDirectoryName(jsonPath);
             var files = new Dictionary<string, (string Path, ProcessMethod Method)>();
             var suffix = ArchiveInfoGetSuffix(infoPsb);
-            List<string> filter = null;
+            HashSet<string> filter = null;
             if (intersect) //only collect files appeared in json
             {
-                filter = ArchiveInfoCollectFiles(infoPsb, suffix).Select(p => p.Replace('\\', '/')).ToList();
+                filter = ArchiveInfoCollectFiles(infoPsb, suffix).Select(p => p.Replace('\\', '/')).ToHashSet();
             }
 
-            void CollectFilesFromList(string targetDir, List<string> infoFiles)
+            if (filter != null && resx.Context[Context_ArchiveItemFileNames] is IList fileNames)
+            {
+                foreach (var fileName in fileNames)
+                {
+                    filter.Add(fileName.ToString());
+                }
+            }
+
+            void CollectFilesFromList(string targetDir, HashSet<string> infoFiles)
             {
                 if (!Directory.Exists(targetDir))
                 {
@@ -604,6 +613,12 @@ Example:
                 //using var ms = mmFile.CreateViewStream();
                 foreach (var item in contents.OrderBy(item => item.Name, StringComparer.Ordinal))
                 {
+                    if (fileInfoDic.ContainsKey(item.Name))
+                    {
+                        Console.WriteLine($"[WARN] {item.Name} is added before, skipping...");
+                        item.Content.Dispose(); //Remember to dispose!
+                        continue;
+                    }
                     fileInfoDic.Add(item.Name,
                         new PsbList
                             {new PsbNumber(bodyFs.Position), new PsbNumber(item.Content.Length)});
@@ -628,6 +643,11 @@ Example:
                 {
                     Console.WriteLine($"Packing {kv.Key} ...");
                     var relativePathWithoutSuffix = ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+                    if (fileInfoDic.ContainsKey(relativePathWithoutSuffix))
+                    {
+                        Console.WriteLine($"[WARN] {relativePathWithoutSuffix} is added before, skipping...");
+                        continue;
+                    }
                     var fileNameWithSuffix = Path.GetFileName(kv.Key);
                     if (kv.Value.Method == ProcessMethod.None)
                     {

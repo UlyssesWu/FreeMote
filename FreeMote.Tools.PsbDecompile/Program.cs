@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -192,9 +193,9 @@ Example:
                 var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
-                var optNoFolder = archiveCmd.Option("-nf|--no-folder",
-                    "extract all files into source folder root, ignore the folder structure described in info.psb. May overwrite files; Won't be able to repack.",
-                    CommandOptionType.NoValue);
+                //var optNoFolder = archiveCmd.Option("-nf|--no-folder",
+                //    "extract all files into source folder root, ignore the folder structure described in info.psb. May overwrite files; Won't be able to repack.",
+                //    CommandOptionType.NoValue);
 
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB Paths", true);
@@ -221,7 +222,7 @@ Example:
                         FlattenArrayByDefault = false;
                     }
 
-                    bool noFolder = optNoFolder.HasValue();
+                    //bool noFolder = optNoFolder.HasValue();
                     bool extractAll = optExtractAll.HasValue();
                     var outputRaw = optRaw.HasValue();
                     bool enableParallel = FastMode;
@@ -248,7 +249,7 @@ Example:
                     Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
-                        ExtractArchive(s, key, context, outputRaw, noFolder, extractAll, enableParallel);
+                        ExtractArchive(s, key, context, outputRaw, extractAll, enableParallel);
                     }
                     sw.Stop();
                     Console.WriteLine($"Process time: {sw.Elapsed:g}");
@@ -332,7 +333,7 @@ Example:
         }
 
         /// <summary>
-        /// [RequireUsing]
+        /// [RequireUsing] <paramref name="stream"/> will be disposed if <paramref name="shellType"/> is MDF
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="shellType"></param>
@@ -393,16 +394,7 @@ Example:
                 Directory.CreateDirectory(baseDir);
             }
         }
-
-        /* the "amazing" design of archive psb:
-        "expire_suffix_list": [".psb.m"]
-        "image/man003" -> packed with key man003.psb.m
-        "scenario/ca01_06.txt.scn.m" -> packed with key ca01_06.txt.scn.m (?)
-        "script/ikusei.nut.m" -> packed with key ikusei.nut.m (ok fine)
-        "sound/bgm.psb" -> not packed (??)
-        "bg_c_whit.m" -> packed with key bg_c_whit.m.psb.m (???)
-         */
-
+        
         /// <summary>
         /// Extract files from info.psb.m and body.bin
         /// </summary>
@@ -410,11 +402,9 @@ Example:
         /// <param name="key"></param>
         /// <param name="context"></param>
         /// <param name="outputRaw">no mdf unzip, no decompile</param>
-        /// <param name="noFolder">put all files into one folder, no other folders</param>
         /// <param name="extractAll">mdf unzip + decompile</param>
         /// <param name="enableParallel"></param>
-        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, bool outputRaw = true, bool noFolder = false,
-            bool extractAll = false, bool enableParallel = true)
+        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, bool outputRaw = true, bool extractAll = false, bool enableParallel = true)
         {
             if (File.Exists(filePath))
             {
@@ -480,51 +470,83 @@ Example:
                         Directory.CreateDirectory(extractDir);
                     }
 
+                    List<string> specialItemFileNames = new List<string>();
                     if (enableParallel) //parallel!
                     {
+                        var archiveItemFileNames = new ConcurrentDictionary<string, string>();
                         using var mmFile =
                             MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
                         Parallel.ForEach(dic, pair =>
                         {
                             //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
-                            var range = ((PsbList)pair.Value);
+                            var range = (PsbList)pair.Value;
                             var start = ((PsbNumber)range[0]).UIntValue;
                             var len = ((PsbNumber)range[1]).IntValue;
 
                             using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
                             var bodyBytes = new byte[len];
                             mmAccessor.ReadArray(0, bodyBytes, 0, len);
-
-                            var relativePathWithSuffix = ArchiveInfoGetFileNameAppendSuffix(pair.Key, suffix);
-                            var fileNameWithSuffix = Path.GetFileName(relativePathWithSuffix);
-                            if (noFolder)
-                            {
-                                relativePathWithSuffix = fileNameWithSuffix;
-                            }
-                            var shellType = relativePathWithSuffix.DefaultShellType();
-                            var path = Path.Combine(extractDir, relativePathWithSuffix);
-                            EnsureDirectory(path);
+                            
+                            var rawPath = Path.Combine(extractDir, pair.Key);
+                            EnsureDirectory(rawPath);
                             if (outputRaw)
                             {
-                                File.WriteAllBytes(path, bodyBytes);
+                                File.WriteAllBytes(rawPath, bodyBytes);
                                 return;
                             }
 
-                            using var ms = MsManager.GetStream(bodyBytes);
-                            var bodyContext = new Dictionary<string, object>(context)
+                            var shellType = MdfFile.IsSignatureMdf(bodyBytes) ? "MDF" : "";
+                            var possibleFileNames = ArchiveInfoGetAllPossibleFileNames(pair.Key, suffix);
+                            var relativePath = pair.Key;
+                            var finalContext = new Dictionary<string, object>(context);
+                            finalContext.Remove(Context_ArchiveSource);
+
+                            var ms = MsManager.GetStream(bodyBytes);
+                            MemoryStream mms = null;
+
+                            if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
                             {
-                                [Context_MdfKey] = key + fileNameWithSuffix
-                            };
-                            bodyContext.Remove(Context_ArchiveSource);
-                            using var mms = string.IsNullOrEmpty(shellType) ? ms : MdfConvert(ms, shellType, bodyContext);
+                                foreach (var possibleFileName in possibleFileNames)
+                                {
+                                    var bodyContext = new Dictionary<string, object>(finalContext)
+                                    {
+                                        [Context_MdfKey] = key + possibleFileName
+                                    };
+                                    
+                                    try
+                                    {
+                                        mms = MdfConvert(ms, shellType, bodyContext);
+                                    }
+                                    catch (InvalidDataException e)
+                                    {
+                                        ms = MsManager.GetStream(bodyBytes);
+                                        mms = null;
+                                    }
+
+                                    if (mms != null)
+                                    {
+                                        relativePath = possibleFileName;
+                                        finalContext = bodyContext;
+                                        if (possibleFileName != possibleFileNames[0])
+                                        {
+                                            archiveItemFileNames[pair.Key] = possibleFileName;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+
+                            var finalPath = Path.Combine(extractDir, relativePath);
+                            mms ??= ms;
+
                             if (extractAll && PsbFile.CheckSignature(mms))
                             {
                                 try
                                 {
                                     PSB bodyPsb = new PSB(mms);
                                     PsbDecompiler.DecompileToFile(bodyPsb,
-                                        Path.Combine(extractDir, relativePathWithSuffix + ".json"), //important, must keep suffix for rebuild
-                                        bodyContext, PsbExtractOption.Extract);
+                                        Path.Combine(extractDir, relativePath + ".json"), //important, must keep suffix for rebuild
+                                        finalContext, PsbExtractOption.Extract);
                                 }
                                 catch (Exception e)
                                 {
@@ -532,23 +554,25 @@ Example:
                                     Debug.WriteLine(e);
 #endif
                                     Console.WriteLine($"Decompile failed: {pair.Key}");
-                                    WriteAllBytes(path, mms);
+                                    WriteAllBytes(finalPath, mms);
                                     //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                 }
                             }
                             else
                             {
-                                WriteAllBytes(path, mms);
+                                WriteAllBytes(finalPath, mms);
                                 //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                             }
                         });
 
+                        specialItemFileNames.AddRange(archiveItemFileNames.Values);
                         Console.WriteLine($"{dic.Count} files extracted.");
                     }
                     else
                     {
                         //no parallel
                         //var maxLen = dic?.Values.Max(item => item.Children(1).GetInt()) ?? 0;
+                        var archiveItemFileNames = new Dictionary<string, string>();
                         using var mmFile =
                             MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
 
@@ -564,49 +588,82 @@ Example:
                             var bodyBytes = new byte[len];
                             mmAccessor.ReadArray(0, bodyBytes, 0, len);
 
-                            var relativePathWithSuffix = ArchiveInfoGetFileNameAppendSuffix(pair.Key, suffix);
-                            var fileNameWithSuffix = Path.GetFileName(relativePathWithSuffix);
-                            if (noFolder)
-                            {
-                                relativePathWithSuffix = fileNameWithSuffix;
-                            }
-                            var path = Path.Combine(extractDir, relativePathWithSuffix);
-                            EnsureDirectory(path);
+                            var rawPath = Path.Combine(extractDir, pair.Key);
+                            EnsureDirectory(rawPath);
                             if (outputRaw)
                             {
-                                File.WriteAllBytes(path, bodyBytes.AsSpan().Slice(start, len).ToArray());
+                                File.WriteAllBytes(rawPath, bodyBytes.AsSpan().Slice(start, len).ToArray());
                                 continue;
                             }
 
-                            using (var ms = MsManager.GetStream(bodyBytes))
+                            var shellType = MdfFile.IsSignatureMdf(bodyBytes) ? "MDF" : "";
+                            var possibleFileNames = ArchiveInfoGetAllPossibleFileNames(pair.Key, suffix);
+                            var relativePath = pair.Key;
+                            var finalContext = new Dictionary<string, object>(context);
+                            finalContext.Remove(Context_ArchiveSource);
+
+                            var ms = MsManager.GetStream(bodyBytes);
+                            MemoryStream mms = null;
+
+                            if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
                             {
-                                context[Context_MdfKey] = key + fileNameWithSuffix;
-                                var shellType = relativePathWithSuffix.DefaultShellType();
-                                var mms = string.IsNullOrEmpty(shellType) ? ms : MdfConvert(ms, shellType, context);
-                                if (extractAll && PsbFile.CheckSignature(mms))
+                                foreach (var possibleFileName in possibleFileNames)
                                 {
+                                    var bodyContext = new Dictionary<string, object>(finalContext)
+                                    {
+                                        [Context_MdfKey] = key + possibleFileName
+                                    };
+
                                     try
                                     {
-                                        PSB bodyPsb = new PSB(mms);
-                                        PsbDecompiler.DecompileToFile(bodyPsb,
-                                            Path.Combine(extractDir, relativePathWithSuffix + ".json"), context,
-                                            PsbExtractOption.Extract);
+                                        mms = MdfConvert(ms, shellType, bodyContext);
                                     }
-                                    catch (Exception e)
+                                    catch (InvalidDataException e)
                                     {
-#if DEBUG
-                                        Debug.WriteLine(e);
-#endif
-                                        Console.WriteLine($"Decompile failed: {pair.Key}");
-                                        WriteAllBytes(path, mms);
-                                        //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
+                                        ms = MsManager.GetStream(bodyBytes);
+                                        mms = null;
+                                    }
+
+                                    if (mms != null)
+                                    {
+                                        relativePath = possibleFileName;
+                                        finalContext = bodyContext;
+                                        if (possibleFileName != possibleFileNames[0])
+                                        {
+                                            Console.WriteLine($"  detected key name: {pair.Key} -> {possibleFileName}");
+                                            archiveItemFileNames[pair.Key] = possibleFileName;
+                                        }
+                                        break;
                                     }
                                 }
-                                else
+                            }
+
+                            var finalPath = Path.Combine(extractDir, relativePath);
+                            mms ??= ms;
+
+                            if (extractAll && PsbFile.CheckSignature(mms))
+                            {
+                                try
                                 {
-                                    WriteAllBytes(path, mms);
+                                    PSB bodyPsb = new PSB(mms);
+                                    PsbDecompiler.DecompileToFile(bodyPsb,
+                                        Path.Combine(extractDir, relativePath + ".json"), //important, must keep suffix for rebuild
+                                        finalContext, PsbExtractOption.Extract);
+                                }
+                                catch (Exception e)
+                                {
+#if DEBUG
+                                    Debug.WriteLine(e);
+#endif
+                                    Console.WriteLine($"Decompile failed: {pair.Key}");
+                                    WriteAllBytes(finalPath, mms);
                                     //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                                 }
+                            }
+                            else
+                            {
+                                WriteAllBytes(finalPath, mms);
+                                //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                             }
                         }
                     }
@@ -615,6 +672,7 @@ Example:
                     resx.Context[Context_ArchiveSource] = new List<string> { name };
                     resx.Context[Context_MdfMtKey] = key;
                     resx.Context[Context_MdfKey] = archiveMdfKey;
+                    resx.Context[Context_ArchiveItemFileNames] = specialItemFileNames;
                     File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
 
                 }

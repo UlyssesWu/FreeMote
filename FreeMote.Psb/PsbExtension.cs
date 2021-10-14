@@ -950,16 +950,82 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static string ArchiveInfoGetFileNameAppendSuffix(string name, string suffix)
         {
-            if (!name.EndsWith(".m") && !name.EndsWith(".psb")) //if a file name ends with .m, it's a naughty bad file with its own suffix
+            //if a file name ends with .xxx.m (like abc.nut.m), it's a naughty bad file with its own suffix. However, abc.m is not considered as such
+            if ((name.EndsWith(".m") && name.Count(c => c == '.') > 1) || name.EndsWith(".psb"))
             {
-                return name + suffix;
+                return name;
             }
 
-            return name;
+            return name + suffix;
+
+        }
+
+        /* the "amazing" design of archive psb:
+        "expire_suffix_list": [".psb.m"]
+        "image/man003" -> packed with key man003.psb.m
+        "scenario/ca01_06.txt.scn.m" -> packed with key ca01_06.txt.scn.m (?)
+        "script/ikusei.nut.m" -> packed with key ikusei.nut.m (ok fine)
+        "sound/bgm.psb" -> not packed (??)
+        "bg_c_whit.m" -> packed with key bg_c_whit.m.psb.m (???)
+         */
+
+        /// <summary>
+        /// get all possible file names (used as key) for items in archive psb, the first one is default (most confident)
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="suffix"></param>
+        /// <returns></returns>
+        public static List<string> ArchiveInfoGetAllPossibleFileNames(string name, string suffix)
+        {
+            List<string> exts = new List<string>();
+            var name2 = name;
+            while (Path.GetExtension(name2) != string.Empty)
+            {
+                exts.Add(Path.GetExtension(name2));
+                name2 = Path.ChangeExtension(name2, null);
+            }
+
+            List<string> results = new List<string>();
+            if (exts.Count == 0)
+            {
+                //"image/man003" -> man003.psb.m
+                results.Add(name + suffix);
+                results.Add(name);
+            }
+            else //exts.Count > 0
+            {
+                if (exts[0].ToLowerInvariant() == ".m" && exts.Count == 1)
+                {
+                    //"bg_c_whit.m" -> bg_c_whit.m.psb.m
+                    results.Add(name + suffix);
+                    results.Add(name);
+                    results.Add(Path.ChangeExtension(name, null));
+                }
+                else
+                {
+                    //"scenario/ca01_06.txt.scn.m" -> ca01_06.txt.scn.m
+                    //"script/ikusei.nut.m" -> ikusei.nut.m
+                    //"sound/bgm.psb" -> null
+                    results.Add(name);
+                    results.Add(name + suffix);
+                    name2 = name;
+                    while (Path.GetExtension(name2) != string.Empty)
+                    {
+                        name2 = Path.ChangeExtension(name2, null);
+                        results.Add(name2);
+                        results.Add(name2 + suffix);
+                    }
+                }
+            }
+
+            //stress test
+            //results.Reverse();
+
+            return results;
         }
 
         /// <summary>
-        /// Collect file names in archive info file_info
+        /// Collect (possible) file names in archive info file_info
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="suffix"></param>
@@ -970,7 +1036,12 @@ namespace FreeMote.Psb
             {
                 foreach (var name in fileInfo.Keys)
                 {
-                    yield return ArchiveInfoGetFileNameAppendSuffix(name, suffix);
+                    //yield return ArchiveInfoGetFileNameAppendSuffix(name, suffix);
+                    //foreach (var fileName in ArchiveInfoGetAllPossibleFileNames(name, suffix))
+                    //{
+                    //    yield return fileName;
+                    //}
+                    yield return ArchiveInfoGetAllPossibleFileNames(name, suffix).FirstOrDefault();
                 }
             }
         }

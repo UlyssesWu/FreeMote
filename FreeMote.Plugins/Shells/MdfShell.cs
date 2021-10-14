@@ -73,7 +73,7 @@ namespace FreeMote.Plugins.Shells
         }
         
         /// <summary>
-        /// Decode/encode MDF used in archive PSB.
+        /// Decode/encode MDF used in archive PSB. (<paramref name="stream"/> will be disposed)
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="key"></param>
@@ -96,6 +96,7 @@ namespace FreeMote.Plugins.Shells
             using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
             bw.Write(br.ReadBytes(8));
             //uint count = 0;
+
             List<byte> keys = new List<byte>();
             if (keyLength != null)
             {
@@ -104,7 +105,8 @@ namespace FreeMote.Plugins.Shells
                     keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
                 }
 
-                keys = keys.Take((int) keyLength.Value).ToList();
+                keys = keys.GetRange(0, (int)keyLength.Value);
+                //keys = keys.Take((int) keyLength.Value).ToList();
             }
             else
             {

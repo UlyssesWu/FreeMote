@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using FreeMote.PsBuild;
 using FreeMote.PsBuild.Converters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FreeMote.Tests
 {
@@ -508,6 +510,29 @@ namespace FreeMote.Tests
             var stream = File.OpenRead(path);
             var inShell = shell.IsInShell(stream);
             File.WriteAllBytes("test.psd", shell.ToShell(stream).ToArray());
+        }
+
+
+        [TestMethod]
+        public void TestLoadResxJson()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "image_info.psb.m.json");
+            var resx = PsbResourceJson.LoadByPsbJsonPath(path);
+            Console.WriteLine(resx.Context[Consts.Context_ArchiveItemFileNames]);
+            //JObject j = (JObject)resx.Context[Consts.Context_ArchiveItemFileNames];
+            //foreach (var kv in j)
+            //{
+            //    var val = kv.Value.Value<string>();
+            //    if (string.IsNullOrEmpty(val))
+            //    {
+            //        Console.WriteLine("<null>");
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine(val);
+            //    }
+            //}
         }
 
         [TestMethod]

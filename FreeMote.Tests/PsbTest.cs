@@ -326,5 +326,15 @@ namespace FreeMote.Tests
             sw.Stop();
             time = sw.Elapsed;
         }
+
+        [TestMethod]
+        public void TestArchiveInfoGetAllPossibleFileNames()
+        {
+            var results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("scenario/ca01_06.txt.scn.m", ".psb.m");
+            foreach (var result in results)
+            {
+                Console.WriteLine(result);
+            }
+        }
     }
 }

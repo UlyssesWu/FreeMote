@@ -66,6 +66,11 @@ namespace FreeMote
         public const string Context_ArchiveSource = "ArchiveSource";
 
         /// <summary>
+        /// (List) Archive Item Special FileNames
+        /// </summary>
+        public const string Context_ArchiveItemFileNames = "ArchiveItemFileNames";
+
+        /// <summary>
         /// (string) MDF Seed (key + filename)
         /// </summary>
         public const string Context_MdfKey = "MdfKey";
