@@ -54,15 +54,22 @@ namespace FreeMote.Psb
         /// </summary>
         internal PsbArray ExtraChunkOffsets = null;
         internal PsbArray ExtraChunkLengths = null;
+
         /// <summary>
         /// Extra Resources
         /// </summary>
         public List<PsbResource> ExtraResources { get; internal set; }
-        
+
         /// <summary>
         /// Objects (Entries)
         /// </summary>
-        public PsbDictionary Objects { get; set; }
+        public PsbDictionary Objects
+        {
+            get => Root as PsbDictionary;
+            set => Root = value;
+        }
+
+        public IPsbValue Root { get; set; }
 
         /// <summary>
         /// Type specific handler
@@ -306,9 +313,10 @@ namespace FreeMote.Psb
                     throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
                 }
 
-                Objects = obj as PsbDictionary ??
-                          throw new PsbBadFormatException(PsbBadFormatReason.Objects,
-                              "Wrong offset when parsing objects");
+                Root = obj;
+                //Objects = obj as PsbDictionary ??
+                //          throw new PsbBadFormatException(PsbBadFormatReason.Objects,
+                //              "Wrong offset when parsing objects");
             }
 #if !DEBUG
             catch (Exception e)
@@ -1033,7 +1041,7 @@ namespace FreeMote.Psb
             #region Compile Entries
 
             Header.OffsetEntries = (uint)bw.BaseStream.Position;
-            Pack(bw, Objects);
+            Pack(bw, Root);
 
             #endregion
 
