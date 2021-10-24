@@ -110,6 +110,7 @@ namespace FreeMote.PsBuild
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
+            reader.MaxDepth = 256;
             Dictionary<string, PsbString> context = new Dictionary<string, PsbString>();
             JToken obj;
             if (reader.TokenType == JsonToken.StartArray)
@@ -264,7 +265,10 @@ namespace FreeMote.PsBuild
         { 
             using StringWriter sw = new StringWriter();
             using JsonWriter jw = new ArrayCollapseJsonTextWriter(sw) {Formatting = Formatting.Indented};
-            var ser = new JsonSerializer();
+            var ser = new JsonSerializer
+            {
+                MaxDepth = 256
+            };
             if (converter != null)
             {
                 ser.Converters.Add(converter);
