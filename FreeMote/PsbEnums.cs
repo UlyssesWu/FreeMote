@@ -160,6 +160,9 @@ namespace FreeMote
     
     public enum PsbPixelFormat
     {
+        /// <summary>
+        /// Use default when possible, otherwise throw error
+        /// </summary>
         None = 0,
         /// <summary>
         /// Little Endian RGBA8 (plat: win)
