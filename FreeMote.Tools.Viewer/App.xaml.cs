@@ -23,11 +23,8 @@ namespace FreeMote.Tools.Viewer
 
     class Program
     {
-        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        private static extern bool FreeConsole();
-
         [STAThread]
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Console.WriteLine("FreeMote Viewer");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
@@ -120,7 +117,8 @@ namespace FreeMote.Tools.Viewer
                     Core.DirectLoad = true;
                 }
 
-                FreeConsole();
+                //FreeConsole();
+                ConsoleExtension.Hide();
                 App wpf = new App();
                 MainWindow main = new MainWindow();
                 wpf.Run(main);
@@ -128,12 +126,14 @@ namespace FreeMote.Tools.Viewer
 
             try
             {
-                app.ExecuteAsync(args);
+                return app.Execute(args);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
+
+            return 0;
         }
 
         private static string PrintHelp()
@@ -143,8 +143,8 @@ namespace FreeMote.Tools.Viewer
   FreeMoteViewer -nf sample_head.psb sample_body.psb
 Hint:
   You can load multiple partial exported PSB like the 2nd example. 
-  The specified order is VERY important, always try to put the Main part at last (body is the Main part comparing to head)!
-  If you're picking multiple files from file explorer and drag&drop to FreeMoteViewer, drag the non-Main part.";
+  Use correct order: always try to put the Main part at last (body is the Main part comparing to head)!
+  If you're picking multiple files from file explorer and drag&drop to Viewer, drag the non-Main part.";
         }
     }
 
@@ -157,4 +157,26 @@ Hint:
         {
         }
     }
+}
+
+static class ConsoleExtension
+{
+    const int SW_HIDE = 0;
+    const int SW_SHOW = 5;
+    readonly static IntPtr handle = GetConsoleWindow();
+    [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
+    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+    private static extern bool FreeConsole();
+
+    public static void Hide()
+    {
+        ShowWindow(handle, SW_HIDE); //hide the console
+    }
+    public static void Show()
+    {
+        ShowWindow(handle, SW_SHOW); //show the console
+    }
+
+
 }
