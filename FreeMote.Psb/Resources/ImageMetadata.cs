@@ -478,7 +478,7 @@ namespace FreeMote.Psb
                         var astcPath = Path.ChangeExtension(path, ".astc");
                         if (File.Exists(astcPath))
                         {
-                            Console.WriteLine($"[WARN] Can not encode TLG, using {astcPath}");
+                            Console.WriteLine($"[WARN] Can not encode ASTC, using {astcPath}");
                             data = AstcFile.CutHeader(File.ReadAllBytes(astcPath));
                         }
                         else

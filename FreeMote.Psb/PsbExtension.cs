@@ -1063,6 +1063,11 @@ namespace FreeMote.Psb
             return suffix;
         }
 
+        //types: 
+        //1. name_info.psb.m + name_body.bin
+        //2. nameinfo.psb.m + namebody.bin
+        //3. nameinfo.psb.m + nameinfo_body.bin
+
         /// <summary>
         /// Get package name from a string like {package name}_info.psb.m
         /// </summary>

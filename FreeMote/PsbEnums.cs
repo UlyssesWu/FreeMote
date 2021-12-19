@@ -313,6 +313,21 @@ namespace FreeMote
         IntroBody,
     }
 
+    /// <summary>
+    /// The main object of info.psb.m
+    /// </summary>
+    public enum PsbArchiveInfoType
+    {
+        /// <summary>
+        /// file_info
+        /// </summary>
+        FileInfo = 0,
+        /// <summary>
+        /// umd_root (PSP)
+        /// </summary>
+        UmdRoot,
+    }
+
     public enum EncodeMode
     {
         Encrypt,
@@ -324,9 +339,8 @@ namespace FreeMote
         Body,
         Header,
         Full,
-        /// <summary>
-        /// Automata
-        /// <para>if encrypt v3-V4, will only encrypt header.</para>
+        /// <summary> 
+        /// <para>if encrypt v3-v4, will only encrypt header.</para>
         /// <para>if encrypt v2, will only encrypt body(strings).</para>
         /// <para>if decrypt, clean header and body both.</para>
         /// </summary>

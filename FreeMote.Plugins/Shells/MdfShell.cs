@@ -53,7 +53,9 @@ namespace FreeMote.Plugins.Shells
                     uint? keyLength = context.ContainsKey(Context_MdfKeyLength)
                         ? Convert.ToUInt32(context[Context_MdfKeyLength])
                         : (uint?) null;
+
                     stream = EncodeMdf(stream, (string) context[Context_MdfKey], keyLength);
+                    stream.Position = 0; //A new MemoryStream
                 }
 
                 var pos = stream.Position;

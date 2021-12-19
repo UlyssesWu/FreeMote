@@ -193,6 +193,9 @@ Example:
                 var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
+                var optBody = archiveCmd.Option<string>("-b|--body <PATH>",
+                    "Set body.bin path. If not set, {name}_body.bin is used.",
+                    CommandOptionType.SingleValue);
                 //var optNoFolder = archiveCmd.Option("-nf|--no-folder",
                 //    "extract all files into source folder root, ignore the folder structure described in info.psb. May overwrite files; Won't be able to repack.",
                 //    CommandOptionType.NoValue);
@@ -222,6 +225,12 @@ Example:
                         FlattenArrayByDefault = false;
                     }
 
+                    string bodyPath = null;
+                    if (optBody.HasValue())
+                    {
+                        bodyPath = optBody.Value();
+                    }
+
                     //bool noFolder = optNoFolder.HasValue();
                     bool extractAll = optExtractAll.HasValue();
                     var outputRaw = optRaw.HasValue();
@@ -249,7 +258,7 @@ Example:
                     Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
-                        ExtractArchive(s, key, context, outputRaw, extractAll, enableParallel);
+                        ExtractArchive(s, key, context, bodyPath, outputRaw, extractAll, enableParallel);
                     }
                     sw.Stop();
                     Console.WriteLine($"Process time: {sw.Elapsed:g}");
@@ -394,18 +403,23 @@ Example:
                 Directory.CreateDirectory(baseDir);
             }
         }
-        
+
         /// <summary>
         /// Extract files from info.psb.m and body.bin
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="key"></param>
         /// <param name="context"></param>
+        /// <param name="bodyPath"></param>
         /// <param name="outputRaw">no mdf unzip, no decompile</param>
         /// <param name="extractAll">mdf unzip + decompile</param>
         /// <param name="enableParallel"></param>
-        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, bool outputRaw = true, bool extractAll = false, bool enableParallel = true)
+        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, string bodyPath = null, bool outputRaw = true, bool extractAll = false, bool enableParallel = true)
         {
+            if (filePath.ToLowerInvariant().EndsWith(".bin"))
+            {
+                Console.WriteLine("[WARN] It seems that you are trying to extract from a body.bin file. You should extract body.bin by extracting info.psb.m file instead.");
+            }
             if (File.Exists(filePath))
             {
                 var fileName = Path.GetFileName(filePath);
@@ -420,14 +434,34 @@ Example:
                     name = fileName;
                 }
 
-                var body = Path.Combine(dir ?? "", name + "_body.bin");
-                bool hasBody = true;
-                if (!File.Exists(body))
+                bool hasBody = false;
+                string body = null;
+                if (string.IsNullOrEmpty(bodyPath))
                 {
-                    Console.WriteLine($"Can not find body: {body}");
-                    hasBody = false;
+                    if (!File.Exists(bodyPath))
+                    {
+                        Console.WriteLine($"Can not find body from specified path: {bodyPath}");
+                    }
+                    else
+                    {
+                        body = bodyPath;
+                        hasBody = true;
+                    }
                 }
+                else
+                {
+                    body = Path.Combine(dir ?? "", name + "_body.bin");
 
+                    if (!File.Exists(body))
+                    {
+                        Console.WriteLine($"Can not find body: {body}");
+                    }
+                    else
+                    {
+                        hasBody = true;
+                    }
+                }
+                
                 try
                 {
                     var baseShellType = Path.GetExtension(fileName).DefaultShellType();
