@@ -33,10 +33,11 @@ namespace FreeMote.Tools.Viewer
             app.OptionsComparison = StringComparison.OrdinalIgnoreCase;
 
             //help
-            app.HelpOption("-?|--help"); //do not inherit
+            //var optHelp = app.HelpOption("-?|--help"); //do not inherit
             app.ExtendedHelpText = PrintHelp();
 
             //options
+            var optHelp = app.Option("-?|--help", "Show help", CommandOptionType.NoValue);
             var optWidth = app.Option<uint>("-w|--width", "Set Window width", CommandOptionType.SingleValue);
             var optHeight = app.Option<uint>("-h|--height", "Set Window height", CommandOptionType.SingleValue);
             var optDirectLoad = app.Option("-d|--direct", "Just load with EMT driver, don't try parsing with FreeMote first", CommandOptionType.NoValue);
@@ -47,8 +48,10 @@ namespace FreeMote.Tools.Viewer
 
             app.OnExecute(() =>
             {
-                if (argPath.Values.Count == 0)
+                if (argPath.Values.Count == 0 || optHelp.HasValue())
                 {
+                    var help = app.GetHelpText();
+                    MessageBox.Show(help, "FreeMote Viewer Help", MessageBoxButton.OK, MessageBoxImage.Information);
                     app.ShowHelp();
                     return;
                 }
@@ -117,8 +120,10 @@ namespace FreeMote.Tools.Viewer
                     Core.DirectLoad = true;
                 }
 
-                //FreeConsole();
-                ConsoleExtension.Hide();
+                if (ConsoleExtension.HasMyConsole())
+                {
+                    ConsoleExtension.Hide();
+                }
                 App wpf = new App();
                 MainWindow main = new MainWindow();
                 wpf.Run(main);
@@ -127,6 +132,13 @@ namespace FreeMote.Tools.Viewer
             try
             {
                 return app.Execute(args);
+            }
+            catch (CommandParsingException)
+            {
+                Console.WriteLine("Could not parse the arguments.");
+                app.ShowHelp();
+                var help = app.GetHelpText();
+                MessageBox.Show(help, "FreeMote Viewer Help", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception e)
             {
@@ -178,5 +190,18 @@ static class ConsoleExtension
         ShowWindow(handle, SW_SHOW); //show the console
     }
 
+    [DllImport("kernel32.dll")]
+    static extern IntPtr GetCurrentProcessId();
 
+    [DllImport("user32.dll")]
+    static extern int GetWindowThreadProcessId(IntPtr hWnd, ref IntPtr ProcessId);
+
+    public static bool HasMyConsole()
+    {
+        IntPtr hConsole = GetConsoleWindow();
+        IntPtr hProcessId = IntPtr.Zero;
+        GetWindowThreadProcessId(hConsole, ref hProcessId);
+
+        return GetCurrentProcessId().Equals(hProcessId);
+    }
 }
