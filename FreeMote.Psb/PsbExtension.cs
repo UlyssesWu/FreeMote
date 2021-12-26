@@ -1032,8 +1032,17 @@ namespace FreeMote.Psb
                     //"scenario/ca01_06.txt.scn.m" -> ca01_06.txt.scn.m
                     //"script/ikusei.nut.m" -> ikusei.nut.m
                     //"sound/bgm.psb" -> null
-                    results.Add(name);
-                    results.Add(name + suffix);
+                    if (name.EndsWith(".txt") && suffix.StartsWith(".scn"))
+                    {
+                        results.Add(name + suffix);
+                        results.Add(name);
+                    }
+                    else
+                    {
+                        results.Add(name);
+                        results.Add(name + suffix);
+                    }
+
                     name2 = name;
                     while (Path.GetExtension(name2) != string.Empty)
                     {
