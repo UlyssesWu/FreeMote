@@ -921,6 +921,28 @@ namespace FreeMote.Psb
 
         #region Archive
 
+        public static PsbArchiveInfoType GetArchiveInfoType(this PSB psb)
+        {
+            if (psb.Objects.ContainsKey(PsbArchiveInfoType.UmdRoot.GetRootKey()))
+            {
+                return PsbArchiveInfoType.UmdRoot;
+            }
+            else if (psb.Objects.ContainsKey(PsbArchiveInfoType.FileInfo.GetRootKey()))
+            {
+                return PsbArchiveInfoType.FileInfo;
+            }
+
+            return PsbArchiveInfoType.None;
+        }
+
+        public static string GetRootKey(this PsbArchiveInfoType type) =>
+            type switch
+            {
+                PsbArchiveInfoType.FileInfo => "file_info",
+                PsbArchiveInfoType.UmdRoot => "umd_root",
+                _ => null
+            };
+
         /// <summary>
         /// Remove suffix for file name in archive info file_info
         /// </summary>
@@ -978,6 +1000,10 @@ namespace FreeMote.Psb
         public static List<string> ArchiveInfoGetAllPossibleFileNames(string name, string suffix)
         {
             List<string> exts = new List<string>();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return exts;
+            }
             var name2 = name;
             while (Path.GetExtension(name2) != string.Empty)
             {
@@ -1018,10 +1044,15 @@ namespace FreeMote.Psb
                 }
             }
 
+            if (name.Contains("/")) //There is path, OMG
+            {
+                results.AddRange(ArchiveInfoGetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix));
+            }
+
             //stress test
             //results.Reverse();
 
-            return results;
+            return results.Distinct().ToList();
         }
 
         /// <summary>
@@ -1032,7 +1063,9 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static IEnumerable<string> ArchiveInfoCollectFiles(PSB psb, string suffix)
         {
-            if (psb.Objects.ContainsKey("file_info") && psb.Objects["file_info"] is PsbDictionary fileInfo)
+            var archiveInfoType = psb.GetArchiveInfoType();
+            var rootKey = archiveInfoType.GetRootKey();
+            if (psb.Objects.ContainsKey(rootKey) && psb.Objects[rootKey] is PsbDictionary fileInfo)
             {
                 foreach (var name in fileInfo.Keys)
                 {
@@ -1091,6 +1124,22 @@ namespace FreeMote.Psb
             }
 
             return name;
+        }
+
+        /// <summary>
+        /// Get an item's start and length info from info.psb.m
+        /// </summary>
+        /// <param name="range"></param>
+        /// <param name="archiveInfoType"></param>
+        /// <returns></returns>
+        public static (uint Start, int Length) ArchiveInfoGetItemPositionFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
+        {
+            if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+            {
+                return (((PsbNumber)range[range.Count - 1]).UIntValue, ((PsbNumber)range[range.Count - 2]).IntValue);
+            }
+
+            return (((PsbNumber) range[0]).UIntValue, ((PsbNumber) range[1]).IntValue);
         }
 
         #endregion

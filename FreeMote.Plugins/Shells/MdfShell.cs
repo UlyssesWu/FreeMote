@@ -73,15 +73,16 @@ namespace FreeMote.Plugins.Shells
 
             return MdfFile.DecompressToPsbStream(stream, size) as MemoryStream;
         }
-        
+
         /// <summary>
         /// Decode/encode MDF used in archive PSB. (<paramref name="stream"/> will be disposed)
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="key"></param>
         /// <param name="keyLength"></param>
+        /// <param name="keepHeader"></param>
         /// <returns></returns>
-        internal MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength)
+        internal MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength, bool keepHeader = true)
         {
             //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
             var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
@@ -96,7 +97,10 @@ namespace FreeMote.Plugins.Shells
 
             using BinaryReader br = new BinaryReader(stream);
             using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
-            bw.Write(br.ReadBytes(8));
+            if (keepHeader)
+            {
+                bw.Write(br.ReadBytes(8));
+            }
             //uint count = 0;
 
             List<byte> keys = new List<byte>();

@@ -13,6 +13,8 @@ using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
 using static FreeMote.Psb.PsbExtension;
 
+// .pmf: https://wiki.multimedia.cx/index.php/PSMF 
+
 namespace FreeMote.Tools.PsbDecompile
 {
     class Program
@@ -436,7 +438,7 @@ Example:
 
                 bool hasBody = false;
                 string body = null;
-                if (string.IsNullOrEmpty(bodyPath))
+                if (!string.IsNullOrEmpty(bodyPath))
                 {
                     if (!File.Exists(bodyPath))
                     {
@@ -474,7 +476,9 @@ Example:
                     File.WriteAllText(Path.GetFullPath(filePath) + ".json", PsbDecompiler.Decompile(psb));
                     PsbResourceJson resx = new PsbResourceJson(psb, context);
 
-                    var dic = psb.Objects["file_info"] as PsbDictionary;
+                    PsbArchiveInfoType archiveInfoType = psb.GetArchiveInfoType();
+                    
+                    var dic = psb.Objects[archiveInfoType.GetRootKey()] as PsbDictionary;
                     var suffixList = (PsbList)psb.Objects["expire_suffix_list"];
                     var suffix = "";
                     if (suffixList.Count > 0)
@@ -508,14 +512,20 @@ Example:
                     if (enableParallel) //parallel!
                     {
                         var archiveItemFileNames = new ConcurrentDictionary<string, string>();
+                        var fileLength = new FileInfo(body).Length;
                         using var mmFile =
                             MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
                         Parallel.ForEach(dic, pair =>
                         {
                             //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
                             var range = (PsbList)pair.Value;
-                            var start = ((PsbNumber)range[0]).UIntValue;
-                            var len = ((PsbNumber)range[1]).IntValue;
+                            var (start, len) = ArchiveInfoGetItemPositionFromRangeList(range, archiveInfoType);
+
+                            if (start + len > fileLength)
+                            {
+                                Console.WriteLine($"{pair.Key} (start:{start}, len:{len}) is beyond the body.bin's range. Check your body.bin file. Skipping...");
+                                return;
+                            }
 
                             using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
                             var bodyBytes = new byte[len];
@@ -615,8 +625,7 @@ Example:
                             Console.WriteLine(
                                 $"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
                             var range = ((PsbList)pair.Value);
-                            var start = ((PsbNumber)range[0]).IntValue;
-                            var len = ((PsbNumber)range[1]).IntValue;
+                            var (start, len) = ArchiveInfoGetItemPositionFromRangeList(range, archiveInfoType);
 
                             using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
                             var bodyBytes = new byte[len];
@@ -626,7 +635,7 @@ Example:
                             EnsureDirectory(rawPath);
                             if (outputRaw)
                             {
-                                File.WriteAllBytes(rawPath, bodyBytes.AsSpan().Slice(start, len).ToArray());
+                                File.WriteAllBytes(rawPath, bodyBytes);
                                 continue;
                             }
 
@@ -652,7 +661,7 @@ Example:
                                     {
                                         mms = MdfConvert(ms, shellType, bodyContext);
                                     }
-                                    catch (InvalidDataException e)
+                                    catch (InvalidDataException)
                                     {
                                         ms = MsManager.GetStream(bodyBytes);
                                         mms = null;

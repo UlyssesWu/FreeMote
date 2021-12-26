@@ -372,6 +372,8 @@ Example:
                 return;
             }
 
+            var archiveInfoType = infoPsb.GetArchiveInfoType();
+
             var resx = PsbResourceJson.LoadByPsbJsonPath(jsonPath);
             if (!resx.Context.ContainsKey(Context_ArchiveSource) ||
                 resx.Context[Context_ArchiveSource] == null)
@@ -619,9 +621,20 @@ Example:
                         item.Content.Dispose(); //Remember to dispose!
                         continue;
                     }
-                    fileInfoDic.Add(item.Name,
-                        new PsbList
-                            {new PsbNumber(bodyFs.Position), new PsbNumber(item.Content.Length)});
+
+                    if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+                    {
+                        fileInfoDic.Add(item.Name,
+                            new PsbList
+                                {PsbNull.Null, new PsbNumber(item.Content.Length), new PsbNumber(bodyFs.Position)});
+                    }
+                    else
+                    {
+                        fileInfoDic.Add(item.Name,
+                            new PsbList
+                                {new PsbNumber(bodyFs.Position), new PsbNumber(item.Content.Length)});
+                    }
+
                     if (item.Content is MemoryStream ims)
                     {
                         ims.WriteTo(bodyFs);
@@ -632,6 +645,17 @@ Example:
                     }
 
                     item.Content.Dispose(); //Remember to dispose!
+
+                    if (archiveInfoType == PsbArchiveInfoType.UmdRoot && item.Name.EndsWith(".png"))
+                    {
+                        //Padding?
+                        int end = (int)(bodyFs.Position % 16);
+                        if (end != 0)
+                        {
+                            var pad = 16 - end;
+                            bodyFs.Write(new byte[pad], 0, pad);
+                        }
+                    }
                 }
 
                 //bodyBin = ms.ToArray();
@@ -654,9 +678,29 @@ Example:
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         //using var fs = File.OpenRead(kv.Value.Path);
                         var fs = mmFs.CreateViewStream();
-                        fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
-                            {new PsbNumber(bodyFs.Position), new PsbNumber(fs.Length)});
+                        if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+                        {
+                            fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
+                                {PsbNull.Null, new PsbNumber(fs.Length), new PsbNumber(bodyFs.Position)}); //We still have no idea about the first parameter
+                        }
+                        else
+                        {
+                            fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
+                                {new PsbNumber(bodyFs.Position), new PsbNumber(fs.Length)});
+                        }
+
                         fs.CopyTo(bodyFs); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
+
+                        if (archiveInfoType == PsbArchiveInfoType.UmdRoot && relativePathWithoutSuffix.EndsWith(".png"))
+                        {
+                            //Padding?
+                            int end = (int) (bodyFs.Position % 16);
+                            if (end != 0)
+                            {
+                                var pad = 16 - end;
+                                bodyFs.Write(new byte[pad], 0, pad);
+                            }
+                        }
                     }
                     else if (kv.Value.Method == ProcessMethod.EncodeMdf)
                     {
@@ -714,7 +758,7 @@ Example:
             //Write
             bodyFs.Dispose();
 
-            infoPsb.Objects["file_info"] = fileInfoDic;
+            infoPsb.Objects[archiveInfoType.GetRootKey()] = fileInfoDic;
 
             infoPsb.Merge();
             if (key != null)

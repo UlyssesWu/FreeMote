@@ -319,9 +319,13 @@ namespace FreeMote
     public enum PsbArchiveInfoType
     {
         /// <summary>
+        /// Maybe not an archive info?
+        /// </summary>
+        None = 0,
+        /// <summary>
         /// file_info
         /// </summary>
-        FileInfo = 0,
+        FileInfo,
         /// <summary>
         /// umd_root (PSP)
         /// </summary>
