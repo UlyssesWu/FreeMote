@@ -282,6 +282,10 @@ namespace FreeMote
 
             switch (typeStr.ToUpperInvariant())
             {
+                case "CI4":
+                    return PsbPixelFormat.CI4;
+                case "CI8":
+                    return PsbPixelFormat.CI8;
                 case "CI4_SW":
                     return PsbPixelFormat.CI4_SW;
                 case "CI8_SW":

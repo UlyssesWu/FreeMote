@@ -249,6 +249,14 @@ namespace FreeMote
         /// CI4 with Swizzle for vita
         /// </summary>
         CI4_SW,
+        /// <summary>
+        /// CI8 with Swizzle for PSP
+        /// </summary>
+        CI8,
+        /// <summary>
+        /// CI4 with Swizzle for PSP
+        /// </summary>
+        CI4,
 
         //Special
 
@@ -331,6 +339,20 @@ namespace FreeMote
         /// </summary>
         UmdRoot,
     }
+
+    public enum SwizzleType
+    {
+        None,
+        PSP,
+        PSV
+    }
+
+    //public enum TileType
+    //{
+    //    None,
+    //    Default,
+    //    PS4,
+    //}
 
     public enum EncodeMode
     {

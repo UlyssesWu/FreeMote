@@ -35,21 +35,29 @@ namespace FreeMote.Tools.EmtConvert
         /// </summary>
         LeARGB_To_L8Grayscale,
         /// <summary>
-        /// Untitle
-        /// </summary>
-        Untile,
-        /// <summary>
-        /// Unswizzle
-        /// </summary>
-        Unswizzle,
-        /// <summary>
         /// Tile
         /// </summary>
         Tile,
         /// <summary>
-        /// Swizzle
+        /// Untitle
         /// </summary>
-        Swizzle,
+        Untile,
+        /// <summary>
+        /// Swizzle PSV
+        /// </summary>
+        Swizzle_PSV,
+        /// <summary>
+        /// Unswizzle PSV
+        /// </summary>
+        Unswizzle_PSV,
+        /// <summary>
+        /// Swizzle PSP
+        /// </summary>
+        Swizzle_PSP,
+        /// <summary>
+        /// Unswizzle PSP
+        /// </summary>
+        Unswizzle_PSP,
     }
 
     public enum PsbFixMethod
@@ -157,17 +165,23 @@ Example:
                                 bts = RL.Argb2L8(bts);
                                 bts = RL.ReadL8(bts, height, width);
                                 break;
-                            case PsbImageConvertMethod.Untile:
-                                bts = PostProcessing.UntileTexture(bts, width, height, pixelFormat);
-                                break;
-                            case PsbImageConvertMethod.Unswizzle:
-                                bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat);
-                                break;
                             case PsbImageConvertMethod.Tile:
                                 bts = PostProcessing.TileTexture(bts, width, height, pixelFormat);
                                 break;
-                            case PsbImageConvertMethod.Swizzle:
+                            case PsbImageConvertMethod.Untile:
+                                bts = PostProcessing.UntileTexture(bts, width, height, pixelFormat);
+                                break;
+                            case PsbImageConvertMethod.Swizzle_PSV:
                                 bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat);
+                                break;
+                            case PsbImageConvertMethod.Unswizzle_PSV:
+                                bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat);
+                                break;
+                            case PsbImageConvertMethod.Swizzle_PSP:
+                                bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
+                                break;
+                            case PsbImageConvertMethod.Unswizzle_PSP:
+                                bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
                                 break;
                             default:
                                 continue;

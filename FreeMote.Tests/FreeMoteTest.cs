@@ -304,6 +304,25 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestSwizzle()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "textfont14.psb", "4.bin");
+            var pixels = File.ReadAllBytes(path);
+            var cleanPixels = PostProcessing.UnswizzleTexturePSP(pixels, 512, 512, PixelFormat.Format4bppIndexed);
+            var swizzledPixels = PostProcessing.SwizzleTexturePSP(cleanPixels, 512, 512, PixelFormat.Format4bppIndexed);
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                if (pixels[i] != swizzledPixels[i])
+                {
+                    Debug.WriteLine($"[{i}] {pixels[i]} vs {swizzledPixels[i]}");
+                }
+            }
+            Assert.IsTrue(pixels.SequenceEqual(swizzledPixels.Take(pixels.Length)));
+        }
+
+        [TestMethod]
         public void TestPath()
         {
             var path = PathNetCore.GetRelativePath(@"C:\\abc\def\", @"C:\\abc\def\image/tex.png"); //"image\tex.png"

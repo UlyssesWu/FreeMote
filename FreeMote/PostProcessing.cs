@@ -26,7 +26,7 @@ namespace FreeMote
             48, 49, 56, 57, 50, 51, 58, 59,
             36, 37, 44, 45, 38, 39, 46, 47,
             52, 53, 60, 61, 54, 55, 62, 63
-        };
+        }; //Also used in 3DS
 
         static readonly int[] tileOrderDefault =
         {
@@ -42,7 +42,8 @@ namespace FreeMote
 
         private static int GetTilePixelIndex(int t, int x, int y, int width)
         {
-            return (int) ((((tileOrderPs4[t] / 8) + y) * width) + ((tileOrderPs4[t] % 8) + x));
+            var tileOrder = tileOrderPs4;
+            return (int) ((((tileOrder[t] / 8) + y) * width) + ((tileOrder[t] % 8) + x));
         }
 
         private static int GetTilePixelOffset(int t, int x, int y, int width, PixelFormat pixelFormat)
@@ -182,11 +183,27 @@ namespace FreeMote
             }
         }
 
-        public static byte[] UnswizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        public static byte[] UnswizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat,
+            SwizzleType swizzle = SwizzleType.PSV)
         {
+            switch (swizzle)
+            {
+                case SwizzleType.PSV:
+                    return UnswizzleTexturePSV(pixelData, width, height, pixelFormat);
+                case SwizzleType.PSP:
+                    return UnswizzleTexturePSP(pixelData, width, height, pixelFormat);
+                default:
+                    return pixelData;
+            }
+        }
+
+
+        public static byte[] UnswizzleTexturePSV(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        {
+            bool compactMode = false;
             var scale = 1;
             var pixelFormatSize = Image.GetPixelFormatSize(pixelFormat);
-            bool compactMode = false;
+            int unswizzledShouldBeSize;
             int bytesPerPixel = pixelFormatSize / 8;
             if (bytesPerPixel == 0) //less than 8
             {
@@ -196,8 +213,15 @@ namespace FreeMote
                 {
                     throw new NotSupportedException("BytesPerPixel must >= 0.5");
                 }
+
+                unswizzledShouldBeSize = width * height / scale;
             }
-            byte[] unswizzled = new byte[pixelData.Length];
+            else
+            {
+                unswizzledShouldBeSize = (pixelFormatSize / 8) * width * height;
+            }
+
+            byte[] unswizzled = new byte[Math.Max(pixelData.Length, unswizzledShouldBeSize)];
             int min = width < height ? width : height;
             int k = (int)Math.Log(min, 2);
 
@@ -239,6 +263,10 @@ namespace FreeMote
                 {
                     var srcPosition = i / scale;
                     var srcSubIndex = i % scale;
+                    if (srcPosition >= pixelData.Length)
+                    {
+                        continue;
+                    }
                     var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
                     var dstIndex = (y * width) + x;
                     var dstPosition = dstIndex / scale;
@@ -255,8 +283,70 @@ namespace FreeMote
 
             return unswizzled;
         }
-        
-        public static byte[] SwizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+
+        public static byte[] SwizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat, SwizzleType swizzle = SwizzleType.PSV)
+        {
+            switch (swizzle)
+            {
+                case SwizzleType.PSV:
+                    return SwizzleTexturePSV(pixelData, width, height, pixelFormat);
+                case SwizzleType.PSP:
+                    return SwizzleTexturePSP(pixelData, width, height, pixelFormat);
+                default:
+                    return pixelData;
+            }
+        }
+
+        public static byte[] SwizzleTexturePSP(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        {
+            var scale = 1;
+            var pixelFormatSize = Image.GetPixelFormatSize(pixelFormat);
+            bool compactMode = false;
+            int bytesPerPixel = pixelFormatSize / 8;
+            if (bytesPerPixel == 0) //less than 8
+            {
+                compactMode = true;
+                scale = 8 / pixelFormatSize;
+                if (scale != 2)
+                {
+                    throw new NotSupportedException("BytesPerPixel must >= 0.5");
+                }
+            }
+            byte[] swizzled = new byte[pixelData.Length];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    GetPixelCoordinatesPSP(x, y, width, height, pixelFormat, out var nx, out var ny);
+                    var srcIndex = nx + (width * ny);
+                    var dstIndex = x + (width * y);
+                    if (compactMode)
+                    {
+                        var srcPosition = srcIndex / scale;
+                        var srcSubIndex = srcIndex % scale;
+                        if (srcPosition >= pixelData.Length)
+                        {
+                            continue;
+                        }
+                        var srcData = srcSubIndex == 1 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
+                        
+                        var dstPosition = dstIndex / scale;
+                        var dstSubIndex = dstIndex % scale;
+                        swizzled[dstPosition] = dstSubIndex == 0 ? (byte)((swizzled[dstPosition] & 0xF0) | srcData) : (byte)((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                    }
+                    else
+                    {
+                        Buffer.BlockCopy(pixelData, srcIndex * bytesPerPixel, swizzled, dstIndex * bytesPerPixel,
+                            bytesPerPixel);
+                    }
+                }
+            }
+
+            return swizzled;
+        }
+
+        public static byte[] SwizzleTexturePSV(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
         {
             var scale = 1;
             var pixelFormatSize = Image.GetPixelFormatSize(pixelFormat);
@@ -320,6 +410,95 @@ namespace FreeMote
             return swizzled;
         }
 
+        public static byte[] UnswizzleTexturePSP(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        {
+            bool compactMode = false;
+            var scale = 1;
+            int unswizzledShouldBeSize;
+            var pixelFormatSize = Image.GetPixelFormatSize(pixelFormat);
+            int bytesPerPixel = pixelFormatSize / 8;
+            if (pixelFormatSize < 8)
+            {
+                compactMode = true;
+                scale = 8 / pixelFormatSize;
+                unswizzledShouldBeSize = width * height / scale;
+            }
+            else
+            {
+                unswizzledShouldBeSize = (pixelFormatSize / 8) * width * height;
+            }
+
+            byte[] unswizzled = new byte[Math.Max(pixelData.Length, unswizzledShouldBeSize)];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    GetPixelCoordinatesPSP(x, y, width, height, pixelFormat, out var nx, out var ny);
+                    var srcIndex = x + (width * y);
+                    var dstIndex = nx + (width * ny);
+                    if (compactMode)
+                    {
+                        var srcPosition = srcIndex / scale;
+                        var srcSubIndex = srcIndex % scale;
+                        if (srcPosition >= pixelData.Length)
+                        {
+                            continue;
+                        }
+                        var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
+                        var dstPosition = dstIndex / scale;
+                        var dstSubIndex = dstIndex % scale;
+                        unswizzled[dstPosition] = dstSubIndex == 1 ? (byte)((unswizzled[dstPosition] & 0xF0) | srcData) : (byte)((unswizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                    }
+                    else
+                    {
+                        Buffer.BlockCopy(pixelData, srcIndex * bytesPerPixel, unswizzled, dstIndex * bytesPerPixel,
+                            bytesPerPixel);
+                    }
+                }
+            }
+
+            return unswizzled;
+        }
+
+        private static void GetPixelCoordinatesPSP(int origX, int origY, int width, int height, PixelFormat pixelFormat, out int transformedX, out int transformedY)
+        {
+            var bitsPerPixel = Image.GetPixelFormatSize(pixelFormat);
+            int tileWidth = (bitsPerPixel < 8 ? 32 : (16 / (bitsPerPixel / 8)));
+            GetPixelCoordinatesTiledEx(origX, origY, width, height, out transformedX, out transformedY, tileWidth, 8, null);
+        }
+
+        private static void GetPixelCoordinatesTiledEx(int origX, int origY, int width, int height, out int transformedX, out int transformedY, int tileWidth, int tileHeight, int[] pixelOrdering)
+        {
+            // TODO: sometimes eats the last few blocks(?) in the image (ex. BC7 GNFs)
+
+            // Sanity checks
+            if (width == 0) width = tileWidth;
+            if (height == 0) height = tileHeight;
+
+            // Calculate coords in image
+            int tileSize = (tileWidth * tileHeight);
+            int globalPixel = ((origY * width) + origX);
+            int globalX = ((globalPixel / tileSize) * tileWidth);
+            int globalY = ((globalX / width) * tileHeight);
+            globalX %= width;
+
+            // Calculate coords in tile
+            int inTileX = (globalPixel % tileWidth);
+            int inTileY = ((globalPixel / tileWidth) % tileHeight);
+            int inTilePixel = ((inTileY * tileHeight) + inTileX);
+
+            // If applicable, transform by ordering table
+            if (pixelOrdering != null && tileSize <= pixelOrdering.Length)
+            {
+                inTileX = (pixelOrdering[inTilePixel] % 8);
+                inTileY = (pixelOrdering[inTilePixel] / 8);
+            }
+
+            // Set final image coords
+            transformedX = (globalX + inTileX);
+            transformedY = (globalY + inTileY);
+        }
         #endregion
 
     }

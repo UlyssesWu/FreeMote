@@ -200,10 +200,12 @@ namespace FreeMote
                 case PsbPixelFormat.A8:
                     result = Argb2A8(result);
                     break;
-                case PsbPixelFormat.CI8_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                case PsbPixelFormat.CI4:
+                case PsbPixelFormat.CI8:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat, SwizzleType.PSP);
                     break;
                 case PsbPixelFormat.CI4_SW:
+                case PsbPixelFormat.CI8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.L8_SW:
@@ -234,6 +236,17 @@ namespace FreeMote
             return result;
         }
 
+        /// <summary>
+        /// Convert a PSB image resource which contains pal and palType to Bitmap. For now we only support 32Bpp palettes
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="palette"></param>
+        /// <param name="height"></param>
+        /// <param name="width"></param>
+        /// <param name="colorFormat"></param>
+        /// <param name="paletteColorFormat"></param>
+        /// <returns></returns>
+        /// <exception cref="BadImageFormatException"></exception>
         public static Bitmap ConvertToImageWithPalette(byte[] data, byte[] palette, int height, int width,
             PsbPixelFormat colorFormat = PsbPixelFormat.None, PsbPixelFormat paletteColorFormat = PsbPixelFormat.None)
         {
@@ -249,6 +262,7 @@ namespace FreeMote
 
             switch (colorFormat)
             {
+                case PsbPixelFormat.CI8:
                 case PsbPixelFormat.CI8_SW:
                     {
                         bmp = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
@@ -260,11 +274,13 @@ namespace FreeMote
                         // Assign the edited palette to the bitmap.
                         bmp.Palette = pal;
 
-                        data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                        data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat,
+                            colorFormat == PsbPixelFormat.CI8 ? SwizzleType.PSP : SwizzleType.PSV);
                         //Switch_0_2(ref data);
                     }
 
                     break;
+                case PsbPixelFormat.CI4:
                 case PsbPixelFormat.CI4_SW:
                     {
                         bmp = new Bitmap(width, height, PixelFormat.Format4bppIndexed); //ここ重要
@@ -276,7 +292,9 @@ namespace FreeMote
                         // Assign the edited palette to the bitmap.
                         bmp.Palette = pal;
                         //data.Length * 2 = 8bppBmp.Width * 8bppBmp.Height
-                        data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+
+                        data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat,
+                            colorFormat == PsbPixelFormat.CI4 ? SwizzleType.PSP : SwizzleType.PSV);
                     }
                     break;
                 default:
@@ -290,6 +308,7 @@ namespace FreeMote
 
             if (scanBytes >= data.Length)
             {
+                //Marshal.Copy(data, 0, iptr, data.Length);
                 Marshal.Copy(data, 0, iptr, data.Length);
                 bmp.UnlockBits(bmpData); // 解锁内存区域
                 

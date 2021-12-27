@@ -311,7 +311,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 END OF TERMS AND CONDITIONS
 
 ------------------------------
-PostProcessing (Untile/Unswizzle) code is licensed under MIT. AUTHOR: xdaniel (https://twitter.com/xdanieldzd/)
+PostProcessing (Untile/Unswizzle) code is licensed under MIT. AUTHOR: xdaniel (https://github.com/xdanieldzd)
 The MIT License (MIT)
 
 Copyright (c) 2016 xdaniel (Daniel R.) / DigitalZero Domain

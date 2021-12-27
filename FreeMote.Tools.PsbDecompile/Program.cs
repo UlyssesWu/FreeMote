@@ -456,7 +456,7 @@ Example:
 
                     if (!File.Exists(body))
                     {
-                        Console.WriteLine($"Can not find body: {body}");
+                        Console.WriteLine($"Can not find body (use `-b` to set body.bin path manually): {body} ");
                     }
                     else
                     {
@@ -470,7 +470,7 @@ Example:
                     PSB psb = null;
                     using (var fs = File.OpenRead(filePath))
                     {
-                        psb = new PSB(MdfConvert(fs, baseShellType, context));
+                        psb = PsbFile.CheckSignature(fs) ? new PSB(fs) : new PSB(MdfConvert(fs, baseShellType, context));
                     }
 
                     File.WriteAllText(Path.GetFullPath(filePath) + ".json", PsbDecompiler.Decompile(psb));

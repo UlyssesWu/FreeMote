@@ -86,7 +86,7 @@ Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and a
 * @gdkchan for [DxtCodec](https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs) code.
 * @mfascia for [TexturePacker](https://github.com/mfascia/TexturePacker) code.
 * @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs), [ArcPSB](https://github.com/morkt/GARbro/blob/master/ArcFormats/Emote/ArcPSB.cs), [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs) code. LICENSE: MIT
-* @xdaniel & @FireyFly for [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
+* @xdaniel & @FireyFly for [GetPixelCoordinatesPSP](https://github.com/xdanieldzd/Scarlet/blob/8d9e9cd34f6563da4a0f9b8797c3a1dd35542a4c/Scarlet/Drawing/ImageBinary.cs#L1278) and [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
 * @Nyerguds for [BitmapHelper](https://stackoverflow.com/a/45100442) code.
 * @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/), @skilittle as sponsors!
 * [vgmstream](https://github.com/vgmstream/vgmstream) and @SilicaAndPina for VAG related code.
