@@ -91,7 +91,7 @@ namespace FreeMote
         public const string Context_UseFlattenArray = "UseFlattenArray";
 
         /// <summary>
-        /// (bool) (for <see cref="PsbType.Tachie"/>) If set, always use chunk (piece) images to compile rather than use the combined one
+        /// (bool) (for <see cref="PsbType.Tachie"/>) If set to <c>true</c>, always use chunk (piece) images to compile rather than use the combined one
         /// </summary>
         public const string Context_DisableCombinedImage = "DisableCombinedImage";
 
@@ -163,9 +163,14 @@ namespace FreeMote
         public static bool PaletteMerge { get; set; } = false;
 
         /// <summary>
-        /// Allows you to edit CI* images by re-generate the palette for each bppIndexed image (will increase size), otherwise you should not change those images
+        /// (not used yet) Allows you to edit CI* images by re-generate the palette for each bppIndexed image (will increase size), otherwise you should not change those images
         /// </summary>
         public static bool GeneratePalette { get; set; } = true;
+
+        /// <summary>
+        /// When compile, FreeMote will try to convert images with palette to common images (without palette). The compiled size will increase. 
+        /// </summary>
+        public static bool AllowRemovePalette { get; set; } = false;
         
         /// <summary>
         /// Use managed code rather than external/native if possible

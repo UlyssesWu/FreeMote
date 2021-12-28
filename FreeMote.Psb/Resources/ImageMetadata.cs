@@ -138,10 +138,7 @@ namespace FreeMote.Psb
 
             internal set
             {
-                if (Palette == null)
-                {
-                    Palette = new PsbResource();
-                }
+                Palette ??= new PsbResource();
 
                 Palette.Data = value;
             }
@@ -182,6 +179,11 @@ namespace FreeMote.Psb
             if (Data == null)
             {
                 return (false, "Data is null");
+            }
+
+            if (PixelFormat.UsePalette() && PalData == null)
+            {
+                return (false, "PalData is null");
             }
 
             if (Compress == PsbCompressType.None)

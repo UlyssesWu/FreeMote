@@ -322,7 +322,7 @@ namespace FreeMote.PsBuild
             var psb = new PSB(inputPath);
             if (psb.Type == PsbType.Tachie)
             {
-                var bitmaps = TextureCombiner.CombineTachie(psb);
+                var bitmaps = TextureCombiner.CombineTachie(psb, out var hasPalette);
                 foreach (var kv in bitmaps)
                 {
                     kv.Value.CombinedImage.Save(Path.Combine(dirPath, $"{kv.Key}{texExt}"), texFormat);

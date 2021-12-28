@@ -160,7 +160,9 @@ namespace FreeMote
                 case PsbPixelFormat.A8_SW:
                 case PsbPixelFormat.TileA8_SW:
                 case PsbPixelFormat.CI8_SW:
+                case PsbPixelFormat.CI8:
                     return 8;
+                case PsbPixelFormat.CI4:
                 case PsbPixelFormat.CI4_SW:
                     return 4;
                 case PsbPixelFormat.ASTC_8BPP:

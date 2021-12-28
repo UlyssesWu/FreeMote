@@ -322,6 +322,24 @@ namespace FreeMote.Tests
             Assert.IsTrue(pixels.SequenceEqual(swizzledPixels.Take(pixels.Length)));
         }
 
+        //[TestMethod]
+        //public void TestGraphics()
+        //{
+        //    //No, it won't work
+        //    var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+        //    var path1 = Path.Combine(resPath, "textfont20_2.psb", "[0]-[0].png");
+        //    var path2 = Path.Combine(resPath, "textfont20_2.psb", "[1]-[1].png");
+        //    Bitmap bmp1 = BitmapHelper.LoadBitmap(File.ReadAllBytes(path1));
+        //    Bitmap bmp2 = BitmapHelper.LoadBitmap(File.ReadAllBytes(path2));
+        //    Bitmap bmpCanvas = new Bitmap(1024, 512, bmp1.PixelFormat);
+
+        //    bmpCanvas.Palette = bmp1.Palette;
+        //    Graphics g = Graphics.FromImage(bmpCanvas);
+        //    g.DrawImage(bmp2, new Point(512, 0));
+        //    g.Save();
+        //    bmpCanvas.Save("4bpp.png");
+        //}
+
         [TestMethod]
         public void TestPath()
         {
