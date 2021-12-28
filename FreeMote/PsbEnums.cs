@@ -113,6 +113,10 @@ namespace FreeMote
         /// </summary>
         ems,
         /// <summary>
+        /// PSP
+        /// </summary>
+        psp,
+        /// <summary>
         /// PS Vita
         /// </summary>
         vita,

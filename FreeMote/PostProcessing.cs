@@ -259,6 +259,7 @@ namespace FreeMote
                     0 1  2 3             
                  */
 
+                var dstIndex = (y * width) + x;
                 if (compactMode)
                 {
                     var srcPosition = i / scale;
@@ -268,7 +269,6 @@ namespace FreeMote
                         continue;
                     }
                     var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
-                    var dstIndex = (y * width) + x;
                     var dstPosition = dstIndex / scale;
                     var dstSubIndex = dstIndex % scale;
                     // 这里是大端，dstSubIndex = 0, 则设置大端前2字节
@@ -276,8 +276,27 @@ namespace FreeMote
                 }
                 else
                 {
-                    Buffer.BlockCopy(pixelData, i * bytesPerPixel, unswizzled, ((y * width) + x) * bytesPerPixel,
-                        bytesPerPixel);
+                    var startCopyPosition = i * bytesPerPixel;
+                    if (startCopyPosition >= pixelData.Length)
+                    {
+                        continue;
+                    }
+                    if (bytesPerPixel <= 1)
+                    {
+                        Buffer.BlockCopy(pixelData, startCopyPosition, unswizzled, dstIndex * bytesPerPixel,
+                            bytesPerPixel);
+                    }
+                    else
+                    {
+                        var endCopyPosition = startCopyPosition + bytesPerPixel;
+                        var actualCopySize = bytesPerPixel;
+                        if (endCopyPosition >= pixelData.Length)
+                        {
+                            actualCopySize = pixelData.Length - startCopyPosition;
+                        }
+                        Buffer.BlockCopy(pixelData, startCopyPosition, unswizzled, dstIndex * bytesPerPixel,
+                            actualCopySize);
+                    }
                 }
             }
 
@@ -452,8 +471,28 @@ namespace FreeMote
                     }
                     else
                     {
-                        Buffer.BlockCopy(pixelData, srcIndex * bytesPerPixel, unswizzled, dstIndex * bytesPerPixel,
-                            bytesPerPixel);
+                        var startCopyPosition = srcIndex * bytesPerPixel;
+                        if (startCopyPosition >= pixelData.Length)
+                        {
+                            continue;
+                        }
+
+                        if (bytesPerPixel <= 1)
+                        {
+                            Buffer.BlockCopy(pixelData, startCopyPosition, unswizzled, dstIndex * bytesPerPixel,
+                                bytesPerPixel);
+                        }
+                        else
+                        {
+                            var endCopyPosition = startCopyPosition + bytesPerPixel;
+                            var actualCopySize = bytesPerPixel;
+                            if (endCopyPosition >= pixelData.Length)
+                            {
+                                actualCopySize = pixelData.Length - startCopyPosition;
+                            }
+                            Buffer.BlockCopy(pixelData, startCopyPosition, unswizzled, dstIndex * bytesPerPixel,
+                                actualCopySize);
+                        }
                     }
                 }
             }
