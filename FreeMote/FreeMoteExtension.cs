@@ -90,6 +90,8 @@ namespace FreeMote
         {
             switch (format)
             {
+                case PsbPixelFormat.CI4:
+                case PsbPixelFormat.CI8:
                 case PsbPixelFormat.CI8_SW:
                 case PsbPixelFormat.CI4_SW:
                     return true;
