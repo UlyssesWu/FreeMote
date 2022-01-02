@@ -570,8 +570,11 @@ namespace FreeMote.Psb
                         {
                             if (resDictionary.ContainsKey(resource.Index.ToString())) //index is used before
                             {
-                                Console.WriteLine(
-                                    $"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
+                                if (Consts.Verbose)
+                                {
+                                    Console.WriteLine($"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
+                                }
+
                                 //continue;
                                 indexConflict = true;
                                 conflictedIndex = resource.Resource.Index.Value;
@@ -583,13 +586,16 @@ namespace FreeMote.Psb
                             if (resDictionary.ContainsKey(friendlyName)) // friendly name is also used (most likely its the same res reused), no name can be used to save
                             {
                                 Console.WriteLine(
-                                    $"[WARN] Resource Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
+                                    $"[WARN] Resource Index {resource.Index} and Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
                                 continue; //just skip
                             }
 
                             if (indexConflict) //index is used but friendly name is not (maybe they are different?), save using friendly name
                             {
-                                Console.WriteLine($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
+                                if (Consts.Verbose)
+                                {
+                                    Console.WriteLine($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
+                                }
                             }
                         }
 

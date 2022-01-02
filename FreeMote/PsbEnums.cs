@@ -4,7 +4,7 @@
 
 namespace FreeMote
 {
-    internal class PsbBadFormatException : FormatException
+    public class PsbBadFormatException : FormatException
     {
         public PsbBadFormatReason Reason { get; }
 
@@ -33,7 +33,7 @@ namespace FreeMote
         Objects
     }
 
-    internal enum PsbBadFormatReason
+    public enum PsbBadFormatReason
     {
         Header,
         IsMdf,
@@ -128,6 +128,7 @@ namespace FreeMote
         /// NSwitch
         /// </summary>
         nx,
+        //citra //3ds
         other = Byte.MaxValue,
     }
 

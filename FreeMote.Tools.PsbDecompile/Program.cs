@@ -372,14 +372,13 @@ Example:
             try
 #endif
             {
-                if (keepRaw)
+                var (outputPath, psb) = keepRaw ?
+                    PsbDecompiler.DecompileToFile(path, key: key, type: type)
+                    : PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type, contextDic: context);
+                if (psb.Type == PsbType.ArchiveInfo)
                 {
-                    PsbDecompiler.DecompileToFile(path, key: key, type: type);
-                }
-                else
-                {
-                    PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type,
-                        contextDic: context);
+                    Console.WriteLine(
+                        $"[INFO] {name} is an Archive Info PSB. Use `info-psb` command on this PSB to extract content from body.bin .");
                 }
             }
 #if !DEBUG
@@ -420,7 +419,7 @@ Example:
         {
             if (filePath.ToLowerInvariant().EndsWith(".bin"))
             {
-                Console.WriteLine("[WARN] It seems that you are trying to extract from a body.bin file. You should extract body.bin by extracting info.psb.m file instead.");
+                Console.WriteLine("[WARN] It seems that you are trying to extract from a body.bin file. You should extract body.bin by extracting info.psb.m file with `info-psb` command instead.");
             }
             if (File.Exists(filePath))
             {
@@ -463,7 +462,7 @@ Example:
                         hasBody = true;
                     }
                 }
-                
+
                 try
                 {
                     var baseShellType = Path.GetExtension(fileName).DefaultShellType();
@@ -477,7 +476,7 @@ Example:
                     PsbResourceJson resx = new PsbResourceJson(psb, context);
 
                     PsbArchiveInfoType archiveInfoType = psb.GetArchiveInfoType();
-                    
+
                     var dic = psb.Objects[archiveInfoType.GetRootKey()] as PsbDictionary;
                     var suffixList = (PsbList)psb.Objects["expire_suffix_list"];
                     var suffix = "";
@@ -530,7 +529,7 @@ Example:
                             using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
                             var bodyBytes = new byte[len];
                             mmAccessor.ReadArray(0, bodyBytes, 0, len);
-                            
+
                             var rawPath = Path.Combine(extractDir, pair.Key);
                             EnsureDirectory(rawPath);
                             if (outputRaw)
@@ -556,7 +555,7 @@ Example:
                                     {
                                         [Context_MdfKey] = key + possibleFileName
                                     };
-                                    
+
                                     try
                                     {
                                         mms = MdfConvert(ms, shellType, bodyContext);

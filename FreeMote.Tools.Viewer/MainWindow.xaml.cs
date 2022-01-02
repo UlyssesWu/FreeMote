@@ -53,6 +53,10 @@ namespace FreeMote.Tools.Viewer
         public MainWindow()
         {
             _psbPaths = Core.PsbPaths;
+            if (_psbPaths.Count == 0)
+            {
+                Application.Current.Shutdown(-1);
+            }
 
             _helper = new WindowInteropHelper(this);
 

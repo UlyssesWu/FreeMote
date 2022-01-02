@@ -107,12 +107,22 @@ namespace FreeMote.Tools.Viewer
                             Core.PsbPaths[i] = tempFile;
                             Core.NeedRemoveTempFile = true;
                         }
-                        
+
                         GC.Collect(); //Can save memory from 700MB to 400MB
                     }
-                    catch (Exception)
+                    catch (PsbBadFormatException ex)
                     {
-                        //ignore
+                        MessageBox.Show("Can not load PSB, maybe your PSB is encrypted. \r\nUse EmtConvert to decrypt it first.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        CleanTempFiles();
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.ToString(), "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        CleanTempFiles();
+                        return;
                     }
                 }
                 else
@@ -146,6 +156,19 @@ namespace FreeMote.Tools.Viewer
             }
 
             return 0;
+        }
+
+        private static void CleanTempFiles()
+        {
+            if (Core.NeedRemoveTempFile && Core.PsbPaths?.Count > 0)
+            {
+                foreach (var psbPath in Core.PsbPaths)
+                {
+                    File.Delete(psbPath);
+                }
+
+                Core.NeedRemoveTempFile = false;
+            }
         }
 
         private static string PrintHelp()

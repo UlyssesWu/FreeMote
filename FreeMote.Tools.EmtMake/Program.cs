@@ -73,7 +73,7 @@ namespace FreeMote.Tools.EmtMake
 
         private static void PrintHelp()
         {
-            Console.WriteLine("Usage: .exe <PSB path> [make.json path]");
+            Console.WriteLine("Usage: .exe <PSB path>");
         }
     }
 }

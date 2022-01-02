@@ -186,7 +186,10 @@ namespace FreeMote
                 case PsbSpec.common:
                 case PsbSpec.ems:
                 case PsbSpec.vita:
+                case PsbSpec.psp:
                     return PsbPixelFormat.BeRGBA8;
+                case PsbSpec.nx:
+                case PsbSpec.ps4:
                 case PsbSpec.krkr:
                 case PsbSpec.win:
                     return PsbPixelFormat.LeRGBA8;

@@ -181,6 +181,11 @@ namespace FreeMote
         /// (not implemented yet) If the audio have 2 channels, try to combine them when output wave
         /// </summary>
         public static bool CombineAudioChannels { get; set; } = false;
+
+        /// <summary>
+        /// Output more logs
+        /// </summary>
+        public static bool Verbose { get; set; } = false;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

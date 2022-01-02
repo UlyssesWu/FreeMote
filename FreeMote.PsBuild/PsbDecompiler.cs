@@ -227,7 +227,7 @@ namespace FreeMote.PsBuild
         /// <param name="key">PSB CryptKey</param>
         /// <param name="type">Specify PSB type, if not set, infer type automatically</param>
         /// <param name="contextDic">Context, used to set some configurations</param>
-        public static void DecompileToFile(string inputPath, PsbExtractOption extractOption = PsbExtractOption.Original,
+        public static (string OutputPath, PSB Psb) DecompileToFile(string inputPath, PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null, PsbType type = PsbType.PSB, Dictionary<string, object> contextDic = null)
         {
             var context = FreeMount.CreateContext(contextDic);
@@ -236,9 +236,12 @@ namespace FreeMote.PsBuild
                 context.Context[Consts.Context_CryptKey] = key;
             }
 
-            File.WriteAllText(ChangeExtensionForOutputJson(inputPath, ".json"), Decompile(inputPath, out var psb, context.Context));
+            var outputPath = ChangeExtensionForOutputJson(inputPath, ".json");
+            File.WriteAllText(outputPath, Decompile(inputPath, out var psb, context.Context));
 
             OutputResources(psb, context, inputPath, extractOption, extractFormat, useResx);
+
+            return (outputPath, psb);
         }
 
         /// <summary>
