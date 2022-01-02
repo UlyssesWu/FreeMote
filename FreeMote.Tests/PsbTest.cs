@@ -192,10 +192,10 @@ namespace FreeMote.Tests
             ctx.Context[Consts.Context_MdfKey] = "38757621acf82scenario_info.psb.m";
             ctx.Context[Consts.Context_MdfKeyLength] = 131;
 
-            var mdfShell = new MdfShell();
+            //var mdfShell = new MdfShell();
             //var ms = mdfShell.ToPsb(File.OpenRead(path), ctx.Context);
             //HINT: brute get info-psb key is nearly impossible, don't waste your time on it and just find the key by yourself
-            var ms = mdfShell.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131);
+            var ms = PsbExtension.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131);
             File.WriteAllBytes(path + ".raw", ms.ToArray());
         }
 

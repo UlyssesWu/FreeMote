@@ -4,7 +4,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using FreeMote.Plugins;
+using Troschuetz.Random.Generators;
 
 namespace FreeMote.Psb
 {
@@ -633,6 +636,76 @@ namespace FreeMote.Psb
                 bw.Flush();
                 return fs.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Decode/encode MDF used in archive PSB. (<paramref name="stream"/> will <b>NOT</b> be disposed)
+        /// </summary>
+        /// <param name="stream">will <b>NOT</b> be disposed</param>
+        /// <param name="key">a full key a.k.a seed</param>
+        /// <param name="keyLength">key buffer length, usually 131, but could be other value</param>
+        /// <param name="keepHeader">if <c>true</c>, skip first 8 bytes (header)</param>
+        /// <returns></returns>
+        public static MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength, bool keepHeader = true)
+        {
+            //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
+            var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
+            uint[] seeds = new uint[4];
+            seeds[0] = BitConverter.ToUInt32(bts, 0);
+            seeds[1] = BitConverter.ToUInt32(bts, 1 * 4);
+            seeds[2] = BitConverter.ToUInt32(bts, 2 * 4);
+            seeds[3] = BitConverter.ToUInt32(bts, 3 * 4);
+
+            MemoryStream ms = new MemoryStream((int)stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
+            var gen = new MT19937Generator(seeds);
+
+            using BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true);
+            using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            if (keepHeader)
+            {
+                bw.Write(br.ReadBytes(8));
+            }
+            //uint count = 0;
+
+            List<byte> keys = new List<byte>();
+            if (keyLength != null)
+            {
+                for (int i = 0; i < keyLength / 4 + 1; i++)
+                {
+                    keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
+                }
+
+                keys = keys.GetRange(0, (int)keyLength.Value);
+                //keys = keys.Take((int) keyLength.Value).ToList();
+            }
+            else
+            {
+                while (keys.Count < br.BaseStream.Length)
+                {
+                    keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
+                }
+            }
+
+            int currentKey = 0;
+            while (br.BaseStream.Position < br.BaseStream.Length)
+            {
+                var current = br.ReadByte();
+                if (currentKey >= keys.Count)
+                {
+                    currentKey = 0;
+                }
+
+                current ^= keys[currentKey];
+                currentKey++;
+
+                //if (keyLength == null || (count < keyLength.Value))
+                //{
+                //    current ^= gen.NextUIntInclusiveMaxValue();
+                //}
+                bw.Write(current);
+            }
+
+            return ms;
         }
 
         #endregion

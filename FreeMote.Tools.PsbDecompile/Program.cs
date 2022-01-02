@@ -465,32 +465,34 @@ Example:
 
                 try
                 {
-                    var baseShellType = Path.GetExtension(fileName).DefaultShellType();
                     PSB psb = null;
                     using (var fs = File.OpenRead(filePath))
-                    {
-                        psb = PsbFile.CheckSignature(fs) ? new PSB(fs) : new PSB(MdfConvert(fs, baseShellType, context));
+                    { 
+                        var shellType = PsbFile.GetSignatureShellType(fs);
+                        psb = shellType == "PSB" ? new PSB(fs) : new PSB(MdfConvert(fs, shellType, context));
                     }
 
                     File.WriteAllText(Path.GetFullPath(filePath) + ".json", PsbDecompiler.Decompile(psb));
                     PsbResourceJson resx = new PsbResourceJson(psb, context);
-
-                    PsbArchiveInfoType archiveInfoType = psb.GetArchiveInfoType();
-
-                    var dic = psb.Objects[archiveInfoType.GetRootKey()] as PsbDictionary;
-                    var suffixList = (PsbList)psb.Objects["expire_suffix_list"];
-                    var suffix = "";
-                    if (suffixList.Count > 0)
-                    {
-                        suffix = suffixList[0] as PsbString ?? "";
-                    }
-
                     if (!hasBody)
                     {
                         //Write resx.json
                         resx.Context[Context_ArchiveSource] = new List<string> { name };
                         File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
                         return;
+                    }
+
+                    PsbArchiveInfoType archiveInfoType = psb.GetArchiveInfoType();
+                    if (archiveInfoType == PsbArchiveInfoType.None)
+                    {
+                        return;
+                    }
+                    var dic = psb.Objects[archiveInfoType.GetRootKey()] as PsbDictionary;
+                    var suffixList = (PsbList)psb.Objects["expire_suffix_list"];
+                    var suffix = "";
+                    if (suffixList.Count > 0)
+                    {
+                        suffix = suffixList[0] as PsbString ?? "";
                     }
 
                     Console.WriteLine($"Extracting info from {fileName} ...");
@@ -582,7 +584,7 @@ Example:
                             var finalPath = Path.Combine(extractDir, relativePath);
                             mms ??= ms;
 
-                            if (extractAll && PsbFile.CheckSignature(mms))
+                            if (extractAll && PsbFile.IsSignaturePsb(mms))
                             {
                                 try
                                 {
@@ -683,7 +685,7 @@ Example:
                             var finalPath = Path.Combine(extractDir, relativePath);
                             mms ??= ms;
 
-                            if (extractAll && PsbFile.CheckSignature(mms))
+                            if (extractAll && PsbFile.IsSignaturePsb(mms))
                             {
                                 try
                                 {

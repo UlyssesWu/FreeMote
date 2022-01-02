@@ -363,7 +363,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Tasks after load: sort & type infer
+        /// Tasks after load: sort and type infer
         /// </summary>
         private void AfterLoad()
         {

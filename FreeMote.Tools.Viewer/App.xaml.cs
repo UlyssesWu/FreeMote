@@ -90,7 +90,7 @@ namespace FreeMote.Tools.Viewer
                             using var ms = ctx.OpenFromShell(fs, ref currentType);
                             var psb = ms != null ? new PSB(ms) : new PSB(fs);
 
-                            if (psb.Platform == PsbSpec.krkr)
+                            if (psb.Platform == PsbSpec.krkr) //common should be loadable
                             {
                                 psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
                             }

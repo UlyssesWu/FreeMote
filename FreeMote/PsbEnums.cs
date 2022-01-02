@@ -85,6 +85,10 @@ namespace FreeMote
         /// Sound Archive
         /// </summary>
         SoundArchive = 8,
+        /// <summary>
+        /// Tile Map
+        /// </summary>
+        Map = 9,
     }
 
     /// <summary>
@@ -97,7 +101,7 @@ namespace FreeMote
         /// </summary>
         none = Byte.MinValue, 
         /// <summary>
-        /// Unity & other
+        /// Unity and other
         /// </summary>
         common,
         /// <summary>

@@ -320,7 +320,7 @@ Example:
             app.Command("mdf", mdfCmd =>
             {
                 //help
-                mdfCmd.Description = "Pack/Unpack MT19937 encrypted MDF (FreeMote.Plugins required)";
+                mdfCmd.Description = "Pack/Unpack MT19937 encrypted MDF/MFL (FreeMote.Plugins required)";
                 mdfCmd.HelpOption();
                 mdfCmd.ExtendedHelpText = @"
 Example:
@@ -382,7 +382,7 @@ Example:
                             }
 
                             context[Context_MdfKey] = finalSeed;
-                            ShellConvert(s, "MDF", context);
+                            ShellConvert(s, "", context); //Unpack
                         }
                     }
                 });

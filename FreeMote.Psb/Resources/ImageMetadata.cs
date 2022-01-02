@@ -305,7 +305,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Name for export & import
+        /// Name for export and import
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>

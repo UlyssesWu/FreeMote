@@ -114,7 +114,7 @@ namespace FreeMote.Plugins
         /// <summary>
         /// [RequireUsing] Use plugins to decompress shell types to PSB
         /// </summary>
-        /// <param name="stream">the input stream won't be disposed automatically</param>
+        /// <param name="stream">the input stream will <b>NOT</b> be disposed automatically</param>
         /// <param name="type"></param>
         /// <returns>unpacked stream, remember to dispose!</returns>
         public MemoryStream OpenFromShell(Stream stream, ref string type)

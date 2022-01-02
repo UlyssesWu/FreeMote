@@ -6,8 +6,10 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FreeMote.FastLz;
 using FreeMote.Plugins.Audio;
 using FreeMote.Plugins.Shells;
+using FreeMote.Psb;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VGAudio.Containers.Dsp;
 using VGAudio.Containers.Wave;
@@ -184,6 +186,18 @@ namespace FreeMote.Tests
             var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 512, 1024,
                 PsbPixelFormat.CI8_SW);
             bmp.Save("ci8_10.png", ImageFormat.Png);
+        }
+
+        [TestMethod]
+        public void TestFastLz()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "raw.mfl");
+            var input = File.OpenRead(path);
+            var outStream = PsbExtension.EncodeMdf(input, "Rj9Pegoh4e_viewer.psb.m", 97, false);
+            var buffer = outStream.ToArray();
+            var output = FastLzNative.Decompress(buffer, 13504);
+            File.WriteAllBytes("decode-raw.mfl", output);
         }
 
         [TestMethod]
