@@ -28,8 +28,8 @@ Compile and decompile PSB files. Convert PSB among different platforms. Recover 
 ### FreeMote.Plugins
 External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMote/wiki) for usages.
 
-* Images: TLG encoding/decoding support via [**FreeMote.Tlg**](https://github.com/Project-AZUSA/TlgLib) (by Ulysses). (x64)
-* Shells: Compression/decompression support.
+* Images: TLG encoding/decoding support via [**FreeMote.Tlg** (x64)](https://github.com/UlyssesWu/FreeMote.Tlg).
+* Shells: Compression/decompression support, such as [**FreeMote.FastLz** (x64)](https://github.com/UlyssesWu/FreeMote.FastLz).
 * Audio: Experimental support for audio used in PSB.
 
 ### FreeMote.Purify (Unreleased)
