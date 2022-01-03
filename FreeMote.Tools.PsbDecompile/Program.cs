@@ -38,20 +38,21 @@ namespace FreeMote.Tools.PsbDecompile
             app.ExtendedHelpText = PrintHelp();
 
             //options
+            var optMdfSeed = app.Option<string>("-s|--seed <SEED>", "Set MT19937 MDF seed (Key+FileName)", CommandOptionType.SingleValue,
+                inherited: false);
+            var optMdfKeyLen = app.Option<int>("-l|--length <LEN>", "Set MT19937 MDF key length. Default=131",
+                CommandOptionType.SingleValue, inherited: false);
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             //var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
             //    "Convert textures to png/bmp. Default=png", CommandOptionType.SingleValue, true);
             var optRaw = app.Option("-raw|--raw", "Output raw resources", CommandOptionType.NoValue, inherited: true);
             //メモリ足りない もうどうしよう : https://soundcloud.com/ulysses-wu/Heart-Chrome
-            var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue,
-                inherited: true);
+            var optOom = app.Option("-oom|--memory-limit", "Disable In-Memory Loading", CommandOptionType.NoValue, inherited: true);
             var optNoParallel = app.Option("-1by1|--enumerate",
                 "Disable parallel processing (can be very slow)", CommandOptionType.NoValue, inherited: true);
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
-            var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue,
-                true);
-            var optType = app.Option<PsbType>("-t|--type <TYPE>", "Set PSB type manually",
-                CommandOptionType.SingleValue, inherited: true);
+            var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue, true);
+            var optType = app.Option<PsbType>("-t|--type <TYPE>", "Set PSB type manually", CommandOptionType.SingleValue, inherited: true);
             var optDisableFlattenArray = app.Option("-dfa|--disable-flatten-array",
                 "Disable represent extra resource as flatten arrays", CommandOptionType.NoValue, inherited: true);
             var optDisableCombinedImage = app.Option("-dci|--disable-combined-image",
@@ -192,7 +193,7 @@ Example:
                 var optMdfKey = archiveCmd.Option("-k|--key <KEY>",
                     "Set key (Infer file name from path)",
                     CommandOptionType.SingleValue);
-                var optMdfKeyLen = archiveCmd.Option<int>("-l|--length <LEN>",
+                var optMdfKeyLen2 = archiveCmd.Option<int>("-l|--length <LEN>",
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
                 var optBody = archiveCmd.Option<string>("-b|--body <PATH>",
@@ -249,7 +250,7 @@ Example:
                         throw new ArgumentNullException(nameof(key), "No key or seed specified.");
                     }
 
-                    int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 0x83;
+                    int keyLen = optMdfKeyLen2.HasValue() ? optMdfKeyLen2.ParsedValue : 0x83;
                     Dictionary<string, object> context = new Dictionary<string, object>();
 
                     if (keyLen >= 0)
@@ -289,11 +290,21 @@ Example:
                     FlattenArrayByDefault = false;
                 }
 
-                Dictionary<string, object> context = null;
+                Dictionary<string, object> context = new();
+
+                if (optMdfSeed.HasValue())
+                {
+                    context[Context_MdfKey] = optMdfSeed.ParsedValue;
+                }
+
+                if (optMdfKeyLen.HasValue())
+                {
+                    context[Context_MdfKeyLength] = optMdfKeyLen.ParsedValue;
+                }
 
                 if (optDisableCombinedImage.HasValue())
                 {
-                    context = new Dictionary<string, object>() { { Context_DisableCombinedImage, true } };
+                    context[Context_DisableCombinedImage] = true;
                 }
 
                 bool useRaw = optRaw.HasValue();
@@ -359,6 +370,10 @@ Example:
                 stream.Dispose();
             }
 
+            if (ms is { Length: > 0 })
+            {
+                ctx.Shell = shellType;
+            }
             return ms;
         }
 
@@ -467,7 +482,7 @@ Example:
                 {
                     PSB psb = null;
                     using (var fs = File.OpenRead(filePath))
-                    { 
+                    {
                         var shellType = PsbFile.GetSignatureShellType(fs);
                         psb = shellType == "PSB" ? new PSB(fs) : new PSB(MdfConvert(fs, shellType, context));
                     }

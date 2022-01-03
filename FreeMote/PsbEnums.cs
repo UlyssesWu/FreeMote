@@ -14,25 +14,6 @@ namespace FreeMote
         }
     }
 
-    /// <summary>
-    /// PSB.Combine(PSB)
-    /// </summary>
-    public enum PsbCombineMethod
-    {
-        /// <summary>
-        /// Default
-        /// </summary>
-        Default,
-        /// <summary>
-        /// Merge everything
-        /// </summary>
-        All,
-        /// <summary>
-        /// Only merge objects
-        /// </summary>
-        Objects
-    }
-
     public enum PsbBadFormatReason
     {
         Header,
@@ -99,7 +80,7 @@ namespace FreeMote
         /// <summary>
         /// Do not have spec
         /// </summary>
-        none = Byte.MinValue, 
+        none = Byte.MinValue,
         /// <summary>
         /// Unity and other
         /// </summary>
@@ -132,7 +113,14 @@ namespace FreeMote
         /// NSwitch
         /// </summary>
         nx,
-        //citra //3ds
+        /// <summary>
+        /// 3DS
+        /// </summary>
+        citra,
+        /// <summary>
+        /// Android
+        /// </summary>
+        and,
         other = Byte.MaxValue,
     }
 

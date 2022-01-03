@@ -54,9 +54,9 @@ namespace FreeMote.Tools.PsBuild
             var optKey = app.Option<uint>("-k|--key <KEY>", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optSpec = app.Option<PsbSpec>("-p|--spec <SPEC>", "Set PSB platform (krkr/common/win/ems)",
                 CommandOptionType.SingleValue);
-            var optNoRename = app.Option("-no-rename",
+            var optNoRename = app.Option("-nr|--no-rename",
                 "Prevent output file renaming, may overwrite your original PSB files", CommandOptionType.NoValue);
-            var optNoShell = app.Option("-no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
+            var optNoShell = app.Option("-ns|--no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
             var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)",
                 CommandOptionType.NoValue, true);
             //var optOutputPath =
@@ -329,8 +329,7 @@ Example:
             {
                 //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
                 var filename = name + ".psb"; //rename later //TODO: support set output path
-                PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename,
-                    canPackShell);
+                PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename, canPackShell);
             }
             catch (Exception e)
             {
@@ -774,7 +773,7 @@ Example:
                 fmContext.Context.Remove(Context_MdfKey);
             }
 
-            using var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), "MDF");
+            using var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), fmContext.HasShell ? fmContext.Shell.ToUpperInvariant() : "MDF");
             File.WriteAllBytes(packageName, infoMdf.ToArray());
             infoMdf.Dispose();
 
