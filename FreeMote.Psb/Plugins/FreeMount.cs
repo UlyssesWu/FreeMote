@@ -9,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using FreeMote.Psb;
-using Microsoft.IO;
 
 namespace FreeMote.Plugins
 {
@@ -65,6 +64,7 @@ namespace FreeMote.Plugins
         private void AddDefaultCatalogs(AggregateCatalog catalog)
         {
             catalog.Catalogs.Add(new TypeCatalog(typeof(WavFormatter))); //Wav
+            catalog.Catalogs.Add(new TypeCatalog(typeof(AudioFileFormatter))); //Audio file
         }
 
         /// <summary>

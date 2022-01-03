@@ -191,6 +191,16 @@ namespace FreeMote.Psb
         {
             bw.Write((byte) Type);
         }
+
+        public static implicit operator bool(PsbBool b)
+        {
+            return b.Value;
+        }
+
+        public static explicit operator PsbBool(bool b)
+        {
+            return new PsbBool(b);
+        }
     }
 
     public enum PsbNumberType
@@ -1126,6 +1136,25 @@ namespace FreeMote.Psb
 
         public PsbDictionary() : base()
         {
+        }
+
+        public bool TryGetPsbValue<T>(string key, out T value) where T : IPsbValue
+        {
+            var get = TryGetValue(key, out IPsbValue v);
+            if (get)
+            {
+                if (v is T tv)
+                {
+                    value = tv;
+                    return true;
+                }
+
+                value = default;
+                return false;
+            }
+
+            value = default;
+            return false;
         }
 
         public Dictionary<string, IPsbValue> Value => this;

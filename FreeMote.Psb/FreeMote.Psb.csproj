@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Plugins\ManagedTlgFormatter.cs" />
+    <Compile Include="Plugins\AudioFileFormatter.cs" />
     <Compile Include="Resources\ArchDatas.cs" />
     <Compile Include="Resources\AudioMetadata.cs" />
     <Compile Include="IPsbType.cs" />
