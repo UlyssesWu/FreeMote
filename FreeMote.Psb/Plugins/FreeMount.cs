@@ -340,7 +340,7 @@ namespace FreeMote.Plugins
         /// <summary>
         /// <inheritdoc cref="IPsbAudioFormatter.TryGetArchData"/>
         /// </summary>
-        /// <param name="psb"></param>
+        /// <param name="md"></param>
         /// <param name="channel"><inheritdoc cref="IPsbAudioFormatter.TryGetArchData"/></param>
         /// <param name="archData"></param>
         /// <param name="context"></param>

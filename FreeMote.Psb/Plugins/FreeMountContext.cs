@@ -73,10 +73,12 @@ namespace FreeMote.Plugins
         /// <summary>
         /// <inheritdoc cref="FreeMount.WaveToArchData"/>
         /// </summary>
+        /// <param name="archData"></param>
         /// <param name="ext"></param>
         /// <param name="wave"></param>
         /// <param name="fileName"></param>
         /// <param name="waveExt">"ext" in ArchData</param>
+        /// <param name="md"></param>
         /// <returns></returns>
         public bool WaveToArchData(AudioMetadata md, IArchData archData, string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
         {

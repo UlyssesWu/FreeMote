@@ -157,6 +157,20 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPal()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var imgPath = Path.Combine(resPath, "akatsuki.no.goei.image.samples", "ev_aya07.psb", "ev_aya07_half-5.png");
+            var imgPath = Path.Combine(resPath, "textfont20_2.psb", "[0]-[0].png");
+
+            var img = BitmapHelper.LoadBitmap(File.ReadAllBytes(imgPath));
+            var locked = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadOnly, img.PixelFormat);
+            Debug.WriteLine($"{locked.Stride},{locked.Width},{locked.Height},{locked.PixelFormat}");
+            //RL.ConvertToImageFile(bts, imgPath + "output.png", 544, 960, PsbImageFormat.png, PsbPixelFormat.L8_SW);
+        }
+
+
+        [TestMethod]
         public void TestRGBA8SW()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

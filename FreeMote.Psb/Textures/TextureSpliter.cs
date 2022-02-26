@@ -15,7 +15,7 @@ namespace FreeMote.Psb.Textures
     public static class TextureSpliter
     {
         /// <summary>
-        /// <see cref="PsbResHelper.CollectResources"/> for packed-texture specs, especially for <see cref="PsbSpec.win"/>
+        /// <see cref="PsbResHelper.CollectResources{T}"/> for packed-texture specs, especially for <see cref="PsbSpec.win"/>
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>

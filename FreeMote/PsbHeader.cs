@@ -310,7 +310,7 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Similar as <see cref="PsbFile.TestHeaderEncrypted"/> but not based on file.
+        /// Similar as <see cref="PsbFile.TestHeaderEncrypted()"/> but not based on file.
         /// </summary>
         public bool IsHeaderEncrypted => HeaderLength > (MAX_HEADER_LENGTH + 16) || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
     }

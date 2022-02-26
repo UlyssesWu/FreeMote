@@ -308,7 +308,6 @@ Example:
                 }
 
                 bool useRaw = optRaw.HasValue();
-                //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?)null;
 
                 PsbType type = PsbType.PSB;

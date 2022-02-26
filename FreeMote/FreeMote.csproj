@@ -50,6 +50,7 @@
     <Compile Include="Adler32.cs" />
     <Compile Include="AstcDecoder.cs" />
     <Compile Include="AstcFile.cs" />
+    <Compile Include="BitmapExtension.cs" />
     <Compile Include="BitmapHelper.cs" />
     <Compile Include="BTree.cs" />
     <Compile Include="DxtCodec.cs" />

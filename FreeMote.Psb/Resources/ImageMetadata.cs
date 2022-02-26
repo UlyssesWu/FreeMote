@@ -216,6 +216,7 @@ namespace FreeMote.Psb
             if (!valid)
             {
                 Console.WriteLine($"[WARN] Validation failed when linking {fullPath} . {checkResult}");
+                Console.WriteLine("Check your image format (bit depth, size, pixel format). You should keep it same as original.");
                 if (Consts.StrictMode)
                 {
                     throw new FormatException(checkResult);
