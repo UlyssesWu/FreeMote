@@ -1,11 +1,15 @@
 ﻿using FreeMote.Psb;
-using FreeMote.Psb.Textures;
 using FreeMote.PsBuild.Converters;
 
 namespace FreeMote.PsBuild
 {
     public static class PsbSpecConverter
     {
+        /// <summary>
+        /// Enable resolution support (may scaling images, quality is not guaranteed)
+        /// </summary>
+        public static bool EnableResolution = false;
+
         /// <summary>
         /// Try to switch Spec
         /// </summary>
@@ -15,7 +19,7 @@ namespace FreeMote.PsBuild
         public static void SwitchSpec(this PSB psb, PsbSpec targetSpec,
             PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
-            if (targetSpec == PsbSpec.other || targetSpec == PsbSpec.none)
+            if (targetSpec is PsbSpec.other or PsbSpec.none)
             {
                 return;
             }
@@ -66,7 +70,7 @@ namespace FreeMote.PsBuild
                 switch (original)
                 {
                     case PsbSpec.krkr:
-                        Krkr2CommonConverter krkr2Win = new Krkr2CommonConverter(true);
+                        Krkr2CommonConverter krkr2Win = new Krkr2CommonConverter(true) {EnableResolution = EnableResolution};
                         krkr2Win.Convert(psb);
                         break;
                     case PsbSpec.common:
@@ -79,12 +83,12 @@ namespace FreeMote.PsBuild
                 }
             }
 
-            else if (targetSpec == PsbSpec.common || targetSpec == PsbSpec.ems)
+            else if (targetSpec is PsbSpec.common or PsbSpec.ems)
             {
                 switch (original)
                 {
                     case PsbSpec.krkr:
-                        Krkr2CommonConverter krkr2Common = new Krkr2CommonConverter();
+                        Krkr2CommonConverter krkr2Common = new Krkr2CommonConverter() {EnableResolution = EnableResolution};
                         krkr2Common.Convert(psb);
                         break;
                     case PsbSpec.win:

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using FreeMote.Psb;
 using FreeMote.Psb.Textures;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace FreeMote.PsBuild.Converters
 {
@@ -33,7 +35,15 @@ namespace FreeMote.PsBuild.Converters
         public int TexturePadding { get; set; } = 5;
         public BestFitHeuristic FitHeuristic { get; set; } = BestFitHeuristic.MaxOneAxis;
 
+        /// <summary>
+        /// Use name gained from krkr PSB like "vr足l"
+        /// </summary>
         public bool UseMeaningfulName { get; set; } = true;
+        /// <summary>
+        /// If enable, scale down the image to match the target resolution, maybe causing bad quality.
+        /// <para>If not enable, ignore and remove "resolution" in icon (reset resolution to 1, making the image clear)</para>
+        /// </summary>
+        public bool EnableResolution { get; set; } = false;
         /// <summary>
         /// Expand texture edge
         /// </summary>
@@ -150,6 +160,7 @@ namespace FreeMote.PsBuild.Converters
             var source = (PsbDictionary) psb.Objects["source"];
             int maxSideLength = 2048;
             long area = 0;
+            var texRegex = new Regex($"^tex#.+?{Delimiter}");
 
             //Collect textures
             foreach (var tex in source)
@@ -159,6 +170,11 @@ namespace FreeMote.PsBuild.Converters
                 foreach (var icon in icons)
                 {
                     var iconName = icon.Key;
+                    var match = texRegex.Match(iconName);
+                    if (match.Success)
+                    {
+                        iconName = iconName.Substring(match.Length);
+                    }
                     var info = (PsbDictionary) icon.Value;
                     var width = (int) (PsbNumber) info["width"];
                     var height = (int) (PsbNumber) info["height"];
@@ -171,8 +187,20 @@ namespace FreeMote.PsBuild.Converters
                     var bmp = info["compress"]?.ToString().ToUpperInvariant() == "RL"
                         ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
                         : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
+                    if (info.ContainsKey("resolution") && info["resolution"].GetFloat() != 1.0f && EnableResolution)
+                    {
+                        //scale down image, not recommended
+                        var resolution = info["resolution"].GetFloat();
+                        var newWidth = (int) Math.Ceiling(width * resolution);
+                        var newHeight = (int) Math.Ceiling(height * resolution);
+                        var resizedBmp = bmp.ResizeImage(newWidth, newHeight);
+                        bmp.Dispose();
+                        bmp = resizedBmp;
+                        width = newWidth;
+                        height = newHeight;
+                    }
                     bmp.Tag = iconName;
-                    textures.Add($"{texName}{Delimiter}{icon.Key}", bmp);
+                    textures.Add($"{texName}{Delimiter}{iconName}", bmp);
                     //estimate area and side length
                     area += width * height;
                     if (width >= maxSideLength || height >= maxSideLength)
@@ -189,7 +217,7 @@ namespace FreeMote.PsBuild.Converters
                 size = 4096;
             }
 
-            int padding = TexturePadding >= 0 && TexturePadding <= 100 ? TexturePadding : 1;
+            int padding = TexturePadding is >= 0 and <= 100 ? TexturePadding : 1;
 
             TexturePacker packer = new TexturePacker
             {
@@ -222,15 +250,44 @@ namespace FreeMote.PsBuild.Converters
                         continue;
                     }
 
-                    var paths = node.Texture.Source.Split(new[] {Delimiter}, StringSplitOptions.RemoveEmptyEntries);
-                    var icon = (PsbDictionary) source[paths[0]].Children("icon").Children(paths[1]);
+                    var delimiterPos = node.Texture.Source.IndexOf(Delimiter, StringComparison.Ordinal);
+                    if (delimiterPos < 0)
+                    {
+                        throw new FormatException($"cannot parse icon path: {node.Texture.Source}");
+                    }
+                    var texPath = node.Texture.Source.Substring(0, delimiterPos);
+                    var iconPath = node.Texture.Source.Substring(delimiterPos + 1);
+                    //var paths = node.Texture.Source.Split(new[] {Delimiter}, StringSplitOptions.RemoveEmptyEntries);
+                    var icon = (PsbDictionary) source[texPath].Children("icon").Children(iconPath);
                     icon.Remove("compress");
                     icon.Remove(Consts.ResourceKey);
                     icon["attr"] = PsbNumber.Zero;
                     icon["left"] = new PsbNumber(node.Bounds.Left);
                     icon["top"] = new PsbNumber(node.Bounds.Top);
+                    if (icon.ContainsKey("resolution") && icon["resolution"].GetFloat() != 1.0f && !EnableResolution)
+                    {
+                        //Converting from krkr to win. Krkr has the full size image. We just keep resolution = 1.
+                        //Maybe implement scale down later. 
+                        var resolution = icon["resolution"].GetFloat();
+                        icon["resolution_hint"] = new PsbNumber(resolution); //leave a hint here
+                        icon.Remove("resolution");
+                    }
                     icon.Parent = icons;
-                    var iconName = UseMeaningfulName ? node.Texture.Source : id.ToString();
+                    var iconName = id.ToString();
+                    if (UseMeaningfulName)
+                    {
+                        var meaningfulName = node.Texture.Source;
+                        var match = texRegex.Match(meaningfulName);
+                        if (match.Success)
+                        {
+                            meaningfulName = meaningfulName.Substring(match.Length);
+                        }
+                        if (!string.IsNullOrWhiteSpace(meaningfulName) && !icons.ContainsKey(meaningfulName))
+                        {
+                            iconName = meaningfulName;
+                        }
+                    }
+                    //var iconName = UseMeaningfulName ? node.Texture.Source : id.ToString();
                     icons.Add(iconName, icon);
                     iconInfos.Add(node.Texture.Source, (texName, iconName));
                     id++;

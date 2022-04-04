@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using FreeMote.Psb;
 using FreeMote.Psb.Textures;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace FreeMote.PsBuild.Converters
 {
@@ -81,6 +82,44 @@ namespace FreeMote.PsBuild.Converters
                     {
                         iconList.Add(iconPair.Key);
                         var icon = (PsbDictionary) iconPair.Value;
+                        //handle resolution from win
+                        if (icon.ContainsKey("resolution") && icon["resolution"].GetFloat() != 1.0f)
+                        {
+                            //Converting from win to krkr. Win has scaled image, but krkr wants a full size one. 
+                            //Scale it up will cause bad quality image most likely. But there seems no other choice.
+                            var resolution = icon["resolution"].GetFloat();
+                            var bmp = bmps[iconPair.Key];
+                            var resizedBmp = bmp.ResizeImage(icon["width"].GetInt(), icon["height"].GetInt());
+                            bmps[iconPair.Key] = resizedBmp;
+                            bmp.Dispose();
+                            
+                            //Attempt to remove resolution, won't work
+                            //icon.Remove("resolution"); //you won't be able to convert it back
+                            //if (icon.ContainsKey("width"))
+                            //{
+                            //    icon["width"] = new PsbNumber(Math.Ceiling(icon["width"].GetFloat() * resolution));
+                            //}
+                            //if (icon.ContainsKey("height"))
+                            //{
+                            //    icon["height"] = new PsbNumber(Math.Ceiling(icon["height"].GetFloat() * resolution));
+                            //}
+
+                            //if (icon.ContainsKey("originX"))
+                            //{
+                            //    icon["originX"] = new PsbNumber(Math.Floor(icon["originX"].GetFloat() * resolution));
+                            //}
+
+                            //if (icon.ContainsKey("originY"))
+                            //{
+                            //    icon["originY"] = new PsbNumber(Math.Floor(icon["originY"].GetFloat() * resolution));
+                            //}
+                        }
+                        else if (icon.ContainsKey("resolution_hint")) //recover resolution
+                        {
+                            icon["resolution"] = icon["resolution_hint"];
+                            icon.Remove("resolution_hint");
+                        }
+
                         var data = UseRL
                             ? RL.CompressImage(bmps[iconPair.Key], TargetPixelFormat)
                             : RL.GetPixelBytesFromImage(bmps[iconPair.Key], TargetPixelFormat);

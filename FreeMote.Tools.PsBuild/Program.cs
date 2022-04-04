@@ -108,6 +108,8 @@ Example:
                 var optPortSpec = portCmd.Option<PsbSpec>("-p|--spec <SPEC>",
                     "Target PSB platform (krkr/common/win/ems)",
                     CommandOptionType.SingleValue).IsRequired();
+                var optEnableResolution = portCmd.Option<bool>("-r|--resolution",
+                    "Enable resolution support (may scaling images, quality is not guaranteed)", CommandOptionType.NoValue);
                 //args
                 var argPsbPath = portCmd.Argument("PSB", "PSB Path", multipleValues: true).IsRequired();
 
@@ -115,11 +117,12 @@ Example:
                 {
                     var portSpec = optPortSpec.ParsedValue;
                     var psbPaths = argPsbPath.Values;
+                    var enableResolution = optEnableResolution.HasValue();
                     foreach (var s in psbPaths)
                     {
                         if (File.Exists(s))
                         {
-                            Port(s, portSpec);
+                            Port(s, portSpec, enableResolution);
                         }
                     }
                 });
@@ -255,7 +258,7 @@ Example:
             Console.WriteLine("Done.");
         }
 
-        private static void Port(string s, PsbSpec portSpec)
+        private static void Port(string s, PsbSpec portSpec, bool resolution = false)
         {
             var name = Path.GetFileNameWithoutExtension(s);
             var ext = Path.GetExtension(s);
@@ -267,10 +270,12 @@ Example:
             }
             else
             {
+                PsbSpecConverter.EnableResolution = resolution;
                 psb.SwitchSpec(portSpec);
                 psb.Merge();
-                File.WriteAllBytes(Path.ChangeExtension(s, $".{portSpec}{psb.Type.DefaultExtension()}"), psb.Build());
-                Console.WriteLine($"Convert {name} done.");
+                var savePath = Path.ChangeExtension(s, $".{portSpec}{psb.Type.DefaultExtension()}");
+                File.WriteAllBytes(savePath, psb.Build());
+                Console.WriteLine($"Convert output: {savePath}");
             }
         }
 
