@@ -597,7 +597,12 @@ Example:
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
 
                         //using var fs = File.OpenRead(kv.Value.Path);
-                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(), "MDF"))); //disposed later
+                        //https://docs.microsoft.com/en-us/dotnet/api/system.io.memorymappedfiles.memorymappedfile.createviewstream?view=net-6.0
+                        //NOTE: To create a complete view of the memory-mapped file, specify 0 (zero) for the size parameter.
+                        //If you do this, the size of the view might be larger than the size of the source file on disk.
+                        //This is because views are provided in units of system pages, and the size of the view is rounded up to the next system page size.
+                        var fileSize = new FileInfo(kv.Value.Path).Length;
+                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), "MDF"))); //disposed later
                     }
                     else
                     {
@@ -681,7 +686,8 @@ Example:
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         //using var fs = File.OpenRead(kv.Value.Path);
-                        var fs = mmFs.CreateViewStream();
+                        var fileSize = new FileInfo(kv.Value.Path).Length;
+                        var fs = mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read);
                         if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
                         {
                             fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
@@ -722,7 +728,8 @@ Example:
                         }
 
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
-                        using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(), "MDF");
+                        var fileSize = new FileInfo(kv.Value.Path).Length;
+                        using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), "MDF");
                         fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
                             {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
                         outputMdf.WriteTo(bodyFs);
