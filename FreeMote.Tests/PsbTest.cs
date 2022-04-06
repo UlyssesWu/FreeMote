@@ -335,6 +335,13 @@ namespace FreeMote.Tests
             {
                 Console.WriteLine(result);
             }
+
+            Console.WriteLine();
+            results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("up05_10_03.txt", ".scn.m");
+            foreach (var result in results)
+            {
+                Console.WriteLine(result);
+            }
         }
     }
 }

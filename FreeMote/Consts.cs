@@ -115,7 +115,8 @@ namespace FreeMote
         /// </summary>
         public static bool PsbDataStructureAlign { get; set; } = true;
 
-        public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
+        //This is a bad design, abandon
+        //public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
 
         /// <summary>
         /// Take more memory when loading, but maybe faster

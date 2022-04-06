@@ -146,11 +146,16 @@ namespace FreeMote.Psb
             Header = new PsbHeader { Version = version };
         }
 
-        public PSB(string path)
+        public PSB(string path, Encoding encoding = null)
         {
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException("File not exists.", path);
+            }
+
+            if (encoding != null)
+            {
+                Encoding = encoding;
             }
 
             FilePath = path;
@@ -714,7 +719,7 @@ namespace FreeMote.Psb
             }
 
             br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)idx], SeekOrigin.Begin);
-            var strValue = br.ReadStringZeroTrim();
+            var strValue = br.ReadStringZeroTrim(Encoding);
 
             if (refStr != null && strValue == refStr.Value) //Strict value equal check
             {
@@ -1484,7 +1489,7 @@ namespace FreeMote.Psb
             {
                 uint strsEndPos = StringOffsets.Value.Max();
                 br.BaseStream.Seek(strsEndPos, SeekOrigin.Current);
-                br.ReadStringZeroTrim();
+                br.ReadStringZeroTrim(Encoding);
                 strsEndPos = (uint)br.BaseStream.Position;
                 var strsLength = strsEndPos - Header.OffsetStringsData;
                 br.BaseStream.Seek(-strsLength, SeekOrigin.Current);
@@ -1501,7 +1506,7 @@ namespace FreeMote.Psb
                         }
 
                         strBr.BaseStream.Seek(StringOffsets[(int)str.Index], SeekOrigin.Begin);
-                        var strValue = strBr.ReadStringZeroTrim();
+                        var strValue = strBr.ReadStringZeroTrim(Encoding);
                         str.Value = strValue;
                     }
                 }
@@ -1517,7 +1522,7 @@ namespace FreeMote.Psb
                     }
 
                     br.BaseStream.Seek(Header.OffsetStringsData + StringOffsets[(int)str.Index], SeekOrigin.Begin);
-                    var strValue = br.ReadStringZeroTrim();
+                    var strValue = br.ReadStringZeroTrim(Encoding);
                     str.Value = strValue;
                 }
             }

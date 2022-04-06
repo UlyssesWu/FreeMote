@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using FreeMote.Psb;
 using FreeMote.Plugins;
 using FreeMote.Psb.Textures;
@@ -17,6 +18,8 @@ namespace FreeMote.PsBuild
     /// </summary>
     public static class PsbDecompiler
     {
+        public static Encoding Encoding { get; set; } = Encoding.UTF8;
+
         /// <summary>
         /// Decompile Pure PSB as Json
         /// </summary>
@@ -24,7 +27,7 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         public static string Decompile(string path)
         {
-            PSB psb = new PSB(path);
+            PSB psb = new PSB(path, Encoding);
             return Decompile(psb);
         }
 
@@ -52,7 +55,7 @@ namespace FreeMote.PsBuild
 
             try
             {
-                psb = new PSB(stream, false);
+                psb = new PSB(stream, false, Encoding);
             }
             catch (PsbBadFormatException e) when (e.Reason == PsbBadFormatReason.Header ||
                                                   e.Reason == PsbBadFormatReason.Array ||
@@ -77,7 +80,7 @@ namespace FreeMote.PsBuild
                         using var mms = new MemoryStream((int)stream.Length);
                         PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
                         stream.Dispose();
-                        psb = new PSB(mms);
+                        psb = new PSB(mms, true, Encoding);
                         ctx.Context[Consts.Context_CryptKey] = key;
                     }
                     catch
@@ -275,7 +278,7 @@ namespace FreeMote.PsBuild
 
             var context = FreeMount.CreateContext();
             context.ImageFormat = format;
-            var psb = new PSB(inputPath);
+            var psb = new PSB(inputPath, Encoding);
             if (psb.TypeHandler is BaseImageType imageType)
             {
                 imageType.UnlinkToFile(psb, context, name, dirPath, outputUnlinkedPsb, order);
@@ -322,7 +325,7 @@ namespace FreeMote.PsBuild
             var texExt = format == PsbImageFormat.bmp ? ".bmp" : ".png";
             var texFormat = format.ToImageFormat();
 
-            var psb = new PSB(inputPath);
+            var psb = new PSB(inputPath, Encoding);
             if (psb.Type == PsbType.Tachie)
             {
                 var bitmaps = TextureCombiner.CombineTachie(psb, out var hasPalette);

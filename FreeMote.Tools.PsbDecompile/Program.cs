@@ -57,6 +57,8 @@ namespace FreeMote.Tools.PsbDecompile
                 "Disable represent extra resource as flatten arrays", CommandOptionType.NoValue, inherited: true);
             var optDisableCombinedImage = app.Option("-dci|--disable-combined-image",
                 "Output chunk images (pieces) for image (Tachie) PSB (legacy behaviour)", CommandOptionType.NoValue);
+            var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
+                CommandOptionType.SingleValue, inherited: true);
 
             //args
             var argPath =
@@ -151,6 +153,19 @@ Example:
 
                 linkCmd.OnExecute(() =>
                 {
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            Encoding encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbDecompiler.Encoding = encoding;
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+
                     //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPaths = argPsbPath.Values;
@@ -208,6 +223,19 @@ Example:
 
                 archiveCmd.OnExecute(() =>
                 {
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            Encoding encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbDecompiler.Encoding = encoding;
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+
                     if (optOom.HasValue())
                     {
                         InMemoryLoading = false;
@@ -270,6 +298,19 @@ Example:
 
             app.OnExecute(() =>
             {
+                if (optEncoding.HasValue())
+                {
+                    try
+                    {
+                        Encoding encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                        PsbDecompiler.Encoding = encoding;
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                    }
+                }
+
                 if (optOom.HasValue())
                 {
                     InMemoryLoading = false;

@@ -404,7 +404,7 @@ namespace FreeMote
             bw.Write(context.Encode(BitConverter.GetBytes(value)));
         }
 
-        public static string ReadStringZeroTrim(this BinaryReader br)
+        public static string ReadStringZeroTrim(this BinaryReader br, Encoding encoding = null)
         {
             var pos = br.BaseStream.Position;
             var length = 0;
@@ -414,7 +414,8 @@ namespace FreeMote
             }
 
             br.BaseStream.Position = pos;
-            var str = Consts.PsbEncoding.GetString(br.ReadBytes(length));
+            Encoding enc = encoding ?? Encoding.UTF8;
+            var str = enc.GetString(br.ReadBytes(length));
             br.ReadByte(); //skip \0 - fail if end without \0
             return str;
         }
@@ -429,10 +430,11 @@ namespace FreeMote
             return BinaryPrimitives.ReadInt32BigEndian(br.ReadBytes(4));
         }
 
-        public static void WriteStringZeroTrim(this BinaryWriter bw, string str)
+        public static void WriteStringZeroTrim(this BinaryWriter bw, string str, Encoding encoding = null)
         {
             //bw.Write(str.ToCharArray());
-            bw.Write(Consts.PsbEncoding.GetBytes(str));
+            var enc = encoding ?? Encoding.UTF8;
+            bw.Write(enc.GetBytes(str));
             bw.Write((byte)0);
         }
 
