@@ -28,6 +28,7 @@ namespace FreeMote.Tools.PsBuild
 
     class Program
     {
+        private static Encoding _encoding = Encoding.UTF8;
         //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
 
         static void Main(string[] args)
@@ -59,6 +60,8 @@ namespace FreeMote.Tools.PsBuild
             var optNoShell = app.Option("-ns|--no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
             var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)",
                 CommandOptionType.NoValue, true);
+            var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
+                CommandOptionType.SingleValue, inherited: true);
             //var optOutputPath =
             //  app.Option<string>("-o|--output", "(TODO:)Set output directory or file name.", CommandOptionType.SingleValue);
             //TODO: If set dir, ok; if set filename, only works for the first
@@ -263,7 +266,7 @@ Example:
             var name = Path.GetFileNameWithoutExtension(s);
             var ext = Path.GetExtension(s);
             Console.WriteLine($"Converting {name} to {portSpec} platform...");
-            PSB psb = new PSB(s);
+            PSB psb = new PSB(s, _encoding);
             if (psb.Platform == portSpec)
             {
                 Console.WriteLine("Already at the same platform, Skip.");
@@ -304,7 +307,7 @@ Example:
                     }
                 }
 
-                PSB psb = new PSB(psbPath);
+                PSB psb = new PSB(psbPath, _encoding);
                 psb.Link(texs, order: order, isExternal: true);
                 psb.Merge();
                 File.WriteAllBytes(Path.ChangeExtension(psbPath, "linked" + ext), psb.Build());
@@ -325,7 +328,7 @@ Example:
                 //此処にいて何処にもいない　キミの面影はいつも朧 : https://soundcloud.com/yuhyuhyuhxibbd2/parallel-utau
                 return;
             }
-
+            
             var name = Path.GetFileNameWithoutExtension(s);
             var ext = Path.GetExtension(s);
 

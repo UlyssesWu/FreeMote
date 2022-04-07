@@ -91,5 +91,5 @@ Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and a
 * @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/), @skilittle as sponsors!
 * [vgmstream](https://github.com/vgmstream/vgmstream) and @SilicaAndPina for VAG related code.
 * @mafaca for [AstcDecoder](https://github.com/mafaca/UtinyRipper/blob/master/uTinyRipperGUI/ThirdParty/Texture%20converters/AstcDecoder.cs) code. LICENSE: MIT
-* @GMMan (Yukai Li) for [information](https://gitlab.com/modmyclassic/sega-mega-drive-mini/marchive-batch-tool) of msz, PSBv1, trie form etc.
+* @GMMan (Yukai Li) for [information](https://gitlab.com/modmyclassic/sega-mega-drive-mini/marchive-batch-tool) of mzs, PSBv1, trie form etc.
 * All nuget references used in this project.

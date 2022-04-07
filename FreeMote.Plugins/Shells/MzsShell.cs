@@ -76,6 +76,14 @@ namespace FreeMote.Plugins.Shells
             if (context != null && context.ContainsKey(Context_PsbZStdCompressLevel))
             {
                 compressLevel = (int) context[Context_PsbZStdCompressLevel];
+                if (compressLevel > CompressionOptions.MaxCompressionLevel)
+                {
+                    compressLevel = CompressionOptions.MaxCompressionLevel;
+                }
+                else if (compressLevel < CompressionOptions.MinCompressionLevel)
+                {
+                    compressLevel = CompressionOptions.MinCompressionLevel;
+                }
             }
 
             byte[] input;
