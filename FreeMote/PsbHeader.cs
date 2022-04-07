@@ -24,13 +24,15 @@ namespace FreeMote
         /// <summary>
         /// If 1, the header seems encrypted, which add more difficulty to us
         /// <para>But doesn't really matters since usually it's always encrypted in v3+</para>
+        /// <para>Note: GMMan's PSB doc said 1 for header encrypt and 2 for body encrypt. But my EMT PSBv2 encrypted samples are still using 0.
+        /// So I still prefer <see cref="PsbFile.TestBodyEncrypted()"/></para>
         /// </summary>
         //[FieldOffset(6)]
         public ushort HeaderEncrypt = 0;
 
         /// <summary>
         /// Header Length
-        /// <para>Usually same as <see cref="OffsetNames"/></para>
+        /// <para>Usually same as <see cref="OffsetNames"/> in v2+</para>
         /// </summary>
         //[FieldOffset(8)]
         public uint HeaderLength;

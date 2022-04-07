@@ -52,7 +52,7 @@
     <Compile Include="AstcFile.cs" />
     <Compile Include="BitmapExtension.cs" />
     <Compile Include="BitmapHelper.cs" />
-    <Compile Include="BTree.cs" />
+    <Compile Include="CrudeTrie.cs" />
     <Compile Include="DxtCodec.cs" />
     <Compile Include="DxtUtil.cs" />
     <Compile Include="MdfFile.cs" />

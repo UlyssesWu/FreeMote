@@ -1030,15 +1030,15 @@ namespace FreeMote.Psb
             #region Compile Names
 
             //Compile Names
-            BTree.Build(Names, out var bNames, out var bTree, out var bOffsets);
+            CrudeTrie.Build(Names, out var tNames, out var trie, out var tOffsets);
             //Mark Offset Names
             Header.OffsetNames = (uint)bw.BaseStream.Position;
-
-            var offsetArray = new PsbArray(bOffsets);
+            
+            var offsetArray = new PsbArray(tOffsets);
             offsetArray.WriteTo(bw);
-            var treeArray = new PsbArray(bTree);
+            var treeArray = new PsbArray(trie);
             treeArray.WriteTo(bw);
-            var nameArray = new PsbArray(bNames);
+            var nameArray = new PsbArray(tNames);
             nameArray.WriteTo(bw);
 
             #endregion

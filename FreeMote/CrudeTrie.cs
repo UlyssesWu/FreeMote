@@ -7,22 +7,21 @@ using System.Text;
 namespace FreeMote
 {
     /// <summary>
-    /// B Tree for string
+    /// Trie (prefix tree, 字典树/前缀树) for string, not optimized
     /// </summary>
-    /// Who am I? Why I am here? What am I doing??? -Ulysses, 2017.7.7
     /// Rewrited from psbtools\pcc\psb_cc_btree by number201724(number201724@me.com).
-    public class BTree
+    public class CrudeTrie
     {
         /// <summary>
-        /// Node for B Tree
+        /// Node
         /// </summary>
         [DebuggerDisplay("{" + nameof(Char) + "}")]
-        internal class BNode
+        internal class TrieNode
         {
             public int Id = -1;
             public char Char = (char)0;
-            public BNode Parent;
-            public List<BNode> Childs = new List<BNode>();
+            public TrieNode Parent;
+            public List<TrieNode> Childs = new List<TrieNode>();
 
             public int BeginPosition = 0;
             public int EndPosition = 0;
@@ -55,11 +54,11 @@ namespace FreeMote
         private List<uint> _names = new List<uint>();
         private List<uint> _tree = new List<uint>();
         private List<uint> _offsets = new List<uint>();
-        private BNode _root;
+        private TrieNode _root;
 
-        internal BNode Root
+        internal TrieNode Root
         {
-            get => _root ??= new BNode();
+            get => _root ??= new TrieNode();
             set => _root = value;
         }
 
@@ -67,10 +66,10 @@ namespace FreeMote
 
         public Dictionary<string, uint> Results { get; } = new Dictionary<string, uint>();
 
-        public BTree()
+        public CrudeTrie()
         { }
 
-        public BTree(List<string> input)
+        public CrudeTrie(List<string> input)
         {
             Values = input;
             Build();
@@ -85,7 +84,7 @@ namespace FreeMote
 
         internal void InsertTree(string value)
         {
-            BNode prev = Root;
+            TrieNode prev = Root;
             foreach (var c in Encoding.UTF8.GetBytes(value)) //WTF! We have to take unicode chars apart
             {
                 prev = GetNode(prev, (char)c);
@@ -93,24 +92,24 @@ namespace FreeMote
             GetNode(prev, (char)0, true);
         }
 
-        public static BTree Build(List<string> namesList, out List<uint> names, out List<uint> tree, out List<uint> offsets)
+        public static CrudeTrie Build(List<string> namesList, out List<uint> names, out List<uint> tree, out List<uint> offsets)
         {
-            BTree bTree = new BTree(namesList);
-            names = bTree._names;
-            tree = bTree._tree;
-            offsets = bTree._offsets;
-            return bTree;
+            var crudeTrie = new CrudeTrie(namesList);
+            names = crudeTrie._names;
+            tree = crudeTrie._tree;
+            offsets = crudeTrie._offsets;
+            return crudeTrie;
         }
 
-        private BNode GetNode(BNode node, char c, bool isEnd = false)
+        private TrieNode GetNode(TrieNode node, char c, bool isEnd = false)
         {
-            BNode result = node.Childs.FirstOrDefault(child => child.Char == c);
+            TrieNode result = node.Childs.FirstOrDefault(child => child.Char == c);
             if (result != null)
             {
                 return result;
             }
 
-            result = new BNode
+            result = new TrieNode
             {
                 Char = c,
                 Parent = node
@@ -121,7 +120,7 @@ namespace FreeMote
 
         public int FindIndex(string name) => Values.FindIndex(s => s == name);
 
-        internal string this[BNode node]
+        internal string this[TrieNode node]
         {
             get
             {
@@ -165,7 +164,7 @@ namespace FreeMote
         }
 
 
-        private void MakeBranch(BNode node)
+        private void MakeBranch(TrieNode node)
         {
             foreach (var child in node.Childs)
             {
@@ -191,7 +190,7 @@ namespace FreeMote
             }
         }
 
-        private void MakeOffset(BNode node)
+        private void MakeOffset(TrieNode node)
         {
             var max = Math.Max(node.MaxChar, node.MinChar);
             var min = Math.Min(node.MaxChar, node.MinChar);
@@ -219,7 +218,7 @@ namespace FreeMote
             node.FirstChar = min;
         }
 
-        private void MakeTree(BNode node)
+        private void MakeTree(TrieNode node)
         {
             int nodeId = 0;
             uint offset = 0;
@@ -256,7 +255,7 @@ namespace FreeMote
 
         private void Build()
         {
-            Root = new BNode {Id = 0};
+            Root = new TrieNode {Id = 0};
             foreach (var value in Values)
             {
                 InsertTree(value);
@@ -267,7 +266,7 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Load a B Tree
+        /// Load a Trie
         /// </summary>
         public static List<string> Load(List<uint> names, List<uint> trees, List<uint> offsets)
         {

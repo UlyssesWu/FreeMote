@@ -148,8 +148,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb");
             PSB psb = new PSB(path);
-            var tree = BTree.Build(psb.Names, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
-            var list = BTree.Load(oNames, oTrees, oOffsets);
+            var tree = CrudeTrie.Build(psb.Names, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
+            var list = CrudeTrie.Load(oNames, oTrees, oOffsets);
             Assert.IsTrue(psb.Names.SequenceEqual(list));
         }
 

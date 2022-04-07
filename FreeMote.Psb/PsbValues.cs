@@ -38,6 +38,12 @@ namespace FreeMote.Psb
         ArrayN7 = 0x13,
         ArrayN8 = 0x14,
 
+        //index of key name, only used in PSBv1 (according to GMMan's doc)
+        KeyNameN1 = 0x11,
+        KeyNameN2 = 0x12,
+        KeyNameN3 = 0x13,
+        KeyNameN4 = 0x14,
+
         //index of strings table
         StringN1 = 0x15,
         StringN2 = 0x16,
