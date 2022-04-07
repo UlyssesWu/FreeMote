@@ -82,6 +82,7 @@
     <Compile Include="Shells\Lz4Shell.cs" />
     <Compile Include="Shells\MdfShell.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Shells\MzsShell.cs" />
     <Compile Include="Shells\PsdShell.cs" />
     <Compile Include="Shells\PspShell.cs" />
     <Compile Include="Shells\PszShell.cs" />
@@ -108,6 +109,9 @@
     </PackageReference>
     <PackageReference Include="VGAudio">
       <Version>2.2.1-CI00002</Version>
+    </PackageReference>
+    <PackageReference Include="ZstdNet">
+      <Version>1.4.5</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

@@ -61,6 +61,11 @@ namespace FreeMote
         public const string Context_PsbZlibFastCompress = "PsbZlibFastCompress";
 
         /// <summary>
+        /// (int) ZStandard Compression Level
+        /// </summary>
+        public const string Context_PsbZStdCompressLevel = "PsbZStdCompressLevel";
+
+        /// <summary>
         /// (List) Archive sources
         /// </summary>
         public const string Context_ArchiveSource = "ArchiveSource";

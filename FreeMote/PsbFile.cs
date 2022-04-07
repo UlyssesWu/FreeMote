@@ -646,11 +646,15 @@ namespace FreeMote
             }
             if (header[0] == 'm' && header[1] == 'd' && header[2] == 'f' && header[3] == 0)
             {
-                return "MDF";
+                return "MDF"; //Deflate
             }
             if (header[0] == 'm' && header[1] == 'f' && header[2] == 'l' && header[3] == 0)
             {
-                return "MFL";
+                return "MFL"; //FastLZ
+            }
+            if (header[0] == 'm' && header[1] == 'z' && header[2] == 's' && header[3] == 0)
+            {
+                return "MZS"; //ZStandard
             }
             return string.Empty;
         }
