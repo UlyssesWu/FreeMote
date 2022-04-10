@@ -54,8 +54,8 @@ namespace FreeMote.Tests
         public void TestBTree()
         {
             var list = new List<string> {"aabc", "deff", "acebdf"};
-            CrudeTrie crudeTrie = new CrudeTrie(list);
-            CrudeTrie.Build(list, out var names, out var tree, out var offsets);
+            PrefixTree prefixTree = new PrefixTree(list);
+            PrefixTree.Build(list, out var names, out var tree, out var offsets);
 
         }
 

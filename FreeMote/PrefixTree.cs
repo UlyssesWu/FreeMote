@@ -7,10 +7,11 @@ using System.Text;
 namespace FreeMote
 {
     /// <summary>
-    /// Trie (prefix tree, 字典树/前缀树) for string, not optimized
+    /// Trie (prefix tree, 字典树/前缀树) for string
     /// </summary>
     /// Rewrited from psbtools\pcc\psb_cc_btree by number201724(number201724@me.com).
-    public class CrudeTrie
+    /// SEE: https://en.wikipedia.org/wiki/Trie  https://zhuanlan.zhihu.com/p/143975546
+    public class PrefixTree
     {
         /// <summary>
         /// Node
@@ -21,7 +22,7 @@ namespace FreeMote
             public int Id = -1;
             public char Char = (char)0;
             public TrieNode Parent;
-            public List<TrieNode> Childs = new List<TrieNode>();
+            public readonly Dictionary<char, TrieNode> Children = new();
 
             public int BeginPosition = 0;
             public int EndPosition = 0;
@@ -31,29 +32,29 @@ namespace FreeMote
             {
                 get
                 {
-                    if (Childs.Count <= 0)
+                    if (Children.Count <= 0)
                     {
                         return (char)0;
                     }
-                    return Childs.Min(node => node.Char);
+                    return Children.Keys.Min();
                 }
             }
             public char MaxChar
             {
                 get
                 {
-                    if (Childs.Count <= 0)
+                    if (Children.Count <= 0)
                     {
                         return (char)0;
                     }
-                    return Childs.Max(node => node.Char);
+                    return Children.Keys.Max();
                 }
             }
         }
 
-        private List<uint> _names = new List<uint>();
-        private List<uint> _tree = new List<uint>();
-        private List<uint> _offsets = new List<uint>();
+        private readonly List<uint> _names = new List<uint>();
+        private readonly List<uint> _tree = new List<uint>();
+        private readonly List<uint> _offsets = new List<uint>();
         private TrieNode _root;
 
         internal TrieNode Root
@@ -64,12 +65,12 @@ namespace FreeMote
 
         internal List<string> Values = new List<string>();
 
-        public Dictionary<string, uint> Results { get; } = new Dictionary<string, uint>();
+        public Dictionary<string, uint> Results { get; } = new();
 
-        public CrudeTrie()
+        public PrefixTree()
         { }
 
-        public CrudeTrie(List<string> input)
+        public PrefixTree(List<string> input)
         {
             Values = input;
             Build();
@@ -82,6 +83,10 @@ namespace FreeMote
             return Values.FindLastIndex(s => s == value);
         }
 
+        /// <summary>
+        /// Insert a string to Trie
+        /// </summary>
+        /// <param name="value"></param>
         internal void InsertTree(string value)
         {
             TrieNode prev = Root;
@@ -89,32 +94,32 @@ namespace FreeMote
             {
                 prev = GetNode(prev, (char)c);
             }
-            GetNode(prev, (char)0, true);
+            GetNode(prev, (char)0, true); //终结节点
         }
 
-        public static CrudeTrie Build(List<string> namesList, out List<uint> names, out List<uint> tree, out List<uint> offsets)
+        public static PrefixTree Build(List<string> namesList, out List<uint> names, out List<uint> tree, out List<uint> offsets)
         {
-            var crudeTrie = new CrudeTrie(namesList);
-            names = crudeTrie._names;
-            tree = crudeTrie._tree;
-            offsets = crudeTrie._offsets;
-            return crudeTrie;
+            //namesList.Sort((s1, s2) => s1.Length - s2.Length);
+            var trie = new PrefixTree(namesList);
+            names = trie._names;
+            tree = trie._tree;
+            offsets = trie._offsets;
+            return trie;
         }
 
         private TrieNode GetNode(TrieNode node, char c, bool isEnd = false)
         {
-            TrieNode result = node.Childs.FirstOrDefault(child => child.Char == c);
-            if (result != null)
+            if (node.Children.ContainsKey(c))
             {
-                return result;
+                return node.Children[c];
             }
 
-            result = new TrieNode
+            var result = new TrieNode
             {
                 Char = c,
                 Parent = node
             };
-            node.Childs.Add(result);
+            node.Children.Add(c, result);
             return result;
         }
 
@@ -166,26 +171,26 @@ namespace FreeMote
 
         private void MakeBranch(TrieNode node)
         {
-            foreach (var child in node.Childs)
+            foreach (var child in node.Children)
             {
-                MakeTree(child);
+                MakeTree(child.Value);
             }
 
-            foreach (var child in node.Childs)
+            foreach (var child in node.Children)
             {
-                MakeOffset(child);
+                MakeOffset(child.Value);
             }
 
-            foreach (var child in node.Childs)
+            foreach (var child in node.Children)
             {
-                MakeBranch(child);
+                MakeBranch(child.Value);
             }
 
-            foreach (var child in node.Childs)
+            foreach (var child in node.Children)
             {
-                if (child.Char == 0)
+                if (child.Key == 0)
                 {
-                    Results[this[child]] = (uint)child.Id;
+                    Results[this[child.Value]] = (uint)child.Value.Id;
                 }
             }
         }

@@ -1030,7 +1030,7 @@ namespace FreeMote.Psb
             #region Compile Names
 
             //Compile Names
-            CrudeTrie.Build(Names, out var tNames, out var trie, out var tOffsets);
+            PrefixTree.Build(Names, out var tNames, out var trie, out var tOffsets);
             //Mark Offset Names
             Header.OffsetNames = (uint)bw.BaseStream.Position;
             
