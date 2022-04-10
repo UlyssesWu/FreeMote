@@ -31,7 +31,7 @@ namespace FreeMote
         public ushort HeaderEncrypt = 0;
 
         /// <summary>
-        /// Header Length
+        /// Header Length (or OffsetKeyIndexes for PSBv1)
         /// <para>Usually same as <see cref="OffsetNames"/> in v2+</para>
         /// </summary>
         //[FieldOffset(8)]
@@ -122,8 +122,7 @@ namespace FreeMote
             //    return header;
             //}
             if (header.HeaderLength < br.BaseStream.Length
-                && header.OffsetNames < br.BaseStream.Length
-                && (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0))
+                && header.OffsetNames < br.BaseStream.Length) //&& (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0)
             {
                 header.OffsetStrings = br.ReadUInt32();
                 header.OffsetStringsData = br.ReadUInt32();
@@ -288,7 +287,7 @@ namespace FreeMote
                 bw.Write(Signature);
                 bw.Write(Version);
                 bw.Write(HeaderEncrypt);
-                bw.Write(GetHeaderLength());
+                bw.Write(Version == 1? HeaderLength : GetHeaderLength());
                 bw.Write(OffsetNames);
                 bw.Write(OffsetStrings);
                 bw.Write(OffsetStringsData);
@@ -314,6 +313,6 @@ namespace FreeMote
         /// <summary>
         /// Similar as <see cref="PsbFile.TestHeaderEncrypted()"/> but not based on file.
         /// </summary>
-        public bool IsHeaderEncrypted => HeaderLength > (MAX_HEADER_LENGTH + 16) || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
+        public bool IsHeaderEncrypted => HeaderLength > (MAX_HEADER_LENGTH + 16) || OffsetNames == 0 || (Version > 1 && HeaderLength != OffsetNames && HeaderLength != 0);
     }
 }
