@@ -13,7 +13,6 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json.Linq;
 using static FreeMote.Consts;
 using static FreeMote.Psb.PsbExtension;
 
@@ -90,6 +89,18 @@ Example:
 
                 linkCmd.OnExecute(() =>
                 {
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPath = argPsbPath.Value;
                     var texPaths = argTexPaths.Values;
@@ -118,6 +129,18 @@ Example:
 
                 portCmd.OnExecute(() =>
                 {
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+
                     var portSpec = optPortSpec.ParsedValue;
                     var psbPaths = argPsbPath.Values;
                     var enableResolution = optEnableResolution.HasValue();
@@ -189,6 +212,18 @@ Example:
                         keepRaw = true;
                     }
 
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+                    
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
 
@@ -233,6 +268,18 @@ Example:
 
             app.OnExecute(() =>
             {
+                if (optEncoding.HasValue())
+                {
+                    try
+                    {
+                        _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                    }
+                }
+
                 if (optDouble.HasValue())
                 {
                     JsonUseDoubleOnly = true;
@@ -335,6 +382,7 @@ Example:
             Console.WriteLine($"Compiling {name} ...");
             try
             {
+                PsbCompiler.Encoding = _encoding;
                 //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
                 var filename = name + ".psb"; //rename later //TODO: support set output path
                 PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename, canPackShell);
