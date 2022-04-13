@@ -98,7 +98,7 @@ Example:
                         }
                         else if (Directory.Exists(psbPath))
                         {
-                            var files = FreeMoteExtension.GetFiles(psbPath, new[] { "*.psb", "*.pimg", "*.m", "*.bytes" });
+                            var files = FreeMoteExtension.GetFiles(psbPath, new[] {"*.psb", "*.pimg", "*.m", "*.bytes"});
 
                             if (enableParallel)
                             {
@@ -283,7 +283,7 @@ Example:
 
                     if (keyLen >= 0)
                     {
-                        context[Context_MdfKeyLength] = (uint)keyLen;
+                        context[Context_MdfKeyLength] = (uint) keyLen;
                     }
 
                     Stopwatch sw = Stopwatch.StartNew();
@@ -291,6 +291,7 @@ Example:
                     {
                         ExtractArchive(s, key, context, bodyPath, outputRaw, extractAll, enableParallel);
                     }
+
                     sw.Stop();
                     Console.WriteLine($"Process time: {sw.Elapsed:g}");
                 });
@@ -349,13 +350,14 @@ Example:
                 }
 
                 bool useRaw = optRaw.HasValue();
-                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?)null;
+                uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
 
                 PsbType type = PsbType.PSB;
                 if (optType.HasValue())
                 {
                     type = optType.ParsedValue;
                 }
+
                 foreach (var s in argPath.Values)
                 {
                     if (File.Exists(s))
@@ -365,7 +367,7 @@ Example:
                     else if (Directory.Exists(s))
                     {
                         foreach (var file in FreeMoteExtension.GetFiles(s,
-                            new[] { "*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m" }))
+                                     new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
                             Decompile(s, useRaw, PsbImageFormat.png, key, type, context);
                         }
@@ -410,10 +412,11 @@ Example:
                 stream.Dispose();
             }
 
-            if (ms is { Length: > 0 })
+            if (ms is {Length: > 0})
             {
                 ctx.Shell = shellType;
             }
+
             return ms;
         }
 
@@ -427,8 +430,8 @@ Example:
             try
 #endif
             {
-                var (outputPath, psb) = keepRaw ?
-                    PsbDecompiler.DecompileToFile(path, key: key, type: type)
+                var (outputPath, psb) = keepRaw
+                    ? PsbDecompiler.DecompileToFile(path, key: key, type: type)
                     : PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type, contextDic: context);
                 if (psb.Type == PsbType.ArchiveInfo)
                 {
@@ -437,6 +440,15 @@ Example:
                 }
             }
 #if !DEBUG
+            catch (PsbBadFormatException psbBadFormatException)
+            {
+                if (psbBadFormatException.Reason == PsbBadFormatReason.Body)
+                {
+                    Console.WriteLine("[ERROR] Your PSB is encrypted. Use `-k` option with a valid key to decrypt it.");
+                }
+
+                Console.WriteLine(psbBadFormatException);
+            }
             catch (Exception e)
             {
                 Console.WriteLine(e);
@@ -470,12 +482,15 @@ Example:
         /// <param name="outputRaw">no mdf unzip, no decompile</param>
         /// <param name="extractAll">mdf unzip + decompile</param>
         /// <param name="enableParallel"></param>
-        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, string bodyPath = null, bool outputRaw = true, bool extractAll = false, bool enableParallel = true)
+        static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, string bodyPath = null,
+            bool outputRaw = true, bool extractAll = false, bool enableParallel = true)
         {
             if (filePath.ToLowerInvariant().EndsWith(".bin"))
             {
-                Console.WriteLine("[WARN] It seems that you are trying to extract from a body.bin file. You should extract body.bin by extracting info.psb.m file with `info-psb` command instead.");
+                Console.WriteLine(
+                    "[WARN] It seems that you are trying to extract from a body.bin file. You should extract body.bin by extracting info.psb.m file with `info-psb` command instead.");
             }
+
             if (File.Exists(filePath))
             {
                 var fileName = Path.GetFileName(filePath);
@@ -532,7 +547,7 @@ Example:
                     if (!hasBody)
                     {
                         //Write resx.json
-                        resx.Context[Context_ArchiveSource] = new List<string> { name };
+                        resx.Context[Context_ArchiveSource] = new List<string> {name};
                         File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
                         return;
                     }
@@ -542,8 +557,9 @@ Example:
                     {
                         return;
                     }
+
                     var dic = psb.Objects[archiveInfoType.GetRootKey()] as PsbDictionary;
-                    var suffixList = (PsbList)psb.Objects["expire_suffix_list"];
+                    var suffixList = (PsbList) psb.Objects["expire_suffix_list"];
                     var suffix = "";
                     if (suffixList.Count > 0)
                     {
@@ -574,12 +590,13 @@ Example:
                         Parallel.ForEach(dic, pair =>
                         {
                             //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
-                            var range = (PsbList)pair.Value;
+                            var range = (PsbList) pair.Value;
                             var (start, len) = ArchiveInfoGetItemPositionFromRangeList(range, archiveInfoType);
 
                             if (start + len > fileLength)
                             {
-                                Console.WriteLine($"{pair.Key} (start:{start}, len:{len}) is beyond the body.bin's range. Check your body.bin file. Skipping...");
+                                Console.WriteLine(
+                                    $"{pair.Key} (start:{start}, len:{len}) is beyond the body.bin's range. Check your body.bin file. Skipping...");
                                 return;
                             }
 
@@ -631,6 +648,7 @@ Example:
                                         {
                                             archiveItemFileNames[pair.Key] = possibleFileName;
                                         }
+
                                         break;
                                     }
                                 }
@@ -680,7 +698,7 @@ Example:
                         {
                             Console.WriteLine(
                                 $"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
-                            var range = ((PsbList)pair.Value);
+                            var range = ((PsbList) pair.Value);
                             var (start, len) = ArchiveInfoGetItemPositionFromRangeList(range, archiveInfoType);
 
                             using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
@@ -732,6 +750,7 @@ Example:
                                             Console.WriteLine($"  detected key name: {pair.Key} -> {possibleFileName}");
                                             archiveItemFileNames[pair.Key] = possibleFileName;
                                         }
+
                                         break;
                                     }
                                 }
@@ -768,12 +787,11 @@ Example:
                     }
 
                     //Write resx.json
-                    resx.Context[Context_ArchiveSource] = new List<string> { name };
+                    resx.Context[Context_ArchiveSource] = new List<string> {name};
                     resx.Context[Context_MdfMtKey] = key;
                     resx.Context[Context_MdfKey] = archiveMdfKey;
                     resx.Context[Context_ArchiveItemFileNames] = specialItemFileNames;
                     File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
-
                 }
                 catch (Exception e)
                 {
