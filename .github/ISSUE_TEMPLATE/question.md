@@ -1,6 +1,6 @@
 ---
 name: Question
-about: An issue or question about FreeMote
+about: Provide samples (e.g. PSB file) or your issue will be ignored!
 title: "[Question]"
 labels: ''
 assignees: ''
