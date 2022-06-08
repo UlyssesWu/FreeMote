@@ -242,6 +242,11 @@ namespace FreeMote.PsBuild
             var outputPath = ChangeExtensionForOutputJson(inputPath, ".json");
             File.WriteAllText(outputPath, Decompile(inputPath, out var psb, context.Context));
 
+            if (type != PsbType.PSB)
+            {
+                psb.Type = type;
+            }
+
             OutputResources(psb, context, inputPath, extractOption, extractFormat, useResx);
 
             return (outputPath, psb);

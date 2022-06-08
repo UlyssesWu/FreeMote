@@ -787,25 +787,11 @@ namespace FreeMote.Psb
                 // because that would be positive
                 <= (unchecked((int) 0b11111111_01111111_11111111_11111111)) => 4, // an extra 1 is needed to prove it's a negative number ([01]111.. raise from right to left)
                 <= (unchecked((int) 0b11111111_11111111_01111111_11111111)) => 3, // same energy
-                <= (unchecked((int) 0b11111111_11111111_11111111_01111111)) => 2, 
+                <= (unchecked((int) 0b11111111_11111111_11111111_01111111)) => 2,
                 <= 0 => 1,
                 //_ => 4
             };
         }
-
-        /// <summary>
-        /// get minimum size cost
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        public static int GetSize(this uint i)
-        {
-            int n = 0; do { i >>= 8; n++; } while (i != 0);
-
-            return n;
-        }
-
-
 
         public static int GetSize(this long i)
         {
@@ -830,6 +816,18 @@ namespace FreeMote.Psb
                 <= 0 => 1,
                 //_ => 4
             };
+        }
+
+        /// <summary>
+        /// get minimum size cost
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static int GetSize(this uint i)
+        {
+            int n = 0; do { i >>= 8; n++; } while (i != 0);
+
+            return n;
         }
         
         public static uint ReadCompactUInt(this BinaryReader br, byte size)
