@@ -9,4 +9,4 @@ assignees: ''
 * Read [wiki](https://github.com/UlyssesWu/FreeMote/wiki)
 * Provide game name and platform (PC/Android/PSP etc.)
 * Provide PSB file samples
-* Screenshots if needed
+* Program output, or screenshots
