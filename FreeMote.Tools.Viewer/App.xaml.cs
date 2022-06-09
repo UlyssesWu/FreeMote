@@ -174,10 +174,11 @@ namespace FreeMote.Tools.Viewer
         private static string PrintHelp()
         {
             return @"Examples: 
+  FreeMoteViewer sample.psb
   FreeMoteViewer -w 1920 -h 1080 -d sample.psb
   FreeMoteViewer -nf sample_head.psb sample_body.psb
 Hint:
-  You can load multiple partial exported PSB like the 2nd example. 
+  You can load multiple partial exported PSB like the `-nf` example. 
   Use correct order: always try to put the Main part at last (body is the Main part comparing to head)!
   If you're picking multiple files from file explorer and drag&drop to Viewer, drag the non-Main part.";
         }
