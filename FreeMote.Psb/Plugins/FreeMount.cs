@@ -364,6 +364,7 @@ namespace FreeMote.Plugins
         {
             if (type != null)
             {
+                type = type.ToUpperInvariant(); //force upper case!
                 if (type == "" && !Shells.ContainsKey(type))
                 {
                     if (stream is MemoryStream ms)
@@ -417,6 +418,7 @@ namespace FreeMote.Plugins
 
         public MemoryStream PackToShell(Stream stream, string type, Dictionary<string, object> context = null)
         {
+            type = type.ToUpperInvariant(); //force upper case!
             if (type == "PSB" || Shells[type] == null)
             {
                 return null;

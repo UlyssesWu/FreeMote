@@ -519,7 +519,7 @@ Example:
                         }
 
                         Console.WriteLine($"[{type}] Shell applied for {path}");
-                        File.WriteAllBytes(Path.ChangeExtension(path, $".compressed.{type}"), mms.ToArray());
+                        File.WriteAllBytes(Path.ChangeExtension(path, $".compressed.{type.ToLowerInvariant()}"), mms.ToArray());
                     }
                 }
             }

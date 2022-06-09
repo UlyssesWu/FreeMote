@@ -123,7 +123,7 @@ namespace FreeMote.Plugins
         /// [RequireUsing] Use plugins to decompress shell types to PSB
         /// </summary>
         /// <param name="stream">the input stream will <b>NOT</b> be disposed automatically</param>
-        /// <param name="type"></param>
+        /// <param name="type">type name should be Upper case, e.g. MDF</param>
         /// <returns>unpacked stream, remember to dispose!</returns>
         public MemoryStream OpenFromShell(Stream stream, ref string type)
         {
@@ -134,7 +134,7 @@ namespace FreeMote.Plugins
         /// [RequireUsing] Use plugins to compress PSB to shell type
         /// </summary>
         /// <param name="input">The input stream. Might be disposed!</param>
-        /// <param name="type"></param>
+        /// <param name="type">type name should be Upper case, e.g. MDF</param>
         /// <returns></returns>
         public MemoryStream PackToShell(Stream input, string type = null)
         {
