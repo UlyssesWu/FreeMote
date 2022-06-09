@@ -255,7 +255,7 @@ namespace FreeMote
             {
                 case PsbType.Tachie:
                     return "image";
-                case PsbType.ArchiveInfo:
+                case PsbType.ArchiveInfo: //could also be "scenario"
                     return "archive";
                 case PsbType.BmpFont:
                     return "font";

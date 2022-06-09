@@ -428,8 +428,7 @@ Example:
             PSB infoPsb = PsbCompiler.LoadPsbFromJsonFile(jsonPath);
             if (infoPsb.Type != PsbType.ArchiveInfo)
             {
-                Console.WriteLine("Json is not an ArchiveInfo PSB.");
-                return;
+                Console.WriteLine($"[WARN] The json ({infoPsb.Type}) seems not to be an ArchiveInfo type.");
             }
 
             var archiveInfoType = infoPsb.GetArchiveInfoType();

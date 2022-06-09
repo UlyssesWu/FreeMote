@@ -244,7 +244,7 @@ namespace FreeMote.PsBuild
                         psb.Link(resx, baseDir);
                     }
 
-                    if (resx.Platform != null)
+                    if (resx.Platform != null && resx.Platform != PsbSpec.none)
                     {
                         psb.SwitchSpec(resx.Platform.Value, resx.Platform.Value.DefaultPixelFormat());
                     }

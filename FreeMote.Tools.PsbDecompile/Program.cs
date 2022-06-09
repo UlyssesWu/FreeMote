@@ -558,6 +558,9 @@ Example:
                         return;
                     }
 
+                    //Maybe PSB is not identified as ArchiveInfo, but since we have tested it with GetArchiveInfoType,
+                    //we just set it here.
+                    resx.PsbType = PsbType.ArchiveInfo;
                     var dic = psb.Objects[archiveInfoType.GetRootKey()] as PsbDictionary;
                     var suffixList = (PsbList) psb.Objects["expire_suffix_list"];
                     var suffix = "";
