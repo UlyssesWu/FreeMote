@@ -13,7 +13,7 @@ namespace FreeMote.PsBuild
     /// </summary>
     public static class PsbCompiler
     {
-        public static Encoding Encoding { get; set; } = null;
+        public static Encoding Encoding { get; set; } = Encoding.UTF8;
 
         /// <summary>
         /// Compile to file

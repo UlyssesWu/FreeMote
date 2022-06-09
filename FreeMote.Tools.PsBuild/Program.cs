@@ -94,6 +94,7 @@ Example:
                         try
                         {
                             _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbCompiler.Encoding = _encoding;
                         }
                         catch (ArgumentException e)
                         {
@@ -134,6 +135,7 @@ Example:
                         try
                         {
                             _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbCompiler.Encoding = _encoding;
                         }
                         catch (ArgumentException e)
                         {
@@ -217,6 +219,7 @@ Example:
                         try
                         {
                             _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbCompiler.Encoding = _encoding;
                         }
                         catch (ArgumentException e)
                         {
@@ -273,6 +276,7 @@ Example:
                     try
                     {
                         _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                        PsbCompiler.Encoding = _encoding;
                     }
                     catch (ArgumentException e)
                     {
@@ -387,7 +391,6 @@ Example:
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                PsbCompiler.Encoding = _encoding;
                 //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
                 var filename = name + ".psb"; //rename later //TODO: support set output path
                 PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename, canPackShell);
