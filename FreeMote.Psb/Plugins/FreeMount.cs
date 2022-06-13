@@ -151,7 +151,7 @@ namespace FreeMote.Plugins
             }
             catch (CompositionException compositionException)
             {
-                Debug.WriteLine(compositionException.ToString());
+                Console.WriteLine(compositionException.ToString());
             }
 
             UpdatePluginsCollection();
@@ -224,7 +224,17 @@ namespace FreeMote.Plugins
             }
             else if (File.Exists(path))
             {
-                catalog.Catalogs.Add(new AssemblyCatalog(Assembly.LoadFile(path)));
+                try
+                {
+                    catalog.Catalogs.Add(new AssemblyCatalog(Assembly.LoadFile(path)));
+                }
+                catch (NotSupportedException e)
+                {
+                    Console.WriteLine($"[ERROR] Load plugin failed from {path}");
+                    Console.WriteLine(@"1. Are you running program on OneDrive or over local network? Try running on your local drive.
+2. Try unblocking this file from properties. If you don't know how to do this, google it.");
+                    Console.WriteLine(e);
+                }
             }
         }
 
