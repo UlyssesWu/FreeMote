@@ -64,6 +64,7 @@ namespace FreeMote.PsBuild.Converters
             var iconInfo = TranslateResources(psb);
             Travel((PsbDictionary) psb.Objects["object"], iconInfo);
             Add(psb);
+            TranslateTimeline(psb);
             psb.Platform = ToWin ? PsbSpec.win : PsbSpec.common;
         }
 
@@ -420,6 +421,40 @@ namespace FreeMote.PsBuild.Converters
                         Travel(childCol, iconInfos);
                     }
                 }
+            }
+        }
+
+        private void TranslateTimeline(PSB psb)
+        {
+            PsbList nList = new PsbList();
+
+            void TranslateChildren(PsbList childrenList, string path)
+            {
+                foreach (var timeline in childrenList)
+                {
+                    if (timeline is PsbDictionary item)
+                    {
+                        if (item["type"] is PsbString { Value: "folder" } && item["children"] is PsbList children)
+                        {
+                            TranslateChildren(children, $"{path}/{item["label"].ToString()}");
+                        }
+                        else if (item["variableList"] is PsbList variableList)
+                        {
+                            item["path_hint"] = $"{path}/{item["label"].ToString()}".ToPsbString();
+                            nList.Add(item);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] Cannot convert timeline {item["label"].ToString()}");
+                        }
+                    }
+                }
+            }
+
+            if (psb.Objects["metadata"] is PsbDictionary metadata && metadata["timelineControl"] is PsbList timelines)
+            {
+                TranslateChildren(timelines, "");
+                metadata["timelineControl"] = nList;
             }
         }
     }
