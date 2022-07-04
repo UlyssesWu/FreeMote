@@ -101,22 +101,26 @@ namespace FreeMote.Plugins
         /// Use plugins to convert resource bytes to bitmap
         /// </summary>
         /// <param name="ext"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="platform"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public Bitmap ResourceToBitmap(string ext, in byte[] data)
+        public Bitmap ResourceToBitmap(string ext, int width, int height, PsbSpec platform, in byte[] data)
         {
-            return FreeMount._.ResourceToBitmap(ext, data, Context);
+            return FreeMount._.ResourceToBitmap(ext, data, width, height, platform, Context);
         }
 
         /// <summary>
         /// Use plugins to convert bitmap to resource bytes
         /// </summary>
         /// <param name="ext"></param>
+        /// <param name="platform"></param>
         /// <param name="bitmap"></param>
         /// <returns></returns>
-        public byte[] BitmapToResource(string ext, Bitmap bitmap)
+        public byte[] BitmapToResource(string ext, PsbSpec platform, Bitmap bitmap)
         {
-            return FreeMount._.BitmapToResource(ext, bitmap, Context);
+            return FreeMount._.BitmapToResource(ext, platform, bitmap, Context);
         }
 
         /// <summary>

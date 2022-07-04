@@ -337,8 +337,8 @@ namespace FreeMote.Psb
             for (int i = 0; i < resources.Count; i++)
             {
                 var resource = resources[i];
-                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Height, resource.Width,
-                    resource.PixelFormat, resource.PalettePixelFormat);
+                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Width,
+                    resource.Height, resource.PixelFormat, resource.PalettePixelFormat);
 
                 switch (order)
                 {
@@ -478,15 +478,14 @@ namespace FreeMote.Psb
                             relativePath = CheckPath(relativePath, i);
                             if (resource.Compress == PsbCompressType.RL)
                             {
-                                RL.DecompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat);
+                                RL.DecompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath), resource.Width, resource.Height, extractFormat, resource.PixelFormat);
                             }
                             else if (resource.Compress == PsbCompressType.Tlg ||
                                      resource.Compress == PsbCompressType.ByName)
                             {
                                 var bmp = context.ResourceToBitmap(resource.Compress == PsbCompressType.Tlg
                                     ? ".tlg"
-                                    : Path.GetExtension(resource.Name), resource.Data);
+                                    : Path.GetExtension(resource.Name), resource.Width, resource.Height, resource.Spec, resource.Data);
                                 if (bmp == null)
                                 {
                                     if (resource.Compress == PsbCompressType.Tlg) //Fallback to managed TLG decoder
@@ -514,9 +513,8 @@ namespace FreeMote.Psb
                             //}
                             else
                             {
-                                RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat, resource.PalData,
-                                    resource.PalettePixelFormat);
+                                RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath), resource.Width, resource.Height, extractFormat, resource.PixelFormat,
+                                    resource.PalData, resource.PalettePixelFormat);
                             }
 
                             break;

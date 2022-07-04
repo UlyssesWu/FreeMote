@@ -163,7 +163,7 @@ Example:
                                 break;
                             case PsbImageConvertMethod.LeARGB_To_L8Grayscale:
                                 bts = RL.Argb2L8(bts);
-                                bts = RL.ReadL8(bts, height, width);
+                                bts = RL.ReadL8(bts, width, height);
                                 break;
                             case PsbImageConvertMethod.Tile:
                                 bts = PostProcessing.TileTexture(bts, width, height, pixelFormat);
@@ -187,7 +187,7 @@ Example:
                                 continue;
                         }
 
-                        RL.ConvertToImageFile(bts, Path.ChangeExtension(path, ".converted.png"), height, width, PsbImageFormat.png);
+                        RL.ConvertToImageFile(bts, Path.ChangeExtension(path, ".converted.png"), width, height, PsbImageFormat.png);
                     }
                    
                 });

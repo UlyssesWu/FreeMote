@@ -186,8 +186,8 @@ namespace FreeMote.PsBuild.Converters
                         continue;
                     }
                     var bmp = info["compress"]?.ToString().ToUpperInvariant() == "RL"
-                        ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
-                        : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
+                        ? RL.DecompressToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat())
+                        : RL.ConvertToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat());
                     if (info.ContainsKey("resolution") && info["resolution"].GetFloat() != 1.0f && EnableResolution)
                     {
                         //scale down image, not recommended

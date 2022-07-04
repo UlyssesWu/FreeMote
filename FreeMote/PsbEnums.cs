@@ -265,6 +265,10 @@ namespace FreeMote
         /// ASTC with block 4x4 for nx
         /// </summary>
         ASTC_8BPP,
+        /// <summary>
+        /// Big Endian BC7 compressed RGBA8 for nx
+        /// </summary>
+        BC7,
     }
 
     public enum PsbAudioFormat

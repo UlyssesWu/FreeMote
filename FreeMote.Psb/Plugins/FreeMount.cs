@@ -278,16 +278,19 @@ namespace FreeMote.Plugins
         /// </summary>
         /// <param name="ext"></param>
         /// <param name="data"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="platform"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public Bitmap ResourceToBitmap(string ext, in byte[] data, Dictionary<string, object> context = null)
+        public Bitmap ResourceToBitmap(string ext, in byte[] data, int width, int height, PsbSpec platform, Dictionary<string, object> context = null)
         {
             if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBitmap(data))
             {
                 return null;
             }
 
-            return ImageFormatters[ext].ToBitmap(data, context);
+            return ImageFormatters[ext].ToBitmap(data, width, height, platform, context);
         }
 
         /// <summary>
@@ -314,16 +317,17 @@ namespace FreeMote.Plugins
         /// </summary>
         /// <param name="ext"></param>
         /// <param name="bitmap"></param>
+        /// <param name="platform"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public byte[] BitmapToResource(string ext, Bitmap bitmap, Dictionary<string, object> context = null)
+        public byte[] BitmapToResource(string ext, PsbSpec platform, Bitmap bitmap, Dictionary<string, object> context = null)
         {
             if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBytes(bitmap))
             {
                 return null;
             }
 
-            return ImageFormatters[ext].ToBytes(bitmap, context);
+            return ImageFormatters[ext].ToBytes(bitmap, platform, context);
         }
 
         /// <summary>

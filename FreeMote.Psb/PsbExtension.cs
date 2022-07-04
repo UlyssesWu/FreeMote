@@ -46,6 +46,8 @@ namespace FreeMote.Psb
                     return ".tlg";
                 case PsbCompressType.Astc:
                     return ".astc";
+                case PsbCompressType.Bc7:
+                    return ".dds";
                 case PsbCompressType.RL:
                     return ".rl";
                 default:

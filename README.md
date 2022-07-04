@@ -48,7 +48,7 @@ Decompile an EMT PSB to MMO project. **The output file is always licensed under 
 Open and render EMT _pure_ PSB. This tool is powered by [FreeMote.NET](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer).
 
 ## Build
-This project requires **VS 2019** and .NET **4.7.2 - 4.8** to build.
+This project requires **VS 2022** and .NET **4.8** to build.
 
 **FreeMote.Plugins** / **FreeMote.Plugins.x64** require a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote Plugins, you can unload Plugins projects and remove them from other projects' reference.
 

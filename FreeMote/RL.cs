@@ -12,27 +12,27 @@ namespace FreeMote
     /// </summary>
     public static class RL
     {
-        public static Bitmap ConvertToImage(byte[] data, byte[] palette, int height, int width,
+        public static Bitmap ConvertToImage(byte[] data, byte[] palette, int width, int height,
             PsbPixelFormat colorFormat, PsbPixelFormat paletteColorFormat)
         {
             //Copy data & palette to avoid changing original Data (might be reused)
             if (palette != null && palette.Length > 0)
             {
-                return ConvertToImageWithPalette(data.ToArray(), palette.ToArray(), height, width, colorFormat, paletteColorFormat);
+                return ConvertToImageWithPalette(data.ToArray(), palette.ToArray(), width, height, colorFormat, paletteColorFormat);
             }
 
-            return ConvertToImage(data.ToArray(), height, width, colorFormat);
+            return ConvertToImage(data.ToArray(), width, height, colorFormat);
         }
 
         /// <summary>
         /// Convert a special format image to common image for extract
         /// </summary>
         /// <param name="data"></param>
-        /// <param name="height"></param>
         /// <param name="width"></param>
+        /// <param name="height"></param>
         /// <param name="colorFormat"></param>
         /// <returns></returns>
-        public static Bitmap ConvertToImage(byte[] data, int height, int width,
+        public static Bitmap ConvertToImage(byte[] data, int width, int height,
             PsbPixelFormat colorFormat = PsbPixelFormat.None)
         {
             var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
@@ -79,25 +79,25 @@ namespace FreeMote
                     data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.A8:
-                    data = ReadA8(data, height, width);
+                    data = ReadA8(data, width, height);
                     break;
                 case PsbPixelFormat.A8_SW:
-                    data = ReadA8(data, height, width);
+                    data = ReadA8(data, width, height);
                     data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
                 case PsbPixelFormat.TileA8_SW:
-                    data = ReadA8(data, height, width);
+                    data = ReadA8(data, width, height);
                     data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
                 case PsbPixelFormat.L8:
-                    data = ReadL8(data, height, width);
+                    data = ReadL8(data, width, height);
                     break;
                 case PsbPixelFormat.L8_SW:
-                    data = ReadL8(data, height, width);
+                    data = ReadL8(data, width, height);
                     data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
                 case PsbPixelFormat.TileL8_SW:
-                    data = ReadL8(data, height, width);
+                    data = ReadL8(data, width, height);
                     data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
                 case PsbPixelFormat.RGBA5650:
@@ -241,13 +241,13 @@ namespace FreeMote
         /// </summary>
         /// <param name="data"></param>
         /// <param name="palette"></param>
-        /// <param name="height"></param>
         /// <param name="width"></param>
+        /// <param name="height"></param>
         /// <param name="colorFormat"></param>
         /// <param name="paletteColorFormat"></param>
         /// <returns></returns>
         /// <exception cref="BadImageFormatException"></exception>
-        public static Bitmap ConvertToImageWithPalette(byte[] data, byte[] palette, int height, int width,
+        public static Bitmap ConvertToImageWithPalette(byte[] data, byte[] palette, int width, int height,
             PsbPixelFormat colorFormat = PsbPixelFormat.None, PsbPixelFormat paletteColorFormat = PsbPixelFormat.None)
         {
             Bitmap bmp;
@@ -298,7 +298,7 @@ namespace FreeMote
                     }
                     break;
                 default:
-                    return ConvertToImage(data, height, width, colorFormat);
+                    return ConvertToImage(data, width, height, colorFormat);
             }
 
             int stride = bmpData.Stride; // 扫描线的宽度
@@ -357,42 +357,43 @@ namespace FreeMote
             return PixelBytesFromImage(bmp, pixelFormat);
         }
 
-        public static void DecompressToImageFile(byte[] data, string path, int height, int width,
+        public static void DecompressToImageFile(byte[] data, string path, int width, int height,
             PsbImageFormat format = PsbImageFormat.png, PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
         {
             byte[] bytes;
             try
             {
-                bytes = Decompress(data, height, width, align);
+                bytes = Decompress(data, width, height, align);
             }
             catch (Exception e)
             {
                 throw new PsbBadFormatException(PsbBadFormatReason.Resources, "data incorrect", e);
             }
 
-            ConvertToImageFile(bytes, path, height, width, format, colorFormat);
+            ConvertToImageFile(bytes, path, width, height, format, colorFormat);
         }
 
-        public static Bitmap DecompressToImage(byte[] data, int height, int width,
+        public static Bitmap DecompressToImage(byte[] data, int width, int height,
             PsbPixelFormat colorFormat = PsbPixelFormat.None, int align = 4)
         {
             byte[] bytes;
             try
             {
-                bytes = Decompress(data, height, width, align);
+                bytes = Decompress(data, width, height, align);
             }
             catch (Exception e)
             {
                 throw new PsbBadFormatException(PsbBadFormatReason.Resources, "data incorrect", e);
             }
 
-            return ConvertToImage(bytes, height, width, colorFormat);
+            return ConvertToImage(bytes, width, height, colorFormat);
         }
         
-        public static void ConvertToImageFile(byte[] data, string path, int height, int width, PsbImageFormat format,
-            PsbPixelFormat colorFormat = PsbPixelFormat.None, byte[] palette = null, PsbPixelFormat paletteColorFormat = PsbPixelFormat.None)
+        public static void ConvertToImageFile(byte[] data, string path, int width, int height, PsbImageFormat format,
+            PsbPixelFormat colorFormat = PsbPixelFormat.None, byte[] palette = null,
+            PsbPixelFormat paletteColorFormat = PsbPixelFormat.None)
         {
-            Bitmap bmp = ConvertToImage(data, palette, height, width, colorFormat, paletteColorFormat);
+            Bitmap bmp = ConvertToImage(data, palette, width, height, colorFormat, paletteColorFormat);
             
             switch (format)
             {
@@ -405,17 +406,17 @@ namespace FreeMote
             }
         }
 
-        private static byte[] Decompress(Stream stream, int height, int width, int align = 4)
+        private static byte[] Decompress(Stream stream, int width, int height, int align = 4)
         {
             var realLength = height * width * align;
             return RleCompress.Decompress(stream, align, realLength);
         }
 
-        public static byte[] Decompress(byte[] data, int height, int width, int align = 4)
+        public static byte[] Decompress(byte[] data, int width, int height, int align = 4)
         {
             using (var stream = new MemoryStream(data))
             {
-                return Decompress(stream, height, width, align);
+                return Decompress(stream, width, height, align);
             }
         }
 
@@ -644,7 +645,7 @@ namespace FreeMote
 
         #region Read
 
-        private static byte[] ReadA8L8(byte[] data, int height, int width)
+        private static byte[] ReadA8L8(byte[] data, int width, int height)
         {
             byte[] output = new byte[height * width * 4];
             int dst = 0;
@@ -683,7 +684,7 @@ namespace FreeMote
             return output;
         }
 
-        private static byte[] ReadA8(byte[] data, int height, int width)
+        private static byte[] ReadA8(byte[] data, int width, int height)
         {
             byte[] output = new byte[height * width * 4];
             int dst = 0;
@@ -706,7 +707,7 @@ namespace FreeMote
             return output;
         }
 
-        public static byte[] ReadL8(byte[] data, int height, int width)
+        public static byte[] ReadL8(byte[] data, int width, int height)
         {
             byte[] output = new byte[height * width * 4];
             int dst = 0;

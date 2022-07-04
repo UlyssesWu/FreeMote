@@ -63,6 +63,11 @@ namespace FreeMote.Psb
         Astc,
 
         /// <summary>
+        /// BC7
+        /// </summary>
+        Bc7,
+
+        /// <summary>
         /// By extension
         /// </summary>
         ByName,

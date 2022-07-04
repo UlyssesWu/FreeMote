@@ -360,8 +360,8 @@ namespace FreeMote.Tests
             psb.Merge();
             File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
             File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
-            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096, 4096, PsbImageFormat.png,
-                PsbPixelFormat.LeRGBA8);
+            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096, 4096,
+                PsbImageFormat.png, PsbPixelFormat.LeRGBA8);
         }
 
         [TestMethod]
