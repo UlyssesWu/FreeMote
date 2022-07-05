@@ -263,20 +263,17 @@ namespace FreeMote.Psb
         /// <param name="bmp"></param>
         public void SetData(Bitmap bmp)
         {
-            bool converted = false;
+            Data = null;
 
             switch (PixelFormat)
             {
                 case PsbPixelFormat.ASTC_8BPP:
-                    Data = FreeMount.CreateContext().BitmapToResource(PsbCompressType.Astc.ToExtensionString(), Spec, bmp);
-                    if (Data != null)
-                    {
-                        converted = true;
-                    }
+                case PsbPixelFormat.BC7:
+                    Data = FreeMount.CreateContext().BitmapToResource(PixelFormat.ToExtensionString(), Spec, bmp);
                     break;
             }
 
-            if (!converted)
+            if (Data == null)
             {
                 switch (Compress)
                 {
@@ -284,8 +281,6 @@ namespace FreeMote.Psb
                         Data = RL.CompressImage(bmp, PixelFormat);
                         break;
                     case PsbCompressType.Tlg:
-                    case PsbCompressType.Astc:
-                    case PsbCompressType.Bc7:
                         Data = FreeMount.CreateContext().BitmapToResource(Compress.ToExtensionString(), Spec, bmp);
                         break;
                     default:
@@ -352,10 +347,10 @@ namespace FreeMote.Psb
                     image = context.ResourceToBitmap(PsbCompressType.Tlg.ToExtensionString(), Width, Height, Spec, File.ReadAllBytes(path));
                     break;
                 //astc
-                case ".astc" when Compress == PsbCompressType.Astc:
+                case ".astc" when PixelFormat == PsbPixelFormat.ASTC_8BPP:
                     return AstcFile.CutHeader(File.ReadAllBytes(path));
                 case ".astc":
-                    image = context.ResourceToBitmap(PsbCompressType.Astc.ToExtensionString(), Width, Height, Spec, File.ReadAllBytes(path));
+                    image = context.ResourceToBitmap(PixelFormat.ToExtensionString(), Width, Height, Spec, File.ReadAllBytes(path));
                     break;
                 //rl
                 case ".rl" when Compress == PsbCompressType.RL:
@@ -369,7 +364,7 @@ namespace FreeMote.Psb
                 //raw
                 case ".raw" when Compress == PsbCompressType.None:
                     return File.ReadAllBytes(path);
-                case ".raw" when Compress == PsbCompressType.Astc:
+                case ".raw" when PixelFormat == PsbPixelFormat.ASTC_8BPP:
                     return File.ReadAllBytes(path);
                 case ".raw" when Compress == PsbCompressType.RL:
                     return RL.Compress(File.ReadAllBytes(path));
@@ -440,13 +435,28 @@ namespace FreeMote.Psb
                 }
             }
 
+            //Plugin Encoder, for PixelFormat or Compress
             switch (PixelFormat)
             {
                 case PsbPixelFormat.ASTC_8BPP:
-                    data = context.BitmapToResource(PsbCompressType.Astc.ToExtensionString(), Spec, image);
+                case PsbPixelFormat.BC7:
+                    data = context.BitmapToResource(PixelFormat.ToExtensionString(), Spec, image);
                     if (data != null)
                     {
                         return data;
+                    }
+
+                    if (PixelFormat == PsbPixelFormat.ASTC_8BPP)
+                    {
+                        var astcPath = Path.ChangeExtension(path, ".astc");
+                        if (File.Exists(astcPath))
+                        {
+                            Console.WriteLine($"[WARN] Can not encode ASTC, using {astcPath}");
+                            return AstcFile.CutHeader(File.ReadAllBytes(astcPath));
+                        }
+
+                        Console.WriteLine($"[WARN] Can not convert image to ASTC: {path}");
+                        //data = File.ReadAllBytes(path);
                     }
                     break;
             }
@@ -473,31 +483,6 @@ namespace FreeMote.Psb
                         }
                     }
                     break;
-                case PsbCompressType.Astc:
-                    data = context.BitmapToResource(Compress.ToExtensionString(), Spec, image);
-                    if (data == null)
-                    {
-                        var astcPath = Path.ChangeExtension(path, ".astc");
-                        if (File.Exists(astcPath))
-                        {
-                            Console.WriteLine($"[WARN] Can not encode ASTC, using {astcPath}");
-                            data = AstcFile.CutHeader(File.ReadAllBytes(astcPath));
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[WARN] Can not convert image to ASTC: {path}");
-                            //data = File.ReadAllBytes(path);
-                        }
-                    }
-                    break;
-                case PsbCompressType.Bc7:
-                    data = context.BitmapToResource(".bc7", Spec, image);
-                    if (data == null)
-                    {
-                        Console.WriteLine($"[WARN] Can not convert image to BC7: {path}");
-                    }
-                    break;
-
                 case PsbCompressType.ByName:
                     var imgExt = Path.GetExtension(Name);
                     if (context.SupportImageExt(imgExt))

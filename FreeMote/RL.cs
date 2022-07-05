@@ -114,6 +114,9 @@ namespace FreeMote
                 case PsbPixelFormat.ASTC_8BPP:
                     data = AstcDecoder.DecodeASTC(data, width, height, 4, 4);
                     break;
+                case PsbPixelFormat.BC7:
+                    data = new Bc7Decoder(data, width, height).Unpack();
+                    break;
             }
 
             int stride = bmpData.Stride; // 扫描线的宽度

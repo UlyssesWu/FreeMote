@@ -200,11 +200,6 @@ namespace FreeMote.Psb.Types
                 PsbType = PsbType.Tachie
             };
 
-            if (md.PixelFormat == PsbPixelFormat.ASTC_8BPP)
-            {
-                md.Compress = PsbCompressType.Astc;
-            }
-
             return md;
         }
     }

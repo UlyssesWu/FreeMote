@@ -169,6 +169,7 @@ namespace FreeMote
                     return 4;
                 case PsbPixelFormat.ASTC_8BPP:
                 case PsbPixelFormat.DXT5:
+                case PsbPixelFormat.BC7:
                 default:
                     return null;
             }

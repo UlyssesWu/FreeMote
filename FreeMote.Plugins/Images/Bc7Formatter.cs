@@ -17,7 +17,8 @@ namespace FreeMote.Plugins.Images
     [ExportMetadata("Comment", "BC7 support via BCnEncoder.NET.")]
     class Bc7Formatter : IPsbImageFormatter
     {
-        public List<string> Extensions { get; } = new() { ".bc7", ".dds" };
+        public List<string> Extensions { get; } = new() {".bc7", ".dds"};
+
         public bool CanToBitmap(in byte[] data, Dictionary<string, object> context = null)
         {
             return true;
@@ -47,7 +48,7 @@ namespace FreeMote.Plugins.Images
                 {OutputOptions = {GenerateMipMaps = false, Quality = CompressionQuality.Fast}};
             var pixelBytes = RL.GetPixelBytesFromImage(bitmap, PsbPixelFormat.BeRGBA8);
             var pixels = encoder.EncodeToRawBytes(pixelBytes, bitmap.Width, bitmap.Height, BCnEncoder.Encoder.PixelFormat.Rgba32);
-            return pixels[0];
+            return pixels[0]; //other = mipmap
         }
     }
 }

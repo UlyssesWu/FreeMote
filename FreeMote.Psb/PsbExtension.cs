@@ -44,12 +44,26 @@ namespace FreeMote.Psb
             {
                 case PsbCompressType.Tlg:
                     return ".tlg";
-                case PsbCompressType.Astc:
-                    return ".astc";
-                case PsbCompressType.Bc7:
-                    return ".dds";
                 case PsbCompressType.RL:
                     return ".rl";
+                default:
+                    return "";
+            }
+        }
+
+        /// <summary>
+        /// <paramref name="pixelFormat"/> to its file extension
+        /// </summary>
+        /// <param name="pixelFormat"></param>
+        /// <returns></returns>
+        public static string ToExtensionString(this PsbPixelFormat pixelFormat)
+        {
+            switch (pixelFormat)
+            {
+                case PsbPixelFormat.ASTC_8BPP:
+                    return ".astc";
+                case PsbPixelFormat.BC7:
+                    return ".bc7";
                 default:
                     return "";
             }
