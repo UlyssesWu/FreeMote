@@ -603,11 +603,27 @@ namespace FreeMote.Psb
             for (int i = 0; i < names.Count; i++)
             {
                 //br.BaseStream.Seek(pos, SeekOrigin.Begin);
-                var name = Names[(int)names[i]];
-                var offset = offsets[i];
-                br.BaseStream.Seek(pos + offset, SeekOrigin.Begin);
-                //br.BaseStream.Seek(offset, SeekOrigin.Current);
-                var obj = Unpack(br, lazyLoad);
+                var nameIdx = (int) names[i];
+                if (nameIdx >= Names.Count)
+                {
+                    Console.WriteLine($"[WARN] Bad PSB format: at position:{pos}, name index {nameIdx} >= Names count ({Names.Count}), skipping.");
+                    continue;
+                }
+                var name = Names[nameIdx];
+                IPsbValue obj = null;
+                uint offset = 0;
+                if (i < offsets.Count)
+                {
+                    offset = offsets[i];
+                    br.BaseStream.Seek(pos + offset, SeekOrigin.Begin);
+                    //br.BaseStream.Seek(offset, SeekOrigin.Current);
+                    obj = Unpack(br, lazyLoad);
+                }
+                else
+                {
+                    Console.WriteLine($"[WARN] Bad PSB format: at position:{pos}, offset index {i} >= offsets count ({offsets.Count}), skipping.");
+                }
+
                 if (obj != null)
                 {
                     if (obj is IPsbChild c)
