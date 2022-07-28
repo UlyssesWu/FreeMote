@@ -44,6 +44,10 @@ namespace FreeMote.Plugins.Audio
                 {
                     rawData = data.Body.Data.Data;
                 }
+                else
+                {
+                    rawData = data.Body?.Data?.Data ?? data.Intro?.Data?.Data;
+                }
             }
 
             if (rawData == null)
@@ -83,7 +87,7 @@ namespace FreeMote.Plugins.Audio
             }
             else
             {
-                return false;
+                clip = data.Body ?? data.Intro;
             }
 
             if (clip.Data != null)
@@ -110,10 +114,7 @@ namespace FreeMote.Plugins.Audio
         public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)
         {
             data = null;
-            //if (md.Spec != PsbSpec.nx)
-            //{
-            //    return false;
-            //}
+
             if (channel.Count != 1 || channel["archData"] is not PsbDictionary archDic || !(archDic["ext"] is PsbString ext && ext.Value == Extensions[0]))
             {
                 return false;

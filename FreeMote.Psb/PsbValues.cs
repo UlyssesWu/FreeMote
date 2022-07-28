@@ -701,7 +701,7 @@ namespace FreeMote.Psb
                         return IsNumber32 ? IntValue.ZipNumberBytes() : LongValue.ZipNumberBytes();
                     }
 
-                    return new byte[0];
+                    return Array.Empty<byte>();
                 case PsbNumberType.Long:
                     return LongValue.ZipNumberBytes();
                 case PsbNumberType.Float:
@@ -710,7 +710,7 @@ namespace FreeMote.Psb
                         return BitConverter.GetBytes(FloatValue);
                     }
 
-                    return new byte[0];
+                    return Array.Empty<byte>();
                 case PsbNumberType.Double:
                     return BitConverter.GetBytes(DoubleValue);
                 default:
@@ -1286,7 +1286,7 @@ namespace FreeMote.Psb
         /// </summary>
         public uint? Index { get; set; }
 
-        public byte[] Data { get; set; } = new byte[0];
+        public byte[] Data { get; set; } = Array.Empty<byte>();
 
         public PsbObjType Type
         {
