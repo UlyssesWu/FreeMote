@@ -365,6 +365,17 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestConvertKrkr2Win2()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "ちえ_横_おしゃれc1.pure.psb");
+            PSB psb = new PSB(path);
+            psb.SwitchSpec(PsbSpec.win);
+            psb.Merge();
+            File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
+        }
+
+        [TestMethod]
         public void TestConvertCommon2Win()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

@@ -362,8 +362,16 @@ namespace FreeMote.PsBuild.Converters
                             var partName = new string(s.Value.SkipWhile(c => c != '/').Skip(1).TakeWhile(c => c != '/')
                                 .ToArray());
                             var name = $"{partName}{Delimiter}{iconName}";
-                            dic["icon"] = new PsbString(iconInfos[name].IconName);
-                            dic["src"] = new PsbString(iconInfos[name].Tex);
+                            if (!iconInfos.ContainsKey(name))
+                            {
+                                Console.WriteLine($"[WARN] cannot find icon {name} in source (it may happens in krkr PSB), ignored.");
+                                dic.Remove("src");
+                            }
+                            else
+                            {
+                                dic["icon"] = new PsbString(iconInfos[name].IconName);
+                                dic["src"] = new PsbString(iconInfos[name].Tex);
+                            }
                         }
                         //"ex_body_a" ("icon" : "差分A") <- "motion/ex_body_a/差分A"
                         else if (s.Value.StartsWith("motion/"))
