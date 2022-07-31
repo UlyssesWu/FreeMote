@@ -127,7 +127,7 @@ namespace FreeMote
             {
                 case PsbSpec.common:
                 case PsbSpec.ems:
-                //case PsbSpec.vita: //TODO: is vita or psp BigEndian?
+                    //case PsbSpec.vita: //TODO: is vita or psp BigEndian?
                     return true;
                 default:
                     return false;
@@ -142,8 +142,8 @@ namespace FreeMote
                     return null;
                 case PsbPixelFormat.LeRGBA8:
                 case PsbPixelFormat.BeRGBA8:
-                case PsbPixelFormat.RGBA8_SW:
-                case PsbPixelFormat.TileRGBA8_SW:
+                case PsbPixelFormat.BeRGBA8_SW:
+                case PsbPixelFormat.TileLeRGBA8_SW:
                     return 32;
                 case PsbPixelFormat.LeRGBA4444:
                 case PsbPixelFormat.LeRGBA4444_SW:
@@ -199,7 +199,7 @@ namespace FreeMote
                     return PsbPixelFormat.None;
             }
         }
-        
+
         public static ImageFormat ToImageFormat(this PsbImageFormat imageFormat)
         {
             switch (imageFormat)
@@ -307,12 +307,15 @@ namespace FreeMote
                 case "RGBA4444_SW":
                     return PsbPixelFormat.LeRGBA4444_SW;
                 case "RGBA8":
-                    if (spec.UseBigEndian() || spec == PsbSpec.vita || spec == PsbSpec.psp) //TODO: I'm not sure if psv and psp always use BE, so for now just set for RGBA8
+                    if (spec.UseBigEndian() || spec == PsbSpec.vita ||
+                        spec == PsbSpec.psp) //TODO: I'm not sure if psv and psp always use BE, so for now just set for RGBA8
                         return PsbPixelFormat.BeRGBA8;
                     else
                         return PsbPixelFormat.LeRGBA8;
                 case "RGBA8_SW":
-                    return useTile ? PsbPixelFormat.TileRGBA8_SW : PsbPixelFormat.RGBA8_SW;
+                    return useTile
+                        ? (spec.UseBigEndian() ? PsbPixelFormat.TileBeRGBA8_SW : PsbPixelFormat.TileLeRGBA8_SW)
+                        : ((spec.UseBigEndian() ? PsbPixelFormat.BeRGBA8_SW : PsbPixelFormat.LeRGBA8_SW));
                 case "A8_SW":
                     return useTile ? PsbPixelFormat.TileA8_SW : PsbPixelFormat.A8_SW;
                 case "L8_SW":
@@ -343,9 +346,22 @@ namespace FreeMote
                 case PsbPixelFormat.LeRGBA4444:
                 case PsbPixelFormat.BeRGBA4444:
                     return "RGBA4444";
+                case PsbPixelFormat.BeRGBA8_SW:
+                case PsbPixelFormat.LeRGBA8_SW:
+                case PsbPixelFormat.TileBeRGBA8_SW:
+                case PsbPixelFormat.TileLeRGBA8_SW:
+                    return "RGBA8_SW";
+                case PsbPixelFormat.TileA8L8_SW:
+                case PsbPixelFormat.A8L8_SW:
+                    return "A8L8_SW";
+                case PsbPixelFormat.TileA8_SW:
+                    return "A8_SW";
+                case PsbPixelFormat.TileL8_SW:
+                    return "L8_SW";
+
                 default:
                     return pixelFormat.ToString();
-                    //throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
+                //throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null);
             }
         }
 
@@ -436,7 +452,7 @@ namespace FreeMote
             //bw.Write(str.ToCharArray());
             var enc = encoding ?? Encoding.UTF8;
             bw.Write(enc.GetBytes(str));
-            bw.Write((byte)0);
+            bw.Write((byte) 0);
         }
 
         /// <summary>
@@ -476,12 +492,15 @@ namespace FreeMote
         //https://stackoverflow.com/a/31107925
         internal static unsafe long IndexOf(this byte[] haystack, byte[] needle, long startOffset = 0)
         {
-            fixed (byte* h = haystack) fixed (byte* n = needle)
+            fixed (byte* h = haystack)
+            fixed (byte* n = needle)
             {
-                for (byte* hNext = h + startOffset, hEnd = h + haystack.LongLength + 1 - needle.LongLength, nEnd = n + needle.LongLength; hNext < hEnd; hNext++)
-                    for (byte* hInc = hNext, nInc = n; *nInc == *hInc; hInc++)
-                        if (++nInc == nEnd)
-                            return hNext - h;
+                for (byte* hNext = h + startOffset, hEnd = h + haystack.LongLength + 1 - needle.LongLength, nEnd = n + needle.LongLength;
+                     hNext < hEnd;
+                     hNext++)
+                for (byte* hInc = hNext, nInc = n; *nInc == *hInc; hInc++)
+                    if (++nInc == nEnd)
+                        return hNext - h;
                 return -1;
             }
         }

@@ -66,17 +66,24 @@ namespace FreeMote
                     data = ReadA8L8(data, width, height);
                     data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
-                case PsbPixelFormat.RGBA8_SW:
+                case PsbPixelFormat.BeRGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     Switch_0_2(ref data);
+                    break;
+                case PsbPixelFormat.LeRGBA8_SW:
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.LeRGBA4444_SW:
                     data = Argb428(data);
                     //Rgba2Argb(ref data);
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
-                case PsbPixelFormat.TileRGBA8_SW:
+                case PsbPixelFormat.TileLeRGBA8_SW:
                     data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.TileBeRGBA8_SW:
+                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    Argb2Rgba(ref data);
                     break;
                 case PsbPixelFormat.A8:
                     data = ReadA8(data, width, height);
@@ -128,6 +135,13 @@ namespace FreeMote
             {
                 Marshal.Copy(data, 0, iptr, data.Length);
                 bmp.UnlockBits(bmpData); // 解锁内存区域
+
+                //switch (colorFormat) // BMP post process
+                //{
+                //    case PsbPixelFormat.LeRGBA8_SW: // for PS3
+                //        //bmp.RotateFlip(RotateFlipType.Rotate90FlipX); //This is obviously wrong way to flip it, only right when width == height
+                //        break;
+                //}
                 return bmp;
             }
 
@@ -182,12 +196,19 @@ namespace FreeMote
                     //Switch_0_2(ref result);
                     result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
                     break;
-                case PsbPixelFormat.RGBA8_SW:
+                case PsbPixelFormat.BeRGBA8_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     Switch_0_2(ref result);
                     break;
-                case PsbPixelFormat.TileRGBA8_SW:
+                case PsbPixelFormat.LeRGBA8_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.TileLeRGBA8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.TileBeRGBA8_SW:
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    Argb2Rgba(ref result, true);
                     break;
                 case PsbPixelFormat.L8:
                     result = Argb2L8(result);

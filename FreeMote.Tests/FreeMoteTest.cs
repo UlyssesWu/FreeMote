@@ -180,7 +180,7 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var imgPath = Path.Combine(resPath, "pm_ev001b.psb", "0.bin");
-            RL.ConvertToImageFile(File.ReadAllBytes(imgPath), imgPath + "output.png", 1024, 32, PsbImageFormat.png, PsbPixelFormat.RGBA8_SW);
+            RL.ConvertToImageFile(File.ReadAllBytes(imgPath), imgPath + "output.png", 1024, 32, PsbImageFormat.png, PsbPixelFormat.BeRGBA8_SW);
         }
 
         [TestMethod]

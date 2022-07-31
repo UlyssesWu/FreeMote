@@ -51,6 +51,14 @@ namespace FreeMote
             return (GetTilePixelIndex(t, x, y, width) * (Bitmap.GetPixelFormatSize(pixelFormat) / 8));
         }
 
+        public static byte[] FlipTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        {
+            byte[] flipped = new byte[pixelData.Length];
+            var bpp = Bitmap.GetPixelFormatSize(pixelFormat);
+            //TODO: filp
+            return flipped;
+        }
+
         public static byte[] UntileTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
         {
             byte[] untiled = new byte[pixelData.Length];

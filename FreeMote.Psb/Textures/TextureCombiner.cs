@@ -63,7 +63,7 @@ namespace FreeMote.Psb.Textures
                         var tWidth = tex["width"].GetInt();
 
                         var image = md.ToImage();
-                        if (((int)image.PixelFormat | (int)PixelFormat.Indexed) != 0)
+                        if (((int)image.PixelFormat & (int)PixelFormat.Indexed) != 0)
                         {
                             hasPalette = true;
                             currentHasPalette = true;

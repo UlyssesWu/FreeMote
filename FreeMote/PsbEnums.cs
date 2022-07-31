@@ -106,6 +106,10 @@ namespace FreeMote
         /// </summary>
         vita,
         /// <summary>
+        /// PS3
+        /// </summary>
+        ps3,
+        /// <summary>
         /// PS4
         /// </summary>
         ps4,
@@ -121,6 +125,11 @@ namespace FreeMote
         /// Android
         /// </summary>
         and,
+        /// <summary>
+        /// XBox 360
+        /// </summary>
+        x360,
+
         other = Byte.MaxValue,
     }
 
@@ -196,11 +205,19 @@ namespace FreeMote
         /// <summary>
         /// BeRGBA8_SW (Swizzle) for vita
         /// </summary>
-        RGBA8_SW,
+        BeRGBA8_SW,
+        /// <summary>
+        /// LeRGBA8_SW (Swizzle) for PS3
+        /// </summary>
+        LeRGBA8_SW,
         /// <summary>
         /// LeRGBA8_SW (Tile) for PS4
         /// </summary>
-        TileRGBA8_SW,
+        TileLeRGBA8_SW,
+        /// <summary>
+        /// BeRGBA8_SW (Tile) for ?
+        /// </summary>
+        TileBeRGBA8_SW,
         /// <summary>
         /// Little Endian RGBA4444 with Swizzle for vita
         /// </summary>
