@@ -397,7 +397,7 @@ Example:
         }
 
         /// <summary>
-        /// [RequireUsing] <paramref name="stream"/> will be disposed if <paramref name="shellType"/> is MDF
+        /// [RequireUsing] <paramref name="stream"/> will be disposed if <paramref name="shellType"/> is MPack (e.g. mdf) types
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="shellType"></param>
@@ -615,7 +615,8 @@ Example:
                                 return;
                             }
 
-                            var shellType = MdfFile.IsSignatureMdf(bodyBytes) ? "MDF" : "";
+                            MPack.IsSignatureMPack(bodyBytes, out var shellType);
+                            //var shellType = MdfFile.IsSignatureMdf(bodyBytes) ? "MDF" : "";
                             var possibleFileNames = ArchiveInfoGetAllPossibleFileNames(pair.Key, suffix);
                             var relativePath = pair.Key;
                             var finalContext = new Dictionary<string, object>(context);
@@ -716,7 +717,7 @@ Example:
                                 continue;
                             }
 
-                            var shellType = MdfFile.IsSignatureMdf(bodyBytes) ? "MDF" : "";
+                            MPack.IsSignatureMPack(bodyBytes, out var shellType);
                             var possibleFileNames = ArchiveInfoGetAllPossibleFileNames(pair.Key, suffix);
                             var relativePath = pair.Key;
                             var finalContext = new Dictionary<string, object>(context);

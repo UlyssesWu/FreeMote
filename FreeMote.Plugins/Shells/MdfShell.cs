@@ -65,7 +65,7 @@ namespace FreeMote.Plugins.Shells
                 stream.Position = pos;
             }
 
-            return MdfFile.DecompressToPsbStream(stream, size) as MemoryStream;
+            return MPack.MdfDecompressToPsbStream(stream, size) as MemoryStream;
         }
 
         
@@ -77,7 +77,7 @@ namespace FreeMote.Plugins.Shells
                 fast = (bool) context[Context_PsbZlibFastCompress];
             }
 
-            var ms = MdfFile.CompressPsbToMdfStream(stream, fast);
+            var ms = MPack.CompressPsbToMdfStream(stream, fast);
 
             if (context != null && context.ContainsKey(Context_MdfKey))
             {

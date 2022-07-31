@@ -219,11 +219,11 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "e-mote38_free.mmo-repack.mmo");
             var path2 = Path.Combine(resPath, "emote38-pure.mmo");
 
-            MdfFile.CompressPsbToMdfStream(File.OpenRead(path2)).CopyTo(File.Create(path + "-repack.mmo"));
+            MPack.CompressPsbToMdfStream(File.OpenRead(path2)).CopyTo(File.Create(path + "-repack.mmo"));
 
             using (var mdfStream = File.OpenRead(path))
             {
-                using (var psbStream = MdfFile.DecompressToPsbStream(mdfStream))
+                using (var psbStream = MPack.MdfDecompressToPsbStream(mdfStream))
                 {
                     //using (var pureStream = new MemoryStream((int)psbStream.Length))
                     {

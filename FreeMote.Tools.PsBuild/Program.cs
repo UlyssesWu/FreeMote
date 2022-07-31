@@ -21,7 +21,7 @@ namespace FreeMote.Tools.PsBuild
     enum ProcessMethod
     {
         None = 0,
-        EncodeMdf = 1,
+        EncodeMPack = 1,
         Compile = 2,
     }
 
@@ -444,6 +444,12 @@ Example:
                 return;
             }
 
+            var defaultShellType = "MDF";
+            if (resx.Context.ContainsKey(Context_PsbShellType) && resx.Context[Context_PsbShellType] is string st)
+            {
+                defaultShellType = st;
+            }
+
             if (keyLen > 0)
             {
                 resx.Context[Context_MdfKeyLength] = keyLen;
@@ -577,9 +583,9 @@ Example:
                             else
                             {
                                 using var fs = File.OpenRead(f);
-                                if (!MdfFile.IsSignatureMdf(fs) && name.DefaultShellType() == "MDF")
+                                if (!MPack.IsSignatureMPack(fs, out _) && name.DefaultShellType() == "MDF")
                                 {
-                                    files[name] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.EncodeMdf);
+                                    files[name] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.EncodeMPack);
                                 }
                                 else
                                 {
@@ -650,7 +656,7 @@ Example:
 
                     mdfContext.Remove(Context_ArchiveSource);
 
-                    if (kv.Value.Method == ProcessMethod.EncodeMdf)
+                    if (kv.Value.Method == ProcessMethod.EncodeMPack)
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
 
@@ -660,7 +666,7 @@ Example:
                         //If you do this, the size of the view might be larger than the size of the source file on disk.
                         //This is because views are provided in units of system pages, and the size of the view is rounded up to the next system page size.
                         var fileSize = new FileInfo(kv.Value.Path).Length;
-                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), "MDF"))); //disposed later
+                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), defaultShellType))); //disposed later
                     }
                     else
                     {
@@ -770,7 +776,7 @@ Example:
                             }
                         }
                     }
-                    else if (kv.Value.Method == ProcessMethod.EncodeMdf)
+                    else if (kv.Value.Method == ProcessMethod.EncodeMPack)
                     {
                         if (!string.IsNullOrEmpty(key))
                         {
@@ -787,7 +793,7 @@ Example:
 
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         var fileSize = new FileInfo(kv.Value.Path).Length;
-                        using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), "MDF");
+                        using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), defaultShellType);
                         fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
                             {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
                         outputMdf.WriteTo(bodyFs);

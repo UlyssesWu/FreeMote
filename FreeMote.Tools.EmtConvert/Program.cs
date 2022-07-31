@@ -317,77 +317,9 @@ Example:
             });
 
             //mdf
-            app.Command("mdf", mdfCmd =>
-            {
-                //help
-                mdfCmd.Description = "Pack/Unpack MT19937 encrypted MDF/MFL (FreeMote.Plugins required)";
-                mdfCmd.HelpOption();
-                mdfCmd.ExtendedHelpText = @"
-Example:
-  EmtConvert mdf -k 1234567890ab -l 131 sample.psb 
-  EmtConvert mdf -s 1234567890absample.psb -l 131 sample.psb 
-  Hint: To pack a pure MDF, use `EmtConvert pack -s MDF <MDF file>`
-";
-                //options
-                //var optMdfPack = mdfCmd.Option("-p|--pack",
-                //    "Pack (Encrypt) a PSB to MT19937 MDF",
-                //    CommandOptionType.NoValue);
-                var optMdfSeed = mdfCmd.Option("-s|--seed <SEED>",
-                    "Set complete seed (Key+FileName)",
-                    CommandOptionType.SingleValue);
-                var optMdfKey = mdfCmd.Option("-k|--key <KEY>",
-                    "Set key (Infer file name from path)",
-                    CommandOptionType.SingleValue);
-                var optMdfKeyLen = mdfCmd.Option<uint>("-l|--length <LEN>",
-                    "Set key length. Usually use 131. If not set, it will be the length of the file (usually you don't expect this).",
-                    CommandOptionType.SingleValue);
-                //args
-                var argPsbPaths = mdfCmd.Argument("PSB", "PSB Paths", true);
+            app.Command("mdf", MPackCommand);
+            app.Command("mpack", MPackCommand);
 
-                mdfCmd.OnExecute(() =>
-                {
-                    string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
-                    string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
-                    if (string.IsNullOrEmpty(key) && string.IsNullOrEmpty(seed))
-                    {
-                        //throw new ArgumentNullException(nameof(key), "No key or seed specified.");
-                        Console.WriteLine("No key or seed specified. Packing to pure MDF.");
-
-                        foreach (var s in argPsbPaths.Values)
-                        {
-                            if (File.Exists(s))
-                            {
-                                ShellConvert(s, "MDF");
-                            }
-                        }
-                        return;
-                    }
-
-                    Dictionary<string, object> context = new Dictionary<string, object>();
-                    uint? keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : (uint?) null;
-                    if (keyLen.HasValue)
-                    {
-                        context[Context_MdfKeyLength] = keyLen;
-                    }
-
-                    foreach (var s in argPsbPaths.Values)
-                    {
-                        if (File.Exists(s))
-                        {
-                            var fileName = Path.GetFileName(s);
-                            string finalSeed = seed;
-                            if (key != null)
-                            {
-                                finalSeed = key + fileName;
-                            }
-
-                            context[Context_MdfKey] = finalSeed;
-                            ShellConvert(s, "", context); //Unpack
-                        }
-                    }
-                });
-            });
-            
             app.OnExecute(() =>
             {
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
@@ -453,6 +385,99 @@ Example:
             app.Execute(args);
 
             Console.WriteLine("Done.");
+        }
+
+        private static void MPackCommand(CommandLineApplication mdfCmd)
+        {
+            //help
+            mdfCmd.Description = "Pack/Unpack MT19937 encrypted MDF/MFL (FreeMote.Plugins required)";
+            mdfCmd.HelpOption();
+            mdfCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert mpack -k 1234567890ab -l 131 sample.psb 
+  EmtConvert mpack -s 1234567890absample.psb -l 131 sample.psb 
+  Hint: To pack a pure MDF, use `EmtConvert pack -s MDF <MDF file>`
+";
+            //options
+            //var optMdfPack = mdfCmd.Option("-p|--pack",
+            //    "Pack (Encrypt) a PSB to MT19937 MDF",
+            //    CommandOptionType.NoValue);
+            var optMdfSeed = mdfCmd.Option("-s|--seed <SEED>", "Set complete seed (Key+FileName)", CommandOptionType.SingleValue);
+            var optMdfKey = mdfCmd.Option("-k|--key <KEY>", "Set key (Infer file name from path)", CommandOptionType.SingleValue);
+            var optMdfKeyLen = mdfCmd.Option<uint>("-l|--length <LEN>", "Set key length. Usually use 131. If not set, it will be the length of the file (usually you don't expect this).", CommandOptionType.SingleValue);
+            var optSuffixList = mdfCmd.Option("-x|--suffix <SUFFIX>", "Set expire_suffix_list if the file name is not correctly named.", CommandOptionType.MultipleValue);
+            //args
+            var argPsbPaths = mdfCmd.Argument("PSB", "PSB Paths", true);
+
+            mdfCmd.OnExecute(() =>
+            {
+                var suffixList = optSuffixList.HasValue() ? optSuffixList.Values : null;
+                string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
+                string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
+                if (string.IsNullOrEmpty(key) && string.IsNullOrEmpty(seed))
+                {
+                    //throw new ArgumentNullException(nameof(key), "No key or seed specified.");
+                    Console.WriteLine("No key or seed specified. Packing to pure MDF.");
+
+                    foreach (var s in argPsbPaths.Values)
+                    {
+                        if (File.Exists(s))
+                        {
+                            ShellConvert(s, "MDF");
+                        }
+                    }
+
+                    return;
+                }
+
+                Dictionary<string, object> context = new Dictionary<string, object>();
+                uint? keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : (uint?) null;
+                if (keyLen.HasValue)
+                {
+                    context[Context_MdfKeyLength] = keyLen;
+                }
+
+                foreach (var s in argPsbPaths.Values)
+                {
+                    if (File.Exists(s))
+                    {
+                        var fileName = Path.GetFileName(s);
+
+                        string finalSeed = seed;
+                        if (key != null)
+                        {
+                            finalSeed = key + fileName;
+                        }
+
+                        context[Context_MdfKey] = finalSeed;
+                        var success = ShellConvert(s, "", context); //Unpack
+
+                        if (!success && suffixList != null)
+                        {
+                            foreach (var suffix in suffixList)
+                            {
+                                var allPossibleNames = PsbExtension.ArchiveInfoGetAllPossibleFileNames(fileName, suffix);
+
+                                foreach (var possibleName in allPossibleNames)
+                                {
+                                    finalSeed = seed;
+                                    if (key != null)
+                                    {
+                                        finalSeed = key + possibleName;
+                                    }
+
+                                    context[Context_MdfKey] = finalSeed;
+                                    if (ShellConvert(s, "", context))
+                                    {
+                                        goto CONVERT_OK;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    CONVERT_OK: ;
+                }
+            });
         }
 
         private static void Draw(string path, int width, int height)

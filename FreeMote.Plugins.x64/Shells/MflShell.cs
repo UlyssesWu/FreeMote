@@ -62,6 +62,10 @@ namespace FreeMote.Plugins.Shells
             stream.Read(input, 0, input.Length);
 
             var output = FastLzNative.Decompress(input, unzippedSize);
+            if (output == null)
+            {
+                throw new InvalidDataException("Fast LZ decompress failed");
+            }
 
             return new MemoryStream(output);
         }

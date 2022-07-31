@@ -610,7 +610,7 @@ namespace FreeMote.Psb
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.WriteStringZeroTrim(MPack.MdfSignature);
                 bw.Write((uint)ms.Length);
                 //bw.Write(ZlibCompress.Compress(ms));
                 ZlibCompress.CompressToBinaryWriter(bw, ms);
@@ -654,7 +654,7 @@ namespace FreeMote.Psb
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.WriteStringZeroTrim(MPack.MdfSignature);
                 bw.Write((uint)ms.Length);
                 //bw.Write(ZlibCompress.Compress(ms));
                 ZlibCompress.CompressToBinaryWriter(bw, ms);
