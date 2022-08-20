@@ -362,8 +362,8 @@ namespace FreeMote.Tests
             var path = Path.Combine(resPath, "base_00b33f69d51e22005fd754f79e494968", "2.bin");
             var pixels = File.ReadAllBytes(path);
             var p1 = PostProcessing.UnswizzleTexture(pixels, 1024, 256, PixelFormat.Format32bppArgb);
-            var p2 = PostProcessing.FlipPs3Texture(p1, 1024, 256, PixelFormat.Format32bppArgb);
-            var p3 = PostProcessing.FlipPs3Texture(p2, 1024, 256, PixelFormat.Format32bppArgb);
+            var p2 = PostProcessing.FlipTexturePs3(p1, 1024, 256, PixelFormat.Format32bppArgb);
+            var p3 = PostProcessing.FlipTexturePs3(p2, 1024, 256, PixelFormat.Format32bppArgb);
             var p4 = PostProcessing.SwizzleTexture(p3, 1024, 256, PixelFormat.Format32bppArgb);
 
             Assert.IsTrue(pixels.SequenceEqual(p4.Take(pixels.Length)));

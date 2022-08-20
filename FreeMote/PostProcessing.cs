@@ -62,7 +62,7 @@ namespace FreeMote
         /// <param name="pixelFormat"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static byte[] FlipPs3Texture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        public static byte[] FlipTexturePs3(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
         {
             var lw = Math.Log(width, 2);
             if (lw != (int) lw)
