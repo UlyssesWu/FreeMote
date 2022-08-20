@@ -58,6 +58,10 @@ namespace FreeMote.Tools.EmtConvert
         /// Unswizzle PSP
         /// </summary>
         Unswizzle_PSP,
+        /// <summary>
+        /// Flip PS3
+        /// </summary>
+        Flip_PS3,
     }
 
     public enum PsbFixMethod
@@ -182,6 +186,9 @@ Example:
                                 break;
                             case PsbImageConvertMethod.Unswizzle_PSP:
                                 bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
+                                break;
+                            case PsbImageConvertMethod.Flip_PS3:
+                                bts = PostProcessing.FlipTexturePs3(bts, width, height, pixelFormat);
                                 break;
                             default:
                                 continue;
