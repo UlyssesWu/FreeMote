@@ -1,8 +1,10 @@
 ﻿// Untile/Unswizzle by xdaniel. Copyright(c) 2016 xdaniel(Daniel R.) / DigitalZero Domain. License: The MIT License (MIT) 
 // Tile/Swizzle by Ulysses (wdwxy12345@gmail.com). License: same as FreeMote
+
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading.Tasks;
 
 namespace FreeMote
 {
@@ -48,14 +50,60 @@ namespace FreeMote
 
         private static int GetTilePixelOffset(int t, int x, int y, int width, PixelFormat pixelFormat)
         {
-            return (GetTilePixelIndex(t, x, y, width) * (Bitmap.GetPixelFormatSize(pixelFormat) / 8));
+            return (GetTilePixelIndex(t, x, y, width) * (Image.GetPixelFormatSize(pixelFormat) / 8));
         }
 
-        public static byte[] FlipTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        /// <summary>
+        /// Flip texture for PS3 (Reversible)
+        /// </summary>
+        /// <param name="pixelData"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="pixelFormat"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static byte[] FlipPs3Texture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
         {
+            var lw = Math.Log(width, 2);
+            if (lw != (int) lw)
+            {
+                throw new ArgumentException("Width must be a power of 2");
+            }
+
+            var lh = Math.Log(height, 2);
+            if (lh != (int) lh)
+            {
+                throw new ArgumentException("Height must be a power of 2");
+            }
+
             byte[] flipped = new byte[pixelData.Length];
-            var bpp = Bitmap.GetPixelFormatSize(pixelFormat);
-            //TODO: filp
+            var bpp = Image.GetPixelFormatSize(pixelFormat) / 8;
+            bool wide = width > height;
+            int tileLength = wide ? height : width;
+
+            //对于每个坐标点，先上下翻转，再右转90度
+            Parallel.For(0, pixelData.Length / bpp, pixelIdx =>
+            {
+                int x = pixelIdx % width;
+                int y = pixelIdx / width;
+                var i = pixelIdx * bpp;
+                int targetX, targetY = 0;
+                if (wide)
+                {
+                    targetY = x % tileLength;
+                    targetX = y + x / tileLength * tileLength;
+                }
+                else
+                {
+                    targetX = y % tileLength;
+                    targetY = x + y / tileLength * tileLength;
+                }
+
+                var targetIdx = targetX + targetY * width;
+                var targetI = targetIdx * bpp;
+                pixelData.AsSpan().Slice(i, bpp).CopyTo(flipped.AsSpan(targetI, bpp));
+            });
+
             return flipped;
         }
 
@@ -107,7 +155,7 @@ namespace FreeMote
 
         private static int Compact1By1(int x)
         {
-            x &= 0x55555555;                 // x = -f-e -d-c -b-a -9-8 -7-6 -5-4 -3-2 -1-0
+            x &= 0x55555555; // x = -f-e -d-c -b-a -9-8 -7-6 -5-4 -3-2 -1-0
             x = (x ^ (x >> 1)) & 0x33333333; // x = --fe --dc --ba --98 --76 --54 --32 --10
             x = (x ^ (x >> 2)) & 0x0f0f0f0f; // x = ---- fedc ---- ba98 ---- 7654 ---- 3210
             x = (x ^ (x >> 4)) & 0x00ff00ff; // x = ---- ---- fedc ba98 ---- ---- 7654 3210
@@ -117,7 +165,7 @@ namespace FreeMote
 
         private static int Part1By1(int x)
         {
-            x &= 0x0000ffff;                 // x = ---- ---- ---- ---- fedc ba98 7654 3210
+            x &= 0x0000ffff; // x = ---- ---- ---- ---- fedc ba98 7654 3210
             x = (x ^ (x << 8)) & 0x00ff00ff; // x = ---- ---- fedc ba98 ---- ---- 7654 3210
             x = (x ^ (x << 4)) & 0x0f0f0f0f; // x = ---- fedc ---- ba98 ---- 7654 ---- 3210
             x = (x ^ (x << 2)) & 0x33333333; // x = --fe --dc --ba --98 --76 --54 --32 --10
@@ -144,12 +192,12 @@ namespace FreeMote
         {
             var c1 = bmp.GetPixel(x1, y1);
             var c2 = bmp.GetPixel(x2, y2);
-            bmp.SetPixel(x2,y2, c1);
-            bmp.SetPixel(x1,y1, c2);
+            bmp.SetPixel(x2, y2, c1);
+            bmp.SetPixel(x1, y1, c2);
         }
 
         /// <summary>
-        /// Unswizzle, this is much slower than <seealso cref="UnswizzleTexture"/>
+        /// Unswizzle, this is much slower than <seealso cref="SwizzleTexture"/>
         /// </summary>
         /// <param name="bmp"></param>
         public static void Swizzle(this Bitmap bmp)
@@ -158,7 +206,7 @@ namespace FreeMote
             var height = bmp.Height;
 
             int min = width < height ? width : height;
-            int k = (int)Math.Log(min, 2);
+            int k = (int) Math.Log(min, 2);
 
             for (int i = 0; i < width * height; i++)
             {
@@ -231,7 +279,7 @@ namespace FreeMote
 
             byte[] unswizzled = new byte[Math.Max(pixelData.Length, unswizzledShouldBeSize)];
             int min = width < height ? width : height;
-            int k = (int)Math.Log(min, 2);
+            int k = (int) Math.Log(min, 2);
 
             for (int i = 0; i < width * height; i++)
             {
@@ -276,11 +324,14 @@ namespace FreeMote
                     {
                         continue;
                     }
+
                     var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
                     var dstPosition = dstIndex / scale;
                     var dstSubIndex = dstIndex % scale;
                     // 这里是大端，dstSubIndex = 0, 则设置大端前2字节
-                    unswizzled[dstPosition] = dstSubIndex == 1 ? (byte)((unswizzled[dstPosition] & 0xF0) | srcData) : (byte)((unswizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                    unswizzled[dstPosition] = dstSubIndex == 1
+                        ? (byte) ((unswizzled[dstPosition] & 0xF0) | srcData)
+                        : (byte) ((unswizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
                 }
                 else
                 {
@@ -289,6 +340,7 @@ namespace FreeMote
                     {
                         continue;
                     }
+
                     if (bytesPerPixel <= 1)
                     {
                         Buffer.BlockCopy(pixelData, startCopyPosition, unswizzled, dstIndex * bytesPerPixel,
@@ -302,6 +354,7 @@ namespace FreeMote
                         {
                             actualCopySize = pixelData.Length - startCopyPosition;
                         }
+
                         Buffer.BlockCopy(pixelData, startCopyPosition, unswizzled, dstIndex * bytesPerPixel,
                             actualCopySize);
                     }
@@ -311,7 +364,8 @@ namespace FreeMote
             return unswizzled;
         }
 
-        public static byte[] SwizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat, SwizzleType swizzle = SwizzleType.PSV)
+        public static byte[] SwizzleTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat,
+            SwizzleType swizzle = SwizzleType.PSV)
         {
             switch (swizzle)
             {
@@ -339,6 +393,7 @@ namespace FreeMote
                     throw new NotSupportedException("BytesPerPixel must >= 0.5");
                 }
             }
+
             byte[] swizzled = new byte[pixelData.Length];
 
             for (int y = 0; y < height; y++)
@@ -356,11 +411,16 @@ namespace FreeMote
                         {
                             continue;
                         }
-                        var srcData = srcSubIndex == 1 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
-                        
+
+                        var srcData = srcSubIndex == 1
+                            ? pixelData[srcPosition] & 0x0F
+                            : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
+
                         var dstPosition = dstIndex / scale;
                         var dstSubIndex = dstIndex % scale;
-                        swizzled[dstPosition] = dstSubIndex == 0 ? (byte)((swizzled[dstPosition] & 0xF0) | srcData) : (byte)((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                        swizzled[dstPosition] = dstSubIndex == 0
+                            ? (byte) ((swizzled[dstPosition] & 0xF0) | srcData)
+                            : (byte) ((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
                     }
                     else
                     {
@@ -388,6 +448,7 @@ namespace FreeMote
                     throw new NotSupportedException("BytesPerPixel must >= 0.5");
                 }
             }
+
             byte[] swizzled = new byte[pixelData.Length];
             int min = width < height ? width : height;
             int k = (int) Math.Log(min, 2);
@@ -420,12 +481,14 @@ namespace FreeMote
                 {
                     var srcIndex = (y * width) + x;
                     var srcPosition = srcIndex / scale;
-                    var srcSubIndex = srcIndex % scale; 
+                    var srcSubIndex = srcIndex % scale;
                     var srcData = srcSubIndex == 1 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
                     var dstPosition = i / scale;
                     var dstSubIndex = i % scale;
                     //Inverse the order comparing to Unswizzle
-                    swizzled[dstPosition] = dstSubIndex == 0 ? (byte)((swizzled[dstPosition] & 0xF0) | srcData) : (byte)((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                    swizzled[dstPosition] = dstSubIndex == 0
+                        ? (byte) ((swizzled[dstPosition] & 0xF0) | srcData)
+                        : (byte) ((swizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
                 }
                 else
                 {
@@ -472,10 +535,15 @@ namespace FreeMote
                         {
                             continue;
                         }
-                        var srcData = srcSubIndex == 0 ? pixelData[srcPosition] & 0x0F : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
+
+                        var srcData = srcSubIndex == 0
+                            ? pixelData[srcPosition] & 0x0F
+                            : ((pixelData[srcPosition] & 0xF0) >> pixelFormatSize);
                         var dstPosition = dstIndex / scale;
                         var dstSubIndex = dstIndex % scale;
-                        unswizzled[dstPosition] = dstSubIndex == 1 ? (byte)((unswizzled[dstPosition] & 0xF0) | srcData) : (byte)((unswizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
+                        unswizzled[dstPosition] = dstSubIndex == 1
+                            ? (byte) ((unswizzled[dstPosition] & 0xF0) | srcData)
+                            : (byte) ((unswizzled[dstPosition] & 0x0F) | (srcData << pixelFormatSize));
                     }
                     else
                     {
@@ -498,6 +566,7 @@ namespace FreeMote
                             {
                                 actualCopySize = pixelData.Length - startCopyPosition;
                             }
+
                             Buffer.BlockCopy(pixelData, startCopyPosition, unswizzled, dstIndex * bytesPerPixel,
                                 actualCopySize);
                         }
@@ -508,14 +577,16 @@ namespace FreeMote
             return unswizzled;
         }
 
-        private static void GetPixelCoordinatesPSP(int origX, int origY, int width, int height, PixelFormat pixelFormat, out int transformedX, out int transformedY)
+        private static void GetPixelCoordinatesPSP(int origX, int origY, int width, int height, PixelFormat pixelFormat,
+            out int transformedX, out int transformedY)
         {
             var bitsPerPixel = Image.GetPixelFormatSize(pixelFormat);
             int tileWidth = (bitsPerPixel < 8 ? 32 : (16 / (bitsPerPixel / 8)));
             GetPixelCoordinatesTiledEx(origX, origY, width, height, out transformedX, out transformedY, tileWidth, 8, null);
         }
 
-        private static void GetPixelCoordinatesTiledEx(int origX, int origY, int width, int height, out int transformedX, out int transformedY, int tileWidth, int tileHeight, int[] pixelOrdering)
+        private static void GetPixelCoordinatesTiledEx(int origX, int origY, int width, int height, out int transformedX,
+            out int transformedY, int tileWidth, int tileHeight, int[] pixelOrdering)
         {
             // TODO: sometimes eats the last few blocks(?) in the image (ex. BC7 GNFs)
 
@@ -546,7 +617,7 @@ namespace FreeMote
             transformedX = (globalX + inTileX);
             transformedY = (globalY + inTileY);
         }
-        #endregion
 
+        #endregion
     }
 }
