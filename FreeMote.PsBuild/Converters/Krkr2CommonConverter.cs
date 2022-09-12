@@ -364,7 +364,7 @@ namespace FreeMote.PsBuild.Converters
                             var name = $"{partName}{Delimiter}{iconName}";
                             if (!iconInfos.ContainsKey(name))
                             {
-                                Console.WriteLine($"[WARN] cannot find icon {name} in source (it may happens in krkr PSB), ignored.");
+                                Logger.LogWarn($"[WARN] cannot find icon {name} in source (it may happens in krkr PSB), ignored.");
                                 dic.Remove("src");
                             }
                             else
@@ -453,7 +453,7 @@ namespace FreeMote.PsBuild.Converters
                         }
                         else
                         {
-                            Console.WriteLine($"[WARN] Cannot convert timeline {item["label"].ToString()}");
+                            Logger.LogWarn($"[WARN] Cannot convert timeline {item["label"].ToString()}");
                         }
                     }
                 }

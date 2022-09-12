@@ -208,6 +208,16 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestCI4_SW()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var imgPath = Path.Combine(resPath, "ci4_sw.png");
+            var bts = RL.GetPixelBytesFromImageFile(imgPath, PsbPixelFormat.CI4_SW);
+            
+            RL.ConvertToImageFile(bts, "ci4-repack.png", 9000, 9000, PsbImageFormat.png, PsbPixelFormat.CI4_SW);
+        }
+
+        [TestMethod]
         public void TestFastLz()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

@@ -34,7 +34,7 @@ namespace FreeMote.Tools.PsBuild
         {
             Console.WriteLine("FreeMote PSB Compiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
-
+            Logger.InitConsole();
             FreeMount.Init();
             Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
 

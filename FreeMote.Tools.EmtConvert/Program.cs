@@ -81,6 +81,7 @@ namespace FreeMote.Tools.EmtConvert
         {
             Console.WriteLine("FreeMote PSB Converter");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+            Logger.InitConsole();
             FreeMount.Init();
             Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
             Console.WriteLine();
@@ -397,7 +398,7 @@ Example:
         private static void MPackCommand(CommandLineApplication mdfCmd)
         {
             //help
-            mdfCmd.Description = "Pack/Unpack MT19937 encrypted MDF/MFL (FreeMote.Plugins required)";
+            mdfCmd.Description = "Pack/Unpack MT19937 encrypted MDF/MFL/MZS (FreeMote.Plugins required)";
             mdfCmd.HelpOption();
             mdfCmd.ExtendedHelpText = @"
 Example:

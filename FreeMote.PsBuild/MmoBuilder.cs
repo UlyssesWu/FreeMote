@@ -582,7 +582,7 @@ namespace FreeMote.PsBuild
                                     dic["particle"] = "quad".ToPsbString();
                                     break;
                                 default:
-                                    Console.WriteLine("[WARN] unknown particle!");
+                                    Logger.LogWarn("[WARN] unknown particle!");
                                     break;
                             }
                         }

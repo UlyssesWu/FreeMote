@@ -89,7 +89,7 @@ namespace FreeMote.Plugins.Images
 
                 if (!File.Exists(tempOutFile))
                 {
-                    Console.WriteLine("[ERROR] ASTC convert failed.");
+                    Logger.LogError("[ERROR] ASTC convert failed.");
                     File.Delete(tempFile);
                     return null;
                 }
@@ -97,14 +97,14 @@ namespace FreeMote.Plugins.Images
                 outBytes = File.ReadAllBytes(tempOutFile);
                 if (outBytes.Length == 0)
                 {
-                    Console.WriteLine("[WARN] ASTC encoder output length is 0");
+                    Logger.LogWarn("[WARN] ASTC encoder output length is 0");
                 }
                 File.Delete(tempFile);
                 File.Delete(tempOutFile);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Log(e);
             }
 
             if (context != null)

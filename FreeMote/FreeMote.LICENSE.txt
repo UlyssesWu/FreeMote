@@ -13,6 +13,7 @@ gdkchan (https://github.com/gdkchan)
 mfascia (https://github.com/mfascia)
 Singyuen Yip (yeshengyuan@foxmail.com)
 Maarten Meuris (https://github.com/Nyerguds)
+Rick Strahl (https://github.com/RickStrahl)
 
 ------------------------------
 psbfile (licensed under MIT) is a reference for PSB format related codes. AUTHOR: number201724 (https://github.com/number201724)

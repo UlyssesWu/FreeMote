@@ -301,7 +301,7 @@ namespace FreeMote.PsBuild.Converters
                 }
                 else
                 {
-                    Console.WriteLine($"[WARN] Failed to insert to path {path}, it will be in root path.");
+                    Logger.LogWarn($"[WARN] Failed to insert to path {path}, it will be in root path.");
                     list.Add(item);
                 }
             }

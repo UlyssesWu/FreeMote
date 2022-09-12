@@ -49,7 +49,7 @@ namespace FreeMote.Plugins.Audio
         {
             if (!File.Exists(ToolPath))
             {
-                Console.WriteLine($"[WARN] Cannot convert without {EncoderTool}");
+                Logger.LogWarn($"[WARN] Cannot convert without {EncoderTool}");
                 return false;
             }
 
@@ -101,7 +101,7 @@ namespace FreeMote.Plugins.Audio
                 process?.WaitForExit();
                 if (!File.Exists(tempOutFile) || process?.ExitCode != 0)
                 {
-                    Console.WriteLine("[ERROR] VAG convert failed.");
+                    Logger.LogError("[ERROR] VAG convert failed.");
                     return false;
                 }
 
@@ -111,7 +111,7 @@ namespace FreeMote.Plugins.Audio
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Log(e);
             }
 
             if (data.Data == null)

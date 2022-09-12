@@ -155,13 +155,13 @@ namespace FreeMote.Psb
 
                         if (texIdx == null)
                         {
-                            Console.WriteLine($"[WARN]{resPath} is not used since the file name cannot be recognized.");
+                            Logger.LogWarn($"[WARN]{resPath} is not used since the file name cannot be recognized.");
                             continue;
                         }
 
                         if (resList.Count <= texIdx.Value)
                         {
-                            Console.WriteLine($"[WARN]{resPath} is not used since the tex No. is too large.");
+                            Logger.LogWarn($"[WARN]{resPath} is not used since the tex No. is too large.");
                             continue;
                         }
 
@@ -187,7 +187,7 @@ namespace FreeMote.Psb
 
                 if (resMd == null)
                 {
-                    Console.WriteLine($"[WARN]{resPath} is not used.");
+                    Logger.LogWarn($"[WARN]{resPath} is not used.");
                     continue;
                 }
 
@@ -243,7 +243,7 @@ namespace FreeMote.Psb
                 {
                     if (overwrite)
                     {
-                        Console.WriteLine($"[WARN]{resxResource.Key} is not used.");
+                        Logger.LogWarn($"[WARN]{resxResource.Key} is not used.");
                     }
                     continue;
                 }
@@ -266,7 +266,7 @@ namespace FreeMote.Psb
             {
                 if (extraResource.Index == null)
                 {
-                    Console.WriteLine("[WARN] Found Extra resource without index. Skipped.");
+                    Logger.LogWarn("[WARN] Found Extra resource without index. Skipped.");
                     continue;
                 }
                 var key = $"{Consts.ExtraResourceIdentifierChar}{extraResource.Index}";
@@ -276,7 +276,7 @@ namespace FreeMote.Psb
                     {
                         if (!LinkFromFile(extraResource, key))
                         {
-                            Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
+                            Logger.LogWarn($"[WARN] Extra resource {key} cannot be linked.");
                         }
                     }
                 }
@@ -284,7 +284,7 @@ namespace FreeMote.Psb
                 {
                     if (!LinkFromFile(extraResource, key))
                     {
-                        Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
+                        Logger.LogWarn($"[WARN] Extra resource {key} cannot be linked.");
                     }
                 }
             }
@@ -570,7 +570,7 @@ namespace FreeMote.Psb
                             {
                                 if (Consts.Verbose)
                                 {
-                                    Console.WriteLine($"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
+                                    Logger.LogWarn($"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
                                 }
 
                                 //continue;
@@ -583,7 +583,7 @@ namespace FreeMote.Psb
                         {
                             if (resDictionary.ContainsKey(friendlyName)) // friendly name is also used (most likely its the same res reused), no name can be used to save
                             {
-                                Console.WriteLine(
+                                Logger.LogWarn(
                                     $"[WARN] Resource Index {resource.Index} and Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
                                 continue; //just skip
                             }
@@ -592,7 +592,7 @@ namespace FreeMote.Psb
                             {
                                 if (Consts.Verbose)
                                 {
-                                    Console.WriteLine($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
+                                    Logger.Log($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
                                 }
                             }
                         }

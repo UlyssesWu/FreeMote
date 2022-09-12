@@ -58,7 +58,7 @@ namespace FreeMote.Psb.Types
                     context.TryGet(Consts.Context_DisableCombinedImage, out bool disableCombinedImage);
                     if (hasPalette && !disableCombinedImage)
                     {
-                        Console.WriteLine("[WARN] Found images with palette (Indexed images). Piece images will be used when compiling.");
+                        Logger.LogWarn("[WARN] Found images with palette (Indexed images). Piece images will be used when compiling.");
                         disableCombinedImage = true;
                     }
 
@@ -72,7 +72,7 @@ namespace FreeMote.Psb.Types
                             {
                                 if (!bitmaps[md.Part].Parts.Any(p => p.Resource.Index != null && p.Index == md.Index))
                                 {
-                                    Console.WriteLine($"[WARN] Image is not fully combined: {md}");
+                                    Logger.LogWarn($"[WARN] Image is not fully combined: {md}");
                                     allExtracted = false;
                                     break;
                                 }
@@ -91,7 +91,7 @@ namespace FreeMote.Psb.Types
                         }
                     }
 
-                    Console.WriteLine("[WARN] Combined image won't be used when compiling. Now extracting all pieces...");
+                    Logger.LogWarn("[WARN] Combined image won't be used when compiling. Now extracting all pieces...");
                 }
             }
 

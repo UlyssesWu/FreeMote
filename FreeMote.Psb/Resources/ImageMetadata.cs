@@ -170,6 +170,11 @@ namespace FreeMote.Psb
 
         public PsbType PsbType { get; set; } = PsbType.Motion;
 
+        private static bool IsPowOf2(int n)
+        {
+            return n >= 2 && (n & (n - 1)) == 0;
+        }
+
         /// <summary>
         /// Check if the <see cref="Data"/> looks correct
         /// </summary>
@@ -200,6 +205,14 @@ namespace FreeMote.Psb
                 }
             }
 
+            if (PixelFormat == PsbPixelFormat.CI4_SW || PixelFormat == PsbPixelFormat.CI8_SW)
+            {
+                if (!IsPowOf2(Width) || !IsPowOf2(Height))
+                {
+                    return (false, $"For Swizzle images, Width and Height should be 2^n, but currently are {Width} x {Height}");
+                }
+            }
+
             return (true, string.Empty);
         }
 
@@ -215,8 +228,8 @@ namespace FreeMote.Psb
             var (valid, checkResult) = Validate();
             if (!valid)
             {
-                Console.WriteLine($"[WARN] Validation failed when linking {fullPath} . {checkResult}");
-                Console.WriteLine("Check your image format (bit depth, size, pixel format). You should keep it same as original.");
+                Logger.LogWarn($"[WARN] Validation failed when linking {fullPath} . {checkResult}");
+                Logger.LogWarn("Check your image format (bit depth, size, pixel format). You should keep it same as original.");
                 if (Consts.StrictMode)
                 {
                     throw new FormatException(checkResult);
@@ -411,11 +424,6 @@ namespace FreeMote.Psb
             context.TryGet(Consts.Context_DisableCombinedImage, out bool disableCombinedImage);
             if (PsbType == PsbType.Tachie && !disableCombinedImage) //Let's split Tachie
             {
-                static bool IsPowOf2(int n)
-                {
-                    return n >= 2 && (n & (n - 1)) == 0;
-                }
-
                 //Check if the source image is a combined image
                 if (image.Width == Width && image.Height == Height && IsPowOf2(Width) && IsPowOf2(Height))
                 {
@@ -451,11 +459,11 @@ namespace FreeMote.Psb
                         var astcPath = Path.ChangeExtension(path, ".astc");
                         if (File.Exists(astcPath))
                         {
-                            Console.WriteLine($"[WARN] Can not encode ASTC, using {astcPath}");
+                            Logger.LogWarn($"[WARN] Can not encode ASTC, using {astcPath}");
                             return AstcFile.CutHeader(File.ReadAllBytes(astcPath));
                         }
 
-                        Console.WriteLine($"[WARN] Can not convert image to ASTC: {path}");
+                        Logger.LogWarn($"[WARN] Can not convert image to ASTC: {path}");
                         //data = File.ReadAllBytes(path);
                     }
                     break;
@@ -473,12 +481,12 @@ namespace FreeMote.Psb
                         var tlgPath = Path.ChangeExtension(path, ".tlg");
                         if (File.Exists(tlgPath))
                         {
-                            Console.WriteLine($"[WARN] Can not encode TLG, using {tlgPath}");
+                            Logger.LogWarn($"[WARN] Can not encode TLG, using {tlgPath}");
                             data = File.ReadAllBytes(tlgPath);
                         }
                         else
                         {
-                            Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
+                            Logger.LogWarn($"[WARN] Can not convert image to TLG: {path}");
                             //data = File.ReadAllBytes(path);
                         }
                     }
@@ -491,7 +499,7 @@ namespace FreeMote.Psb
                     }
                     else
                     {
-                        Console.WriteLine($"[WARN] Unsupported image: {path}");
+                        Logger.LogWarn($"[WARN] Unsupported image: {path}");
                         data = File.ReadAllBytes(path);
                     }
                     break;

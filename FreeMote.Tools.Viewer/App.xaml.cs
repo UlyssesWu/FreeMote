@@ -29,6 +29,7 @@ namespace FreeMote.Tools.Viewer
             Console.WriteLine("FreeMote Viewer");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
             Console.WriteLine();
+            Logger.InitConsole();
             var app = new CommandLineApplication();
             app.OptionsComparison = StringComparison.OrdinalIgnoreCase;
 

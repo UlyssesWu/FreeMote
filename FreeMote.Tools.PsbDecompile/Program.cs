@@ -23,7 +23,7 @@ namespace FreeMote.Tools.PsbDecompile
         {
             Console.WriteLine("FreeMote PSB Decompiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
-
+            Logger.InitConsole();
             FreeMount.Init();
             Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
 

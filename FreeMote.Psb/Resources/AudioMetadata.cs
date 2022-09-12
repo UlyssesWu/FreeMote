@@ -106,7 +106,7 @@ namespace FreeMote.Psb
             }
             if (ChannelList.Count > 1 && AudioFormat != PsbAudioFormat.Unknown && AudioFormat != PsbAudioFormat.ADPCM)
             {
-                Console.WriteLine("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
+                Logger.LogWarn("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
             }
             //audio.vag.l.wav
             var ext = Path.GetExtension(fullPath).ToLowerInvariant(); //.wav
@@ -131,13 +131,13 @@ namespace FreeMote.Psb
                     {
                         if (ChannelList.Count > n)
                         {
-                            Console.WriteLine("[WARN] Channel index is out of range.");
+                            Logger.LogWarn("[WARN] Channel index is out of range.");
                         }
                         targetChannel = ChannelList[n];
                     }
                     else
                     {
-                        Console.WriteLine("[WARN] Cannot parse channel index.");
+                        Logger.LogWarn("[WARN] Cannot parse channel index.");
                     }
                 }
             }
@@ -219,14 +219,14 @@ namespace FreeMote.Psb
                             {
                                 if (channel.Data.Index == null)
                                 {
-                                    Console.WriteLine($"[WARN] Channel is not loaded: Channel resource don't have a Index.");
+                                    Logger.LogWarn("[WARN] Channel is not loaded: Channel resource don't have a Index.");
                                     continue;
                                 }
 
                                 var channelFileName = Path.ChangeExtension(fullPath, $".#{channel.Data.Index.Value}{ext}");
                                 if (!File.Exists(channelFileName))
                                 {
-                                    Console.WriteLine(
+                                    Logger.LogWarn(
                                         $"[WARN] Channel is not loaded: Failed to find Channel resource from {channelFileName}");
                                     continue;
                                 }
@@ -307,7 +307,7 @@ namespace FreeMote.Psb
                 }
                 else
                 {
-                    Console.WriteLine(
+                    Logger.LogWarn(
                         $"[WARN] There is no encoder for {channel.Extension}! {fullPath} is not used.");
                 }
             }

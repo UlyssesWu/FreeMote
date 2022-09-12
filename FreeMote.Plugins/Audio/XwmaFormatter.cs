@@ -40,7 +40,7 @@ namespace FreeMote.Plugins.Audio
         {
             if (!File.Exists(ToolPath))
             {
-                Console.WriteLine($"[WARN] Cannot convert without {EncoderTool}");
+                Logger.LogWarn($"[WARN] Cannot convert without {EncoderTool}");
                 return false;
             }
 
@@ -77,7 +77,7 @@ namespace FreeMote.Plugins.Audio
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Log(e);
             }
                 
 
@@ -120,7 +120,7 @@ namespace FreeMote.Plugins.Audio
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Log(e);
             }
 
             if (oms == null)

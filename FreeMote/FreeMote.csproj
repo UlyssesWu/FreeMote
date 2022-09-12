@@ -53,6 +53,7 @@
     <Compile Include="Bc7Decoder.cs" />
     <Compile Include="BitmapExtension.cs" />
     <Compile Include="BitmapHelper.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="PrefixTree.cs" />
     <Compile Include="DxtCodec.cs" />
     <Compile Include="DxtUtil.cs" />

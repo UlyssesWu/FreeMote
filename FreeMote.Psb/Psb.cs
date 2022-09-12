@@ -606,7 +606,7 @@ namespace FreeMote.Psb
                 var nameIdx = (int) names[i];
                 if (nameIdx >= Names.Count)
                 {
-                    Console.WriteLine($"[WARN] Bad PSB format: at position:{pos}, name index {nameIdx} >= Names count ({Names.Count}), skipping.");
+                    Logger.LogWarn($"[WARN] Bad PSB format: at position:{pos}, name index {nameIdx} >= Names count ({Names.Count}), skipping.");
                     continue;
                 }
                 var name = Names[nameIdx];
@@ -621,7 +621,7 @@ namespace FreeMote.Psb
                 }
                 else
                 {
-                    Console.WriteLine($"[WARN] Bad PSB format: at position:{pos}, offset index {i} >= offsets count ({offsets.Count}), skipping.");
+                    Logger.LogWarn($"[WARN] Bad PSB format: at position:{pos}, offset index {i} >= offsets count ({offsets.Count}), skipping.");
                 }
 
                 if (obj != null)

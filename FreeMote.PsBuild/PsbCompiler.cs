@@ -140,7 +140,7 @@ namespace FreeMote.PsBuild
                     if (resx.ExternalTextures)
                     {
 #if DEBUG
-                        Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
+                        Logger.Log("[INFO] External Texture mode ON, no resource will be compiled.");
 #endif
                     }
                     else
@@ -236,7 +236,7 @@ namespace FreeMote.PsBuild
                     if (resx.ExternalTextures)
                     {
 #if DEBUG
-                        Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
+                        Logger.Log("[INFO] External Texture mode ON, no resource will be compiled.");
 #endif
                     }
                     else
@@ -379,7 +379,7 @@ namespace FreeMote.PsBuild
 
                 if (oriResource.Index == null)
                 {
-                    Console.WriteLine($"[WARN] Resource {i} is not replaced.");
+                    Logger.LogWarn($"[WARN] Resource {i} is not replaced.");
                     continue;
                 }
 

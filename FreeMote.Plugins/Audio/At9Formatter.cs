@@ -37,7 +37,7 @@ namespace FreeMote.Plugins.Audio
         {
             if (!File.Exists(ToolPath))
             {
-                Console.WriteLine($"[WARN] Cannot convert without {EncoderTool}");
+                Logger.LogWarn($"[WARN] Cannot convert without {EncoderTool}");
                 return false;
             }
 
@@ -104,7 +104,7 @@ namespace FreeMote.Plugins.Audio
                 outBytes = File.ReadAllBytes(tempOutFile);
                 if (outBytes.Length == 0)
                 {
-                    Console.WriteLine("[WARN] AT9 encoder output length is 0");
+                    Logger.LogWarn("[WARN] AT9 encoder output length is 0");
                 }
 
                 File.Delete(tempFile);
@@ -112,7 +112,7 @@ namespace FreeMote.Plugins.Audio
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Log(e);
             }
 
             if (data.Data == null)
