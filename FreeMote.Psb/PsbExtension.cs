@@ -190,6 +190,11 @@ namespace FreeMote.Psb
             return new(i);
         }
 
+        public static PsbNumber ToPsbNumber(this float i)
+        {
+            return new(i);
+        }
+
         /// <summary>
         /// Set archData value to archData object
         /// </summary>
