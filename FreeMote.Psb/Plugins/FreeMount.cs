@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -34,9 +33,9 @@ namespace FreeMote.Plugins
         public Dictionary<string, IPsbShell> Shells { get; private set; } = new();
         public Dictionary<string, IPsbSpecialType> SpecialTypes { get; private set; } = new();
 
-        public Dictionary<string, IPsbImageFormatter> ImageFormatters { get; private set; } = new();
+        public List<(string Extension, IPsbImageFormatter Formatter)> ImageFormatters { get; private set; } = new();
 
-        public Dictionary<string, IPsbAudioFormatter> AudioFormatters { get; private set; } = new();
+        public List<(string Extension, IPsbAudioFormatter Formatter)> AudioFormatters { get; private set; } = new();
 
         private CompositionContainer _container;
         private readonly Dictionary<IPsbPlugin, IPsbPluginInfo> _plugins = new();
@@ -161,8 +160,8 @@ namespace FreeMote.Plugins
         {
             Shells = new Dictionary<string, IPsbShell>();
             SpecialTypes = new Dictionary<string, IPsbSpecialType>();
-            ImageFormatters = new Dictionary<string, IPsbImageFormatter>();
-            AudioFormatters = new Dictionary<string, IPsbAudioFormatter>();
+            ImageFormatters = new List<(string, IPsbImageFormatter)>();
+            AudioFormatters = new List<(string, IPsbAudioFormatter)>();
 
             foreach (var shell in _shells)
             {
@@ -194,7 +193,11 @@ namespace FreeMote.Plugins
                 _plugins.Add(imageFormatter.Value, imageFormatter.Metadata);
                 foreach (var extension in imageFormatter.Value.Extensions)
                 {
-                    ImageFormatters[extension] = imageFormatter.Value;
+                    var tuple = (extension, imageFormatter.Value);
+                    if (!ImageFormatters.Contains(tuple))
+                    {
+                        ImageFormatters.Add(tuple);
+                    }
                 }
             }
 
@@ -206,7 +209,11 @@ namespace FreeMote.Plugins
                 }
                 foreach (var extension in audioFormatter.Value.Extensions)
                 {
-                    AudioFormatters[extension] = audioFormatter.Value;
+                    var tuple = (extension, audioFormatter.Value);
+                    if (!AudioFormatters.Contains(tuple))
+                    {
+                        AudioFormatters.Add(tuple);
+                    }
                 }
             }
 
@@ -247,12 +254,12 @@ namespace FreeMote.Plugins
         {
             if (plugin is IPsbImageFormatter f)
             {
-                f.Extensions.ForEach(ext => ImageFormatters.Remove(ext));
+                ImageFormatters.RemoveAll(tuple => tuple.Formatter == f);
             }
 
             if (plugin is IPsbAudioFormatter a)
             {
-                a.Extensions.ForEach(ext => AudioFormatters.Remove(ext));
+                AudioFormatters.RemoveAll(tuple => tuple.Formatter == a);
             }
 
             if (plugin is IPsbShell s)
@@ -285,12 +292,15 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public Bitmap ResourceToBitmap(string ext, in byte[] data, int width, int height, PsbSpec platform, Dictionary<string, object> context = null)
         {
-            if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBitmap(data))
+            foreach (var (_, formatter) in ImageFormatters.Where(tuple => tuple.Extension == ext))
             {
-                return null;
+                if (formatter.CanToBitmap(data, context))
+                {
+                    return formatter.ToBitmap(data, width, height, platform, context);
+                }
             }
 
-            return ImageFormatters[ext].ToBitmap(data, width, height, platform, context);
+            return null;
         }
 
         /// <summary>
@@ -304,12 +314,15 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public byte[] ArchDataToWave(string ext, AudioMetadata metadata, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
-            if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToWave(archData, context))
+            foreach (var (_, formatter) in AudioFormatters.Where(tuple => tuple.Extension == ext))
             {
-                return null;
+                if (formatter.CanToWave(archData, context))
+                {
+                    return formatter.ToWave(metadata, archData, fileName, context);
+                }
             }
 
-            return AudioFormatters[ext].ToWave(metadata, archData, fileName, context);
+            return null;
         }
 
         /// <summary>
@@ -322,12 +335,15 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public byte[] BitmapToResource(string ext, PsbSpec platform, Bitmap bitmap, Dictionary<string, object> context = null)
         {
-            if (!ImageFormatters.ContainsKey(ext) || ImageFormatters[ext] == null || !ImageFormatters[ext].CanToBytes(bitmap))
+            foreach (var (_, formatter) in ImageFormatters.Where(tuple => tuple.Extension == ext))
             {
-                return null;
+                if (formatter.CanToBytes(bitmap, context))
+                {
+                    return formatter.ToBytes(bitmap, platform, context);
+                }
             }
 
-            return ImageFormatters[ext].ToBytes(bitmap, platform, context);
+            return null;
         }
 
         /// <summary>
@@ -343,12 +359,16 @@ namespace FreeMote.Plugins
         /// <returns></returns>
         public bool WaveToArchData(AudioMetadata md, IArchData archData, string ext, byte[] wave, string fileName, string waveExt, Dictionary<string, object> context = null)
         {
-            if (!AudioFormatters.ContainsKey(ext) || AudioFormatters[ext] == null || !AudioFormatters[ext].CanToArchData(wave))
+            foreach (var (_, formatter) in AudioFormatters.Where(tuple => tuple.Extension == ext))
             {
-                return false;
+                if (formatter.CanToArchData(wave, context))
+                {
+                    formatter.ToArchData(md, archData, wave, fileName, waveExt, context);
+                    return true;
+                }
             }
 
-            return AudioFormatters[ext].ToArchData(md, archData, wave, fileName, waveExt, context);
+            return false;
         }
 
         /// <summary>
@@ -362,9 +382,9 @@ namespace FreeMote.Plugins
         public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData archData, Dictionary<string, object> context = null)
         {
             archData = null;
-            foreach (var audioFormatter in AudioFormatters)
+            foreach (var t in AudioFormatters)
             {
-                if (audioFormatter.Value.TryGetArchData(md, channel, out archData, context))
+                if (t.Formatter.TryGetArchData(md, channel, out archData, context))
                 {
                     return true;
                 }

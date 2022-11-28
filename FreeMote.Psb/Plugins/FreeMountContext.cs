@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using FreeMote.Psb;
 
 namespace FreeMote.Plugins
@@ -49,12 +50,12 @@ namespace FreeMote.Plugins
 
         public bool SupportImageExt(string ext)
         {
-            return FreeMount._.ImageFormatters.ContainsKey(ext);
+            return FreeMount._.ImageFormatters.Any(t => t.Extension == ext);
         }
 
         public bool SupportAudioExt(string ext)
         {
-            return FreeMount._.AudioFormatters.ContainsKey(ext);
+            return FreeMount._.AudioFormatters.Any(t => t.Extension == ext);
         }
 
         /// <summary>
