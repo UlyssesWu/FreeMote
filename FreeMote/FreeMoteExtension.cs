@@ -127,7 +127,8 @@ namespace FreeMote
             {
                 case PsbSpec.common:
                 case PsbSpec.ems:
-                    //case PsbSpec.vita: //TODO: is vita or psp BigEndian?
+                case PsbSpec.vita: //TODO: is vita or psp BigEndian?
+                case PsbSpec.psp:
                     return true;
                 default:
                     return false;
@@ -301,14 +302,14 @@ namespace FreeMote
                 case "DXT5":
                     return PsbPixelFormat.DXT5;
                 case "RGBA4444":
-                    if (spec.UseBigEndian() || spec == PsbSpec.vita || spec == PsbSpec.psp)
+                    if (spec.UseBigEndian())
                         return PsbPixelFormat.BeRGBA4444;
                     return PsbPixelFormat.LeRGBA4444;
                 case "RGBA4444_SW":
+                    //TODO: BeRGBA4444_SW?
                     return PsbPixelFormat.LeRGBA4444_SW;
                 case "RGBA8":
-                    if (spec.UseBigEndian() || spec == PsbSpec.vita ||
-                        spec == PsbSpec.psp) //TODO: I'm not sure if psv and psp always use BE, so for now just set for RGBA8
+                    if (spec.UseBigEndian()) //TODO: I'm not sure if psv and psp always use BE, so for now just set for RGBA8 //psv #95
                         return PsbPixelFormat.BeRGBA8;
                     else
                         return PsbPixelFormat.LeRGBA8;
