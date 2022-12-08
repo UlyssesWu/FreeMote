@@ -103,7 +103,7 @@
       <Version>2.1.0-CI00002</Version>
     </PackageReference>
     <PackageReference Include="K4os.Compression.LZ4.Streams">
-      <Version>1.2.13</Version>
+      <Version>1.2.16</Version>
     </PackageReference>
     <PackageReference Include="Paint.NET.PhotoShop">
       <Version>2.5.0-CI00007</Version>
