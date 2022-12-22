@@ -15,7 +15,7 @@ namespace FreeMote.Psb.Types
             return psb.TypeId == "motion";
         }
 
-        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : IResourceMetadata
+        public List<T> CollectResources<T>(PSB psb, bool deDuplication = false) where T : IResourceMetadata
         {
             List<T> resourceList = psb.Resources == null
                 ? new List<T>()
