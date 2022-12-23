@@ -70,7 +70,7 @@ namespace FreeMote.Psb
         /// <param name="psb"></param>
         /// <param name="deDuplication">if true, we focus on raw Resource itself, not for PSB structure</param>
         /// <returns></returns>
-        public static List<T> CollectResources<T>(this PSB psb, bool deDuplication = false) where T : IResourceMetadata
+        public static List<T> CollectResources<T>(this PSB psb, bool deDuplication = true) where T : IResourceMetadata
         {
             List<T> resourceList;
             if (psb.TypeHandler != null)
