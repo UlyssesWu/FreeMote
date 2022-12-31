@@ -207,15 +207,19 @@ namespace FreeMote
         /// </summary>
         BeRGBA8_SW,
         /// <summary>
-        /// LeRGBA8_SW (Swizzle) for PS3
+        /// LeRGBA8_SW (Swizzle) for vita
         /// </summary>
         LeRGBA8_SW,
         /// <summary>
-        /// LeRGBA8_SW (Tile) for PS4
+        /// LeRGBA8_SW (Swizzle, Flip) for PS3
+        /// </summary>
+        FlipLeRGBA8_SW,
+        /// <summary>
+        /// LeRGBA8_SW (Swizzle, Tile) for PS4
         /// </summary>
         TileLeRGBA8_SW,
         /// <summary>
-        /// BeRGBA8_SW (Tile) for ?
+        /// BeRGBA8_SW (Swizzle, Tile) for ?
         /// </summary>
         TileBeRGBA8_SW,
         /// <summary>

@@ -68,11 +68,11 @@ namespace FreeMote.Tools.PsbDecompile
             app.Command("image", imageCmd =>
             {
                 //help
-                imageCmd.Description = "Extract (combined) textures from PSBs";
+                imageCmd.Description = "Extract (combined) textures from image type PSBs (with \"imageList\")";
                 imageCmd.HelpOption();
                 imageCmd.ExtendedHelpText = @"
 Example:
-  PsbDecompile image sample.psb
+  PsbDecompile image tachie.psb
   PsbDecompile image sample-resource-folder
 ";
                 //args

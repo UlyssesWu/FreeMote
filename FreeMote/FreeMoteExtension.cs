@@ -316,7 +316,7 @@ namespace FreeMote
                 case "RGBA8_SW":
                     return useTile
                         ? (spec.UseBigEndian() ? PsbPixelFormat.TileBeRGBA8_SW : PsbPixelFormat.TileLeRGBA8_SW)
-                        : ((spec.UseBigEndian() ? PsbPixelFormat.BeRGBA8_SW : PsbPixelFormat.LeRGBA8_SW));
+                        : (spec.UseBigEndian() ? PsbPixelFormat.BeRGBA8_SW : spec == PsbSpec.ps3? PsbPixelFormat.FlipLeRGBA8_SW : PsbPixelFormat.LeRGBA8_SW);
                 case "A8_SW":
                     return useTile ? PsbPixelFormat.TileA8_SW : PsbPixelFormat.A8_SW;
                 case "L8_SW":
@@ -351,6 +351,7 @@ namespace FreeMote
                 case PsbPixelFormat.LeRGBA8_SW:
                 case PsbPixelFormat.TileBeRGBA8_SW:
                 case PsbPixelFormat.TileLeRGBA8_SW:
+                case PsbPixelFormat.FlipLeRGBA8_SW:
                     return "RGBA8_SW";
                 case PsbPixelFormat.TileA8L8_SW:
                 case PsbPixelFormat.A8L8_SW:

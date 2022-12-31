@@ -8,6 +8,7 @@ using FreeMote.Plugins;
 using FreeMote.Psb.Textures;
 using FreeMote.Psb.Types;
 using Newtonsoft.Json;
+using System.Runtime.Remoting.Contexts;
 
 // ReSharper disable AssignNullToNotNullAttribute
 
@@ -338,6 +339,11 @@ namespace FreeMote.PsBuild
                 {
                     kv.Value.CombinedImage.Save(Path.Combine(dirPath, $"{kv.Key}{texExt}"), texFormat);
                 }
+                return;
+            }
+            else if (psb.Type == PsbType.Pimg)
+            {
+                OutputResources(psb, FreeMount.CreateContext(), inputPath, PsbExtractOption.Extract);
                 return;
             }
 
