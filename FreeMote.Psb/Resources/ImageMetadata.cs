@@ -138,10 +138,7 @@ namespace FreeMote.Psb
 
             internal set
             {
-                if (Palette == null)
-                {
-                    Palette = new PsbResource();
-                }
+                Palette ??= new PsbResource();
 
                 Palette.Data = value;
             }
@@ -173,6 +170,11 @@ namespace FreeMote.Psb
 
         public PsbType PsbType { get; set; } = PsbType.Motion;
 
+        private static bool IsPowOf2(int n)
+        {
+            return n >= 2 && (n & (n - 1)) == 0;
+        }
+
         /// <summary>
         /// Check if the <see cref="Data"/> looks correct
         /// </summary>
@@ -182,6 +184,11 @@ namespace FreeMote.Psb
             if (Data == null)
             {
                 return (false, "Data is null");
+            }
+
+            if (PixelFormat.UsePalette() && PalData == null)
+            {
+                return (false, "PalData is null");
             }
 
             if (Compress == PsbCompressType.None)
@@ -195,6 +202,14 @@ namespace FreeMote.Psb
                         return (false,
                             $"Data length check failed: Loaded content size = {Data.Length}, expected size = {shouldBeLength}");
                     }
+                }
+            }
+
+            if (PixelFormat == PsbPixelFormat.CI4_SW || PixelFormat == PsbPixelFormat.CI8_SW)
+            {
+                if (!IsPowOf2(Width) || !IsPowOf2(Height))
+                {
+                    return (false, $"For Swizzle images, Width and Height should be 2^n, but currently are {Width} x {Height}");
                 }
             }
 
@@ -213,7 +228,8 @@ namespace FreeMote.Psb
             var (valid, checkResult) = Validate();
             if (!valid)
             {
-                Console.WriteLine($"[WARN] Validation failed when linking {fullPath} . {checkResult}");
+                Logger.LogWarn($"[WARN] Validation failed when linking {fullPath} . {checkResult}");
+                Logger.LogWarn("Check your image format (bit depth, size, pixel format). You should keep it same as original.");
                 if (Consts.StrictMode)
                 {
                     throw new FormatException(checkResult);
@@ -242,14 +258,14 @@ namespace FreeMote.Psb
             switch (Compress)
             {
                 case PsbCompressType.RL:
-                    return RL.DecompressToImage(Resource.Data, Height, Width, PixelFormat);
+                    return RL.DecompressToImage(Resource.Data, Width, Height, PixelFormat);
                 case PsbCompressType.Tlg:
                     using (var ms = new MemoryStream(Resource.Data))
                     {
                         return new TlgImageConverter().Read(new BinaryReader(ms));
                     }
                 default:
-                    return RL.ConvertToImage(Resource.Data, PalData, Height, Width, PixelFormat, PalettePixelFormat);
+                    return RL.ConvertToImage(Resource.Data, PalData, Width, Height, PixelFormat, PalettePixelFormat);
             }
         }
 
@@ -260,20 +276,17 @@ namespace FreeMote.Psb
         /// <param name="bmp"></param>
         public void SetData(Bitmap bmp)
         {
-            bool converted = false;
+            Data = null;
 
             switch (PixelFormat)
             {
                 case PsbPixelFormat.ASTC_8BPP:
-                    Data = FreeMount.CreateContext().BitmapToResource(PsbCompressType.Astc.ToExtensionString(), bmp);
-                    if (Data != null)
-                    {
-                        converted = true;
-                    }
+                case PsbPixelFormat.BC7:
+                    Data = FreeMount.CreateContext().BitmapToResource(PixelFormat.ToExtensionString(), Spec, bmp);
                     break;
             }
 
-            if (!converted)
+            if (Data == null)
             {
                 switch (Compress)
                 {
@@ -281,10 +294,7 @@ namespace FreeMote.Psb
                         Data = RL.CompressImage(bmp, PixelFormat);
                         break;
                     case PsbCompressType.Tlg:
-                        Data = FreeMount.CreateContext().BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), bmp);
-                        break;
-                    case PsbCompressType.Astc:
-                        Data = FreeMount.CreateContext().BitmapToResource(PsbCompressType.Astc.ToExtensionString(), bmp);
+                        Data = FreeMount.CreateContext().BitmapToResource(Compress.ToExtensionString(), Spec, bmp);
                         break;
                     default:
                         Data = RL.GetPixelBytesFromImage(bmp, PixelFormat);
@@ -303,7 +313,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Name for export & import
+        /// Name for export and import
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -347,13 +357,13 @@ namespace FreeMote.Psb
                 case ".tlg" when Compress == PsbCompressType.Tlg:
                     return File.ReadAllBytes(path);
                 case ".tlg":
-                    image = context.ResourceToBitmap(PsbCompressType.Tlg.ToExtensionString(), File.ReadAllBytes(path));
+                    image = context.ResourceToBitmap(PsbCompressType.Tlg.ToExtensionString(), Width, Height, Spec, File.ReadAllBytes(path));
                     break;
                 //astc
-                case ".astc" when Compress == PsbCompressType.Astc:
+                case ".astc" when PixelFormat == PsbPixelFormat.ASTC_8BPP:
                     return AstcFile.CutHeader(File.ReadAllBytes(path));
                 case ".astc":
-                    image = context.ResourceToBitmap(PsbCompressType.Astc.ToExtensionString(), File.ReadAllBytes(path));
+                    image = context.ResourceToBitmap(PixelFormat.ToExtensionString(), Width, Height, Spec, File.ReadAllBytes(path));
                     break;
                 //rl
                 case ".rl" when Compress == PsbCompressType.RL:
@@ -361,19 +371,19 @@ namespace FreeMote.Psb
                 case ".rl" when Compress == PsbCompressType.None:
                     return RL.Decompress(File.ReadAllBytes(path));
                 case ".rl":
-                    image = RL.DecompressToImage(File.ReadAllBytes(path), Height, Width,
-                        PixelFormat);
+                    image = RL.DecompressToImage(File.ReadAllBytes(path), Width,
+                        Height, PixelFormat);
                     break;
                 //raw
                 case ".raw" when Compress == PsbCompressType.None:
                     return File.ReadAllBytes(path);
-                case ".raw" when Compress == PsbCompressType.Astc:
+                case ".raw" when PixelFormat == PsbPixelFormat.ASTC_8BPP:
                     return File.ReadAllBytes(path);
                 case ".raw" when Compress == PsbCompressType.RL:
                     return RL.Compress(File.ReadAllBytes(path));
                 case ".raw":
-                    image = RL.ConvertToImage(File.ReadAllBytes(path), Height, Width,
-                        PixelFormat);
+                    image = RL.ConvertToImage(File.ReadAllBytes(path), Width,
+                        Height, PixelFormat);
                     break;
                 //bin
                 case ".bin":
@@ -398,7 +408,7 @@ namespace FreeMote.Psb
                     }
                     else if (context.SupportImageExt(ext))
                     {
-                        image = context.ResourceToBitmap(ext, File.ReadAllBytes(path));
+                        image = context.ResourceToBitmap(ext, Width, Height, Spec, File.ReadAllBytes(path));
                     }
                     else
                     {
@@ -414,11 +424,6 @@ namespace FreeMote.Psb
             context.TryGet(Consts.Context_DisableCombinedImage, out bool disableCombinedImage);
             if (PsbType == PsbType.Tachie && !disableCombinedImage) //Let's split Tachie
             {
-                static bool IsPowOf2(int n)
-                {
-                    return n >= 2 && (n & (n - 1)) == 0;
-                }
-
                 //Check if the source image is a combined image
                 if (image.Width == Width && image.Height == Height && IsPowOf2(Width) && IsPowOf2(Height))
                 {
@@ -438,13 +443,28 @@ namespace FreeMote.Psb
                 }
             }
 
+            //Plugin Encoder, for PixelFormat or Compress
             switch (PixelFormat)
             {
                 case PsbPixelFormat.ASTC_8BPP:
-                    data = context.BitmapToResource(PsbCompressType.Astc.ToExtensionString(), image);
+                case PsbPixelFormat.BC7:
+                    data = context.BitmapToResource(PixelFormat.ToExtensionString(), Spec, image);
                     if (data != null)
                     {
                         return data;
+                    }
+
+                    if (PixelFormat == PsbPixelFormat.ASTC_8BPP)
+                    {
+                        var astcPath = Path.ChangeExtension(path, ".astc");
+                        if (File.Exists(astcPath))
+                        {
+                            Logger.LogWarn($"[WARN] Can not encode ASTC, using {astcPath}");
+                            return AstcFile.CutHeader(File.ReadAllBytes(astcPath));
+                        }
+
+                        Logger.LogWarn($"[WARN] Can not convert image to ASTC: {path}");
+                        //data = File.ReadAllBytes(path);
                     }
                     break;
             }
@@ -455,35 +475,18 @@ namespace FreeMote.Psb
                     data = RL.CompressImage(image, PixelFormat);
                     break;
                 case PsbCompressType.Tlg:
-                    data = context.BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), image);
+                    data = context.BitmapToResource(Compress.ToExtensionString(), Spec, image);
                     if (data == null)
                     {
                         var tlgPath = Path.ChangeExtension(path, ".tlg");
                         if (File.Exists(tlgPath))
                         {
-                            Console.WriteLine($"[WARN] Can not encode TLG, using {tlgPath}");
+                            Logger.LogWarn($"[WARN] Can not encode TLG, using {tlgPath}");
                             data = File.ReadAllBytes(tlgPath);
                         }
                         else
                         {
-                            Console.WriteLine($"[WARN] Can not convert image to TLG: {path}");
-                            //data = File.ReadAllBytes(path);
-                        }
-                    }
-                    break;
-                case PsbCompressType.Astc:
-                    data = context.BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), image);
-                    if (data == null)
-                    {
-                        var astcPath = Path.ChangeExtension(path, ".astc");
-                        if (File.Exists(astcPath))
-                        {
-                            Console.WriteLine($"[WARN] Can not encode TLG, using {astcPath}");
-                            data = AstcFile.CutHeader(File.ReadAllBytes(astcPath));
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[WARN] Can not convert image to ASTC: {path}");
+                            Logger.LogWarn($"[WARN] Can not convert image to TLG: {path}");
                             //data = File.ReadAllBytes(path);
                         }
                     }
@@ -492,11 +495,11 @@ namespace FreeMote.Psb
                     var imgExt = Path.GetExtension(Name);
                     if (context.SupportImageExt(imgExt))
                     {
-                        data = context.BitmapToResource(imgExt, image);
+                        data = context.BitmapToResource(imgExt, Spec, image);
                     }
                     else
                     {
-                        Console.WriteLine($"[WARN] Unsupported image: {path}");
+                        Logger.LogWarn($"[WARN] Unsupported image: {path}");
                         data = File.ReadAllBytes(path);
                     }
                     break;

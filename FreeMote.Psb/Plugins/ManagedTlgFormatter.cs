@@ -56,7 +56,7 @@ namespace FreeMote.Plugins
             return false;
         }
 
-        public Bitmap ToBitmap(in byte[] data, Dictionary<string, object> context = null)
+        public Bitmap ToBitmap(in byte[] data, int width, int height, PsbSpec platform, Dictionary<string, object> context = null)
         {
             var bmp = LoadTlg(data, out var v);
             if (v > 5 && context != null)
@@ -67,7 +67,7 @@ namespace FreeMote.Plugins
             return bmp;
         }
 
-        public byte[] ToBytes(Bitmap bitmap, Dictionary<string, object> context = null)
+        public byte[] ToBytes(Bitmap bitmap, PsbSpec platform, Dictionary<string, object> context = null)
         {
             return null;
         }

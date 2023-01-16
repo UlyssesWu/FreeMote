@@ -133,6 +133,66 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
+    /// Simple ogg/wav
+    /// </summary>
+    public class AudioFileArchData : IArchData
+    {
+        private PsbAudioFormat _format = PsbAudioFormat.OGG;
+        public uint Index => Data.Index ?? uint.MaxValue;
+
+        public string Extension { get; set; } = ".ogg";
+        public string WaveExtension { get; set; } = ".ogg";
+
+        public PsbAudioFormat Format
+        {
+            get => _format;
+            set
+            {
+                _format = value;
+                switch (_format)
+                {
+                    case PsbAudioFormat.OGG:
+                        Extension = ".ogg";
+                        WaveExtension = Extension;
+                        break;
+                    case PsbAudioFormat.WAV:
+                        Extension = ".wav";
+                        WaveExtension = Extension;
+                        break;
+                }
+            }
+        }
+
+        public PsbAudioPan ChannelPan => PsbAudioPan.Mono;
+        public IList<PsbResource> DataList => new List<PsbResource> { Data };
+        public PsbDictionary PsbArchData { get; set; }
+
+        public bool Background { get; set; } = true;
+
+        public PsbResource Data { get; set; }
+        public PsbList Loop { get; set; }
+
+
+        public IPsbValue ToPsbArchData()
+        {
+            var result = new PsbDictionary
+            {
+                {"background", (PsbBool)Background},
+                {"data", Data},
+                {"ext", Extension.ToPsbString()},
+                {"filetype", PsbString.Empty}
+            };
+            if (Loop is {Count: > 0})
+            {
+                result.Add("loop", Loop);
+            }
+
+            return result;
+        }
+        
+    }
+
+    /// <summary>
     /// XWMA
     /// </summary>
     public class XwmaArchData : IArchData

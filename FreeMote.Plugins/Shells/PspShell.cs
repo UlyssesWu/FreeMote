@@ -81,7 +81,7 @@ namespace FreeMote.Plugins.Shells
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             //TODO:
-            Console.WriteLine("PSP compression is not supported.");
+            Logger.Log("PSP compression is not supported.");
             return null;
             //throw new NotImplementedException("PSP compression is not supported.");
         }

@@ -69,7 +69,7 @@ namespace FreeMote.Psb.Types
                         }
                         else
                         {
-                            Console.WriteLine($"[WARN] layer_id {dic["layer_id"]} is wrong.");
+                            Logger.LogWarn($"[WARN] layer_id {dic["layer_id"]} is wrong.");
                             continue;
                         }
 

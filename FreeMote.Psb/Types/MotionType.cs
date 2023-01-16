@@ -55,9 +55,27 @@ namespace FreeMote.Psb.Types
                         {
                             list.Add((T)(IResourceMetadata)GenerateImageMetadata(d, r));
                         }
-                        else if (r.Index == null || list.FirstOrDefault(md => md.Index == r.Index.Value) == null)
+                        else if (r.Index == null)
                         {
                             list.Add((T)(IResourceMetadata)GenerateImageMetadata(d, r));
+                        }
+                        else
+                        {
+                            var imd = GenerateImageMetadata(d, r);
+                            if (imd.Palette == null)
+                            {
+                                if (list.FirstOrDefault(md => md.Index == r.Index.Value) == null)
+                                {
+                                    list.Add((T) (IResourceMetadata) imd);
+                                }
+                            }
+                            else
+                            {
+                                if (list.FirstOrDefault(md => md is ImageMetadata i && md.Index == r.Index.Value && i.Palette == imd.Palette) == null)
+                                {
+                                    list.Add((T) (IResourceMetadata) imd);
+                                }
+                            }
                         }
                     }
 

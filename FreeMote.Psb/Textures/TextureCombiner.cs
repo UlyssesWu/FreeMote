@@ -13,15 +13,17 @@ namespace FreeMote.Psb.Textures
         /// Combine Image texture parts 
         /// </summary>
         /// <param name="psb">Image (image) type PSB</param>
+        /// <param name="hasPalette">Whether the source images are nBppIndexed images (which combined image cannot be converted back when repacking)</param>
         /// <returns></returns>
-        public static Dictionary<string, (Bitmap CombinedImage, List<ImageMetadata> Parts)> CombineTachie(PSB psb)
+        public static Dictionary<string, (Bitmap CombinedImage, bool OriginHasPalette, bool CombinedWithPalette, List<ImageMetadata> Parts)> CombineTachie(PSB psb, out bool hasPalette)
         {
+            hasPalette = false;
             if (psb.Type != PsbType.Tachie)
             {
                 throw new NotSupportedException("PSB is not image type");
             }
 
-            Dictionary<string, (Bitmap CombinedImage, List<ImageMetadata> Parts)> images = new();
+            Dictionary<string, (Bitmap CombinedImage, bool HasPalette, bool CombinedWithPalette, List<ImageMetadata> Parts)> images = new();
             if (psb.Objects["imageList"] is not PsbList imageList)
             {
                 return images;
@@ -31,8 +33,7 @@ namespace FreeMote.Psb.Textures
             {
                 var imageItem = psbValue as PsbDictionary;
 
-                var texture = imageItem?["texture"] as PsbList;
-                if (texture == null)
+                if (imageItem?["texture"] is not PsbList texture)
                 {
                     continue;
                 }
@@ -40,7 +41,9 @@ namespace FreeMote.Psb.Textures
                 var height = imageItem["height"].GetInt();
                 var width = imageItem["width"].GetInt();
                 var label = imageItem["label"].ToString();
-
+                bool currentHasPalette = false;
+                bool currentCombinedWithPalette = false;
+                PixelFormat indexedFormat = PixelFormat.Max;
                 Bitmap img = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                 List<ImageMetadata> parts = new List<ImageMetadata>(texture.Count);
                 using (var f = img.FastLock())
@@ -59,11 +62,50 @@ namespace FreeMote.Psb.Textures
                         var tHeight = tex["height"].GetInt();
                         var tWidth = tex["width"].GetInt();
 
-                        f.CopyRegion(md.ToImage(), new Rectangle(0, 0, md.Width, md.Height), new Rectangle(left, top, tWidth, tHeight));
+                        var image = md.ToImage();
+                        if (((int)image.PixelFormat & (int)PixelFormat.Indexed) != 0)
+                        {
+                            hasPalette = true;
+                            currentHasPalette = true;
+                            if (indexedFormat != image.PixelFormat)
+                            {
+                                if (indexedFormat == PixelFormat.Undefined)
+                                {
+                                    //palette format conflict, there is nothing I can do
+                                }
+                                else if(indexedFormat == PixelFormat.Max)
+                                {
+                                    indexedFormat = image.PixelFormat;
+                                }
+                                else
+                                {
+                                    indexedFormat = PixelFormat.Undefined; //palette format conflict, there is nothing I can do
+                                }
+                            }
+                            image = new Bitmap(image);
+                        }
+                        f.CopyRegion(image, new Rectangle(0, 0, md.Width, md.Height), new Rectangle(left, top, tWidth, tHeight));
                     }
                 }
 
-                images.Add(label, (img, parts));
+
+                //if (currentHasPalette) //Try to convert to indexed image
+                //{
+                //    if (indexedFormat != PixelFormat.Undefined && indexedFormat != PixelFormat.Max)
+                //    {
+                //        try
+                //        {
+                //            var indexedImg = img.Clone(new Rectangle(0, 0, img.Width, img.Height), indexedFormat); //Bad Quality
+                //            img = indexedImg;
+                //            currentCombinedWithPalette = true;
+                //        }
+                //        catch (Exception)
+                //        {
+                //            currentCombinedWithPalette = false;
+                //        }
+                //    }
+                //}
+                images.Add(label, (img, currentHasPalette, currentCombinedWithPalette, parts));
             }
 
             return images;
@@ -96,7 +138,7 @@ namespace FreeMote.Psb.Textures
                 Directory.CreateDirectory(dirPath);
             }
 
-            var bitmaps = CombineTachie(psb);
+            var bitmaps = CombineTachie(psb, out var hasPalette);
             foreach (var kv in bitmaps)
             {
                 kv.Value.CombinedImage.Save(Path.Combine(dirPath, $"{kv.Key}.{extractFormat}"), extractFormat.ToImageFormat());

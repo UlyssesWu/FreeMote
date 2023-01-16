@@ -148,8 +148,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb");
             PSB psb = new PSB(path);
-            var tree = BTree.Build(psb.Names, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
-            var list = BTree.Load(oNames, oTrees, oOffsets);
+            var tree = PrefixTree.Build(psb.Names, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
+            var list = PrefixTree.Load(oNames, oTrees, oOffsets);
             Assert.IsTrue(psb.Names.SequenceEqual(list));
         }
 
@@ -360,8 +360,19 @@ namespace FreeMote.Tests
             psb.Merge();
             File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
             File.WriteAllText("emote_krkr2win.json", PsbDecompiler.Decompile(psb));
-            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096, 4096, PsbImageFormat.png,
-                PsbPixelFormat.LeRGBA8);
+            RL.ConvertToImageFile(psb.Resources.First().Data, "tex-in-psb.png", 4096, 4096,
+                PsbImageFormat.png, PsbPixelFormat.LeRGBA8);
+        }
+
+        [TestMethod]
+        public void TestConvertKrkr2Win2()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "ちえ_横_おしゃれc1.pure.psb");
+            PSB psb = new PSB(path);
+            psb.SwitchSpec(PsbSpec.win);
+            psb.Merge();
+            File.WriteAllBytes("emote_krkr2win.psb", psb.Build());
         }
 
         [TestMethod]
@@ -618,6 +629,22 @@ namespace FreeMote.Tests
             psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
             psb.Merge();
             psb.BuildToFile("convert2.psb");
+        }
+
+        [TestMethod]
+        public void TestTrie()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var path = Path.Combine(resPath, "e-mote38基本テンプレート(正面zバイナリ専用)_free.json");
+            var path = Path.Combine(resPath, "test_kazuma.txt.scn.m.json");
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            var names = psb.Names;
+            var s1 = psb.ToStream().Length;
+            Console.WriteLine(s1);
+
+            names.Sort((s1, s2) => s1.Length - s2.Length);
+            var s2 = psb.ToStream().Length;
+            Console.WriteLine(s2);
         }
 
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)

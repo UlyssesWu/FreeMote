@@ -28,8 +28,8 @@ Compile and decompile PSB files. Convert PSB among different platforms. Recover 
 ### FreeMote.Plugins
 External/Experimental features. Read [wiki](https://github.com/UlyssesWu/FreeMote/wiki) for usages.
 
-* Images: TLG encoding/decoding support via [**FreeMote.Tlg**](https://github.com/Project-AZUSA/TlgLib) (by Ulysses). (x64)
-* Shells: Compression/decompression support.
+* Images: TLG encoding/decoding support via [**FreeMote.Tlg** (x64)](https://github.com/UlyssesWu/FreeMote.Tlg).
+* Shells: Compression/decompression support, such as [**FreeMote.FastLz** (x64)](https://github.com/UlyssesWu/FreeMote.FastLz).
 * Audio: Experimental support for audio used in PSB.
 
 ### FreeMote.Purify (Unreleased)
@@ -48,7 +48,7 @@ Decompile an EMT PSB to MMO project. **The output file is always licensed under 
 Open and render EMT _pure_ PSB. This tool is powered by [FreeMote.NET](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer).
 
 ## Build
-This project requires **VS 2019** and .NET **4.7.2 - 4.8** to build.
+This project requires **VS 2022** and .NET **4.8** to build.
 
 **FreeMote.Plugins** / **FreeMote.Plugins.x64** require a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote Plugins, you can unload Plugins projects and remove them from other projects' reference.
 
@@ -85,10 +85,12 @@ Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and a
 * Singyuen Yip for [Adler32](https://github.com/UlyssesWu/FreeMote/blob/master/FreeMote/Adler32.cs) code.
 * @gdkchan for [DxtCodec](https://github.com/gdkchan/CEGTool/blob/master/CEGTool/DXTCodec.cs) code.
 * @mfascia for [TexturePacker](https://github.com/mfascia/TexturePacker) code.
-* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs), [ArcPSB](https://github.com/morkt/GARbro/blob/master/ArcFormats/Emote/ArcPSB.cs), [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs) code. LICENSE: MIT
-* @xdaniel & @FireyFly for [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
+* @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs), [ArcPSB](https://github.com/morkt/GARbro/blob/master/ArcFormats/Emote/ArcPSB.cs), [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs), [Bc7Decoder](https://github.com/morkt/GARbro/blob/master/ArcFormats/Unity/Bc7Decoder.cs) code. LICENSE: MIT
+* @xdaniel & @FireyFly for [GetPixelCoordinatesPSP](https://github.com/xdanieldzd/Scarlet/blob/8d9e9cd34f6563da4a0f9b8797c3a1dd35542a4c/Scarlet/Drawing/ImageBinary.cs#L1278) and [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
 * @Nyerguds for [BitmapHelper](https://stackoverflow.com/a/45100442) code.
 * @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/), @skilittle as sponsors!
 * [vgmstream](https://github.com/vgmstream/vgmstream) and @SilicaAndPina for VAG related code.
 * @mafaca for [AstcDecoder](https://github.com/mafaca/UtinyRipper/blob/master/uTinyRipperGUI/ThirdParty/Texture%20converters/AstcDecoder.cs) code. LICENSE: MIT
+* @RickStrahl for [ColorConsole](https://gist.github.com/RickStrahl/52c9ee43bd2723bcdf7bf4d24b029768) code.
+* @GMMan (Yukai Li) for [information](https://gitlab.com/modmyclassic/sega-mega-drive-mini/marchive-batch-tool) of mzs, PSBv1, trie form etc.
 * All nuget references used in this project.

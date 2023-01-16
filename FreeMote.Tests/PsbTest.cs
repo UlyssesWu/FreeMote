@@ -105,6 +105,18 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPsbV1()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "c01c.txt.scn");
+            PSB psb = new PSB(path);
+            psb.Header.Version = 1;
+            var pathV1 = Path.ChangeExtension(path, "v1.psb");
+            psb.BuildToFile(pathV1);
+            PSB reload = new PSB(pathV1);
+        }
+
+        [TestMethod]
         public void TestPsbLoadKrkr()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
@@ -192,10 +204,10 @@ namespace FreeMote.Tests
             ctx.Context[Consts.Context_MdfKey] = "38757621acf82scenario_info.psb.m";
             ctx.Context[Consts.Context_MdfKeyLength] = 131;
 
-            var mdfShell = new MdfShell();
+            //var mdfShell = new MdfShell();
             //var ms = mdfShell.ToPsb(File.OpenRead(path), ctx.Context);
             //HINT: brute get info-psb key is nearly impossible, don't waste your time on it and just find the key by yourself
-            var ms = mdfShell.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131);
+            var ms = PsbExtension.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131);
             File.WriteAllBytes(path + ".raw", ms.ToArray());
         }
 
@@ -207,11 +219,11 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "e-mote38_free.mmo-repack.mmo");
             var path2 = Path.Combine(resPath, "emote38-pure.mmo");
 
-            MdfFile.CompressPsbToMdfStream(File.OpenRead(path2)).CopyTo(File.Create(path + "-repack.mmo"));
+            MPack.CompressPsbToMdfStream(File.OpenRead(path2)).CopyTo(File.Create(path + "-repack.mmo"));
 
             using (var mdfStream = File.OpenRead(path))
             {
-                using (var psbStream = MdfFile.DecompressToPsbStream(mdfStream))
+                using (var psbStream = MPack.MdfDecompressToPsbStream(mdfStream))
                 {
                     //using (var pureStream = new MemoryStream((int)psbStream.Length))
                     {
@@ -331,6 +343,13 @@ namespace FreeMote.Tests
         public void TestArchiveInfoGetAllPossibleFileNames()
         {
             var results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("scenario/ca01_06.txt.scn.m", ".psb.m");
+            foreach (var result in results)
+            {
+                Console.WriteLine(result);
+            }
+
+            Console.WriteLine();
+            results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("up05_10_03.txt", ".scn.m");
             foreach (var result in results)
             {
                 Console.WriteLine(result);

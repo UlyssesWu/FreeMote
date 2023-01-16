@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using FreeMote.Psb;
 
 namespace FreeMote.Plugins
@@ -39,16 +40,22 @@ namespace FreeMote.Plugins
             return true;
         }
 
+        public string Shell
+        {
+            get => HasShell ? Context[Consts.Context_PsbShellType].ToString() : null;
+            set => Context[Consts.Context_PsbShellType] = value;
+        }
+
         public bool HasShell => Context.ContainsKey(Consts.Context_PsbShellType) && Context[Consts.Context_PsbShellType] != null && !string.IsNullOrEmpty(Context[Consts.Context_PsbShellType].ToString());
 
         public bool SupportImageExt(string ext)
         {
-            return FreeMount._.ImageFormatters.ContainsKey(ext);
+            return FreeMount._.ImageFormatters.Any(t => t.Extension == ext);
         }
 
         public bool SupportAudioExt(string ext)
         {
-            return FreeMount._.AudioFormatters.ContainsKey(ext);
+            return FreeMount._.AudioFormatters.Any(t => t.Extension == ext);
         }
 
         /// <summary>
@@ -67,10 +74,12 @@ namespace FreeMote.Plugins
         /// <summary>
         /// <inheritdoc cref="FreeMount.WaveToArchData"/>
         /// </summary>
+        /// <param name="archData"></param>
         /// <param name="ext"></param>
         /// <param name="wave"></param>
         /// <param name="fileName"></param>
         /// <param name="waveExt">"ext" in ArchData</param>
+        /// <param name="md"></param>
         /// <returns></returns>
         public bool WaveToArchData(AudioMetadata md, IArchData archData, string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
         {
@@ -93,29 +102,33 @@ namespace FreeMote.Plugins
         /// Use plugins to convert resource bytes to bitmap
         /// </summary>
         /// <param name="ext"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="platform"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public Bitmap ResourceToBitmap(string ext, in byte[] data)
+        public Bitmap ResourceToBitmap(string ext, int width, int height, PsbSpec platform, in byte[] data)
         {
-            return FreeMount._.ResourceToBitmap(ext, data, Context);
+            return FreeMount._.ResourceToBitmap(ext, data, width, height, platform, Context);
         }
 
         /// <summary>
         /// Use plugins to convert bitmap to resource bytes
         /// </summary>
         /// <param name="ext"></param>
+        /// <param name="platform"></param>
         /// <param name="bitmap"></param>
         /// <returns></returns>
-        public byte[] BitmapToResource(string ext, Bitmap bitmap)
+        public byte[] BitmapToResource(string ext, PsbSpec platform, Bitmap bitmap)
         {
-            return FreeMount._.BitmapToResource(ext, bitmap, Context);
+            return FreeMount._.BitmapToResource(ext, platform, bitmap, Context);
         }
 
         /// <summary>
         /// [RequireUsing] Use plugins to decompress shell types to PSB
         /// </summary>
-        /// <param name="stream">the input stream won't be disposed automatically</param>
-        /// <param name="type"></param>
+        /// <param name="stream">the input stream will <b>NOT</b> be disposed automatically</param>
+        /// <param name="type">type name should be Upper case, e.g. MDF</param>
         /// <returns>unpacked stream, remember to dispose!</returns>
         public MemoryStream OpenFromShell(Stream stream, ref string type)
         {
@@ -126,7 +139,7 @@ namespace FreeMote.Plugins
         /// [RequireUsing] Use plugins to compress PSB to shell type
         /// </summary>
         /// <param name="input">The input stream. Might be disposed!</param>
-        /// <param name="type"></param>
+        /// <param name="type">type name should be Upper case, e.g. MDF</param>
         /// <returns></returns>
         public MemoryStream PackToShell(Stream input, string type = null)
         {

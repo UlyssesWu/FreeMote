@@ -13,6 +13,7 @@ gdkchan (https://github.com/gdkchan)
 mfascia (https://github.com/mfascia)
 Singyuen Yip (yeshengyuan@foxmail.com)
 Maarten Meuris (https://github.com/Nyerguds)
+Rick Strahl (https://github.com/RickStrahl)
 
 ------------------------------
 psbfile (licensed under MIT) is a reference for PSB format related codes. AUTHOR: number201724 (https://github.com/number201724)
@@ -106,7 +107,7 @@ the implied warranties of merchantability, fitness for a particular purpose and
 non-infringement.
 
 ------------------------------
-ImageTLG, ArcPSB, PspDecompression code is licensed under MIT. AUTHOR: morkt (https://github.com/morkt)
+ImageTLG, ArcPSB, PspDecompression, Bc7Decoder code is licensed under MIT. AUTHOR: morkt (https://github.com/morkt)
 
 The MIT License (MIT)
 
@@ -311,7 +312,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 END OF TERMS AND CONDITIONS
 
 ------------------------------
-PostProcessing (Untile/Unswizzle) code is licensed under MIT. AUTHOR: xdaniel (https://twitter.com/xdanieldzd/)
+PostProcessing (Untile/Unswizzle), GetPixelCoordinatesPSP code is licensed under MIT. AUTHOR: xdaniel (https://github.com/xdanieldzd)
 The MIT License (MIT)
 
 Copyright (c) 2016 xdaniel (Daniel R.) / DigitalZero Domain

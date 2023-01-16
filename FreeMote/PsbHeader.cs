@@ -24,13 +24,15 @@ namespace FreeMote
         /// <summary>
         /// If 1, the header seems encrypted, which add more difficulty to us
         /// <para>But doesn't really matters since usually it's always encrypted in v3+</para>
+        /// <para>Note: GMMan's PSB doc said 1 for header encrypt and 2 for body encrypt. But my EMT PSBv2 encrypted samples are still using 0.
+        /// So I still prefer <see cref="PsbFile.TestBodyEncrypted()"/></para>
         /// </summary>
         //[FieldOffset(6)]
         public ushort HeaderEncrypt = 0;
 
         /// <summary>
-        /// Header Length
-        /// <para>Usually same as <see cref="OffsetNames"/></para>
+        /// Header Length (or OffsetKeyIndexes for PSBv1)
+        /// <para>Usually same as <see cref="OffsetNames"/> in v2+</para>
         /// </summary>
         //[FieldOffset(8)]
         public uint HeaderLength;
@@ -120,8 +122,7 @@ namespace FreeMote
             //    return header;
             //}
             if (header.HeaderLength < br.BaseStream.Length
-                && header.OffsetNames < br.BaseStream.Length
-                && (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0))
+                && header.OffsetNames < br.BaseStream.Length) //&& (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0)
             {
                 header.OffsetStrings = br.ReadUInt32();
                 header.OffsetStringsData = br.ReadUInt32();
@@ -286,7 +287,7 @@ namespace FreeMote
                 bw.Write(Signature);
                 bw.Write(Version);
                 bw.Write(HeaderEncrypt);
-                bw.Write(GetHeaderLength());
+                bw.Write(Version == 1? HeaderLength : GetHeaderLength());
                 bw.Write(OffsetNames);
                 bw.Write(OffsetStrings);
                 bw.Write(OffsetStringsData);
@@ -310,8 +311,8 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Similar as <see cref="PsbFile.TestHeaderEncrypted"/> but not based on file.
+        /// Similar as <see cref="PsbFile.TestHeaderEncrypted()"/> but not based on file.
         /// </summary>
-        public bool IsHeaderEncrypted => HeaderLength > (MAX_HEADER_LENGTH + 16) || OffsetNames == 0 || (HeaderLength != OffsetNames && HeaderLength != 0);
+        public bool IsHeaderEncrypted => HeaderLength > (MAX_HEADER_LENGTH + 16) || OffsetNames == 0 || (Version > 1 && HeaderLength != OffsetNames && HeaderLength != 0);
     }
 }

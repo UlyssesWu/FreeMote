@@ -13,7 +13,6 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json.Linq;
 using static FreeMote.Consts;
 using static FreeMote.Psb.PsbExtension;
 
@@ -22,19 +21,20 @@ namespace FreeMote.Tools.PsBuild
     enum ProcessMethod
     {
         None = 0,
-        EncodeMdf = 1,
+        EncodeMPack = 1,
         Compile = 2,
     }
 
     class Program
     {
+        private static Encoding _encoding = Encoding.UTF8;
         //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
 
         static void Main(string[] args)
         {
             Console.WriteLine("FreeMote PSB Compiler");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
-
+            Logger.InitConsole();
             FreeMount.Init();
             Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
 
@@ -54,11 +54,13 @@ namespace FreeMote.Tools.PsBuild
             var optKey = app.Option<uint>("-k|--key <KEY>", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optSpec = app.Option<PsbSpec>("-p|--spec <SPEC>", "Set PSB platform (krkr/common/win/ems)",
                 CommandOptionType.SingleValue);
-            var optNoRename = app.Option("-no-rename",
+            var optNoRename = app.Option("-nr|--no-rename",
                 "Prevent output file renaming, may overwrite your original PSB files", CommandOptionType.NoValue);
-            var optNoShell = app.Option("-no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
+            var optNoShell = app.Option("-ns|--no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
             var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)",
                 CommandOptionType.NoValue, true);
+            var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
+                CommandOptionType.SingleValue, inherited: true);
             //var optOutputPath =
             //  app.Option<string>("-o|--output", "(TODO:)Set output directory or file name.", CommandOptionType.SingleValue);
             //TODO: If set dir, ok; if set filename, only works for the first
@@ -87,6 +89,19 @@ Example:
 
                 linkCmd.OnExecute(() =>
                 {
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbCompiler.Encoding = _encoding;
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPath = argPsbPath.Value;
                     var texPaths = argTexPaths.Values;
@@ -108,18 +123,34 @@ Example:
                 var optPortSpec = portCmd.Option<PsbSpec>("-p|--spec <SPEC>",
                     "Target PSB platform (krkr/common/win/ems)",
                     CommandOptionType.SingleValue).IsRequired();
+                var optEnableResolution = portCmd.Option<bool>("-r|--resolution",
+                    "Enable resolution support (may scaling images, quality is not guaranteed)", CommandOptionType.NoValue);
                 //args
                 var argPsbPath = portCmd.Argument("PSB", "PSB Path", multipleValues: true).IsRequired();
 
                 portCmd.OnExecute(() =>
                 {
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbCompiler.Encoding = _encoding;
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+
                     var portSpec = optPortSpec.ParsedValue;
                     var psbPaths = argPsbPath.Values;
+                    var enableResolution = optEnableResolution.HasValue();
                     foreach (var s in psbPaths)
                     {
                         if (File.Exists(s))
                         {
-                            Port(s, portSpec);
+                            Port(s, portSpec, enableResolution);
                         }
                     }
                 });
@@ -183,6 +214,19 @@ Example:
                         keepRaw = true;
                     }
 
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                            PsbCompiler.Encoding = _encoding;
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                        }
+                    }
+                    
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
 
@@ -227,6 +271,19 @@ Example:
 
             app.OnExecute(() =>
             {
+                if (optEncoding.HasValue())
+                {
+                    try
+                    {
+                        _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                        PsbCompiler.Encoding = _encoding;
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid.");
+                    }
+                }
+
                 if (optDouble.HasValue())
                 {
                     JsonUseDoubleOnly = true;
@@ -255,22 +312,24 @@ Example:
             Console.WriteLine("Done.");
         }
 
-        private static void Port(string s, PsbSpec portSpec)
+        private static void Port(string s, PsbSpec portSpec, bool resolution = false)
         {
             var name = Path.GetFileNameWithoutExtension(s);
             var ext = Path.GetExtension(s);
             Console.WriteLine($"Converting {name} to {portSpec} platform...");
-            PSB psb = new PSB(s);
+            PSB psb = new PSB(s, _encoding);
             if (psb.Platform == portSpec)
             {
                 Console.WriteLine("Already at the same platform, Skip.");
             }
             else
             {
+                PsbSpecConverter.EnableResolution = resolution;
                 psb.SwitchSpec(portSpec);
                 psb.Merge();
-                File.WriteAllBytes(Path.ChangeExtension(s, $".{portSpec}{psb.Type.DefaultExtension()}"), psb.Build());
-                Console.WriteLine($"Convert {name} done.");
+                var savePath = Path.ChangeExtension(s, $".{portSpec}{psb.Type.DefaultExtension()}");
+                File.WriteAllBytes(savePath, psb.Build());
+                Console.WriteLine($"Convert output: {savePath}");
             }
         }
 
@@ -299,7 +358,7 @@ Example:
                     }
                 }
 
-                PSB psb = new PSB(psbPath);
+                PSB psb = new PSB(psbPath, _encoding);
                 psb.Link(texs, order: order, isExternal: true);
                 psb.Merge();
                 File.WriteAllBytes(Path.ChangeExtension(psbPath, "linked" + ext), psb.Build());
@@ -320,17 +379,21 @@ Example:
                 //此処にいて何処にもいない　キミの面影はいつも朧 : https://soundcloud.com/yuhyuhyuhxibbd2/parallel-utau
                 return;
             }
-
+            
             var name = Path.GetFileNameWithoutExtension(s);
             var ext = Path.GetExtension(s);
+
+            if (name.Contains("_info.psb.m"))
+            {
+                Console.WriteLine("[WARN] It seems that you're going to compile a info.psb.m directly.\r\nIf you want to pack the folder generated by `PsbDecompile info-psb`, you should use `PsBuild info-psb` command instead.");
+            }
 
             Console.WriteLine($"Compiling {name} ...");
             try
             {
                 //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
                 var filename = name + ".psb"; //rename later //TODO: support set output path
-                PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename,
-                    canPackShell);
+                PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename, canPackShell);
             }
             catch (Exception e)
             {
@@ -368,9 +431,10 @@ Example:
             PSB infoPsb = PsbCompiler.LoadPsbFromJsonFile(jsonPath);
             if (infoPsb.Type != PsbType.ArchiveInfo)
             {
-                Console.WriteLine("Json is not an ArchiveInfo PSB.");
-                return;
+                Console.WriteLine($"[WARN] The json ({infoPsb.Type}) seems not to be an ArchiveInfo type.");
             }
+
+            var archiveInfoType = infoPsb.GetArchiveInfoType();
 
             var resx = PsbResourceJson.LoadByPsbJsonPath(jsonPath);
             if (!resx.Context.ContainsKey(Context_ArchiveSource) ||
@@ -378,6 +442,12 @@ Example:
             {
                 Console.WriteLine("ArchiveSource must be specified in resx.json Context.");
                 return;
+            }
+
+            var defaultShellType = "MDF";
+            if (resx.Context.ContainsKey(Context_PsbShellType) && resx.Context[Context_PsbShellType] is string st)
+            {
+                defaultShellType = st;
             }
 
             if (keyLen > 0)
@@ -513,9 +583,9 @@ Example:
                             else
                             {
                                 using var fs = File.OpenRead(f);
-                                if (!MdfFile.IsSignatureMdf(fs) && name.DefaultShellType() == "MDF")
+                                if (!MPack.IsSignatureMPack(fs, out _) && name.DefaultShellType() == "MDF")
                                 {
-                                    files[name] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.EncodeMdf);
+                                    files[name] = (f, keepRaw ? ProcessMethod.None : ProcessMethod.EncodeMPack);
                                 }
                                 else
                                 {
@@ -586,12 +656,17 @@ Example:
 
                     mdfContext.Remove(Context_ArchiveSource);
 
-                    if (kv.Value.Method == ProcessMethod.EncodeMdf)
+                    if (kv.Value.Method == ProcessMethod.EncodeMPack)
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
 
                         //using var fs = File.OpenRead(kv.Value.Path);
-                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(), "MDF"))); //disposed later
+                        //https://docs.microsoft.com/en-us/dotnet/api/system.io.memorymappedfiles.memorymappedfile.createviewstream?view=net-6.0
+                        //NOTE: To create a complete view of the memory-mapped file, specify 0 (zero) for the size parameter.
+                        //If you do this, the size of the view might be larger than the size of the source file on disk.
+                        //This is because views are provided in units of system pages, and the size of the view is rounded up to the next system page size.
+                        var fileSize = new FileInfo(kv.Value.Path).Length;
+                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), defaultShellType))); //disposed later
                     }
                     else
                     {
@@ -619,9 +694,20 @@ Example:
                         item.Content.Dispose(); //Remember to dispose!
                         continue;
                     }
-                    fileInfoDic.Add(item.Name,
-                        new PsbList
-                            {new PsbNumber(bodyFs.Position), new PsbNumber(item.Content.Length)});
+
+                    if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+                    {
+                        fileInfoDic.Add(item.Name,
+                            new PsbList
+                                {PsbNull.Null, new PsbNumber(item.Content.Length), new PsbNumber(bodyFs.Position)});
+                    }
+                    else
+                    {
+                        fileInfoDic.Add(item.Name,
+                            new PsbList
+                                {new PsbNumber(bodyFs.Position), new PsbNumber(item.Content.Length)});
+                    }
+
                     if (item.Content is MemoryStream ims)
                     {
                         ims.WriteTo(bodyFs);
@@ -632,6 +718,17 @@ Example:
                     }
 
                     item.Content.Dispose(); //Remember to dispose!
+
+                    if (archiveInfoType == PsbArchiveInfoType.UmdRoot && item.Name.EndsWith(".png"))
+                    {
+                        //Padding?
+                        int end = (int)(bodyFs.Position % 16);
+                        if (end != 0)
+                        {
+                            var pad = 16 - end;
+                            bodyFs.Write(new byte[pad], 0, pad);
+                        }
+                    }
                 }
 
                 //bodyBin = ms.ToArray();
@@ -653,12 +750,33 @@ Example:
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         //using var fs = File.OpenRead(kv.Value.Path);
-                        var fs = mmFs.CreateViewStream();
-                        fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
-                            {new PsbNumber(bodyFs.Position), new PsbNumber(fs.Length)});
+                        var fileSize = new FileInfo(kv.Value.Path).Length;
+                        var fs = mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read);
+                        if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+                        {
+                            fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
+                                {PsbNull.Null, new PsbNumber(fs.Length), new PsbNumber(bodyFs.Position)}); //We still have no idea about the first parameter
+                        }
+                        else
+                        {
+                            fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
+                                {new PsbNumber(bodyFs.Position), new PsbNumber(fs.Length)});
+                        }
+
                         fs.CopyTo(bodyFs); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
+
+                        if (archiveInfoType == PsbArchiveInfoType.UmdRoot && relativePathWithoutSuffix.EndsWith(".png"))
+                        {
+                            //Padding?
+                            int end = (int) (bodyFs.Position % 16);
+                            if (end != 0)
+                            {
+                                var pad = 16 - end;
+                                bodyFs.Write(new byte[pad], 0, pad);
+                            }
+                        }
                     }
-                    else if (kv.Value.Method == ProcessMethod.EncodeMdf)
+                    else if (kv.Value.Method == ProcessMethod.EncodeMPack)
                     {
                         if (!string.IsNullOrEmpty(key))
                         {
@@ -674,7 +792,8 @@ Example:
                         }
 
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
-                        using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(), "MDF");
+                        var fileSize = new FileInfo(kv.Value.Path).Length;
+                        using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), defaultShellType);
                         fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
                             {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
                         outputMdf.WriteTo(bodyFs);
@@ -714,7 +833,7 @@ Example:
             //Write
             bodyFs.Dispose();
 
-            infoPsb.Objects["file_info"] = fileInfoDic;
+            infoPsb.Objects[archiveInfoType.GetRootKey()] = fileInfoDic;
 
             infoPsb.Merge();
             if (key != null)
@@ -730,7 +849,7 @@ Example:
                 fmContext.Context.Remove(Context_MdfKey);
             }
 
-            using var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), "MDF");
+            using var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), fmContext.HasShell ? fmContext.Shell.ToUpperInvariant() : "MDF");
             File.WriteAllBytes(packageName, infoMdf.ToArray());
             infoMdf.Dispose();
 

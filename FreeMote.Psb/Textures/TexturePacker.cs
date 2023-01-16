@@ -24,8 +24,8 @@ namespace FreeMote.Psb.Textures
         /// <summary>
         /// Expand for 1px
         /// </summary>
-        ///TODO: Expand n px?
-        ///TODO: Since the packer starts from top-left, there is no padding space left for top & left, only down & right. Need more samples.
+        //TODO: Expand n px?
+        //TODO: Since the packer starts from top-left, there is no padding space left for top & left, only down & right. Need more samples.
         Expand1Px,
     }
 

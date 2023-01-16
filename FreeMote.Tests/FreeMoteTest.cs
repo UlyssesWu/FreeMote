@@ -5,9 +5,16 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using BCnEncoder.Decoder;
+using BCnEncoder.Shared;
+using BCnEncoder.Shared.ImageFiles;
+using FreeMote.FastLz;
 using FreeMote.Plugins.Audio;
+using FreeMote.Plugins.Images;
 using FreeMote.Plugins.Shells;
+using FreeMote.Psb;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VGAudio.Containers.Dsp;
 using VGAudio.Containers.Wave;
@@ -52,8 +59,8 @@ namespace FreeMote.Tests
         public void TestBTree()
         {
             var list = new List<string> {"aabc", "deff", "acebdf"};
-            BTree bTree = new BTree(list);
-            BTree.Build(list, out var names, out var tree, out var offsets);
+            PrefixTree prefixTree = new PrefixTree(list);
+            PrefixTree.Build(list, out var names, out var tree, out var offsets);
 
         }
 
@@ -155,11 +162,25 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPal()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            //var imgPath = Path.Combine(resPath, "akatsuki.no.goei.image.samples", "ev_aya07.psb", "ev_aya07_half-5.png");
+            var imgPath = Path.Combine(resPath, "textfont20_2.psb", "[0]-[0].png");
+
+            var img = BitmapHelper.LoadBitmap(File.ReadAllBytes(imgPath));
+            var locked = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadOnly, img.PixelFormat);
+            Debug.WriteLine($"{locked.Stride},{locked.Width},{locked.Height},{locked.PixelFormat}");
+            //RL.ConvertToImageFile(bts, imgPath + "output.png", 544, 960, PsbImageFormat.png, PsbPixelFormat.L8_SW);
+        }
+
+
+        [TestMethod]
         public void TestRGBA8SW()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var imgPath = Path.Combine(resPath, "pm_ev001b.psb", "0.bin");
-            RL.ConvertToImageFile(File.ReadAllBytes(imgPath), imgPath + "output.png", 32, 1024, PsbImageFormat.png, PsbPixelFormat.RGBA8_SW);
+            RL.ConvertToImageFile(File.ReadAllBytes(imgPath), imgPath + "output.png", 1024, 32, PsbImageFormat.png, PsbPixelFormat.BeRGBA8_SW);
         }
 
         [TestMethod]
@@ -169,8 +190,8 @@ namespace FreeMote.Tests
             var palPath = Path.Combine(resPath, "pm_title.psb", "2.bin");
             var imgPath = Path.Combine(resPath, "pm_title.psb", "11.bin");
 
-            var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 512, 1024,
-                PsbPixelFormat.CI8_SW);
+            var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 1024,
+                512, PsbPixelFormat.CI8_SW);
             bmp.Save("ci8_10.png", ImageFormat.Png);
         }
 
@@ -181,9 +202,31 @@ namespace FreeMote.Tests
             var palPath = Path.Combine(resPath, "config.psb", "2.bin");
             var imgPath = Path.Combine(resPath, "config.psb", "11.bin");
 
-            var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 512, 1024,
-                PsbPixelFormat.CI8_SW);
+            var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 1024,
+                512, PsbPixelFormat.CI8_SW);
             bmp.Save("ci8_10.png", ImageFormat.Png);
+        }
+
+        [TestMethod]
+        public void TestCI4_SW()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var imgPath = Path.Combine(resPath, "ci4_sw.png");
+            var bts = RL.GetPixelBytesFromImageFile(imgPath, PsbPixelFormat.CI4_SW);
+            
+            RL.ConvertToImageFile(bts, "ci4-repack.png", 9000, 9000, PsbImageFormat.png, PsbPixelFormat.CI4_SW);
+        }
+
+        [TestMethod]
+        public void TestFastLz()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "raw.mfl");
+            var input = File.OpenRead(path);
+            var outStream = PsbExtension.EncodeMdf(input, "Rj9Pegoh4e_viewer.psb.m", 97, false);
+            var buffer = outStream.ToArray();
+            var output = FastLzNative.Decompress(buffer, 13504);
+            File.WriteAllBytes("decode-raw.mfl", output);
         }
 
         [TestMethod]
@@ -192,8 +235,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var rawDxt = Path.Combine(resPath, "D愛子a_春服-pure", "0.raw");
             var rawBytes = File.ReadAllBytes(rawDxt);
-            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096, PsbImageFormat.png,
-                PsbPixelFormat.DXT5);
+            RL.ConvertToImageFile(rawBytes, rawDxt + "-convert.png", 4096, 4096,
+                PsbImageFormat.png, PsbPixelFormat.DXT5);
         }
 
         [TestMethod]
@@ -203,8 +246,8 @@ namespace FreeMote.Tests
             var rawPng = Path.Combine(resPath, "D愛子a_春服-pure", "0.png");
             Bitmap bitmap = new Bitmap(rawPng);
             var bc3Bytes = DxtUtil.Dxt5Encode(bitmap);
-            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096, PsbImageFormat.png,
-                PsbPixelFormat.DXT5);
+            RL.ConvertToImageFile(bc3Bytes, rawPng + "-convert.png", 4096, 4096,
+                PsbImageFormat.png, PsbPixelFormat.DXT5);
         }
 
         [TestMethod]
@@ -212,9 +255,9 @@ namespace FreeMote.Tests
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "84.bin"); //輪郭00
-            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
+            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 426, 570);
             path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
-            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 395, 411);
+            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 411, 395);
         }
 
         [TestMethod]
@@ -224,17 +267,17 @@ namespace FreeMote.Tests
             string path;
             byte[] bytes;
             path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "84.bin"); //輪郭00
-            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 570, 426);
+            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 426, 570);
             bytes = RL.CompressImageFile(path + ".png");
             File.WriteAllBytes(path + ".rl", bytes);
-            RL.DecompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 570, 426);
+            RL.DecompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 426, 570);
             Assert.IsTrue(bytes.SequenceEqual(File.ReadAllBytes(path)));
 
             path = Path.Combine(resPath, "澄怜a_裸.psb-pure", "89.bin"); //胸00
-            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 395, 411);
+            RL.DecompressToImageFile(File.ReadAllBytes(path), path + ".png", 411, 395);
             bytes = RL.CompressImageFile(path + ".png");
             File.WriteAllBytes(path + ".rl", bytes);
-            RL.DecompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 395, 411);
+            RL.DecompressToImageFile(File.ReadAllBytes(path + ".rl"), path + ".rl.png", 411, 395);
             Assert.IsTrue(bytes.SequenceEqual(File.ReadAllBytes(path)));
         }
         
@@ -302,6 +345,92 @@ namespace FreeMote.Tests
 
             RL.ConvertToImageFile(bts, "rgba4444.png", 2048, 2048, PsbImageFormat.png, PsbPixelFormat.LeRGBA4444);
         }
+
+        [TestMethod]
+        public void TestSwizzle()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "textfont14.psb", "4.bin");
+            var pixels = File.ReadAllBytes(path);
+            var cleanPixels = PostProcessing.UnswizzleTexturePSP(pixels, 512, 512, PixelFormat.Format4bppIndexed);
+            var swizzledPixels = PostProcessing.SwizzleTexturePSP(cleanPixels, 512, 512, PixelFormat.Format4bppIndexed);
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                if (pixels[i] != swizzledPixels[i])
+                {
+                    Debug.WriteLine($"[{i}] {pixels[i]} vs {swizzledPixels[i]}");
+                }
+            }
+            Assert.IsTrue(pixels.SequenceEqual(swizzledPixels.Take(pixels.Length)));
+        }
+
+        [TestMethod]
+        public void TestFlip()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "base_00b33f69d51e22005fd754f79e494968", "2.bin");
+            var pixels = File.ReadAllBytes(path);
+            var p1 = PostProcessing.UnswizzleTexture(pixels, 1024, 256, PixelFormat.Format32bppArgb);
+            var p2 = PostProcessing.FlipTexturePs3(p1, 1024, 256, PixelFormat.Format32bppArgb);
+            var p3 = PostProcessing.FlipTexturePs3(p2, 1024, 256, PixelFormat.Format32bppArgb);
+            var p4 = PostProcessing.SwizzleTexture(p3, 1024, 256, PixelFormat.Format32bppArgb);
+
+            Assert.IsTrue(pixels.SequenceEqual(p4.Take(pixels.Length)));
+        }
+
+        [TestMethod]
+        public void TestBc7()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "ac_lifegame.psb", "0.bin");
+            var buffer = File.ReadAllBytes(path);
+
+            var decoder = new BcDecoder();
+
+            var width = 4096;
+            var height = 3056;
+            var bufferSize = decoder.GetBlockSize(CompressionFormat.Bc7) * width * height;
+            Debug.WriteLine($"size: expect: {bufferSize} ; actual: {buffer.Length}");
+
+            var pixels = decoder.DecodeRaw(buffer, width, height, CompressionFormat.Bc7);
+            var pixelBytes = MemoryMarshal.Cast<ColorRgba32, byte>(pixels);
+            RL.ConvertToImageFile(pixelBytes.ToArray(), "bc7-be.png", width, height, PsbImageFormat.png, PsbPixelFormat.BeRGBA8);
+        }
+
+        [TestMethod]
+        public void TestBc7Plugin()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "ac_lifegame.psb", "0.bin");
+            var buffer = File.ReadAllBytes(path);
+
+            Bc7Formatter bc7Formatter = new Bc7Formatter();
+            var bitmap = bc7Formatter.ToBitmap(buffer, 4096, 3056, PsbSpec.nx);
+            bitmap.Save("bc7-plugin.png");
+
+            var buffer2 = bc7Formatter.ToBytes(bitmap, PsbSpec.nx);
+            var bitmap2 = bc7Formatter.ToBitmap(buffer2, 4096, 3056, PsbSpec.nx);
+            bitmap2.Save("bc7-plugin2.png");
+        }
+
+        //[TestMethod]
+        //public void TestGraphics()
+        //{
+        //    //No, it won't work
+        //    var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+        //    var path1 = Path.Combine(resPath, "textfont20_2.psb", "[0]-[0].png");
+        //    var path2 = Path.Combine(resPath, "textfont20_2.psb", "[1]-[1].png");
+        //    Bitmap bmp1 = BitmapHelper.LoadBitmap(File.ReadAllBytes(path1));
+        //    Bitmap bmp2 = BitmapHelper.LoadBitmap(File.ReadAllBytes(path2));
+        //    Bitmap bmpCanvas = new Bitmap(1024, 512, bmp1.PixelFormat);
+
+        //    bmpCanvas.Palette = bmp1.Palette;
+        //    Graphics g = Graphics.FromImage(bmpCanvas);
+        //    g.DrawImage(bmp2, new Point(512, 0));
+        //    g.Save();
+        //    bmpCanvas.Save("4bpp.png");
+        //}
 
         [TestMethod]
         public void TestPath()

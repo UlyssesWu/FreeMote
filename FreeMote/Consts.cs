@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Microsoft.IO;
 
 // ReSharper disable InconsistentNaming
@@ -61,6 +61,11 @@ namespace FreeMote
         public const string Context_PsbZlibFastCompress = "PsbZlibFastCompress";
 
         /// <summary>
+        /// (int) ZStandard Compression Level
+        /// </summary>
+        public const string Context_PsbZStdCompressLevel = "PsbZStdCompressLevel";
+
+        /// <summary>
         /// (List) Archive sources
         /// </summary>
         public const string Context_ArchiveSource = "ArchiveSource";
@@ -91,7 +96,7 @@ namespace FreeMote
         public const string Context_UseFlattenArray = "UseFlattenArray";
 
         /// <summary>
-        /// (bool) (for <see cref="PsbType.Tachie"/>) If set, always use chunk (piece) images to compile rather than use the combined one
+        /// (bool) (for <see cref="PsbType.Tachie"/>) If set to <c>true</c>, always use chunk (piece) images to compile rather than use the combined one
         /// </summary>
         public const string Context_DisableCombinedImage = "DisableCombinedImage";
 
@@ -115,7 +120,8 @@ namespace FreeMote
         /// </summary>
         public static bool PsbDataStructureAlign { get; set; } = true;
 
-        public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
+        //This is a bad design, abandon
+        //public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
 
         /// <summary>
         /// Take more memory when loading, but maybe faster
@@ -163,9 +169,14 @@ namespace FreeMote
         public static bool PaletteMerge { get; set; } = false;
 
         /// <summary>
-        /// Allows you to edit CI* images by re-generate the palette for each bppIndexed image (will increase size), otherwise you should not change those images
+        /// (not used yet) Allows you to edit CI* images by re-generate the palette for each bppIndexed image (will increase size), otherwise you should not change those images
         /// </summary>
         public static bool GeneratePalette { get; set; } = true;
+
+        /// <summary>
+        /// When compile, FreeMote will try to convert images with palette to common images (without palette). The compiled size will increase. 
+        /// </summary>
+        public static bool AllowRemovePalette { get; set; } = false;
         
         /// <summary>
         /// Use managed code rather than external/native if possible
@@ -176,6 +187,11 @@ namespace FreeMote
         /// (not implemented yet) If the audio have 2 channels, try to combine them when output wave
         /// </summary>
         public static bool CombineAudioChannels { get; set; } = false;
+
+        /// <summary>
+        /// Output more logs
+        /// </summary>
+        public static bool Verbose { get; set; } = false;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

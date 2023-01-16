@@ -239,8 +239,8 @@ namespace FreeMote.PsBuild
                         else
                         {
                             bmp = rl
-                                ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
-                                : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
+                                ? RL.DecompressToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat())
+                                : RL.ConvertToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat());
                             bitmaps.Add(res.Index.Value, bmp);
                         }
                         texs.Add(iconKv.Key, bmp);
@@ -290,8 +290,8 @@ namespace FreeMote.PsBuild
                         var rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
                         var res = (PsbResource)iconItem["pixel"];
                         var texture = rl
-                            ? RL.DecompressToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat())
-                            : RL.ConvertToImage(res.Data, height, width, psb.Platform.DefaultPixelFormat());
+                            ? RL.DecompressToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat())
+                            : RL.ConvertToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat());
 
                         iconItem["image"] = BuildSourceImage(texture);
                         iconItem.Remove("compress");
@@ -582,7 +582,7 @@ namespace FreeMote.PsBuild
                                     dic["particle"] = "quad".ToPsbString();
                                     break;
                                 default:
-                                    Console.WriteLine("[WARN] unknown particle!");
+                                    Logger.LogWarn("[WARN] unknown particle!");
                                     break;
                             }
                         }
