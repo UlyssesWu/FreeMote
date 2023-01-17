@@ -58,18 +58,18 @@ namespace FreeMote.Plugins.Images
             return true;
         }
 
-        public Bitmap ToBitmap(in byte[] data, Dictionary<string, object> context = null)
+        public Bitmap ToBitmap(in byte[] data, int width, int height, PsbSpec platform, Dictionary<string, object> context = null)
         {
             if (AstcFile.IsAstcHeader(data))
             {
                 var header = AstcFile.ParseAstcHeader(data);
-                return RL.ConvertToImage(data.AsSpan(AstcHeader.Length).ToArray(), header.Height, header.Width, PsbPixelFormat.ASTC_8BPP);
+                return RL.ConvertToImage(data.AsSpan(AstcHeader.Length).ToArray(), header.Width, header.Height, PsbPixelFormat.ASTC_8BPP);
             }
 
             return null;
         }
 
-        public byte[] ToBytes(Bitmap bitmap, Dictionary<string, object> context = null)
+        public byte[] ToBytes(Bitmap bitmap, PsbSpec platform, Dictionary<string, object> context = null)
         {
             var tempFile = Path.GetTempFileName();
             bitmap.Save(tempFile);
@@ -89,7 +89,7 @@ namespace FreeMote.Plugins.Images
 
                 if (!File.Exists(tempOutFile))
                 {
-                    Console.WriteLine("[ERROR] ASTC convert failed.");
+                    Logger.LogError("[ERROR] ASTC convert failed.");
                     File.Delete(tempFile);
                     return null;
                 }
@@ -97,14 +97,14 @@ namespace FreeMote.Plugins.Images
                 outBytes = File.ReadAllBytes(tempOutFile);
                 if (outBytes.Length == 0)
                 {
-                    Console.WriteLine("[WARN] ASTC encoder output length is 0");
+                    Logger.LogWarn("[WARN] ASTC encoder output length is 0");
                 }
                 File.Delete(tempFile);
                 File.Delete(tempOutFile);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Log(e);
             }
 
             if (context != null)

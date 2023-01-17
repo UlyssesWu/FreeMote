@@ -68,7 +68,7 @@ namespace FreeMote.Psb
         /// Get all resources with necessary info
         /// </summary>
         /// <param name="psb"></param>
-        /// <param name="deDuplication">if true, we focus on Resource itself </param>
+        /// <param name="deDuplication">if true, we focus on raw Resource itself, not for PSB structure</param>
         /// <returns></returns>
         public static List<T> CollectResources<T>(this PSB psb, bool deDuplication = true) where T : IResourceMetadata
         {
@@ -155,13 +155,13 @@ namespace FreeMote.Psb
 
                         if (texIdx == null)
                         {
-                            Console.WriteLine($"[WARN]{resPath} is not used since the file name cannot be recognized.");
+                            Logger.LogWarn($"[WARN]{resPath} is not used since the file name cannot be recognized.");
                             continue;
                         }
 
                         if (resList.Count <= texIdx.Value)
                         {
-                            Console.WriteLine($"[WARN]{resPath} is not used since the tex No. is too large.");
+                            Logger.LogWarn($"[WARN]{resPath} is not used since the tex No. is too large.");
                             continue;
                         }
 
@@ -187,7 +187,7 @@ namespace FreeMote.Psb
 
                 if (resMd == null)
                 {
-                    Console.WriteLine($"[WARN]{resPath} is not used.");
+                    Logger.LogWarn($"[WARN]{resPath} is not used.");
                     continue;
                 }
 
@@ -243,7 +243,7 @@ namespace FreeMote.Psb
                 {
                     if (overwrite)
                     {
-                        Console.WriteLine($"[WARN]{resxResource.Key} is not used.");
+                        Logger.LogWarn($"[WARN]{resxResource.Key} is not used.");
                     }
                     continue;
                 }
@@ -266,7 +266,7 @@ namespace FreeMote.Psb
             {
                 if (extraResource.Index == null)
                 {
-                    Console.WriteLine("[WARN] Found Extra resource without index. Skipped.");
+                    Logger.LogWarn("[WARN] Found Extra resource without index. Skipped.");
                     continue;
                 }
                 var key = $"{Consts.ExtraResourceIdentifierChar}{extraResource.Index}";
@@ -276,7 +276,7 @@ namespace FreeMote.Psb
                     {
                         if (!LinkFromFile(extraResource, key))
                         {
-                            Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
+                            Logger.LogWarn($"[WARN] Extra resource {key} cannot be linked.");
                         }
                     }
                 }
@@ -284,7 +284,7 @@ namespace FreeMote.Psb
                 {
                     if (!LinkFromFile(extraResource, key))
                     {
-                        Console.WriteLine($"[WARN] Extra resource {key} cannot be linked.");
+                        Logger.LogWarn($"[WARN] Extra resource {key} cannot be linked.");
                     }
                 }
             }
@@ -337,8 +337,8 @@ namespace FreeMote.Psb
             for (int i = 0; i < resources.Count; i++)
             {
                 var resource = resources[i];
-                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Height, resource.Width,
-                    resource.PixelFormat, resource.PalettePixelFormat);
+                var tex = RL.ConvertToImage(resource.Data, resource.PalData, resource.Width,
+                    resource.Height, resource.PixelFormat, resource.PalettePixelFormat);
 
                 switch (order)
                 {
@@ -478,15 +478,14 @@ namespace FreeMote.Psb
                             relativePath = CheckPath(relativePath, i);
                             if (resource.Compress == PsbCompressType.RL)
                             {
-                                RL.DecompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat);
+                                RL.DecompressToImageFile(resource.Data, Path.Combine(dirPath, relativePath), resource.Width, resource.Height, extractFormat, resource.PixelFormat);
                             }
                             else if (resource.Compress == PsbCompressType.Tlg ||
                                      resource.Compress == PsbCompressType.ByName)
                             {
                                 var bmp = context.ResourceToBitmap(resource.Compress == PsbCompressType.Tlg
                                     ? ".tlg"
-                                    : Path.GetExtension(resource.Name), resource.Data);
+                                    : Path.GetExtension(resource.Name), resource.Width, resource.Height, resource.Spec, resource.Data);
                                 if (bmp == null)
                                 {
                                     if (resource.Compress == PsbCompressType.Tlg) //Fallback to managed TLG decoder
@@ -514,9 +513,8 @@ namespace FreeMote.Psb
                             //}
                             else
                             {
-                                RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath),
-                                    resource.Height, resource.Width, extractFormat, resource.PixelFormat, resource.PalData,
-                                    resource.PalettePixelFormat);
+                                RL.ConvertToImageFile(resource.Data, Path.Combine(dirPath, relativePath), resource.Width, resource.Height, extractFormat, resource.PixelFormat,
+                                    resource.PalData, resource.PalettePixelFormat);
                             }
 
                             break;
@@ -570,8 +568,11 @@ namespace FreeMote.Psb
                         {
                             if (resDictionary.ContainsKey(resource.Index.ToString())) //index is used before
                             {
-                                Console.WriteLine(
-                                    $"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
+                                if (Consts.Verbose)
+                                {
+                                    Logger.LogWarn($"[WARN] Resource Index {resource.Index} conflict. May be resource sharing, but may also be something wrong.");
+                                }
+
                                 //continue;
                                 indexConflict = true;
                                 conflictedIndex = resource.Resource.Index.Value;
@@ -582,14 +583,17 @@ namespace FreeMote.Psb
                         {
                             if (resDictionary.ContainsKey(friendlyName)) // friendly name is also used (most likely its the same res reused), no name can be used to save
                             {
-                                Console.WriteLine(
-                                    $"[WARN] Resource Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
+                                Logger.LogWarn(
+                                    $"[WARN] Resource Index {resource.Index} and Name {friendlyName} conflict. May be resource sharing, but may also be something wrong.");
                                 continue; //just skip
                             }
 
                             if (indexConflict) //index is used but friendly name is not (maybe they are different?), save using friendly name
                             {
-                                Console.WriteLine($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
+                                if (Consts.Verbose)
+                                {
+                                    Logger.Log($"[FIXED] Resource {friendlyName} is sharing same data with Index {conflictedIndex}");
+                                }
                             }
                         }
 

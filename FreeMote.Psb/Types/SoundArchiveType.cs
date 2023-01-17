@@ -135,7 +135,7 @@ namespace FreeMote.Psb.Types
                 var resMd = rawResList.FirstOrDefault(r => r.Name == Path.GetFileNameWithoutExtension(resPath));
                 if (resMd == null)
                 {
-                    Console.WriteLine($"[WARN] {resPath} is not used.");
+                    Logger.LogWarn($"[WARN] {resPath} is not used.");
                     continue;
                 }
 
@@ -163,7 +163,7 @@ namespace FreeMote.Psb.Types
                         }
                         else
                         {
-                            Console.WriteLine($"[WARN] {resPath.Key} is not used.");
+                            Logger.LogWarn($"[WARN] {resPath.Key} is not used.");
                         }
                     }
                 }
@@ -177,7 +177,7 @@ namespace FreeMote.Psb.Types
         public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
             PsbLinkOrderBy order = PsbLinkOrderBy.Name)
         {
-            Console.WriteLine("Unlink is not supported for sound_archive type.");
+            Logger.Log("Unlink is not supported for sound_archive type.");
             //TODO: is it even useful?
         }
 
@@ -299,7 +299,7 @@ namespace FreeMote.Psb.Types
                                 var waveChannel = resource.ChannelList[j];
                                 if (waveChannel.Data.Index == null)
                                 {
-                                    Console.WriteLine($"[WARN] Channel {j} is not linked with a Resource.");
+                                    Logger.LogWarn($"[WARN] Channel {j} is not linked with a Resource.");
                                     continue;
                                 }
                                 //TODO: handle channel no.

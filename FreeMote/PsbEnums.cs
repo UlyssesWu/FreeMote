@@ -4,7 +4,7 @@
 
 namespace FreeMote
 {
-    internal class PsbBadFormatException : FormatException
+    public class PsbBadFormatException : FormatException
     {
         public PsbBadFormatReason Reason { get; }
 
@@ -14,26 +14,7 @@ namespace FreeMote
         }
     }
 
-    /// <summary>
-    /// PSB.Combine(PSB)
-    /// </summary>
-    public enum PsbCombineMethod
-    {
-        /// <summary>
-        /// Default
-        /// </summary>
-        Default,
-        /// <summary>
-        /// Merge everything
-        /// </summary>
-        All,
-        /// <summary>
-        /// Only merge objects
-        /// </summary>
-        Objects
-    }
-
-    internal enum PsbBadFormatReason
+    public enum PsbBadFormatReason
     {
         Header,
         IsMdf,
@@ -85,6 +66,10 @@ namespace FreeMote
         /// Sound Archive
         /// </summary>
         SoundArchive = 8,
+        /// <summary>
+        /// Tile Map
+        /// </summary>
+        Map = 9,
     }
 
     /// <summary>
@@ -95,9 +80,9 @@ namespace FreeMote
         /// <summary>
         /// Do not have spec
         /// </summary>
-        none = Byte.MinValue, 
+        none = Byte.MinValue,
         /// <summary>
-        /// Unity & other
+        /// Unity and other
         /// </summary>
         common,
         /// <summary>
@@ -113,9 +98,17 @@ namespace FreeMote
         /// </summary>
         ems,
         /// <summary>
+        /// PSP
+        /// </summary>
+        psp,
+        /// <summary>
         /// PS Vita
         /// </summary>
         vita,
+        /// <summary>
+        /// PS3
+        /// </summary>
+        ps3,
         /// <summary>
         /// PS4
         /// </summary>
@@ -124,6 +117,19 @@ namespace FreeMote
         /// NSwitch
         /// </summary>
         nx,
+        /// <summary>
+        /// 3DS
+        /// </summary>
+        citra,
+        /// <summary>
+        /// Android
+        /// </summary>
+        and,
+        /// <summary>
+        /// XBox 360
+        /// </summary>
+        x360,
+
         other = Byte.MaxValue,
     }
 
@@ -160,6 +166,9 @@ namespace FreeMote
     
     public enum PsbPixelFormat
     {
+        /// <summary>
+        /// Use default when possible, otherwise throw error
+        /// </summary>
         None = 0,
         /// <summary>
         /// Little Endian RGBA8 (plat: win)
@@ -199,11 +208,23 @@ namespace FreeMote
         /// <summary>
         /// BeRGBA8_SW (Swizzle) for vita
         /// </summary>
-        RGBA8_SW,
+        BeRGBA8_SW,
         /// <summary>
-        /// LeRGBA8_SW (Tile) for PS4
+        /// LeRGBA8_SW (Swizzle) for vita
         /// </summary>
-        TileRGBA8_SW,
+        LeRGBA8_SW,
+        /// <summary>
+        /// LeRGBA8_SW (Swizzle, Flip) for PS3
+        /// </summary>
+        FlipLeRGBA8_SW,
+        /// <summary>
+        /// LeRGBA8_SW (Swizzle, Tile) for PS4
+        /// </summary>
+        TileLeRGBA8_SW,
+        /// <summary>
+        /// BeRGBA8_SW (Swizzle, Tile) for ?
+        /// </summary>
+        TileBeRGBA8_SW,
         /// <summary>
         /// Little Endian RGBA4444 with Swizzle for vita
         /// </summary>
@@ -249,6 +270,14 @@ namespace FreeMote
         /// CI4 with Swizzle for vita
         /// </summary>
         CI4_SW,
+        /// <summary>
+        /// CI8 with Swizzle for PSP
+        /// </summary>
+        CI8,
+        /// <summary>
+        /// CI4 with Swizzle for PSP
+        /// </summary>
+        CI4,
 
         //Special
 
@@ -260,6 +289,10 @@ namespace FreeMote
         /// ASTC with block 4x4 for nx
         /// </summary>
         ASTC_8BPP,
+        /// <summary>
+        /// Big Endian BC7 compressed RGBA8 for nx
+        /// </summary>
+        BC7,
     }
 
     public enum PsbAudioFormat
@@ -271,6 +304,7 @@ namespace FreeMote
         XWMA,
         VAG,
         ADPCM,
+        OGG,
     }
 
     public enum PsbAudioPan
@@ -313,6 +347,39 @@ namespace FreeMote
         IntroBody,
     }
 
+    /// <summary>
+    /// The main object of info.psb.m
+    /// </summary>
+    public enum PsbArchiveInfoType
+    {
+        /// <summary>
+        /// Maybe not an archive info?
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// file_info
+        /// </summary>
+        FileInfo,
+        /// <summary>
+        /// umd_root (PSP)
+        /// </summary>
+        UmdRoot,
+    }
+
+    public enum SwizzleType
+    {
+        None,
+        PSP,
+        PSV
+    }
+
+    //public enum TileType
+    //{
+    //    None,
+    //    Default,
+    //    PS4,
+    //}
+
     public enum EncodeMode
     {
         Encrypt,
@@ -324,9 +391,8 @@ namespace FreeMote
         Body,
         Header,
         Full,
-        /// <summary>
-        /// Automata
-        /// <para>if encrypt v3-V4, will only encrypt header.</para>
+        /// <summary> 
+        /// <para>if encrypt v3-v4, will only encrypt header.</para>
         /// <para>if encrypt v2, will only encrypt body(strings).</para>
         /// <para>if decrypt, clean header and body both.</para>
         /// </summary>

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using FreeMote.Psb;
 using FreeMote.Psb.Textures;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace FreeMote.PsBuild.Converters
 {
@@ -37,6 +39,7 @@ namespace FreeMote.PsBuild.Converters
             {
                 Add(psb);
             }
+            TranslateTimeline(psb);
 
             psb.Platform = PsbSpec.krkr;
         }
@@ -81,6 +84,44 @@ namespace FreeMote.PsBuild.Converters
                     {
                         iconList.Add(iconPair.Key);
                         var icon = (PsbDictionary) iconPair.Value;
+                        //handle resolution from win
+                        if (icon.ContainsKey("resolution") && icon["resolution"].GetFloat() != 1.0f)
+                        {
+                            //Converting from win to krkr. Win has scaled image, but krkr wants a full size one. 
+                            //Scale it up will cause bad quality image most likely. But there seems no other choice.
+                            var resolution = icon["resolution"].GetFloat();
+                            var bmp = bmps[iconPair.Key];
+                            var resizedBmp = bmp.ResizeImage(icon["width"].GetInt(), icon["height"].GetInt());
+                            bmps[iconPair.Key] = resizedBmp;
+                            bmp.Dispose();
+                            
+                            //Attempt to remove resolution, won't work
+                            //icon.Remove("resolution"); //you won't be able to convert it back
+                            //if (icon.ContainsKey("width"))
+                            //{
+                            //    icon["width"] = new PsbNumber(Math.Ceiling(icon["width"].GetFloat() * resolution));
+                            //}
+                            //if (icon.ContainsKey("height"))
+                            //{
+                            //    icon["height"] = new PsbNumber(Math.Ceiling(icon["height"].GetFloat() * resolution));
+                            //}
+
+                            //if (icon.ContainsKey("originX"))
+                            //{
+                            //    icon["originX"] = new PsbNumber(Math.Floor(icon["originX"].GetFloat() * resolution));
+                            //}
+
+                            //if (icon.ContainsKey("originY"))
+                            //{
+                            //    icon["originY"] = new PsbNumber(Math.Floor(icon["originY"].GetFloat() * resolution));
+                            //}
+                        }
+                        else if (icon.ContainsKey("resolution_hint")) //recover resolution
+                        {
+                            icon["resolution"] = icon["resolution_hint"];
+                            icon.Remove("resolution_hint");
+                        }
+
                         var data = UseRL
                             ? RL.CompressImage(bmps[iconPair.Key], TargetPixelFormat)
                             : RL.GetPixelBytesFromImage(bmps[iconPair.Key], TargetPixelFormat);
@@ -207,6 +248,86 @@ namespace FreeMote.PsBuild.Converters
             if (!metadata.ContainsKey("attrcomp"))
             {
                 metadata.Add("attrcomp", new PsbDictionary(1));
+            }
+        }
+
+        private void TranslateTimeline(PSB psb)
+        {
+            PsbList nList = new PsbList();
+
+            void Insert(PsbList list, string path, PsbDictionary item)
+            {
+                if (ConvertOption == SpecConvertOption.Minimum)
+                {
+                    item.Remove("hint_path");
+                }
+                var paths = path.Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+                var currentFolderChildren = list;
+                for (var i = 0; i < paths.Length - 1; i++)
+                {
+                    var folder = paths[i];
+                    if (currentFolderChildren.FirstOrDefault(v =>
+                            v is PsbDictionary dic && dic["type"] is PsbString {Value: "folder"} && dic["label"] is PsbString label &&
+                            label == folder) is not PsbDictionary targetFolder)
+                    {
+                        var targetFolderChildren = new PsbList();
+                        targetFolder = new PsbDictionary
+                        {
+                            {"label", folder.ToPsbString()},
+                            {"type", "folder".ToPsbString()},
+                            {"children", targetFolderChildren}
+                        };
+                        currentFolderChildren.Add(targetFolder);
+                        currentFolderChildren = targetFolderChildren;
+                    }
+                    else
+                    {
+                        if (targetFolder["children"] is PsbList children)
+                        {
+                            currentFolderChildren = children;
+                        }
+                        else
+                        {
+                            var targetFolderChildren = new PsbList();
+                            targetFolder["children"] = targetFolderChildren;
+                            currentFolderChildren = targetFolderChildren;
+                        }
+                    }
+                }
+
+                if (currentFolderChildren != null)
+                {
+                    currentFolderChildren.Add(item);
+                }
+                else
+                {
+                    Logger.LogWarn($"[WARN] Failed to insert to path {path}, it will be in root path.");
+                    list.Add(item);
+                }
+            }
+
+            void TranslateChildren(PsbList timelineList)
+            {
+                foreach (var timeline in timelineList)
+                {
+                    if (timeline is PsbDictionary item)
+                    {
+                        if (item["path_hint"] is PsbString hint)
+                        {
+                            Insert(nList, hint.Value, item);
+                        }
+                        else
+                        {
+                            nList.Add(item);
+                        }
+                    }
+                }
+            }
+
+            if (psb.Objects["metadata"] is PsbDictionary metadata && metadata["timelineControl"] is PsbList timelines)
+            {
+                TranslateChildren(timelines);
+                metadata["timelineControl"] = nList;
             }
         }
     }

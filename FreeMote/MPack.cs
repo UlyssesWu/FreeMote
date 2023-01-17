@@ -5,16 +5,14 @@ using System.Text;
 namespace FreeMote
 {
     /// <summary>
-    /// MDF
+    /// Handle compressed files like mdf (M2 Deflate), mfl (M2 FastLz) etc.
     /// </summary> 
-    /// Merged Data File
-    /// Compressed PSB
-    public static class MdfFile
+    public static class MPack
     {
         /// <summary>
         /// MDF Signature
         /// </summary>
-        public const string Signature = "mdf";
+        public const string MdfSignature = "mdf";
 
         public static bool IsSignatureMdf(Stream stream)
         {
@@ -30,6 +28,86 @@ namespace FreeMote
             return false;
         }
 
+        public static bool IsSignatureMdf(byte[] header)
+        {
+            if (header.Length < 4)
+            {
+                return false;
+            }
+
+            if (header[0] == 'm' && header[1] == 'd' && header[2] == 'f' && header[3] == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsSignatureMPack(Stream stream, out string shellType)
+        {
+            var header = new byte[4];
+            var pos = stream.Position;
+            stream.Read(header, 0, 4);
+            stream.Position = pos;
+            return IsSignatureMPack(header, out shellType);
+        }
+
+        public static bool IsSignatureMPack(Span<byte> header, out string shellType)
+        {
+            shellType = string.Empty;
+
+            if (header.Length < 4)
+            {
+                return false;
+            }
+
+            if (header.StartsWith(stackalloc byte[3] {(byte) 'm', (byte) 'd', (byte) 'f'}))
+            {
+                shellType = "MDF";
+                return true;
+            }
+
+            if (header.StartsWith(stackalloc byte[3] {(byte) 'm', (byte) 'f', (byte) 'l'}))
+            {
+                shellType = "MFL";
+                return true;
+            }
+
+            if (header.StartsWith(stackalloc byte[3] { (byte) 'm', (byte) 'z', (byte) 's' }))
+            {
+                shellType = "MZS";
+                return true;
+            }
+
+            if (header.StartsWith(stackalloc byte[3] { (byte) 'm', (byte) 'x', (byte) 'b' }))
+            {
+                shellType = "MXB";
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check if it's a MT19937 MDF (Warning: the result is not always correct)
+        /// </summary>
+        /// <param name="header"></param>
+        /// <returns>if <c>true</c>, it's an encrypted MDF or wrong format; if <c>false</c>, most probably it's a pure mdf</returns>
+        public static bool IsEncryptedMdf(byte[] header)
+        {
+            if (header.Length < 10)
+            {
+                return false;
+            }
+
+            if (header[8] == 0x78 && (header[9] == 0x9C || header[9] == 0xDA))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public static int MdfGetOriginalLength(this Stream stream)
         {
             var pos = stream.Position;
@@ -40,7 +118,7 @@ namespace FreeMote
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        public static void DecompressToPsbFile(string inputPath, string outputPath)
+        public static void MdfDecompressToPsbFile(string inputPath, string outputPath)
         {
             Stream mfs = File.OpenRead(inputPath);
             mfs.Seek(10, SeekOrigin.Begin);
@@ -48,7 +126,7 @@ namespace FreeMote
             mfs.Dispose();
         }
 
-        public static Stream DecompressToPsbStream(Stream input, int size = 0)
+        public static Stream MdfDecompressToPsbStream(Stream input, int size = 0)
         {
             input.Seek(10, SeekOrigin.Begin);
             return ZlibCompress.DecompressToStream(input, size);
@@ -70,7 +148,7 @@ namespace FreeMote
             input.Position = pos;
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
-            bw.WriteStringZeroTrim(Signature);
+            bw.WriteStringZeroTrim(MdfSignature);
             bw.Write((uint) input.Length);
             //bw.Write(ZlibCompress.Compress(input, fast));
             ZlibCompress.CompressToBinaryWriter(bw, input, fast);
@@ -92,7 +170,7 @@ namespace FreeMote
             using (FileStream fs = new FileStream(outputPath ?? psbFile.Path + ".mdf", FileMode.Create))
             {
                 BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(Signature);
+                bw.WriteStringZeroTrim(MdfSignature);
                 bw.Write((uint) ms.Length);
                 //bw.Write(ZlibCompress.Compress(ms, fast));
                 ZlibCompress.CompressToBinaryWriter(bw, ms, fast);

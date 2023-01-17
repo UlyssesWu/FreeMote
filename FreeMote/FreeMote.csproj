@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FreeMote</RootNamespace>
     <AssemblyName>FreeMote</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -50,11 +50,14 @@
     <Compile Include="Adler32.cs" />
     <Compile Include="AstcDecoder.cs" />
     <Compile Include="AstcFile.cs" />
+    <Compile Include="Bc7Decoder.cs" />
+    <Compile Include="BitmapExtension.cs" />
     <Compile Include="BitmapHelper.cs" />
-    <Compile Include="BTree.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="PrefixTree.cs" />
     <Compile Include="DxtCodec.cs" />
     <Compile Include="DxtUtil.cs" />
-    <Compile Include="MdfFile.cs" />
+    <Compile Include="MPack.cs" />
     <Compile Include="PathHelper.cs" />
     <Compile Include="PostProcessing.cs" />
     <Compile Include="FreeMoteExtension.cs" />
@@ -76,10 +79,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream">
-      <Version>2.2.0</Version>
+      <Version>2.2.1</Version>
     </PackageReference>
     <PackageReference Include="System.Memory">
-      <Version>4.5.4</Version>
+      <Version>4.5.5</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

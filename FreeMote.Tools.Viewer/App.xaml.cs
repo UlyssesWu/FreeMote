@@ -23,23 +23,22 @@ namespace FreeMote.Tools.Viewer
 
     class Program
     {
-        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        private static extern bool FreeConsole();
-
         [STAThread]
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Console.WriteLine("FreeMote Viewer");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
             Console.WriteLine();
+            Logger.InitConsole();
             var app = new CommandLineApplication();
             app.OptionsComparison = StringComparison.OrdinalIgnoreCase;
 
             //help
-            app.HelpOption("-?|--help"); //do not inherit
+            //var optHelp = app.HelpOption("-?|--help"); //do not inherit
             app.ExtendedHelpText = PrintHelp();
 
             //options
+            var optHelp = app.Option("-?|--help", "Show help", CommandOptionType.NoValue);
             var optWidth = app.Option<uint>("-w|--width", "Set Window width", CommandOptionType.SingleValue);
             var optHeight = app.Option<uint>("-h|--height", "Set Window height", CommandOptionType.SingleValue);
             var optDirectLoad = app.Option("-d|--direct", "Just load with EMT driver, don't try parsing with FreeMote first", CommandOptionType.NoValue);
@@ -50,8 +49,10 @@ namespace FreeMote.Tools.Viewer
 
             app.OnExecute(() =>
             {
-                if (argPath.Values.Count == 0)
+                if (argPath.Values.Count == 0 || optHelp.HasValue())
                 {
+                    var help = app.GetHelpText();
+                    MessageBox.Show(help, "FreeMote Viewer Help", MessageBoxButton.OK, MessageBoxImage.Information);
                     app.ShowHelp();
                     return;
                 }
@@ -90,7 +91,7 @@ namespace FreeMote.Tools.Viewer
                             using var ms = ctx.OpenFromShell(fs, ref currentType);
                             var psb = ms != null ? new PSB(ms) : new PSB(fs);
 
-                            if (psb.Platform == PsbSpec.krkr)
+                            if (psb.Platform == PsbSpec.krkr) //common should be loadable
                             {
                                 psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
                             }
@@ -107,12 +108,22 @@ namespace FreeMote.Tools.Viewer
                             Core.PsbPaths[i] = tempFile;
                             Core.NeedRemoveTempFile = true;
                         }
-                        
+
                         GC.Collect(); //Can save memory from 700MB to 400MB
                     }
-                    catch (Exception)
+                    catch (PsbBadFormatException ex)
                     {
-                        //ignore
+                        MessageBox.Show("Can not load PSB, maybe your PSB is encrypted. \r\nUse EmtConvert to decrypt it first.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        CleanTempFiles();
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.ToString(), "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        CleanTempFiles();
+                        return;
                     }
                 }
                 else
@@ -120,7 +131,10 @@ namespace FreeMote.Tools.Viewer
                     Core.DirectLoad = true;
                 }
 
-                FreeConsole();
+                if (ConsoleExtension.HasMyConsole())
+                {
+                    ConsoleExtension.Hide();
+                }
                 App wpf = new App();
                 MainWindow main = new MainWindow();
                 wpf.Run(main);
@@ -128,23 +142,46 @@ namespace FreeMote.Tools.Viewer
 
             try
             {
-                app.ExecuteAsync(args);
+                return app.Execute(args);
+            }
+            catch (CommandParsingException)
+            {
+                Console.WriteLine("Could not parse the arguments.");
+                app.ShowHelp();
+                var help = app.GetHelpText();
+                MessageBox.Show(help, "FreeMote Viewer Help", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
+            }
+
+            return 0;
+        }
+
+        private static void CleanTempFiles()
+        {
+            if (Core.NeedRemoveTempFile && Core.PsbPaths?.Count > 0)
+            {
+                foreach (var psbPath in Core.PsbPaths)
+                {
+                    File.Delete(psbPath);
+                }
+
+                Core.NeedRemoveTempFile = false;
             }
         }
 
         private static string PrintHelp()
         {
             return @"Examples: 
+  FreeMoteViewer sample.psb
   FreeMoteViewer -w 1920 -h 1080 -d sample.psb
   FreeMoteViewer -nf sample_head.psb sample_body.psb
 Hint:
-  You can load multiple partial exported PSB like the 2nd example. 
-  The specified order is VERY important, always try to put the Main part at last (body is the Main part comparing to head)!
-  If you're picking multiple files from file explorer and drag&drop to FreeMoteViewer, drag the non-Main part.";
+  You can load multiple partial exported PSB like the `-nf` example. 
+  Use correct order: always try to put the Main part at last (body is the Main part comparing to head)!
+  If you're picking multiple files from file explorer and drag&drop to Viewer, drag the non-Main part.";
         }
     }
 
@@ -156,5 +193,40 @@ Hint:
         protected override void OnStartup(StartupEventArgs e)
         {
         }
+    }
+}
+
+static class ConsoleExtension
+{
+    const int SW_HIDE = 0;
+    const int SW_SHOW = 5;
+    readonly static IntPtr handle = GetConsoleWindow();
+    [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
+    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+    private static extern bool FreeConsole();
+
+    public static void Hide()
+    {
+        ShowWindow(handle, SW_HIDE); //hide the console
+    }
+    public static void Show()
+    {
+        ShowWindow(handle, SW_SHOW); //show the console
+    }
+
+    [DllImport("kernel32.dll")]
+    static extern IntPtr GetCurrentProcessId();
+
+    [DllImport("user32.dll")]
+    static extern int GetWindowThreadProcessId(IntPtr hWnd, ref IntPtr ProcessId);
+
+    public static bool HasMyConsole()
+    {
+        IntPtr hConsole = GetConsoleWindow();
+        IntPtr hProcessId = IntPtr.Zero;
+        GetWindowThreadProcessId(hConsole, ref hProcessId);
+
+        return GetCurrentProcessId().Equals(hProcessId);
     }
 }

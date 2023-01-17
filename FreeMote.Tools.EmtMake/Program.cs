@@ -12,6 +12,7 @@ namespace FreeMote.Tools.EmtMake
         {
             Console.WriteLine("FreeMote MMO Decompiler (Preview)");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
+            Logger.InitConsole();
             FreeMount.Init();
             Console.WriteLine();
             Console.WriteLine("This is a preview version. If it crashes, send the PSB to me.");
@@ -73,7 +74,7 @@ namespace FreeMote.Tools.EmtMake
 
         private static void PrintHelp()
         {
-            Console.WriteLine("Usage: .exe <PSB path> [make.json path]");
+            Console.WriteLine("Usage: .exe <PSB path>");
         }
     }
 }

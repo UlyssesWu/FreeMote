@@ -1,10 +1,13 @@
 ﻿#define USE_FASTBITMAP
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 #if USE_FASTBITMAP
 using FastBitmapLib;
+
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 #else
 using System.Drawing.Drawing2D;
@@ -15,7 +18,7 @@ namespace FreeMote.Psb.Textures
     public static class TextureSpliter
     {
         /// <summary>
-        /// <see cref="PsbResHelper.CollectResources"/> for packed-texture specs, especially for <see cref="PsbSpec.win"/>
+        /// <see cref="PsbResHelper.CollectResources{T}"/> for packed-texture specs, especially for <see cref="PsbSpec.win"/>
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
@@ -76,6 +79,16 @@ namespace FreeMote.Psb.Textures
                 var height = (int) (PsbNumber) info["height"];
                 var top = (int) (PsbNumber) info["top"];
                 var left = (int) (PsbNumber) info["left"];
+                if (info.ContainsKey("resolution")) // the actual width and height need * resolution
+                {
+                    var resolution = (float) (PsbNumber) info["resolution"];
+                    if (resolution != 1.0f)
+                    {
+                        width = (int) Math.Ceiling(width * resolution);
+                        height = (int) Math.Ceiling(height * resolution);
+                    }
+                }
+
                 Bitmap b = new Bitmap(width, height, PixelFormat.Format32bppArgb);
 #if USE_FASTBITMAP
                 using (FastBitmap f = b.FastLock())

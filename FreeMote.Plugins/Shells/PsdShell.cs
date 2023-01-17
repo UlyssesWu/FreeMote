@@ -45,7 +45,7 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToPsb(Stream stream, Dictionary<string, object> context = null)
         {
-            Console.WriteLine("PSD to PSB conversion is not supported.");
+            Logger.Log("PSD to PSB conversion is not supported.");
             return null;
             //throw new NotSupportedException("PSD to PSB conversion is not supported.");
             //var ms = new MemoryStream();
@@ -55,8 +55,9 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
-            Console.WriteLine(
+            Logger.LogWarn(
                 "[WARN] Exported PSD files should follow CC-BY-NC-SA 4.0. Please keep FreeMote information in PSD files.");
+            Console.WriteLine("[WARN] Exported PSD files should follow CC-BY-NC-SA 4.0. Please keep FreeMote information in PSD files.");
             var psb = new PSB(stream);
             if (psb == null)
             {

@@ -213,7 +213,7 @@ namespace FreeMote
             if (string.IsNullOrEmpty (baseName))
                 return null;
 
-            Console.WriteLine($"[Missing] {meta.FileName}/{baseName}");
+            Logger.Log($"[Missing] {meta.FileName}/{baseName}");
             throw new NotImplementedException("Blend Images are not supported yet.");
             //return null;
 

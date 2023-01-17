@@ -198,7 +198,7 @@ namespace FreeMote.Plugins.Audio
 
             if (IsStereo)
             {
-                Console.WriteLine("[WARN] Stereo VAG is not supported. Please provide the sample for research.");
+                Logger.LogWarn("[WARN] Stereo VAG is not supported. Please provide the sample for research.");
             }
 
             // Get PCM data
@@ -308,7 +308,7 @@ namespace FreeMote.Plugins.Audio
 
             if (IsStereo)
             {
-                Console.WriteLine("[WARN] Stereo VAG is not supported. Please provide the sample for research.");
+                Logger.LogWarn("[WARN] Stereo VAG is not supported. Please provide the sample for research.");
             }
 
             // Get PCM data

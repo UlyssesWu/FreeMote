@@ -11,7 +11,6 @@ namespace FreeMote
         public PsbHeader Header { get; set; }
 
         public ushort Version => Header.Version;
-        public bool IsMdf { get; private set; } = false;
 
         public PsbFile(string path)
         {
@@ -39,9 +38,8 @@ namespace FreeMote
         {
             BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true);
             var sig = new string(br.ReadChars(4)).ToUpperInvariant();
-            if (sig.StartsWith("MDF"))
+            if (sig.StartsWith("MDF") || sig.StartsWith("MFL"))
             {
-                IsMdf = true;
                 Header = new PsbHeader();
                 return;
             }
@@ -617,7 +615,7 @@ namespace FreeMote
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public static bool CheckSignature(Stream stream)
+        public static bool IsSignaturePsb(Stream stream)
         {
             var header = new byte[4];
             var pos = stream.Position;
@@ -629,6 +627,36 @@ namespace FreeMote
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Check signature and return shell type if possible; return <see cref="String.Empty"/> if cannot recognize
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static string GetSignatureShellType(Stream stream)
+        {
+            var header = new byte[4];
+            var pos = stream.Position;
+            stream.Read(header, 0, 4);
+            stream.Position = pos;
+            if (header[0] == 'P' && header[1] == 'S' && header[2] == 'B' && header[3] == 0)
+            {
+                return "PSB";
+            }
+            if (header[0] == 'm' && header[1] == 'd' && header[2] == 'f' && header[3] == 0)
+            {
+                return "MDF"; //Deflate
+            }
+            if (header[0] == 'm' && header[1] == 'f' && header[2] == 'l' && header[3] == 0)
+            {
+                return "MFL"; //FastLZ
+            }
+            if (header[0] == 'm' && header[1] == 'z' && header[2] == 's' && header[3] == 0)
+            {
+                return "MZS"; //ZStandard
+            }
+            return string.Empty;
         }
     }
 }

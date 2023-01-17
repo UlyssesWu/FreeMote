@@ -13,6 +13,8 @@ namespace FreeMote.PsBuild
     /// </summary>
     public static class PsbCompiler
     {
+        public static Encoding Encoding { get; set; } = Encoding.UTF8;
+
         /// <summary>
         /// Compile to file
         /// </summary>
@@ -138,7 +140,7 @@ namespace FreeMote.PsBuild
                     if (resx.ExternalTextures)
                     {
 #if DEBUG
-                        Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
+                        Logger.Log("[INFO] External Texture mode ON, no resource will be compiled.");
 #endif
                     }
                     else
@@ -234,7 +236,7 @@ namespace FreeMote.PsBuild
                     if (resx.ExternalTextures)
                     {
 #if DEBUG
-                        Console.WriteLine("[INFO] External Texture mode ON, no resource will be compiled.");
+                        Logger.Log("[INFO] External Texture mode ON, no resource will be compiled.");
 #endif
                     }
                     else
@@ -242,7 +244,7 @@ namespace FreeMote.PsBuild
                         psb.Link(resx, baseDir);
                     }
 
-                    if (resx.Platform != null)
+                    if (resx.Platform != null && resx.Platform != PsbSpec.none)
                     {
                         psb.SwitchSpec(resx.Platform.Value, resx.Platform.Value.DefaultPixelFormat());
                     }
@@ -279,6 +281,7 @@ namespace FreeMote.PsBuild
         {
             PSB psb = new PSB(version)
             {
+                Encoding = Encoding,
                 Objects = JsonConvert.DeserializeObject<PsbDictionary>(json, new PsbJsonConverter())
             };
             psb.InferType();
@@ -353,7 +356,7 @@ namespace FreeMote.PsBuild
 
             var ctx = FreeMount.CreateContext();
             using var psbStream = ctx.OpenStreamFromPsbFile(psbPath);
-            var psb = new PSB(psbStream);
+            var psb = new PSB(psbStream, true, Encoding);
 
             if (jsonPsb.Resources.Count != psb.Resources.Count)
             {
@@ -363,7 +366,7 @@ namespace FreeMote.PsBuild
             MemoryStream ms = new MemoryStream((int)psbStream.Length);
             psbStream.Seek(0, SeekOrigin.Begin);
             psbStream.CopyTo(ms);
-            using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            using BinaryWriter bw = new BinaryWriter(ms, Encoding, true);
 
             for (var i = 0; i < jsonPsb.Resources.Count; i++)
             {
@@ -376,7 +379,7 @@ namespace FreeMote.PsBuild
 
                 if (oriResource.Index == null)
                 {
-                    Console.WriteLine($"[WARN] Resource {i} is not replaced.");
+                    Logger.LogWarn($"[WARN] Resource {i} is not replaced.");
                     continue;
                 }
 

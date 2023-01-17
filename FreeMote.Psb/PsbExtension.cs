@@ -4,7 +4,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using FreeMote.Plugins;
+using Troschuetz.Random.Generators;
 
 namespace FreeMote.Psb
 {
@@ -30,6 +33,11 @@ namespace FreeMote.Psb
             }
         }
 
+        public static PsbString ToPsbString(this PsbSpec spec)
+        {
+            return new PsbString(spec.ToString());
+        }
+
         /// <summary>
         /// <paramref name="compress"/> to its file extension
         /// </summary>
@@ -41,10 +49,26 @@ namespace FreeMote.Psb
             {
                 case PsbCompressType.Tlg:
                     return ".tlg";
-                case PsbCompressType.Astc:
-                    return ".astc";
                 case PsbCompressType.RL:
                     return ".rl";
+                default:
+                    return "";
+            }
+        }
+
+        /// <summary>
+        /// <paramref name="pixelFormat"/> to its file extension
+        /// </summary>
+        /// <param name="pixelFormat"></param>
+        /// <returns></returns>
+        public static string ToExtensionString(this PsbPixelFormat pixelFormat)
+        {
+            switch (pixelFormat)
+            {
+                case PsbPixelFormat.ASTC_8BPP:
+                    return ".astc";
+                case PsbPixelFormat.BC7:
+                    return ".bc7";
                 default:
                     return "";
             }
@@ -203,6 +227,17 @@ namespace FreeMote.Psb
         public static void SetPsbArchData(this IArchData archData, IPsbValue val)
         {
             archData.PsbArchData["archData"] = val;
+        }
+
+        /// <summary>
+        /// Get the second file name extension.
+        /// <example>e.g. get ".vag" from "audio.vag.wav"</example>
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>null if input is null; <see cref="String.Empty"/> if no second extension</returns>
+        internal static string GetSecondExtension(this string path)
+        {
+            return Path.GetExtension(Path.GetFileNameWithoutExtension(path))?.ToLowerInvariant();
         }
 
         #region Object Finding
@@ -585,7 +620,7 @@ namespace FreeMote.Psb
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.WriteStringZeroTrim(MPack.MdfSignature);
                 bw.Write((uint)ms.Length);
                 //bw.Write(ZlibCompress.Compress(ms));
                 ZlibCompress.CompressToBinaryWriter(bw, ms);
@@ -629,7 +664,7 @@ namespace FreeMote.Psb
                 }
 
                 BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(MdfFile.Signature);
+                bw.WriteStringZeroTrim(MPack.MdfSignature);
                 bw.Write((uint)ms.Length);
                 //bw.Write(ZlibCompress.Compress(ms));
                 ZlibCompress.CompressToBinaryWriter(bw, ms);
@@ -638,6 +673,76 @@ namespace FreeMote.Psb
                 bw.Flush();
                 return fs.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Decode/encode MDF used in archive PSB. (<paramref name="stream"/> will <b>NOT</b> be disposed)
+        /// </summary>
+        /// <param name="stream">will <b>NOT</b> be disposed</param>
+        /// <param name="key">a full key a.k.a seed</param>
+        /// <param name="keyLength">key buffer length, usually 131, but could be other value</param>
+        /// <param name="keepHeader">if <c>true</c>, skip first 8 bytes (header)</param>
+        /// <returns></returns>
+        public static MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength, bool keepHeader = true)
+        {
+            //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
+            var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
+            uint[] seeds = new uint[4];
+            seeds[0] = BitConverter.ToUInt32(bts, 0);
+            seeds[1] = BitConverter.ToUInt32(bts, 1 * 4);
+            seeds[2] = BitConverter.ToUInt32(bts, 2 * 4);
+            seeds[3] = BitConverter.ToUInt32(bts, 3 * 4);
+
+            MemoryStream ms = new MemoryStream((int)stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
+            var gen = new MT19937Generator(seeds);
+
+            using BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true);
+            using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            if (keepHeader)
+            {
+                bw.Write(br.ReadBytes(8));
+            }
+            //uint count = 0;
+
+            List<byte> keys = new List<byte>();
+            if (keyLength != null)
+            {
+                for (int i = 0; i < keyLength / 4 + 1; i++)
+                {
+                    keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
+                }
+
+                keys = keys.GetRange(0, (int)keyLength.Value);
+                //keys = keys.Take((int) keyLength.Value).ToList();
+            }
+            else
+            {
+                while (keys.Count < br.BaseStream.Length)
+                {
+                    keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
+                }
+            }
+
+            int currentKey = 0;
+            while (br.BaseStream.Position < br.BaseStream.Length)
+            {
+                var current = br.ReadByte();
+                if (currentKey >= keys.Count)
+                {
+                    currentKey = 0;
+                }
+
+                current ^= keys[currentKey];
+                currentKey++;
+
+                //if (keyLength == null || (count < keyLength.Value))
+                //{
+                //    current ^= gen.NextUIntInclusiveMaxValue();
+                //}
+                bw.Write(current);
+            }
+
+            return ms;
         }
 
         #endregion
@@ -692,113 +797,65 @@ namespace FreeMote.Psb
             return !Double.IsNaN(num) && !Double.IsInfinity(num);
         }
 
-        //WARN: GetSize should not return 0
-        /// <summary>
-        /// Black magic to get size hehehe...
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
         public static int GetSize(this int i)
         {
-            bool neg = false;
-            if (i < 0)
+            return i switch
             {
-                neg = true;
-                i = Math.Abs(i);
-            }
+                // 0b00000000_01111111_11111111_11111111 can be shorten to 0b01111111_11111111_11111111 (it's positive because of the first 0),
+                // but 0b00000000_10000000_00000000_00000000 can not be shorten to 0b10000000_00000000_00000000,
+                // because that would be negative = (unchecked((int)0b11111111_10000000_00000000_00000000))
+                >= 0b00000000_10000000_00000000_00000000 => 4, // an extra 0 is needed to prove it's a positive number ([01]000.. raise from right to left)
+                >= 0b00000000_00000000_10000000_00000000 => 3, // same energy
+                >= 0b00000000_00000000_00000000_10000000 => 2,
+                >= 0 => 1,
+                // 0b11111111_10000000_00000000_00000001 can be shorten to 0b10000000_00000000_00000001 (it's negative because of the first 1),
+                // but 0b11111111_01111111_11111111_11111111 can not be shorten to 0b01111111_11111111_11111111,
+                // because that would be positive
+                <= (unchecked((int) 0b11111111_01111111_11111111_11111111)) => 4, // an extra 1 is needed to prove it's a negative number ([01]111.. raise from right to left)
+                <= (unchecked((int) 0b11111111_11111111_01111111_11111111)) => 3, // same energy
+                <= (unchecked((int) 0b11111111_11111111_11111111_01111111)) => 2,
+                <= 0 => 1,
+                //_ => 4
+            };
+        }
 
-            var hex = i.ToString("X");
-            var l = hex.Length;
-            bool firstBitOne =
-                hex[0] >= '8' &&
-                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
-
-            if (l % 2 != 0)
+        public static int GetSize(this long i)
+        {
+            //this is mostly generated by copilot so I didn't get bored, thanks for concern
+            return i switch
             {
-                l++;
-            }
-
-            l = l / 2;
-            if (neg || firstBitOne)
-            {
-                l++;
-            }
-
-            if (l > 4)
-            {
-                l = 4;
-            }
-
-            return l;
+                >= 0b00000000_10000000_00000000_00000000_00000000_00000000_00000000_00000000 => 8,
+                >= 0b00000000_00000000_10000000_00000000_00000000_00000000_00000000_00000000 => 7,
+                >= 0b00000000_00000000_00000000_10000000_00000000_00000000_00000000_00000000 => 6,
+                >= 0b00000000_00000000_00000000_00000000_10000000_00000000_00000000_00000000 => 5,
+                >= 0b00000000_00000000_00000000_00000000_00000000_10000000_00000000_00000000 => 4,
+                >= 0b00000000_00000000_00000000_00000000_00000000_00000000_10000000_00000000 => 3,
+                >= 0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_10000000 => 2,
+                >= 0 => 1,
+                <= (unchecked((long) 0b11111111_01111111_11111111_11111111_11111111_11111111_11111111_11111111)) => 8,
+                <= (unchecked((long) 0b11111111_11111111_01111111_11111111_11111111_11111111_11111111_11111111)) => 7,
+                <= (unchecked((long) 0b11111111_11111111_11111111_01111111_11111111_11111111_11111111_11111111)) => 6,
+                <= (unchecked((long) 0b11111111_11111111_11111111_11111111_01111111_11111111_11111111_11111111)) => 5,
+                <= (unchecked((long) 0b11111111_11111111_11111111_11111111_11111111_01111111_11111111_11111111)) => 4,
+                <= (unchecked((long) 0b11111111_11111111_11111111_11111111_11111111_11111111_01111111_11111111)) => 3,
+                <= (unchecked((long) 0b11111111_11111111_11111111_11111111_11111111_11111111_11111111_01111111)) => 2,
+                <= 0 => 1,
+                //_ => 4
+            };
         }
 
         /// <summary>
-        /// Black magic to get size hehehe...
+        /// get minimum size cost
         /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
         public static int GetSize(this uint i)
         {
-            //FIXED: Treat uint as int to prevent overconfidence
-            if (i <= Int32.MaxValue)
-            {
-                return GetSize((int)i);
-            }
+            int n = 0; do { i >>= 8; n++; } while (i != 0);
 
-            var l = i.ToString("X").Length;
-            if (l % 2 != 0)
-            {
-                l++;
-            }
-
-            l = l / 2;
-            if (l > 4)
-            {
-                l = 4;
-            }
-
-            return l;
+            return n;
         }
-
-        /// <summary>
-        /// Black magic... hehehe...
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        public static int GetSize(this long i)
-        {
-            bool neg = false;
-            if (i < 0)
-            {
-                neg = true;
-                i = Math.Abs(i);
-            }
-
-            var hex = i.ToString("X");
-            var l = hex.Length;
-            bool firstBitOne =
-                hex[0] >= '8' &&
-                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
-
-            if (l % 2 != 0)
-            {
-                l++;
-            }
-
-            l = l / 2;
-            if (neg || firstBitOne)
-            {
-                l++;
-            }
-
-            if (l > 8)
-            {
-                l = 8;
-            }
-
-            return l;
-        }
-
+        
         public static uint ReadCompactUInt(this BinaryReader br, byte size)
         {
             return br.ReadBytes(size).UnzipUInt();
@@ -926,6 +983,28 @@ namespace FreeMote.Psb
 
         #region Archive
 
+        public static PsbArchiveInfoType GetArchiveInfoType(this PSB psb)
+        {
+            if (psb.Objects.ContainsKey(PsbArchiveInfoType.UmdRoot.GetRootKey()))
+            {
+                return PsbArchiveInfoType.UmdRoot;
+            }
+            else if (psb.Objects.ContainsKey(PsbArchiveInfoType.FileInfo.GetRootKey()))
+            {
+                return PsbArchiveInfoType.FileInfo;
+            }
+
+            return PsbArchiveInfoType.None;
+        }
+
+        public static string GetRootKey(this PsbArchiveInfoType type) =>
+            type switch
+            {
+                PsbArchiveInfoType.FileInfo => "file_info",
+                PsbArchiveInfoType.UmdRoot => "umd_root",
+                _ => null
+            };
+
         /// <summary>
         /// Remove suffix for file name in archive info file_info
         /// </summary>
@@ -955,27 +1034,118 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static string ArchiveInfoGetFileNameAppendSuffix(string name, string suffix)
         {
-            if (!name.EndsWith(".m") && !name.EndsWith(".psb")) //if a file name ends with .m, it's a naughty bad file with its own suffix
+            //if a file name ends with .xxx.m (like abc.nut.m), it's a naughty bad file with its own suffix. However, abc.m is not considered as such
+            if ((name.EndsWith(".m") && name.Count(c => c == '.') > 1) || name.EndsWith(".psb"))
             {
-                return name + suffix;
+                return name;
             }
 
-            return name;
+            return name + suffix;
+
+        }
+
+        /* the "amazing" design of archive psb:
+        "expire_suffix_list": [".psb.m"]
+        "image/man003" -> packed with key man003.psb.m
+        "scenario/ca01_06.txt.scn.m" -> packed with key ca01_06.txt.scn.m (?)
+        "script/ikusei.nut.m" -> packed with key ikusei.nut.m (ok fine)
+        "sound/bgm.psb" -> not packed (??)
+        "bg_c_whit.m" -> packed with key bg_c_whit.m.psb.m (???)
+         */
+
+        /// <summary>
+        /// get all possible file names (used as key) for items in archive psb, the first one is default (most confident)
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="suffix"></param>
+        /// <returns></returns>
+        public static List<string> ArchiveInfoGetAllPossibleFileNames(string name, string suffix)
+        {
+            List<string> exts = new List<string>();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return exts;
+            }
+            var name2 = name;
+            while (Path.GetExtension(name2) != string.Empty)
+            {
+                exts.Add(Path.GetExtension(name2));
+                name2 = Path.ChangeExtension(name2, null);
+            }
+
+            List<string> results = new List<string>();
+            if (exts.Count == 0)
+            {
+                //"image/man003" -> man003.psb.m
+                results.Add(name + suffix);
+                results.Add(name);
+            }
+            else //exts.Count > 0
+            {
+                if (exts[0].ToLowerInvariant() == ".m" && exts.Count == 1)
+                {
+                    //"bg_c_whit.m" -> bg_c_whit.m.psb.m
+                    results.Add(name + suffix);
+                    results.Add(name);
+                    results.Add(Path.ChangeExtension(name, null));
+                }
+                else
+                {
+                    //"scenario/ca01_06.txt.scn.m" -> ca01_06.txt.scn.m
+                    //"script/ikusei.nut.m" -> ikusei.nut.m
+                    //"sound/bgm.psb" -> null
+                    if (name.EndsWith(".txt") && suffix.StartsWith(".scn"))
+                    {
+                        results.Add(name + suffix);
+                        results.Add(name);
+                    }
+                    else
+                    {
+                        results.Add(name);
+                        results.Add(name + suffix);
+                    }
+
+                    name2 = name;
+                    while (Path.GetExtension(name2) != string.Empty)
+                    {
+                        name2 = Path.ChangeExtension(name2, null);
+                        results.Add(name2);
+                        results.Add(name2 + suffix);
+                    }
+                }
+            }
+
+            if (name.Contains("/")) //There is path, OMG
+            {
+                results.AddRange(ArchiveInfoGetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix));
+            }
+
+            //stress test
+            //results.Reverse();
+
+            return results.Distinct().ToList();
         }
 
         /// <summary>
-        /// Collect file names in archive info file_info
+        /// Collect (possible) file names in archive info file_info
         /// </summary>
         /// <param name="psb"></param>
         /// <param name="suffix"></param>
         /// <returns></returns>
         public static IEnumerable<string> ArchiveInfoCollectFiles(PSB psb, string suffix)
         {
-            if (psb.Objects.ContainsKey("file_info") && psb.Objects["file_info"] is PsbDictionary fileInfo)
+            var archiveInfoType = psb.GetArchiveInfoType();
+            var rootKey = archiveInfoType.GetRootKey();
+            if (psb.Objects.ContainsKey(rootKey) && psb.Objects[rootKey] is PsbDictionary fileInfo)
             {
                 foreach (var name in fileInfo.Keys)
                 {
-                    yield return ArchiveInfoGetFileNameAppendSuffix(name, suffix);
+                    //yield return ArchiveInfoGetFileNameAppendSuffix(name, suffix);
+                    //foreach (var fileName in ArchiveInfoGetAllPossibleFileNames(name, suffix))
+                    //{
+                    //    yield return fileName;
+                    //}
+                    yield return ArchiveInfoGetAllPossibleFileNames(name, suffix).FirstOrDefault();
                 }
             }
         }
@@ -996,6 +1166,11 @@ namespace FreeMote.Psb
 
             return suffix;
         }
+
+        //types: 
+        //1. name_info.psb.m + name_body.bin
+        //2. nameinfo.psb.m + namebody.bin
+        //3. nameinfo.psb.m + nameinfo_body.bin
 
         /// <summary>
         /// Get package name from a string like {package name}_info.psb.m
@@ -1022,18 +1197,119 @@ namespace FreeMote.Psb
             return name;
         }
 
+        /// <summary>
+        /// Get an item's start and length info from info.psb.m
+        /// </summary>
+        /// <param name="range"></param>
+        /// <param name="archiveInfoType"></param>
+        /// <returns></returns>
+        public static (uint Start, int Length) ArchiveInfoGetItemPositionFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
+        {
+            if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+            {
+                return (((PsbNumber)range[range.Count - 1]).UIntValue, ((PsbNumber)range[range.Count - 2]).IntValue);
+            }
+
+            return (((PsbNumber) range[0]).UIntValue, ((PsbNumber) range[1]).IntValue);
+        }
+
         #endregion
 
-        /// <summary>
-        /// Get the second file name extension.
-        /// <example>e.g. get ".vag" from "audio.vag.wav"</example>
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns>null if input is null; <see cref="String.Empty"/> if no second extension</returns>
-        internal static string GetSecondExtension(this string path)
+        #region Deprecated
+        //WARN: GetSize should not return 0
+        private static int GetSizeSlow(this int i)
         {
-            return Path.GetExtension(Path.GetFileNameWithoutExtension(path))?.ToLowerInvariant();
+            bool neg = false;
+            if (i < 0)
+            {
+                neg = true;
+                i = Math.Abs(i);
+            }
+
+            var hex = i.ToString("X");
+            var l = hex.Length;
+            bool firstBitOne =
+                hex[0] >= '8' &&
+                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
+
+            if (l % 2 != 0)
+            {
+                l++;
+            }
+
+            l = l / 2;
+            if (neg || firstBitOne)
+            {
+                l++;
+            }
+
+            if (l > 4)
+            {
+                l = 4;
+            }
+
+            return l;
         }
+
+        private static int GetSizeSlow(this uint i)
+        {
+            //FIXED: Treat uint as int to prevent overconfidence
+            if (i <= Int32.MaxValue)
+            {
+                return GetSize((int) i);
+            }
+
+            var l = i.ToString("X").Length;
+            if (l % 2 != 0)
+            {
+                l++;
+            }
+
+            l = l / 2;
+            if (l > 4)
+            {
+                l = 4;
+            }
+
+            return l;
+        }
+
+        private static int GetSizeSlow(this long i)
+        {
+            bool neg = false;
+            if (i < 0)
+            {
+                neg = true;
+                i = Math.Abs(i);
+            }
+
+            var hex = i.ToString("X");
+            var l = hex.Length;
+            bool firstBitOne =
+                hex[0] >= '8' &&
+                hex.Length % 2 == 0; //FIXED: Extend size if first bit is 1 //FIXED: 0x0F is +, 0xFF is -, 0x0FFF is +
+
+            if (l % 2 != 0)
+            {
+                l++;
+            }
+
+            l = l / 2;
+            if (neg || firstBitOne)
+            {
+                l++;
+            }
+
+            if (l > 8)
+            {
+                l = 8;
+            }
+
+            return l;
+        }
+
+        #endregion
+
     }
 
     public class ByteListComparer : IComparer<IList<byte>>
