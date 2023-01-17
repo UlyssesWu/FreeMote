@@ -33,6 +33,11 @@ namespace FreeMote.Psb
             }
         }
 
+        public static PsbString ToPsbString(this PsbSpec spec)
+        {
+            return new PsbString(spec.ToString());
+        }
+
         /// <summary>
         /// <paramref name="compress"/> to its file extension
         /// </summary>
