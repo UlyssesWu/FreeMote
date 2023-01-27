@@ -352,6 +352,23 @@ namespace FreeMote.Psb.Textures
             Process();
         }
 
+        /// <summary>
+        /// Result saved in <see cref="Atlasses"/>
+        /// </summary>
+        /// <param name="images"></param>
+        /// <param name="atlasSize"></param>
+        /// <param name="padding"></param>
+        /// <param name="debugMode"></param>
+        public void Process(IList<TextureInfo> images, int atlasSize, int padding, bool debugMode = false)
+        {
+            Padding = padding;
+            AtlasSize = atlasSize;
+            DebugMode = debugMode;
+
+            SourceTextures.AddRange(images);
+            Process();
+        }
+
         public Bitmap CellProcess(IDictionary<string, Image> images,
             Dictionary<string, (int oriX, int oriY, int width, int height)> origins, int paddingWidth, int paddingHeight,
             out int cellWidth, out int cellHeight, int mode = 0, bool debugMode = false)

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
+using FreeMote.Psb.Textures;
 using SixLabors.Fonts;
 using SixLabors.Fonts.Unicode;
 using SixLabors.ImageSharp.Drawing;
@@ -108,6 +109,11 @@ namespace FreeMote.PsBuild
 }
 */
 
+        private SixLabors.ImageSharp.Color ToColor(Color color)
+        {
+            return SixLabors.ImageSharp.Color.FromRgba(color.R, color.G, color.B, color.A);
+        }
+
         /// <summary>
         /// Generate font PSB
         /// </summary>
@@ -123,6 +129,7 @@ namespace FreeMote.PsBuild
             Color foregroundColor, Color backgroundColor, PsbSpec platform = PsbSpec.common,
             PsbPixelFormat pixelFormat = PsbPixelFormat.None, ushort psbVersion = 2)
         {
+            var context = new FontContext(pixelFormat, platform, ToColor(foregroundColor), ToColor(backgroundColor));
             PSB psb = new PSB(psbVersion)
             {
                 Objects = new PsbDictionary
@@ -136,13 +143,18 @@ namespace FreeMote.PsBuild
             };
             var source = new PsbList();
             psb.Objects["source"] = source;
-            var code = BuildCode(characters);
+            var code = BuildCode(characters, context);
+            context.Code = code;
             psb.Objects["code"] = code;
-
+            context.Debug = true;
+            context.OutlineColor = ToColor(Color.Gold);
+            context.OutlineWidth = 2;
+            context.Pack();
+            
             return psb;
         }
 
-        public PsbDictionary BuildCode(List<(string FontName, HashSet<char> Characters, int Size)> characters)
+        internal PsbDictionary BuildCode(List<(string FontName, HashSet<char> Characters, int Size)> characters, FontContext context)
         {
             var code = new PsbDictionary();
             foreach (var tuple in characters)
@@ -156,14 +168,15 @@ namespace FreeMote.PsBuild
                 var font = family.CreateFont(tuple.Size);
                 foreach (var c in tuple.Characters)
                 {
-                    code[c.ToString()] = BuildChar(font, c);
+                    context.CharFonts[c] = font;
+                    code[c.ToString()] = BuildChar(font, c, context);
                 }
             }
 
             return code;
         }
 
-        public PsbDictionary BuildChar(Font font, char character)
+        internal PsbDictionary BuildChar(Font font, char character, FontContext context)
         {
             var obj = new PsbDictionary();
             var glyphs = font.GetGlyphs(new CodePoint(character), ColorFontSupport.None);
@@ -175,9 +188,13 @@ namespace FreeMote.PsBuild
                 var sizeOfOnePixel = font.FontMetrics.UnitsPerEm / fontSize;
                 var glyph = glyphs.First();
                 var metrics = glyph.GlyphMetrics;
-                obj["h"] = new PsbNumber(Math.Ceiling(metrics.Height / sizeOfOnePixel)); //actual glyph height
-                obj["w"] = new PsbNumber(Math.Ceiling(metrics.Width / sizeOfOnePixel)); //actual glyph width
-                obj["width"] = new PsbNumber(fontSize);
+                var cHeight = (int) Math.Ceiling(metrics.Height / sizeOfOnePixel);
+                var cWidth = (int) Math.Ceiling(metrics.Width / sizeOfOnePixel);
+                context.Glyphs.Add(new TextureInfo {Height = cHeight, Width = cWidth, Source = character.ToString()});
+
+                obj["h"] = new PsbNumber(cHeight); //actual glyph height
+                obj["w"] = new PsbNumber(cWidth); //actual glyph width
+                obj["width"] = obj["w"];
                 obj["height"] = new PsbNumber(fontSize);
                 obj["a"] = new PsbNumber(Math.Ceiling(-(metrics.TopSideBearing / sizeOfOnePixel))); //internal leading; top side bearing
                 obj["d"] = new PsbNumber(Math.Ceiling(fontSize - (metrics.TopSideBearing / sizeOfOnePixel))); //dimension?

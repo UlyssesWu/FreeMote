@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FontBuilder.cs" />
+    <Compile Include="FontContext.cs" />
     <Compile Include="MmoCompiler.cs" />
     <Compile Include="MmoBuilder.cs" />
     <Compile Include="MmoTypes.cs" />
