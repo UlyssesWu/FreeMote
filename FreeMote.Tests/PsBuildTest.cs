@@ -647,6 +647,18 @@ namespace FreeMote.Tests
             Console.WriteLine(s2);
         }
 
+        [TestMethod]
+        public void TestFont()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "zh-cn.ttf");
+            FontBuilder builder = new FontBuilder();
+            builder.AddFont(path);
+            var psb = builder.BuildFontPsb("FreeMote Font",
+                new List<(string FontName, HashSet<char> Characters, int Size)>()
+                    {("", new HashSet<char>() {'U', 'a', 'f', 'g', '^', '_', '囧', 'の', 'Ｏ'}, 32)}, Color.White, Color.Transparent);
+        }
+
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)
         {
             //if (p1.Type != p2.Type && !(p1 is PsbString))

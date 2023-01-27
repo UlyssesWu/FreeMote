@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using FreeMote.Psb;
 using SixLabors.Fonts;
+using SixLabors.Fonts.Unicode;
+using SixLabors.ImageSharp.Drawing;
+using Font = SixLabors.Fonts.Font;
+
+// ReSharper disable PossibleMultipleEnumeration
 
 namespace FreeMote.PsBuild
 {
@@ -106,27 +112,83 @@ namespace FreeMote.PsBuild
         /// Generate font PSB
         /// </summary>
         /// <param name="fontName">the name of the font (in file)</param>
-        /// <param name="characters">all character needed</param>
-        /// <param name="fontsWithSize">A list of fonts, if one character doesn't exist in a font, fallback to next font.</param>
+        /// <param name="characters">all character needed, with font name and size</param>
         /// <param name="foregroundColor">the color of characters, usually <see cref="Color.White"/></param>
         /// <param name="backgroundColor">the color of the background, usually <see cref="Color.Transparent"/></param>
         /// <param name="platform">target PSB platform</param>
         /// <param name="pixelFormat">the pixel format used for PSB (auto choose according to <see cref="PsbSpec"/> if use <see cref="PsbPixelFormat.None"/>)</param>
+        /// <param name="psbVersion">PSB version</param>
         /// <returns>the generated font PSB</returns>
-        public PSB BuildFontPsb(string fontName, HashSet<char> characters, IDictionary<string, int> fontsWithSize, Color foregroundColor, Color backgroundColor, PsbSpec platform = PsbSpec.common,
-            PsbPixelFormat pixelFormat = PsbPixelFormat.None)
+        public PSB BuildFontPsb(string fontName, List<(string FontName, HashSet<char> Characters, int Size)> characters,
+            Color foregroundColor, Color backgroundColor, PsbSpec platform = PsbSpec.common,
+            PsbPixelFormat pixelFormat = PsbPixelFormat.None, ushort psbVersion = 2)
         {
-            PSB psb = new PSB();
-            psb.Objects["spec"] = platform.ToPsbString();
-            psb.Objects["version"] = new PsbNumber(1.08f);
-            psb.Objects["id"] = "font".ToPsbString();
-            psb.Objects["label"] = (fontName ?? "新規プロジェクト").ToPsbString();
+            PSB psb = new PSB(psbVersion)
+            {
+                Objects = new PsbDictionary
+                {
+                    ["spec"] = platform.ToPsbString(),
+                    ["version"] = new PsbNumber(1.08f),
+                    ["id"] = "font".ToPsbString(),
+                    ["label"] = (fontName ?? "新規プロジェクト").ToPsbString()
+                },
+                Type = PsbType.BmpFont
+            };
             var source = new PsbList();
             psb.Objects["source"] = source;
-            var code = new PsbDictionary();
+            var code = BuildCode(characters);
             psb.Objects["code"] = code;
 
             return psb;
+        }
+
+        public PsbDictionary BuildCode(List<(string FontName, HashSet<char> Characters, int Size)> characters)
+        {
+            var code = new PsbDictionary();
+            foreach (var tuple in characters)
+            {
+                if (tuple.Characters.Count == 0)
+                {
+                    continue;
+                }
+
+                var family = string.IsNullOrEmpty(tuple.FontName) ? FontCollection.Families.First() : FontCollection.Get(tuple.FontName);
+                var font = family.CreateFont(tuple.Size);
+                foreach (var c in tuple.Characters)
+                {
+                    code[c.ToString()] = BuildChar(font, c);
+                }
+            }
+
+            return code;
+        }
+
+        public PsbDictionary BuildChar(Font font, char character)
+        {
+            var obj = new PsbDictionary();
+            var glyphs = font.GetGlyphs(new CodePoint(character), ColorFontSupport.None);
+            if (glyphs.Any())
+            {
+                //height = a + d
+                //b = baseline: a/n:17, b/l:25, g:18
+                var fontSize = font.Size;
+                var sizeOfOnePixel = font.FontMetrics.UnitsPerEm / fontSize;
+                var glyph = glyphs.First();
+                var metrics = glyph.GlyphMetrics;
+                obj["h"] = new PsbNumber(Math.Ceiling(metrics.Height / sizeOfOnePixel)); //actual glyph height
+                obj["w"] = new PsbNumber(Math.Ceiling(metrics.Width / sizeOfOnePixel)); //actual glyph width
+                obj["width"] = new PsbNumber(fontSize);
+                obj["height"] = new PsbNumber(fontSize);
+                obj["a"] = new PsbNumber(Math.Ceiling(-(metrics.TopSideBearing / sizeOfOnePixel))); //internal leading; top side bearing
+                obj["d"] = new PsbNumber(Math.Ceiling(fontSize - (metrics.TopSideBearing / sizeOfOnePixel))); //dimension?
+                obj["b"] = obj["d"]; //TODO: how to calculate baseline
+                obj["x"] = PsbNumber.Zero;
+                obj["y"] = PsbNumber.Zero;
+                obj["id"] = PsbNumber.Zero;
+                return obj;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -138,7 +200,8 @@ namespace FreeMote.PsBuild
         /// <param name="platform">target PSB platform</param>
         /// <param name="pixelFormat">the pixel format used for PSB</param>
         /// <returns></returns>
-        public PSB BuildFontPsb(ReadOnlySpan<char> characters, List<string> fontPaths, string fontName = null, PsbSpec platform = PsbSpec.common, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
+        public PSB BuildFontPsb(ReadOnlySpan<char> characters, List<string> fontPaths, string fontName = null,
+            PsbSpec platform = PsbSpec.common, PsbPixelFormat pixelFormat = PsbPixelFormat.None)
         {
             return null;
         }
