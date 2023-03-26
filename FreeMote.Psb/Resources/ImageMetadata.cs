@@ -313,6 +313,18 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
+        /// Remove invalid chars in string for path
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private static string EscapeStringForPath(string name)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var n = name.IndexOfAny(invalidChars) != -1 ? string.Join("_", name.Split(invalidChars)) : name;
+            return n.StartsWith("..") ? n.TrimStart('.') : n;
+        }
+
+        /// <summary>
         /// Name for export and import
         /// </summary>
         /// <param name="type"></param>
@@ -321,7 +333,7 @@ namespace FreeMote.Psb
         {
             if (type == PsbType.Pimg && !string.IsNullOrWhiteSpace(Name))
             {
-                return Path.GetFileNameWithoutExtension(Name);
+                return Path.GetFileNameWithoutExtension(EscapeStringForPath(Name));
             }
 
             if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(Part))
@@ -334,7 +346,7 @@ namespace FreeMote.Psb
                 return "";
             }
 
-            return $"{Part}{Consts.ResourceNameDelimiter}{Name}";
+            return $"{EscapeStringForPath(Part)}{Consts.ResourceNameDelimiter}{EscapeStringForPath(Name)}";
         }
 
         internal byte[] LoadImageBytes(string path, FreeMountContext context,
