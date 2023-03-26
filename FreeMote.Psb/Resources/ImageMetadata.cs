@@ -319,6 +319,12 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public string GetFriendlyName(PsbType type)
         {
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                //Sanitize file name for export
+                Name = string.Join("_", Name.Split(Path.GetInvalidFileNameChars()));
+            }
+
             if (type == PsbType.Pimg && !string.IsNullOrWhiteSpace(Name))
             {
                 return Path.GetFileNameWithoutExtension(Name);
