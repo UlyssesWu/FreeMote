@@ -1,55 +1,72 @@
-﻿using System;
+﻿using FreeMote.Psb.Textures;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-using FreeMote.Psb.Textures;
 
 namespace FreeMote.Psb
 {
-    /// <summary>
-    /// EMT PSB Painter
-    /// </summary>
-    public class PsbPainter
-    {
-        public string GroupMark { get; set; } = "■";
-        public PSB Source { get; set; }
-        public List<ImageMetadata> Resources { get; private set; } = new List<ImageMetadata>();
+    //This painter only paints the initial state of a motion. The accuracy is not guaranteed.
 
-        public PsbPainter(PSB psb)
+    /// <summary>
+    /// Motion PSB Painter
+    /// </summary>
+    public class MtnPainter
+    {
+        public PSB Source { get; set; }
+
+        private readonly List<ImageMetadata> _allResources;
+
+        public string BaseMotion { get; private set; }
+
+        public MtnPainter(PSB psb)
         {
             Source = psb;
-            UpdateResource();
-        }
+            _allResources = Source.Platform == PsbSpec.krkr ? Source.CollectResources<ImageMetadata>().ToList() : Source.CollectSplitResources();
+            var motionName = (Source.Objects["object"] as PsbDictionary)?.Keys.FirstOrDefault();
 
-        /// <summary>
-        /// Gather resources for painting
-        /// </summary>
-        public void UpdateResource()
-        {
-            if (Source.InferType() != PsbType.Motion)
+            if (string.IsNullOrEmpty(motionName))
             {
-                throw new FormatException("PsbPainter only works for Motion(psb) models.");
+                throw new Exception("cannot find base motion object");
             }
 
-            Resources = new List<ImageMetadata>();
-            CollectResource();
+            BaseMotion = motionName;
         }
 
         /// <summary>
-        /// Render the model to an image
+        /// Draw all sub-motions with auto size
         /// </summary>
+        /// <returns></returns>
+        public IEnumerable<(string Name, Bitmap Image)> DrawAll()
+        {
+            var subMotions = GetSubMotionNames();
+            foreach (var subMotion in subMotions)
+            {
+                var img = Draw(subMotion);
+                if (img == null)
+                {
+                    continue;
+                }
+                yield return (subMotion, img);
+            }
+        }
+
+        /// <summary>
+        /// Draw a sub-motion, set both <paramref name="width"/> and <paramref name="height"/> to 0 to use auto size
+        /// </summary>
+        /// <param name="subMotion"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public Bitmap Draw(int width, int height)
+        public Bitmap Draw(string subMotion, int width = 0, int height = 0)
         {
-            Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppPArgb);
-            Graphics g = Graphics.FromImage(bmp);
+            bool autoSize = width <= 0 && height <= 0;
+            var resources = CollectResource(subMotion);
 
             var drawRes = new List<ImageMetadata>();
-            foreach (var res in Resources)
+            foreach (var res in resources)
             {
                 if (res.Opacity <= 0 || !res.Visible)
                 {
@@ -63,14 +80,51 @@ namespace FreeMote.Psb
                 drawRes.Add(res);
             }
 
+            if (drawRes.Count == 0)
+            {
+                return null;
+            }
+
+            Bitmap bmp;
+            float xOffset = 0;
+            float yOffset = 0;
+            if (autoSize)
+            {
+                var minX = drawRes.Min(md => md.OriginX - md.Width / 2f);
+                var maxX = drawRes.Max(md => md.OriginX + md.Width / 2f);
+                var minY = drawRes.Min(md => md.OriginY - md.Height / 2f);
+                var maxY = drawRes.Max(md => md.OriginY + md.Height / 2f);
+
+                xOffset = -(minX + maxX) / 2f;
+                yOffset = -(minY + maxY) / 2f;
+
+                Debug.WriteLine($"{minX}, {minX}, {minY}, {maxY}, {xOffset}, {yOffset}");
+
+                width = (int) Math.Ceiling(maxX - minX);
+                height = (int) Math.Ceiling(maxY - minY);
+                bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            }
+            else
+            {
+                bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            }
+            Graphics g = Graphics.FromImage(bmp);
+
+            Debug.WriteLine(
+                $"Drawing {subMotion} ({width} x {height})");
+
             foreach (var res in drawRes)
             {
+                //point: represents the upper-left corner of the drawn image. Graphics (0,0) is top-left
+                var x = res.OriginX + width / 2f - res.Width / 2f + xOffset;
+                var y = res.OriginY + height / 2f - res.Height / 2f + yOffset;
+
                 Debug.WriteLine(
-                    $"Drawing {res} at {res.OriginX},{res.OriginY} w:{res.Width},h:{res.Height}");
+                    $"Drawing {res} at {x},{y} ({res.OriginX},{res.OriginY}) w:{res.Width},h:{res.Height}");
                 //g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f, res.OriginY + height / 2f));
                 if (res.Opacity >= 10)
                 {
-                    g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f - res.Width / 2f, res.OriginY + height / 2f - res.Height / 2f));
+                    g.DrawImage(res.ToImage(), new PointF(x, y));
                 }
                 else
                 {
@@ -79,7 +133,7 @@ namespace FreeMote.Psb
                     ColorMatrix matrix = new ColorMatrix();
 
                     //set the opacity  
-                    matrix.Matrix33 = res.Opacity /10.0f;
+                    matrix.Matrix33 = res.Opacity / 10.0f;
 
                     //create image attributes  
                     ImageAttributes attributes = new ImageAttributes();
@@ -89,8 +143,8 @@ namespace FreeMote.Psb
 
                     //now draw the image  
                     var image = res.ToImage();
-                    g.DrawImage(image, new Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, image.Width, image.Height,
-                        GraphicsUnit.Pixel, attributes);
+                    g.DrawImage(image, new Rectangle((int)Math.Ceiling(x), (int)Math.Ceiling(y), image.Width, image.Height), 0, 0, image.Width, image.Height,
+                        GraphicsUnit.Pixel, attributes); //TODO: the offset is rounded!
                 }
             }
             //bmp.Save("renderKrkr.png", ImageFormat.png);
@@ -98,40 +152,37 @@ namespace FreeMote.Psb
             return bmp;
         }
 
+        public List<string> GetSubMotionNames()
+        {
+            var list = new List<string>();
+            var subMotionDic = Source.Objects["object"].Children(BaseMotion).Children("motion") as PsbDictionary;
+            if (subMotionDic == null)
+            {
+                return list;
+            }
+
+            list.AddRange(subMotionDic.Keys);
+            return list;
+        }
+
         /// <summary>
         /// Collect paint-able resources
         /// </summary>
-        private void CollectResource()
+        private List<ImageMetadata> CollectResource(string subMotion)
         {
-            //TODO: selectorControl
-            var resources = Source.Platform == PsbSpec.krkr ? Source.CollectResources<ImageMetadata>().ToList() : Source.CollectSplitResources();
-            //get base chara (in case of logo)
-            var basePart = "all_parts";
-            try
-            {
-                if (Source.Objects["metadata"].Children("base").Children("chara") is PsbString chara && !string.IsNullOrEmpty(chara.Value))
-                {
-                    basePart = chara;
-                }
-            }
-            catch
-            {
-                //ignore
-            }
-            foreach (var motion in (PsbDictionary)Source.Objects["object"].Children(basePart).Children("motion"))
-            {
-                //Console.WriteLine($"Motion: {motion.Key}");
-                var layerCol = motion.Value.Children("layer") as PsbList;
-                foreach (var layer in layerCol)
-                {
-                    if (layer is PsbDictionary o)
-                    {
-                        Travel(o, motion.Key, null);
-                    }
-                }
-            }
+            var result = new List<ImageMetadata>();
 
-            Resources = Resources.OrderBy(metadata => metadata.ZIndex).ToList();
+            //Console.WriteLine($"Motion: {motion.Key}");
+            var layerCol = Source.Objects["object"].Children(BaseMotion).Children("motion").Children(subMotion).Children("layer") as PsbList;
+            foreach (var layer in layerCol)
+            {
+                if (layer is PsbDictionary o)
+                {
+                    Travel(o, subMotion, null);
+                }
+            }
+            
+            result = result.OrderBy(metadata => metadata.ZIndex).ToList();
             //TODO: mesh\bp&cc
             //Travel
             void Travel(IPsbCollection collection, string motionName, (float x, float y, float z)? baseLocation, bool baseVisible = true)
@@ -146,10 +197,25 @@ namespace FreeMote.Psb
                             .Where(o => o is PsbDictionary d && d.ContainsKey("content") &&
                                         d["content"] is PsbDictionary d2 && d2.ContainsKey("coord"))
                             .Select(v => v.Children("content").Children("coord"));
+
+                        float ox = 0, oy = 0;
                         if (coordObj.Any())
                         {
                             var coord = coordObj.First() as PsbList;
-                            var coordTuple = (x: (float)(PsbNumber)coord[0], y: (float)(PsbNumber)coord[1], z: (float)(PsbNumber)coord[2]);
+                            var coordTuple = (x: (float) (PsbNumber) coord[0], y: (float) (PsbNumber) coord[1], z: (float) (PsbNumber) coord[2]);
+
+                            if (coord.Parent is PsbDictionary content)
+                            {
+                                if (content.ContainsKey("ox"))
+                                {
+                                    ox = content["ox"].GetFloat();
+                                }
+
+                                if (content.ContainsKey("oy"))
+                                {
+                                    oy = content["oy"].GetFloat();
+                                }
+                            }
 
                             if (baseLocation == null)
                             {
@@ -174,9 +240,9 @@ namespace FreeMote.Psb
                             bool visible = baseVisible;
                             foreach (var obj in srcObj)
                             {
-                                var content = (PsbDictionary)obj["content"];
+                                var content = (PsbDictionary) obj["content"];
                                 var s = content["src"] as PsbString;
-                                var opa = content.ContainsKey("opa") ? (int)(PsbNumber)content["opa"] : 10;
+                                var opa = content.ContainsKey("opa") ? (int) (PsbNumber) content["opa"] : 10;
                                 var icon = content.ContainsKey("icon") ? content["icon"].ToString() : null;
                                 int time = obj["time"] is PsbNumber n ? n.IntValue : 0;
                                 bool suggestVisible = baseVisible && time <= 0 && opa > 0;
@@ -191,20 +257,22 @@ namespace FreeMote.Psb
                                     var iconName = s.Value.Substring(s.Value.LastIndexOf('/') + 1);
                                     var partName = new string(s.Value.SkipWhile(c => c != '/').Skip(1).TakeWhile(c => c != '/')
                                         .ToArray());
-                                    var res = resources.FirstOrDefault(resMd =>
+                                    var res = _allResources.FirstOrDefault(resMd =>
                                         resMd.Part == partName && resMd.Name == iconName);
-                                    if (baseLocation != null && res != null && !Resources.Contains(res))
+                                    if (baseLocation != null && res != null)
                                     {
+                                        //copy from res
+                                        var nRes = res.Clone();
                                         var location = baseLocation.Value;
-                                        res.Label = labelName;
-                                        res.MotionName = motionName;
+                                        nRes.Label = labelName;
+                                        nRes.MotionName = motionName;
                                         //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
-                                        res.OriginX = location.x;
-                                        res.OriginY = location.y;
-                                        res.ZIndex = location.z;
-                                        res.Opacity = opa;
-                                        res.Visible = time <= 0 && visible;
-                                        Resources.Add(res);
+                                        nRes.OriginX = location.x + ox;
+                                        nRes.OriginY = location.y + oy;
+                                        nRes.ZIndex = location.z;
+                                        nRes.Opacity = opa;
+                                        nRes.Visible = time <= 0 && visible;
+                                        result.Add(nRes);
                                     }
                                 }
                                 else if (s.Value.StartsWith("motion/"))
@@ -214,37 +282,39 @@ namespace FreeMote.Psb
                                         var ps = s.Value.Substring("motion/".Length)
                                             .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                                         Travel(
-                                            (IPsbCollection)Source.Objects["object"].Children(ps[0]).Children("motion")
+                                            (IPsbCollection) Source.Objects["object"].Children(ps[0]).Children("motion")
                                                 .Children(ps[1]).Children("layer"), ps[1], baseLocation, suggestVisible);
                                     }
                                 }
                                 //win
-                                else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary)Source.Objects["source"]).ContainsKey(s.Value))
+                                else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary) Source.Objects["source"]).ContainsKey(s.Value))
                                 {
                                     //src
-                                    var res = resources.FirstOrDefault(resMd =>
+                                    var res = _allResources.FirstOrDefault(resMd =>
                                         resMd.Part == s.Value && resMd.Name == icon);
-                                    if (baseLocation != null && res != null && !Resources.Contains(res))
+                                    if (baseLocation != null && res != null)
                                     {
+                                        //copy from res
+                                        var nRes = res.Clone();
                                         var location = baseLocation.Value;
-                                        res.Label = labelName;
-                                        res.MotionName = motionName;
+                                        nRes.Label = labelName;
+                                        nRes.MotionName = motionName;
                                         //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
-                                        res.OriginX = location.x;
-                                        res.OriginY = location.y;
-                                        res.ZIndex = location.z;
-                                        res.Opacity = opa;
-                                        res.Visible = time <= 0 && visible;
-                                        Resources.Add(res);
+                                        nRes.OriginX = location.x + ox;
+                                        nRes.OriginY = location.y + oy;
+                                        nRes.ZIndex = location.z;
+                                        nRes.Opacity = opa;
+                                        nRes.Visible = time <= 0 && visible;
+                                        result.Add(nRes);
                                     }
                                 }
-                                else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary)Source.Objects["object"]).ContainsKey(s.Value))
+                                else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary) Source.Objects["object"]).ContainsKey(s.Value))
                                 {
                                     //motion
                                     if (baseLocation != null)
                                     {
                                         Travel(
-                                            (IPsbCollection)Source.Objects["object"].Children(s.Value).Children("motion")
+                                            (IPsbCollection) Source.Objects["object"].Children(s.Value).Children("motion")
                                                 .Children(icon).Children("layer"), icon, baseLocation, suggestVisible);
                                     }
                                 }
@@ -273,6 +343,9 @@ namespace FreeMote.Psb
                     }
                 }
             }
+
+            return result;
         }
+        
     }
 }

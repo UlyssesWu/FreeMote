@@ -235,7 +235,7 @@ Example:
             app.Command("print", printCmd =>
             {
                 //help
-                printCmd.Description = "Print an EMT PSB (for its initial state, don't expect it working)";
+                printCmd.Description = "Print an EMT/motion PSB (for its initial state, don't expect it working)";
                 printCmd.HelpOption();
                 printCmd.ExtendedHelpText = @"
 Example:
@@ -491,23 +491,45 @@ Example:
         private static void Draw(string path, int width, int height)
         {
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
-            if (width < 0 || height < 0)
+            if (psb.IsEmt())
             {
-                psb.TryGetCanvasSize(out var cw, out var ch);
-                if (width < 0)
+                var painter = new EmtPainter(psb);
+                if (width < 0 || height < 0)
                 {
-                    width = cw;
+                    psb.TryGetCanvasSize(out var cw, out var ch);
+                    if (width < 0)
+                    {
+                        width = cw;
+                    }
+
+                    if (height < 0)
+                    {
+                        height = ch;
+                    }
                 }
 
-                if (height < 0)
+                var bmp = painter.Draw(width, height);
+                bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
+            }
+            else if(psb.Type == PsbType.Motion)
+            {
+                var dirPath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? string.Empty;
+                var outputPath = Path.Combine(dirPath, Path.GetFileNameWithoutExtension(path));
+                if (!Directory.Exists(outputPath))
                 {
-                    height = ch;
+                    Directory.CreateDirectory(outputPath);
+                }
+                var painter = new MtnPainter(psb);
+                var bmps = painter.DrawAll();
+                foreach (var bmp in bmps)
+                {
+                    bmp.Image?.Save(Path.Combine(outputPath, $"{PsbResHelper.EscapeStringForPath(painter.BaseMotion)}-{bmp.Name}.png"), ImageFormat.Png);
                 }
             }
-
-            var bmp = painter.Draw(width, height);
-            bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
+            else
+            {
+                Console.WriteLine("PSB is not drawable.");
+            }
         }
         
         private static bool ShellConvert(string path, string type, Dictionary<string, object> context = null)

@@ -557,6 +557,26 @@ namespace FreeMote.Psb
             return string.Join("/", paths);
         }
 
+        /// <summary>
+        /// Check if this PSB is a Emote Motion PSB
+        /// </summary>
+        /// <param name="psb"></param>
+        /// <returns></returns>
+        public static bool IsEmt(this PSB psb)
+        {
+            if (psb.TypeId != "motion")
+            {
+                return false;
+            }
+
+            if (!psb.Objects.ContainsKey("metadata") || psb.Objects["metadata"] is not PsbDictionary md)
+            {
+                return false;
+            }
+
+            return md["format"] is PsbString {Value: "emote"};
+        }
+
         #endregion
 
         #region Context

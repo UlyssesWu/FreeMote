@@ -175,6 +175,11 @@ namespace FreeMote.Psb
             return n >= 2 && (n & (n - 1)) == 0;
         }
 
+        public ImageMetadata Clone()
+        {
+            return (ImageMetadata)MemberwiseClone();
+        }
+
         /// <summary>
         /// Check if the <see cref="Data"/> looks correct
         /// </summary>
@@ -223,6 +228,20 @@ namespace FreeMote.Psb
         /// <param name="context"></param>
         public void Link(string fullPath, FreeMountContext context)
         {
+            if (string.IsNullOrWhiteSpace(fullPath) || !File.Exists(fullPath))
+            {
+                if (Consts.StrictMode)
+                {
+                    throw new FileNotFoundException("[ERROR] Cannot find file to Link.", fullPath);
+                }
+                else
+                {
+                    Logger.LogWarn($"[WARN] Cannot find file to Link at {fullPath}.");
+                }
+
+                return;
+            }
+
             Data = LoadImageBytes(fullPath, context, out var palette);
             PalData = palette;
             var (valid, checkResult) = Validate();
@@ -311,19 +330,7 @@ namespace FreeMote.Psb
         {
             return $"{Part}/{Name}";
         }
-
-        /// <summary>
-        /// Remove invalid chars in string for path
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        private static string EscapeStringForPath(string name)
-        {
-            var invalidChars = Path.GetInvalidFileNameChars();
-            var n = name.IndexOfAny(invalidChars) != -1 ? string.Join("_", name.Split(invalidChars)) : name;
-            return n.StartsWith("..") ? n.TrimStart('.') : n;
-        }
-
+        
         /// <summary>
         /// Name for export and import
         /// </summary>
@@ -333,7 +340,7 @@ namespace FreeMote.Psb
         {
             if (type == PsbType.Pimg && !string.IsNullOrWhiteSpace(Name))
             {
-                return Path.GetFileNameWithoutExtension(EscapeStringForPath(Name));
+                return Path.GetFileNameWithoutExtension(PsbResHelper.EscapeStringForPath(Name));
             }
 
             if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(Part))
@@ -346,7 +353,7 @@ namespace FreeMote.Psb
                 return "";
             }
 
-            return $"{EscapeStringForPath(Part)}{Consts.ResourceNameDelimiter}{EscapeStringForPath(Name)}";
+            return $"{PsbResHelper.EscapeStringForPath(Part)}{Consts.ResourceNameDelimiter}{PsbResHelper.EscapeStringForPath(Name)}";
         }
 
         internal byte[] LoadImageBytes(string path, FreeMountContext context,

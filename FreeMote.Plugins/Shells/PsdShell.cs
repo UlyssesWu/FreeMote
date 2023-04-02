@@ -64,7 +64,7 @@ namespace FreeMote.Plugins.Shells
                 throw new BadImageFormatException("Not a valid PSB file.");
             }
 
-            PsbPainter painter = new PsbPainter(psb);
+            EmtPainter painter = new EmtPainter(psb);
 
             if (TryGetCanvasSize && painter.Resources.Count > 0)
             {
@@ -105,7 +105,7 @@ namespace FreeMote.Plugins.Shells
             return ms;
         }
 
-        private PsdFile ConvertToPsd(PsbPainter painter, int width, int height)
+        private PsdFile ConvertToPsd(EmtPainter painter, int width, int height)
         {
             PsdFile psd = new PsdFile
             {

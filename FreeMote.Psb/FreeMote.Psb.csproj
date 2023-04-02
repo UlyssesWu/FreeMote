@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MtnPainter.cs" />
     <Compile Include="Plugins\ManagedTlgFormatter.cs" />
     <Compile Include="Plugins\AudioFileFormatter.cs" />
     <Compile Include="Resources\ArchDatas.cs" />
@@ -60,7 +61,7 @@
     <Compile Include="Plugins\IPsbSpecialType.cs" />
     <Compile Include="PSB.cs" />
     <Compile Include="PsbExtension.cs" />
-    <Compile Include="PsbPainter.cs" />
+    <Compile Include="EmtPainter.cs" />
     <Compile Include="PsbResHelper.cs" />
     <Compile Include="PsbValues.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

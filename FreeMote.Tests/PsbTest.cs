@@ -255,7 +255,7 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸-pure.psb");
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
+            var painter = new EmtPainter(psb);
             var bmp = painter.Draw(4096, 4096);
             bmp.Save("RenderKrkr.png", ImageFormat.Png);
         }
@@ -267,7 +267,7 @@ namespace FreeMote.Tests
             var path = Path.Combine(resPath, "emote_logo_d5-pure.psb");
             //var path = Path.Combine(resPath, "vanilla-pure.psb");
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
+            var painter = new EmtPainter(psb);
             var bmp = painter.Draw(4096, 4096);
             bmp.Save("RenderWin.png", ImageFormat.Png);
         }
@@ -278,9 +278,23 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "akira_guide-pure.psb");
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
+            var painter = new EmtPainter(psb);
             var bmp = painter.Draw(2048, 2048);
             bmp.Save("RenderCommon.png", ImageFormat.Png);
+        }
+
+        [TestMethod]
+        public void TestDrawKrkrMtn()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "sd001.mtn");
+            var psb = new PSB(path);
+            var painter = new MtnPainter(psb);
+            var bmps = painter.DrawAll();
+            foreach (var bmp in bmps)
+            {
+                bmp.Image?.Save($"{bmp.Name}.png", ImageFormat.Png);
+            }
         }
 
         [TestMethod]
