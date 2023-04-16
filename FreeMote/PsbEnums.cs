@@ -290,6 +290,10 @@ namespace FreeMote
         /// Big Endian BC7 compressed RGBA8 for nx
         /// </summary>
         BC7,
+        /// <summary>
+        /// DXT1
+        /// </summary>
+        DXT1
     }
 
     public enum PsbAudioFormat

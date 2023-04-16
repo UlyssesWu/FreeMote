@@ -95,10 +95,10 @@ namespace FreeMote.Psb
                 var minY = drawRes.Min(md => md.OriginY - md.Height / 2f);
                 var maxY = drawRes.Max(md => md.OriginY + md.Height / 2f);
 
-                xOffset = -(minX + maxX) / 2f;
+                xOffset = -(minX + maxX) / 2f; //to ensure there is no minus location when drawing
                 yOffset = -(minY + maxY) / 2f;
 
-                Debug.WriteLine($"{minX}, {minX}, {minY}, {maxY}, {xOffset}, {yOffset}");
+                //Debug.WriteLine($"{minX}, {minX}, {minY}, {maxY}, {xOffset}, {yOffset}");
 
                 width = (int) Math.Ceiling(maxX - minX);
                 height = (int) Math.Ceiling(maxY - minY);

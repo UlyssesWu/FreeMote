@@ -51,6 +51,10 @@ namespace FreeMote
                 case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref data);
                     break;
+                case PsbPixelFormat.DXT1:
+                    data = DxtUtil.DecompressDxt1(data, width, height);
+                    Switch_0_2(ref data); //DXT1(for win) need conversion
+                    break;
                 case PsbPixelFormat.DXT5:
                     data = DxtUtil.DecompressDxt5(data, width, height);
                     Switch_0_2(ref data); //DXT5(for win) need conversion
@@ -195,6 +199,10 @@ namespace FreeMote
                 case PsbPixelFormat.TileA8L8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb2A8L8(result);
+                    break;
+                case PsbPixelFormat.DXT1:
+                    //Switch_0_2(ref result);
+                    result = DxtUtil.Dxt1Encode(result, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.DXT5:
                     //Switch_0_2(ref result);
