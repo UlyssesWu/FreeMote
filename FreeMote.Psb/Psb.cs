@@ -792,7 +792,7 @@ namespace FreeMote.Psb
             var stringsDic = new Dictionary<string, PsbString>();
             var stringsIndexDic = new Dictionary<uint, PsbString>();
             uint strIdx = 0;
-            TravelCollect(Objects);
+            TravelCollect(Root);
 
             Names = new List<string>(namesSet);
             Names.Sort(string.CompareOrdinal); //FIXED: Compared by bytes

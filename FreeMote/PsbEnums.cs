@@ -22,6 +22,7 @@ namespace FreeMote
         Resources,
         Array,
         Body,
+        Json,
     }
 
     /// <summary>

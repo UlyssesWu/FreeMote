@@ -281,9 +281,31 @@ namespace FreeMote.PsBuild
         {
             PSB psb = new PSB(version)
             {
-                Encoding = Encoding,
-                Objects = JsonConvert.DeserializeObject<PsbDictionary>(json, new PsbJsonConverter())
+                Encoding = Encoding
             };
+            var converter = new PsbJsonConverter();
+            var j = json.TrimStart();
+            if (j.StartsWith("["))
+            {
+                psb.Root = JsonConvert.DeserializeObject<PsbList>(json, converter);
+            }
+            else if (j.StartsWith("\""))
+            {
+                psb.Root = JsonConvert.DeserializeObject<PsbString>(json, converter);
+            }
+            else
+            {
+                try
+                {
+                    psb.Root = JsonConvert.DeserializeObject<PsbDictionary>(json, converter);
+                }
+                catch (Exception e)
+                {
+                    throw new PsbBadFormatException(PsbBadFormatReason.Json,
+                        $"Cannot parse json to PSB: {json.Substring(0, Math.Min(json.Length, 30))}", e);
+                }
+            }
+
             psb.InferType();
             psb.Collect(false, false); //don't merge res since it's empty now
             return psb;
