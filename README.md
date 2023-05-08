@@ -5,6 +5,8 @@ Managed EMT/PSB tool libs.
 
 [Download FreeMote Toolkit](https://github.com/UlyssesWu/FreeMote/releases)
 
+It's required to attach the text of [FreeMote.LICENSE](https://github.com/UlyssesWu/FreeMote/blob/master/FreeMote/FreeMote.LICENSE.txt) with your release if you're using FreeMote codes or binaries.
+
 ## About PSB
 FreeMote is a set of tool/libs for `M2 Packaged Struct Binary` file format. The file header usually starts with `PSB`/`PSZ`/`mdf`, 
 and the file extensions usually are `.psb|.psz|.mdf|.pimg|.scn|.mmo|.emtbytes|.mtn|.dpak`.
@@ -66,8 +68,6 @@ Thanks for everyone who provided these samples!
 by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />FreeMote is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a> (CC-BY-NC-SA 4.0).
-
-It's required to attach the text of [FreeMote.LICENSE](https://github.com/UlyssesWu/FreeMote/blob/master/FreeMote/FreeMote.LICENSE.txt) with your release if you're using FreeMote libs.
 
 Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and are considered as **Adapted Material**. Therefore they're always licensed under **CC-BY-NC-SA 4.0**. [wiki](https://github.com/UlyssesWu/FreeMote/wiki/License)
 
