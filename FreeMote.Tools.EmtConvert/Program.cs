@@ -494,19 +494,19 @@ Example:
             if (psb.IsEmt())
             {
                 var painter = new EmtPainter(psb);
-                if (width < 0 || height < 0)
-                {
-                    psb.TryGetCanvasSize(out var cw, out var ch);
-                    if (width < 0)
-                    {
-                        width = cw;
-                    }
+                //if (width < 0 || height < 0)
+                //{
+                //    psb.TryGetCanvasSize(out var cw, out var ch);
+                //    if (width < 0)
+                //    {
+                //        width = cw;
+                //    }
 
-                    if (height < 0)
-                    {
-                        height = ch;
-                    }
-                }
+                //    if (height < 0)
+                //    {
+                //        height = ch;
+                //    }
+                //}
 
                 var bmp = painter.Draw(width, height);
                 bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);

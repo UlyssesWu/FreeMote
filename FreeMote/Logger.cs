@@ -44,7 +44,14 @@ namespace FreeMote
                 Debug.WriteLine(message);
             }
 #endif
-            OnLogWarn?.Invoke(message);
+            if (OnLogWarn == null)
+            {
+                Console.WriteLine(message);
+            }
+            else
+            {
+                OnLogWarn?.Invoke(message);
+            }
         }
         internal static void LogWarn(object obj) => LogWarn(obj?.ToString());
 
@@ -56,7 +63,14 @@ namespace FreeMote
                 Debug.WriteLine(message);
             }
 #endif
-            OnLogError?.Invoke(message);
+            if (OnLogError == null)
+            {
+                Console.WriteLine(message);
+            }
+            else
+            {
+                OnLogError?.Invoke(message);
+            }
         }
         internal static void LogError(object obj) => LogError(obj?.ToString());
 

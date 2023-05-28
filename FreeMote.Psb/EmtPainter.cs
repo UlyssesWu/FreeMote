@@ -37,6 +37,41 @@ namespace FreeMote.Psb
             CollectResource();
         }
 
+        public (int Width, int Height, float OffsetX, float OffsetY) TryGetCanvasSize()
+        {
+            var drawRes = new List<ImageMetadata>();
+            float xOffset = 0;
+            float yOffset = 0;
+            foreach (var res in Resources)
+            {
+                if (res.Opacity <= 0 || !res.Visible)
+                {
+                    continue;
+                }
+
+                //if (res.Name.StartsWith("icon") && res.Name != "icon1")
+                //{
+                //    continue;
+                //}
+                drawRes.Add(res);
+            }
+
+            var minX = drawRes.Min(md => md.OriginX - md.Width / 2f);
+            var maxX = drawRes.Max(md => md.OriginX + md.Width / 2f);
+            var minY = drawRes.Min(md => md.OriginY - md.Height / 2f);
+            var maxY = drawRes.Max(md => md.OriginY + md.Height / 2f);
+
+            xOffset = -(minX + maxX) / 2f; //to ensure there is no minus location when drawing
+            yOffset = -(minY + maxY) / 2f;
+
+            //Debug.WriteLine($"{minX}, {minX}, {minY}, {maxY}, {xOffset}, {yOffset}");
+
+            var width = (int) Math.Ceiling(maxX - minX);
+            var height = (int) Math.Ceiling(maxY - minY);
+
+            return (width, height, xOffset, yOffset);
+        }
+
         /// <summary>
         /// Render the model to an image
         /// </summary>
@@ -45,8 +80,7 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public Bitmap Draw(int width, int height)
         {
-            Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppPArgb);
-            Graphics g = Graphics.FromImage(bmp);
+            bool autoSize = width <= 0 && height <= 0;
 
             var drawRes = new List<ImageMetadata>();
             foreach (var res in Resources)
@@ -63,14 +97,45 @@ namespace FreeMote.Psb
                 drawRes.Add(res);
             }
 
+            Bitmap bmp;
+            float xOffset = 0;
+            float yOffset = 0;
+            if (autoSize)
+            {
+                var minX = drawRes.Min(md => md.OriginX - md.Width / 2f);
+                var maxX = drawRes.Max(md => md.OriginX + md.Width / 2f);
+                var minY = drawRes.Min(md => md.OriginY - md.Height / 2f);
+                var maxY = drawRes.Max(md => md.OriginY + md.Height / 2f);
+
+                xOffset = -(minX + maxX) / 2f; //to ensure there is no minus location when drawing
+                yOffset = -(minY + maxY) / 2f;
+
+                //Debug.WriteLine($"{minX}, {minX}, {minY}, {maxY}, {xOffset}, {yOffset}");
+
+                width = (int) Math.Ceiling(maxX - minX);
+                height = (int) Math.Ceiling(maxY - minY);
+                bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            }
+            else
+            {
+                bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            }
+            
+            Graphics g = Graphics.FromImage(bmp);
+
             foreach (var res in drawRes)
             {
+                //point: represents the upper-left corner of the drawn image. Graphics (0,0) is top-left
+                var x = res.OriginX + width / 2f - res.Width / 2f + xOffset;
+                var y = res.OriginY + height / 2f - res.Height / 2f + yOffset;
+
                 Debug.WriteLine(
-                    $"Drawing {res} at {res.OriginX},{res.OriginY} w:{res.Width},h:{res.Height}");
+                    $"Drawing {res} at {x},{y} ({res.OriginX},{res.OriginY}) w:{res.Width},h:{res.Height}");
                 //g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f, res.OriginY + height / 2f));
+
                 if (res.Opacity >= 10)
                 {
-                    g.DrawImage(res.ToImage(), new PointF(res.OriginX + width / 2f - res.Width / 2f, res.OriginY + height / 2f - res.Height / 2f));
+                    g.DrawImage(res.ToImage(), new PointF(x, y));
                 }
                 else
                 {
@@ -89,8 +154,10 @@ namespace FreeMote.Psb
 
                     //now draw the image  
                     var image = res.ToImage();
-                    g.DrawImage(image, new Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, image.Width, image.Height,
-                        GraphicsUnit.Pixel, attributes);
+                    g.DrawImage(image, new Rectangle((int) Math.Ceiling(x), (int) Math.Ceiling(y), image.Width, image.Height), 0, 0, image.Width, image.Height,
+                        GraphicsUnit.Pixel, attributes); //TODO: the offset is rounded!
+                    //g.DrawImage(image, new Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, image.Width, image.Height,
+                    //    GraphicsUnit.Pixel, attributes);
                 }
             }
             //bmp.Save("renderKrkr.png", ImageFormat.png);
