@@ -266,9 +266,12 @@ namespace FreeMote.Psb
                                     //motion
                                     if (baseLocation != null)
                                     {
-                                        Travel(
-                                            (IPsbCollection)Source.Objects["object"].Children(s.Value).Children("motion")
-                                                .Children(icon).Children("layer"), icon, baseLocation, suggestVisible);
+                                        var motion = Source.Objects["object"].Children(s.Value).Children("motion");
+                                        if (motion is PsbDictionary motionDic && motionDic.TryGetValue(icon, out var iconDic))
+                                        {
+                                            //motion can be empty dic if it is a Partial exported PSB
+                                            Travel((IPsbCollection)iconDic.Children("layer"), icon, baseLocation, suggestVisible);
+                                        }
                                     }
                                 }
                             }
