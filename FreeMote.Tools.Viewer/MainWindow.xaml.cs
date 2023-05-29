@@ -70,8 +70,8 @@ namespace FreeMote.Tools.Viewer
             _di.IsFrontBufferAvailableChanged
                 += OnIsFrontBufferAvailableChanged;
 
-            MouseMove += MainWindow_MouseMove;
-            MouseWheel += MainWindow_MouseWheel;
+            //MouseMove += MainWindow_MouseMove;
+            //MouseWheel += MainWindow_MouseWheel;
             MouseDoubleClick += MainWindow_MouseDoubleClick;
 
             KeyDown += OnKeyDown;
@@ -93,22 +93,24 @@ namespace FreeMote.Tools.Viewer
             CreatePlayer(Core.Width, Core.Height);
         }
 
-        public void CreatePlayer(double width, double height)
+        public void CreatePlayer(double width, double height, float scale = 1f, float? x = null, float? y = null)
         {
             _emote?.Dispose();
             _emote?.D3DRelease();
 
-            Width = width;
-            Height = height;
+            //Width = width;
+            //Height = height;
+
             //Topmost = true;
             //Width = 800;
             //Height = 600;
+            
             _midX = Width / 2;
             _midY = Height / 2;
             CenterMark.Visibility = Visibility.Hidden;
             CharaCenterMark.Visibility = Visibility.Hidden;
 
-            _emote = new Emote(_helper.EnsureHandle(), (int) Width, (int) Height, true);
+            _emote = new Emote(_helper.EnsureHandle(), (int) width, (int) height, true);
             _emote.EmoteInit();
 
             if (_psbPaths.Count > 1)
@@ -119,9 +121,36 @@ namespace FreeMote.Tools.Viewer
             {
                 _player = _emote.CreatePlayer("Chara1", _psbPaths.FirstOrDefault());
             }
+            
+            var centerX = 0f;
+            var centerY = 0f;
 
-            _player.SetScale(1, 0, 0);
-            _player.SetCoord(0, 0);
+            if (x != null && y != null)
+            {
+                centerX = x.Value;
+                centerY = y.Value;
+            }
+            else
+            {
+                var profileAvailable = _player.IsCharaProfileAvailable();
+                if (profileAvailable)
+                {
+                    var boundsTop = _player.GetCharaProfile("boundsTop");
+                    var boundsBottom = _player.GetCharaProfile("boundsBottom");
+                    var boundsLeft = _player.GetCharaProfile("boundsLeft");
+                    var boundsRight = _player.GetCharaProfile("boundsRight");
+                    if (boundsTop != 0 && boundsBottom != 0 && boundsLeft != 0 && boundsRight != 0)
+                    {
+                        centerX = -(boundsLeft + boundsRight) / 2;
+                        centerY = -(boundsTop + boundsBottom) / 2;
+                        height = boundsBottom - boundsTop;
+                        width = boundsRight - boundsLeft;
+                    }
+                }
+            }
+
+            _player.SetScale(scale, 0, 0);
+            _player.SetCoord(centerX, centerY);
             _player.SetVariable("fade_z", 256);
             _player.SetSmoothing(true);
             _player.Show();
@@ -205,7 +234,7 @@ namespace FreeMote.Tools.Viewer
 
         void MainWindow_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed && e.GetPosition(MotionPanel).X < 0)
+            if (e.LeftButton == MouseButtonState.Pressed) //&& e.GetPosition(MotionPanel).X < 0
             {
                 var ex = e.GetPosition(this);
                 _player.OffsetCoord((int) (ex.X - _lastX), (int) (ex.Y - _lastY));
@@ -308,8 +337,10 @@ namespace FreeMote.Tools.Viewer
             DrawingVisual drawingVisual = new DrawingVisual();
             using (var drawingContext = drawingVisual.RenderOpen())
             {
+                //drawingContext.DrawImage(d3dImage, new Rect(new Size(d3dImage.PixelWidth, d3dImage.PixelHeight)));
                 drawingContext.DrawImage(d3dImage, new Rect(new Size(d3dImage.PixelWidth, d3dImage.PixelHeight)));
             }
+            //RenderTargetBitmap rtb = new RenderTargetBitmap(d3dImage.PixelWidth, d3dImage.PixelHeight, 96, 96, PixelFormats.Pbgra32);
             RenderTargetBitmap rtb = new RenderTargetBitmap(d3dImage.PixelWidth, d3dImage.PixelHeight, 96, 96, PixelFormats.Pbgra32);
             rtb.Render(drawingVisual);
 
@@ -417,7 +448,7 @@ namespace FreeMote.Tools.Viewer
                 _emote.Draw();
                 _emote.D3DEndScene();
                 // invalidate the updated region of the D3DImage (in this case, the whole image)
-                _di.AddDirtyRect(new Int32Rect(0, 0, _emote.SurfaceWidth, _emote.SurfaceHeight));
+                _di.AddDirtyRect(new Int32Rect(0, 0, _di.PixelWidth, _di.PixelHeight));
                 // unlock the D3DImage
                 _di.Unlock();
             }
@@ -435,10 +466,12 @@ namespace FreeMote.Tools.Viewer
                 if (MotionPanel.Visibility == Visibility.Visible)
                 {
                     MotionPanel.Visibility = Visibility.Collapsed;
+                    ScrollMotion.IsHitTestVisible = false;
                 }
                 else
                 {
                     MotionPanel.Visibility = Visibility.Visible;
+                    ScrollMotion.IsHitTestVisible = true;
                 }
 
                 return;
@@ -483,6 +516,12 @@ namespace FreeMote.Tools.Viewer
                 };
                 btn.Click += PlayTimeline;
                 MotionPanel.Children.Add(btn);
+            }
+
+            if (MotionPanel.Children.Count > 0)
+            {
+                MotionPanel.Visibility = Visibility.Visible;
+                ScrollMotion.IsHitTestVisible = true;
             }
         }
 
@@ -537,7 +576,25 @@ namespace FreeMote.Tools.Viewer
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    CreatePlayer(e.NewSize.Width, e.NewSize.Height);
+                    _player.GetCoord(out var x, out var y);
+                    var scale = _player.GetScale();
+                    //CreatePlayer(e.NewSize.Width, e.NewSize.Height, scale, x, y);
+                    //calculate new width and height, keep ratio of NewSize, and no less than 1920x1080
+                    var ratio = e.NewSize.Width / e.NewSize.Height;
+                    var width = e.NewSize.Width;
+                    var height = e.NewSize.Height;
+                    if (ratio > 1)
+                    { 
+                        width = Math.Max(1920, width);
+                        height = width / ratio;
+                    }
+                    else
+                    {
+                        height = Math.Max(1080, height);
+                        width = height * ratio;
+                    }
+                    
+                    CreatePlayer(width, height, scale, x, y);
                 });
             }
 
@@ -548,6 +605,12 @@ namespace FreeMote.Tools.Viewer
             _player.StopTimeline("");
             _player.Skip();
             _player.SetVariable("fade_z", 256);
+        }
+
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            e.Handled = true;
+            MainWindow_MouseWheel(sender, e);
         }
 
         private void Clear(object sender, RoutedEventArgs e)
@@ -564,6 +627,11 @@ namespace FreeMote.Tools.Viewer
         {
             _playing = !_playing;
             BtnPlayPause.Content = _playing ? "⏸" : "▶";
+        }
+
+        private void ResetScale(object sender, RoutedEventArgs e)
+        {
+            _player.SetScale(1);
         }
     }
 }

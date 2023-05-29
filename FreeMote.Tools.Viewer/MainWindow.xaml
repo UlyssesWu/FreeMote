@@ -5,9 +5,14 @@
         Width="1280"
         Height="720"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource NekoHacksScene}" Closing="Window_Closing" SizeChanged="Window_SizeChanged"
-        >
+        Background="Transparent"
+        Closing="Window_Closing" SizeChanged="Window_SizeChanged"
+>
+    <!-- Background="{StaticResource NekoHacksScene}" -->
     <Grid>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" PanningMode="None" Grid.ColumnSpan="2" Grid.RowSpan="2" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+            <Rectangle MouseMove="MainWindow_MouseMove" Fill="{StaticResource NekoHacksScene}" />
+        </ScrollViewer>
         <Label Name="CenterMark" Content="+" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="Gold" />
         <TextBlock Name="CharaCenterMark"  HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="20" Foreground="Red" Margin="0" Width="25" Height="28" Text="+" TextAlignment="Center"  />
         <Grid>
@@ -17,17 +22,19 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="25"/>
             </Grid.ColumnDefinitions>
             <TextBlock Margin="2,2,0,0" Foreground="Silver" Opacity="0.5" FontSize="11" Tag="You are not allowed to remove this line according to License (BY)">Powered by FreeMote</TextBlock>
             <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Margin="5,0,0,0">
                 <Button x:Name="BtnPlayPause" Width="30" HorizontalAlignment="Right" Content="⏯" ToolTip="Play/Pause" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="PlayOrPause"></Button>
-                <Button Width="30" HorizontalAlignment="Right" Content="📷" ToolTip="Capture" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="RenderImage"></Button>
+                <Button Width="30" HorizontalAlignment="Right" Content="🔍" ToolTip="Reset Scale" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="ResetScale"></Button>
+                <Button Width="30" HorizontalAlignment="Right" Content="📷" ToolTip="ScreenShot" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="RenderImage"></Button>
                 <Button Width="60" HorizontalAlignment="Right" Content="Motion" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="GetTimelines"></Button>
                 <Button Width="60" HorizontalAlignment="Right" Content="Stop" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="Stop"></Button>
                 <Button Width="60" HorizontalAlignment="Right" Content="Clear" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="Clear"></Button>
             </StackPanel>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Column="1"  Grid.Row="1" >
+            <ScrollViewer x:Name="ScrollMotion" VerticalScrollBarVisibility="Auto" Grid.Column="1"  Grid.Row="1" IsHitTestVisible="False">
                 <StackPanel Name="MotionPanel" HorizontalAlignment="Right" Orientation="Vertical">
                 </StackPanel>
             </ScrollViewer>
