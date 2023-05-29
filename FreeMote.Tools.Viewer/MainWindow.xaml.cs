@@ -1,5 +1,5 @@
 ﻿/*
- *  Project AZUSA © 2015-2018 ( https://github.com/Project-AZUSA )
+ *  Project AZUSA © 2015-2023
  *  AUTHOR:	Ulysses (wdwxy12345@gmail.com)
  */
 
@@ -12,10 +12,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace FreeMote.Tools.Viewer
 {
@@ -31,6 +31,7 @@ namespace FreeMote.Tools.Viewer
     public partial class MainWindow : Window
     {
         const float RefreshRate = 1000.0f / 65.0f; // 1/n秒カウントをmsへ変換。
+        //const float RefreshRate = 1000.0f / 120f; // 1/n秒カウントをmsへ変換。
         private const int Movement = 10;
 
         private static double _lastX, _lastY;
@@ -49,6 +50,9 @@ namespace FreeMote.Tools.Viewer
         private double _deltaX, _deltaY;
         private double _elapsedTime;
         private bool _measureMode = false;
+
+        private bool _playing = true;
+        private CancellationTokenSource _sizeChangeCancellation = null;
 
         public MainWindow()
         {
@@ -85,8 +89,17 @@ namespace FreeMote.Tools.Viewer
             //Top = y1 - 600;
             // parse the XAML
             InitializeComponent();
-            Width = Core.Width;
-            Height = Core.Height;
+            //Topmost = true;
+            CreatePlayer(Core.Width, Core.Height);
+        }
+
+        public void CreatePlayer(double width, double height)
+        {
+            _emote?.Dispose();
+            _emote?.D3DRelease();
+
+            Width = width;
+            Height = height;
             //Topmost = true;
             //Width = 800;
             //Height = 600;
@@ -97,7 +110,7 @@ namespace FreeMote.Tools.Viewer
 
             _emote = new Emote(_helper.EnsureHandle(), (int) Width, (int) Height, true);
             _emote.EmoteInit();
-            
+
             if (_psbPaths.Count > 1)
             {
                 _player = _emote.CreatePlayer("CombinedChara1", _psbPaths.ToArray());
@@ -112,16 +125,7 @@ namespace FreeMote.Tools.Viewer
             _player.SetVariable("fade_z", 256);
             _player.SetSmoothing(true);
             _player.Show();
-            
-            if (Core.NeedRemoveTempFile)
-            {
-                foreach (var psbPath in _psbPaths)
-                {
-                    File.Delete(psbPath);
-                }
-                
-                Core.NeedRemoveTempFile = false;
-            }
+
 
             // begin rendering the custom D3D scene into the D3DImage
             BeginRenderingScene();
@@ -294,6 +298,32 @@ namespace FreeMote.Tools.Viewer
             return delta / 120.0f / 50.0f;
         }
 
+        private void RenderImage(object sender, RoutedEventArgs e)
+        {
+            //get player character rectangle
+            var d3dImage = _di;
+            d3dImage.Lock();
+            d3dImage.AddDirtyRect(new Int32Rect(0, 0, d3dImage.PixelWidth, d3dImage.PixelHeight));
+            d3dImage.Unlock();
+            DrawingVisual drawingVisual = new DrawingVisual();
+            using (var drawingContext = drawingVisual.RenderOpen())
+            {
+                drawingContext.DrawImage(d3dImage, new Rect(new Size(d3dImage.PixelWidth, d3dImage.PixelHeight)));
+            }
+            RenderTargetBitmap rtb = new RenderTargetBitmap(d3dImage.PixelWidth, d3dImage.PixelHeight, 96, 96, PixelFormats.Pbgra32);
+            rtb.Render(drawingVisual);
+
+            // Convert the RenderTargetBitmap into a PNG
+            PngBitmapEncoder png = new PngBitmapEncoder();
+            png.Frames.Add(BitmapFrame.Create(rtb));
+
+            // Save the PNG to a file
+            using (FileStream stream = new FileStream("image.png", FileMode.Create))
+            {
+                png.Save(stream);
+            }
+        }
+
         private void OnIsFrontBufferAvailableChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             // if the front buffer is available, then WPF has just created a new
@@ -379,7 +409,7 @@ namespace FreeMote.Tools.Viewer
         {
             if (_di.IsFrontBufferAvailable && _scene != IntPtr.Zero)
             {
-                _emote.Update((float) elasped);
+                _emote.Update(_playing? (float) elasped : 0);
                 // lock the D3DImage
                 _di.Lock();
                 // update the scene (via a call into our custom library)
@@ -426,7 +456,7 @@ namespace FreeMote.Tools.Viewer
                     Tag = "main",
                     Margin = new Thickness(0, 0, 5, 5),
                     Background = Brushes.Transparent,
-                    Foreground = Brushes.DarkOrange,
+                    Foreground = Brushes.Khaki,
                 };
                 btn.Click += PlayTimeline;
                 MotionPanel.Children.Add(btn);
@@ -449,7 +479,7 @@ namespace FreeMote.Tools.Viewer
                     Tag = "diff",
                     Margin = new Thickness(0, 0, 5, 5),
                     Background = Brushes.Transparent,
-                    Foreground = Brushes.DarkOrange,
+                    Foreground = Brushes.Khaki,
                 };
                 btn.Click += PlayTimeline;
                 MotionPanel.Children.Add(btn);
@@ -462,6 +492,55 @@ namespace FreeMote.Tools.Viewer
                 ((Button) sender).Tag.ToString() == "diff"
                     ? TimelinePlayFlags.TIMELINE_PLAY_DIFFERENCE
                     : TimelinePlayFlags.NONE);
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (Core.NeedRemoveTempFile)
+            {
+                foreach (var psbPath in _psbPaths)
+                {
+                    File.Delete(psbPath);
+                }
+
+                Core.NeedRemoveTempFile = false;
+            }
+        }
+
+        private async void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (_sizeChangeCancellation != null)
+            {
+                _sizeChangeCancellation.Cancel(false);
+            }
+            else
+            {
+                _sizeChangeCancellation = new CancellationTokenSource();
+                return;
+            }
+
+            // Create a new token source for the new size change event.
+            _sizeChangeCancellation = new CancellationTokenSource();
+
+            // Wait 500ms, and check if there are other size changes in progress.
+            // If there aren't any, then the size change is finished.
+            try
+            {
+                await Task.Delay(500, _sizeChangeCancellation.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
+            if (!_sizeChangeCancellation.IsCancellationRequested)
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    CreatePlayer(e.NewSize.Width, e.NewSize.Height);
+                });
+            }
+
         }
 
         private void Stop(object sender, RoutedEventArgs e)
@@ -479,6 +558,12 @@ namespace FreeMote.Tools.Viewer
             }
 
             _player.SetVariable("fade_z", 256);
+        }
+
+        private void PlayOrPause(object sender, RoutedEventArgs e)
+        {
+            _playing = !_playing;
+            BtnPlayPause.Content = _playing ? "⏸" : "▶";
         }
     }
 }
