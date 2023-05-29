@@ -451,6 +451,12 @@ namespace FreeMote.PsBuild
                     dic["className"] = classType.ToString().ToPsbString();
                     dic["comment"] = PsbString.Empty;
 
+                    //remove meshCombinator
+                    if (dic.ContainsKey("meshCombinator"))
+                    {
+                        dic.Remove("meshCombinator");
+                    }
+
                     //Build frameList
                     MmoFrameMask frameMask = 0;
                     MmoFrameMaskEx frameMaskEx = 0;
