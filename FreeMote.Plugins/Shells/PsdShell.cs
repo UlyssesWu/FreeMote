@@ -21,6 +21,10 @@ namespace FreeMote.Plugins.Shells
     class PsdShell : IPsbShell
     {
         public byte[] Signature { get; } = {(byte) '8', (byte) 'B', (byte) 'P', (byte) 'S'};
+        public const int MaxLayerId = 65535;
+        public const string LayerIdSuffix = "#lyid#";
+        private const string PsdTypeEmt = "emt";
+        private const string PsdTypePimg = "pimg";
 
         public int Width { get; set; } = -1;
         public int Height { get; set; } = -1;
@@ -49,12 +53,237 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToPsb(Stream stream, Dictionary<string, object> context = null)
         {
-            Logger.Log("PSD to PSB conversion is not supported.");
+            try
+            {
+                PsdFile psd = new PsdFile(stream, new LoadContext {Encoding = Encoding.UTF8});
+                var xmp = psd.ImageResources.FirstOrDefault(info => info is XmpResource);
+                if (xmp is XmpResource xmpRes)
+                {
+                    var type = xmpRes.Name.ToLowerInvariant();
+                    //if (type != PsdTypePimg)
+                    //{
+                    //    return null;
+                    //}
+                }
+                var layers = new PsbList();
+                PSB psb = new PSB(3)
+                {
+                    Objects = new PsbDictionary
+                    {
+                        ["width"] = psd.Width.ToPsbNumber(),
+                        ["height"] = psd.Height.ToPsbNumber(),
+                        ["layers"] = layers
+                    }
+                }; //TODO: set version
+
+                psd.Layers.Reverse();
+                Stack<GroupLayer> groupLayers = new Stack<GroupLayer>();
+                List<(GroupLayer Group, Layer Layer)> groupLayerList = new();
+                List<ImageMetadata> imageMetadatas = new List<ImageMetadata>();
+                Dictionary<Layer, int> layerIdMap = new Dictionary<Layer, int>(psd.Layers.Count);
+                Dictionary<Layer, LayerSectionType> layerSectionTypes = new(psd.Layers.Count);
+                HashSet<int> idRegistry = new HashSet<int>(psd.Layers.Count);
+                int newId = 1;
+                foreach (var layer in psd.Layers)
+                {
+                    var sectionInfo = layer.AdditionalInfo.FirstOrDefault(info => info is LayerSectionInfo);
+                    if (sectionInfo is LayerSectionInfo section)
+                    {
+                        layerSectionTypes[layer] = section.SectionType;
+                        if (section.SectionType == LayerSectionType.SectionDivider)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        layerSectionTypes[layer] = LayerSectionType.Layer;
+                    }
+
+                    if (layer.Name.Contains(LayerIdSuffix))
+                    {
+                        try
+                        {
+                            var lines = layer.Name.Split(new[] { LayerIdSuffix }, StringSplitOptions.None);
+                            var idStr = lines[1];
+                            var id = int.Parse(idStr);
+                            layerIdMap[layer] = id;
+                            layer.Name = lines[0];
+                        }
+                        catch
+                        {
+                            layerIdMap[layer] = 0;
+                        }
+                    }
+                    else
+                    {
+                        var idLayer = layer.AdditionalInfo.FirstOrDefault(info => info is LayerId);
+                        if (idLayer is LayerId layerId)
+                        {
+                            var id = (int) layerId.Id;
+                            if (!idRegistry.Contains(id))
+                            {
+                                layerIdMap[layer] = id;
+                                idRegistry.Add(id);
+                            }
+                            else if (id == -1)
+                            {
+                                layerIdMap[layer] = id;
+                            }
+                            else
+                            {
+                                layerIdMap[layer] = 0;
+                            }
+                        }
+                        else
+                        {
+                            layerIdMap[layer] = 0;
+                        }
+                    }
+                    
+                }
+
+                foreach (var l in layerIdMap.Keys)
+                {
+                    var id = layerIdMap[l];
+                    if (id == 0)
+                    {
+                        while (idRegistry.Contains(newId))
+                        {
+                            newId++;
+                        }
+                        layerIdMap[l] = newId;
+                        idRegistry.Add(newId);
+                    }
+                }
+
+                foreach (var layer in psd.Layers)
+                {
+                    var sectionType = layerSectionTypes[layer];
+                    var id = sectionType == LayerSectionType.SectionDivider ? 0 : layerIdMap[layer];
+
+                    if (sectionType is LayerSectionType.OpenFolder or LayerSectionType.ClosedFolder)
+                    {
+                        var group = new GroupLayer
+                        {
+                            LayerId = id,
+                            Name = layer.Name,
+                            Open = sectionType == LayerSectionType.OpenFolder,
+                            Parent = groupLayers.Count > 0 ? groupLayers.Peek() : null
+                        };
+                        groupLayers.Push(group);
+                        groupLayerList.Add((group, layer));
+                        continue;
+                    }
+
+                    if (sectionType == LayerSectionType.SectionDivider)
+                    {
+                        if (groupLayers.Count > 0)
+                        {
+                            groupLayers.Pop();
+                        }
+                        continue;
+                    }
+
+                    var bitmap = layer.GetBitmap();
+                    bool useTlg = true;
+                    var imageMetadata = new ImageMetadata() { LayerType = id, Resource = new PsbResource(), Compress = PsbCompressType.Tlg};
+                    imageMetadata.SetData(bitmap);
+                    if (imageMetadata.Data == null)
+                    {
+                        useTlg = false;
+                        Logger.LogWarn($"Cannot convert bitmap to TLG, maybe FreeMote.Plugins.x64 is missing, or you're not working on Windows.");
+                        using var pngMs = new MemoryStream();
+                        bitmap.Save(pngMs, ImageFormat.Png);
+                        imageMetadata.Data = pngMs.ToArray();
+                    } 
+
+                    int sameImageId = -1;
+                    if (imageMetadata.Data != null)
+                    {
+                        var same = imageMetadatas.FirstOrDefault(r => r.Data.SequenceEqual(imageMetadata.Data));
+                        if (same != null)
+                        {
+                            sameImageId = same.LayerType;
+                        }
+                    }
+
+                    if (sameImageId < 0)
+                    {
+                        imageMetadatas.Add(imageMetadata);
+                    }
+
+                    var rect = layer.Rect;
+                    var left = rect.X;
+                    var top = rect.Y;
+                    var width = rect.Width;
+                    var height = rect.Height;
+                    int? currentGroupId = groupLayers.Count > 0? groupLayers.Peek().LayerId : null;
+                    var obj = new PsbDictionary
+                    {
+                        ["layer_id"] = id.ToPsbNumber(),
+                        ["layer_type"] = PsbNumber.Zero,
+                        ["name"] = layer.Name.ToPsbString(),
+                        ["left"] = left.ToPsbNumber(),
+                        ["top"] = top.ToPsbNumber(),
+                        ["width"] = width.ToPsbNumber(),
+                        ["height"] = height.ToPsbNumber(),
+                        ["type"] = 13.ToPsbNumber(),
+                        ["visible"] = layer.Visible ? 1.ToPsbNumber() : PsbNumber.Zero,
+                        ["opacity"] = new PsbNumber(layer.Opacity),
+                    };
+                    if (currentGroupId != null)
+                    {
+                        obj["group_layer_id"] = currentGroupId.Value.ToPsbNumber();
+                    }
+
+                    if (sameImageId < 0)
+                    {
+                        if (id >= 0)
+                        {
+                            //Set resource here
+                            psb.Objects[$"{id}.{(useTlg ? "tlg" : "png")}"] = imageMetadata.Resource;
+                        }
+                    }
+                    else
+                    {
+                        obj["same_image"] = sameImageId.ToPsbNumber();
+                    }
+
+                    layers.Add(obj);
+                }
+
+                foreach (var g in groupLayerList)
+                {
+                    var obj = new PsbDictionary
+                    {
+                        ["layer_id"] = g.Group.LayerId.ToPsbNumber(),
+                        ["layer_type"] = 2.ToPsbNumber(),
+                        ["type"] = 13.ToPsbNumber(),
+                        ["width"] = g.Layer.Width.ToPsbNumber(),
+                        ["height"] = g.Layer.Height.ToPsbNumber(),
+                        ["left"] = g.Layer.Rect.X.ToPsbNumber(),
+                        ["top"] = g.Layer.Rect.Y.ToPsbNumber(),
+                        ["name"] = g.Layer.Name.ToPsbString(),
+                        ["visible"] = g.Layer.Visible ? 1.ToPsbNumber() : PsbNumber.Zero,
+                        ["opacity"] = new PsbNumber(g.Layer.Opacity),
+                    };
+                    if (g.Group.Parent != null)
+                    {
+                        obj["group_layer_id"] = g.Group.Parent.LayerId.ToPsbNumber();
+                    }
+
+                    layers.Add(obj);
+                }
+
+                psb.Merge();
+                return psb.ToStream();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e);
+            }
             return null;
-            //throw new NotSupportedException("PSD to PSB conversion is not supported.");
-            //var ms = new MemoryStream();
-            //stream.CopyTo(ms);
-            //return ms;
         }
 
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
@@ -70,7 +299,7 @@ namespace FreeMote.Plugins.Shells
 
             if (psb.Type == PsbType.Pimg)
             {
-                return ConvertPImgToPsd(psb);
+                return ConvertPimgToPsd(psb);
             }
 
             EmtPainter painter = new EmtPainter(psb);
@@ -114,7 +343,7 @@ namespace FreeMote.Plugins.Shells
             return ms;
         }
 
-        private MemoryStream ConvertPImgToPsd(PSB psb)
+        private MemoryStream ConvertPimgToPsd(PSB psb)
         {
             var width = psb.Objects["width"].GetInt();
             var height = psb.Objects["height"].GetInt();
@@ -135,7 +364,7 @@ namespace FreeMote.Plugins.Shells
                 ImageCompression = ImageCompression.Rle
             };
 
-            psd.ImageResources.Add(new XmpResource("") {XmpMetaString = Resources.Xmp});
+            psd.ImageResources.Add(new XmpResource(PsdTypePimg) {XmpMetaString = Resources.Xmp});
             psd.BaseLayer.SetBitmap(new Bitmap(width, height, PixelFormat.Format32bppArgb),
                 ImageReplaceOption.KeepCenter, psd.ImageCompression);
 
@@ -241,7 +470,6 @@ namespace FreeMote.Plugins.Shells
             }
 
             psd.Layers.Reverse();
-
             var ms = new MemoryStream();
             psd.Save(ms, Encoding.UTF8);
             return ms;
@@ -287,7 +515,7 @@ namespace FreeMote.Plugins.Shells
                 ImageCompression = ImageCompression.Rle
             };
 
-            psd.ImageResources.Add(new XmpResource("") {XmpMetaString = Resources.Xmp});
+            psd.ImageResources.Add(new XmpResource(PsdTypeEmt) {XmpMetaString = Resources.Xmp});
             psd.BaseLayer.SetBitmap(new Bitmap(width, height, PixelFormat.Format32bppArgb),
                 ImageReplaceOption.KeepCenter, psd.ImageCompression);
 
@@ -372,6 +600,7 @@ namespace FreeMote.Plugins.Shells
     [DebuggerDisplay("{Name,nq} ({LayerId})")]
     class GroupLayer : ILayer
     {
+        public bool Open { get; set; } = false;
         public GroupLayer Parent { get; set; }
         public int LayerId { get; set; }
         public PsbDictionary Object { get; set; }
@@ -380,7 +609,12 @@ namespace FreeMote.Plugins.Shells
         
         public void CreateLayers(PsdFile psd)
         {
-            var beginLayer = psd.MakeSectionLayers(Name, out var endLayer, false);
+            var beginLayer = psd.MakeSectionLayers(Name, out var endLayer, Open);
+            if (LayerId is >= 0 and <= PsdShell.MaxLayerId)
+            {
+                var idLayer = new LayerId((uint) LayerId);
+                beginLayer.AdditionalInfo.Add(idLayer);
+            }
             psd.Layers.Add(beginLayer);
             foreach (var child in Children)
             {
@@ -411,19 +645,34 @@ namespace FreeMote.Plugins.Shells
                 var emptyLayer = psd.MakeImageLayer(new Bitmap(layerWidth, layerHeight), Name, layerLeft, layerTop);
                 emptyLayer.Visible = Object["visible"].GetInt() != 0;
                 emptyLayer.Opacity = (byte) Object["opacity"].GetInt();
+                if (LayerId is >= 0 and <= PsdShell.MaxLayerId)
+                {
+                    var idLayer = new LayerId((uint) LayerId);
+                    emptyLayer.AdditionalInfo.Add(idLayer);
+                }
+                else if (LayerId == -1)
+                {
+                    emptyLayer.Name += $"{PsdShell.LayerIdSuffix}{LayerId}";
+                }
+
                 psd.Layers.Add(emptyLayer);
             }
             else
             {
-                var imageLayer = psd.MakeImageLayer(md.ToImage(), Name, md.Left, md.Top);
-                //var idLayer = new RawLayerInfo("lyid");
-                //create 8 bytes array, first 4 is int value 4, second 4 is Id
-                //idLayer.Data = new byte[8];
-                //BitConverter.GetBytes(4).CopyTo(idLayer.Data, 0);
-                //BitConverter.GetBytes(LayerId).CopyTo(idLayer.Data, 4);
-                //imageLayer.AdditionalInfo.Add(idLayer);
-                imageLayer.Visible = md.Visible;
-                imageLayer.Opacity = (byte) md.Opacity;
+                var layerTop = Object["top"].GetInt();
+                var layerLeft = Object["left"].GetInt();
+                var imageLayer = psd.MakeImageLayer(md.ToImage(), Name, layerLeft, layerTop);
+                imageLayer.Visible = Object["visible"].GetInt() != 0;
+                imageLayer.Opacity = (byte) Object["opacity"].GetInt();
+                if (LayerId is >= 0 and <= PsdShell.MaxLayerId)
+                {
+                    var idLayer = new LayerId((uint) LayerId);
+                    imageLayer.AdditionalInfo.Add(idLayer);
+                }
+                else if (LayerId == -1)
+                {
+                    imageLayer.Name += $"{PsdShell.LayerIdSuffix}{LayerId}";
+                }
                 psd.Layers.Add(imageLayer);
             }
         }

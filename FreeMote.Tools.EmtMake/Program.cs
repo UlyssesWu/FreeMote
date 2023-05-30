@@ -20,6 +20,7 @@ namespace FreeMote.Tools.EmtMake
             Console.ReadLine();
             if (args.Length < 1 || !File.Exists(args[0]))
             {
+                PrintHelp();
                 return;
             }
 

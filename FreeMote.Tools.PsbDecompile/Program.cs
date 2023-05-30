@@ -182,6 +182,10 @@ Example:
                                 Console.WriteLine(e);
                             }
                         }
+                        else
+                        {
+                            Console.WriteLine($"Input path not found: {psbPath}");
+                        }
                     }
                 });
             });

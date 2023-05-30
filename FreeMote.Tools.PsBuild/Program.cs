@@ -152,6 +152,10 @@ Example:
                         {
                             Port(s, portSpec, enableResolution);
                         }
+                        else
+                        {
+                            Console.WriteLine($"Input path not found: {s}");
+                        }
                     }
                 });
             });

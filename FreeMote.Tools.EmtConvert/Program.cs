@@ -227,6 +227,10 @@ Example:
                         {
                             ShellConvert(s, type);
                         }
+                        else
+                        {
+                            Console.WriteLine($"Input path not found: {s}");
+                        }
                     }
                 });
             });
@@ -260,6 +264,10 @@ Example:
                         if (File.Exists(s))
                         {
                             Draw(s, width, height);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Input path not found: {s}");
                         }
                     }
                 });
@@ -347,6 +355,10 @@ Example:
                             Convert(key, s);
                         }
                     }
+                    else
+                    {
+                        Console.WriteLine($"Input path not found: {s}");
+                    }
                 }
             });
 
@@ -432,6 +444,10 @@ Example:
                         if (File.Exists(s))
                         {
                             ShellConvert(s, "MDF");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Input path not found: {s}");
                         }
                     }
 
