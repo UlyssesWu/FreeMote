@@ -243,14 +243,14 @@ namespace FreeMote.Psb
 
                             if (baseLocation == null)
                             {
-                                //Console.WriteLine($"Set coord: {coordTuple.x},{coordTuple.y},{coordTuple.z}");
+                                Debug.WriteLine($"Set coord: {coordTuple.x},{coordTuple.y},{coordTuple.z} | {dic.Path}");
                                 baseLocation = coordTuple;
                             }
                             else
                             {
                                 var loc = baseLocation.Value;
                                 baseLocation = (loc.x + coordTuple.x, loc.y + coordTuple.y, loc.z + coordTuple.z);
-                                //Console.WriteLine($"Update coord: {loc.x},{loc.y},{loc.z} -> {baseLocation?.x},{baseLocation?.y},{baseLocation?.z}");
+                                Debug.WriteLine($"Update coord: {loc.x},{loc.y},{loc.z} + {coordTuple.x},{coordTuple.y},{coordTuple.z} -> {baseLocation?.x},{baseLocation?.y},{baseLocation?.z} | {dic.Path}");
                             }
                         }
 

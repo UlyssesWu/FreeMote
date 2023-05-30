@@ -102,6 +102,10 @@ namespace FreeMote.Psb
         public PsbString TypeString { get; set; }
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
+        /// <summary>
+        /// PIMG layer_type
+        /// </summary>
+        public int LayerType { get; set; }
 
         /// <summary>
         /// Pal

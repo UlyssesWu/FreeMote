@@ -73,7 +73,9 @@ namespace FreeMote.Psb.Types
                             continue;
                         }
 
-                        var res = (ImageMetadata)(IResourceMetadata)list.FirstOrDefault(k => k.Name.StartsWith(layerId.ToString(), true, null));
+                        var res =
+                            (ImageMetadata) (IResourceMetadata) (list.FirstOrDefault(k => k.Name.StartsWith($"{layerId}.", true, null)) ??
+                                                                 list.FirstOrDefault(k => k.Name.StartsWith($"{layerId}", true, null)));
                         if (res == null)
                         {
                             continue;
@@ -120,6 +122,11 @@ namespace FreeMote.Psb.Types
                         if (dic["name"] is PsbString nn)
                         {
                             res.Label = nn.Value;
+                        }
+
+                        if (dic["layer_type"] is PsbNumber lt)
+                        {
+                            res.LayerType = lt.IntValue;
                         }
                     }
                 }
