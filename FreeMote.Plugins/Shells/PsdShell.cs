@@ -8,7 +8,6 @@ using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FastBitmapLib;
 using FreeMote.Plugins.Properties;
 using FreeMote.Psb;
 using PhotoshopFile;
@@ -66,6 +65,7 @@ namespace FreeMote.Plugins.Shells
                     //    return null;
                     //}
                 }
+
                 var layers = new PsbList();
                 PSB psb = new PSB(3)
                 {
@@ -105,7 +105,7 @@ namespace FreeMote.Plugins.Shells
                     {
                         try
                         {
-                            var lines = layer.Name.Split(new[] { LayerIdSuffix }, StringSplitOptions.None);
+                            var lines = layer.Name.Split(new[] {LayerIdSuffix}, StringSplitOptions.None);
                             var idStr = lines[1];
                             var id = int.Parse(idStr);
                             layerIdMap[layer] = id;
@@ -141,7 +141,6 @@ namespace FreeMote.Plugins.Shells
                             layerIdMap[layer] = 0;
                         }
                     }
-                    
                 }
 
                 foreach (var l in layerIdMap.Keys)
@@ -153,6 +152,7 @@ namespace FreeMote.Plugins.Shells
                         {
                             newId++;
                         }
+
                         layerIdMap[l] = newId;
                         idRegistry.Add(newId);
                     }
@@ -183,21 +183,23 @@ namespace FreeMote.Plugins.Shells
                         {
                             groupLayers.Pop();
                         }
+
                         continue;
                     }
 
                     var bitmap = layer.GetBitmap();
                     bool useTlg = true;
-                    var imageMetadata = new ImageMetadata() { LayerType = id, Resource = new PsbResource(), Compress = PsbCompressType.Tlg};
+                    var imageMetadata = new ImageMetadata() {LayerType = id, Resource = new PsbResource(), Compress = PsbCompressType.Tlg};
                     imageMetadata.SetData(bitmap);
                     if (imageMetadata.Data == null)
                     {
                         useTlg = false;
-                        Logger.LogWarn($"Cannot convert bitmap to TLG, maybe FreeMote.Plugins.x64 is missing, or you're not working on Windows.");
+                        Logger.LogWarn(
+                            $"Cannot convert bitmap to TLG, maybe FreeMote.Plugins.x64 is missing, or you're not working on Windows.");
                         using var pngMs = new MemoryStream();
                         bitmap.Save(pngMs, ImageFormat.Png);
                         imageMetadata.Data = pngMs.ToArray();
-                    } 
+                    }
 
                     int sameImageId = -1;
                     if (imageMetadata.Data != null)
@@ -219,7 +221,7 @@ namespace FreeMote.Plugins.Shells
                     var top = rect.Y;
                     var width = rect.Width;
                     var height = rect.Height;
-                    int? currentGroupId = groupLayers.Count > 0? groupLayers.Peek().LayerId : null;
+                    int? currentGroupId = groupLayers.Count > 0 ? groupLayers.Peek().LayerId : null;
                     var obj = new PsbDictionary
                     {
                         ["layer_id"] = id.ToPsbNumber(),
@@ -284,6 +286,7 @@ namespace FreeMote.Plugins.Shells
             {
                 Logger.LogError(e);
             }
+
             return null;
         }
 
@@ -291,7 +294,6 @@ namespace FreeMote.Plugins.Shells
         {
             Logger.LogWarn(
                 "[WARN] Exported PSD files should follow CC-BY-NC-SA 4.0. Please keep FreeMote information in PSD files.");
-            //Console.WriteLine("[WARN] Exported PSD files should follow CC-BY-NC-SA 4.0. Please keep FreeMote information in PSD files.");
             var psb = new PSB(stream);
             if (psb == null)
             {
@@ -374,7 +376,6 @@ namespace FreeMote.Plugins.Shells
             //layer type: 0 = image, 2 = folder
             List<ILayer> layers = new List<ILayer>();
             List<GroupLayer> groupLayers = new List<GroupLayer>();
-
             var layerObjects = (PsbList) psb.Objects["layers"];
 
             GroupLayer CreateGroupLayer(PsbDictionary lObj, ILayer child = null)
@@ -388,10 +389,11 @@ namespace FreeMote.Plugins.Shells
                         existedGroup.Children.Add(child);
                         child.Parent = existedGroup;
                     }
+
                     return null;
                 }
 
-                var groupLayer = new GroupLayer {Object = lObj, LayerId = layerId, Name = lObj["name"].ToString() };
+                var groupLayer = new GroupLayer {Object = lObj, LayerId = layerId, Name = lObj["name"].ToString()};
                 if (child != null)
                 {
                     groupLayer.Children.Add(child);
@@ -439,12 +441,16 @@ namespace FreeMote.Plugins.Shells
                 {
                     var layerId = layerObj["layer_id"].GetInt();
                     var imageLayer = new ImageLayer
-                        {Object = layerObj, Name = layerObj["name"].ToString(), LayerId = layerId, ImageMetadata = images.FirstOrDefault(md => md.Index == (uint) layerId)};
+                    {
+                        Object = layerObj, Name = layerObj["name"].ToString(), LayerId = layerId,
+                        ImageMetadata = images.FirstOrDefault(md => md.Index == (uint) layerId)
+                    };
                     if (imageLayer.ImageMetadata == null && layerObj.TryGetValue("same_image", out var sameImageId))
                     {
                         var sameImage = sameImageId.GetInt();
                         imageLayer.ImageMetadata = images.FirstOrDefault(md => md.Index == (uint) sameImage);
                     }
+
                     if (layerObj["group_layer_id"] is PsbNumber groupLayerId)
                     {
                         var parent = layerObjects.FirstOrDefault(l =>
@@ -607,7 +613,7 @@ namespace FreeMote.Plugins.Shells
         public PsbDictionary Object { get; set; }
         public List<ILayer> Children { get; private set; } = new();
         public string Name { get; set; }
-        
+
         public void CreateLayers(PsdFile psd)
         {
             var beginLayer = psd.MakeSectionLayers(Name, out var endLayer, Open);
@@ -618,11 +624,13 @@ namespace FreeMote.Plugins.Shells
                 var idLayer = new LayerId((uint) LayerId);
                 beginLayer.AdditionalInfo.Add(idLayer);
             }
+
             psd.Layers.Add(beginLayer);
             foreach (var child in Children)
             {
                 child.CreateLayers(psd);
             }
+
             psd.Layers.Add(endLayer);
         }
     }
@@ -676,6 +684,7 @@ namespace FreeMote.Plugins.Shells
                 {
                     imageLayer.Name += $"{PsdShell.LayerIdSuffix}{LayerId}";
                 }
+
                 psd.Layers.Add(imageLayer);
             }
         }
