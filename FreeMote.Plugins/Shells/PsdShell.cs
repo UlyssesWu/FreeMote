@@ -8,6 +8,7 @@ using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Text;
+using FastBitmapLib;
 using FreeMote.Plugins.Properties;
 using FreeMote.Psb;
 using PhotoshopFile;
@@ -610,6 +611,8 @@ namespace FreeMote.Plugins.Shells
         public void CreateLayers(PsdFile psd)
         {
             var beginLayer = psd.MakeSectionLayers(Name, out var endLayer, Open);
+            beginLayer.Visible = Object.TryGetValue("visible", out var visible) && visible.GetInt() != 0;
+            beginLayer.Opacity = (byte) (Object.TryGetValue("opacity", out var opacity) ? opacity.GetInt() : 255);
             if (LayerId is >= 0 and <= PsdShell.MaxLayerId)
             {
                 var idLayer = new LayerId((uint) LayerId);

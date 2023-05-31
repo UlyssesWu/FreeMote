@@ -132,7 +132,7 @@ namespace FreeMote
             };
         }
 
-        public Bitmap ReadAndGetMetaData(BinaryReader file, out TlgMetaData md)
+        public Bitmap ReadAndGetMetaData(BinaryReader file, out TlgMetaData md, bool copy = true)
         {
             TlgMetaData meta = ReadMetaData(file);
             md = meta;
@@ -157,8 +157,13 @@ namespace FreeMote
                     Trace.WriteLine(x.Message, "[TlgFormat.Read]");
                 }
             }
+
             //PixelFormat format = 32 == meta.BPP ? PixelFormats.Bgra32 : PixelFormats.Bgr32;
             PixelFormat format = 32 == meta.Bpp ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb;
+            if (copy)
+            {
+                return RL.ConvertToImage(image, (int) meta.Width, (int) meta.Height, PsbPixelFormat.LeRGBA8);
+            }
             return CreateImage(meta, format, image, (int)meta.Width * 4);
         }
 
