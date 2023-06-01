@@ -357,12 +357,12 @@ namespace FreeMote.Plugins.Shells
                 Height = height,
                 Resolution = new ResolutionInfo
                 {
-                    HeightDisplayUnit = ResolutionInfo.Unit.Centimeters,
-                    WidthDisplayUnit = ResolutionInfo.Unit.Centimeters,
+                    HeightDisplayUnit = ResolutionInfo.Unit.Points,
+                    WidthDisplayUnit = ResolutionInfo.Unit.Points,
                     HResDisplayUnit = ResolutionInfo.ResUnit.PxPerInch,
                     VResDisplayUnit = ResolutionInfo.ResUnit.PxPerInch,
-                    HDpi = new UFixed16_16(0, 350),
-                    VDpi = new UFixed16_16(0, 350)
+                    HDpi = new UFixed16_16(72, 0),
+                    VDpi = new UFixed16_16(72, 0),
                 },
                 ImageCompression = ImageCompression.Rle
             };
@@ -512,12 +512,12 @@ namespace FreeMote.Plugins.Shells
                 Height = height,
                 Resolution = new ResolutionInfo
                 {
-                    HeightDisplayUnit = ResolutionInfo.Unit.Centimeters,
-                    WidthDisplayUnit = ResolutionInfo.Unit.Centimeters,
+                    HeightDisplayUnit = ResolutionInfo.Unit.Points,
+                    WidthDisplayUnit = ResolutionInfo.Unit.Points,
                     HResDisplayUnit = ResolutionInfo.ResUnit.PxPerInch,
                     VResDisplayUnit = ResolutionInfo.ResUnit.PxPerInch,
-                    HDpi = new UFixed16_16(0, 350),
-                    VDpi = new UFixed16_16(0, 350)
+                    HDpi = new UFixed16_16(72, 0),
+                    VDpi = new UFixed16_16(72, 0),
                 },
                 ImageCompression = ImageCompression.Rle
             };
