@@ -60,10 +60,11 @@ namespace FreeMote.Plugins.Shells
                 if (xmp is XmpResource xmpRes)
                 {
                     var type = xmpRes.Name.ToLowerInvariant();
-                    //if (type != PsdTypePimg)
-                    //{
-                    //    return null;
-                    //}
+                    if (type != PsdTypePimg)
+                    {
+                        Logger.LogWarn("Only pimg PSD can be converted to PSB.");
+                        //return null;
+                    }
                 }
 
                 var layers = new PsbList();

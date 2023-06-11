@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.IO;
 
@@ -50,6 +49,11 @@ namespace FreeMote
         public const string Context_PsbShellType = "PsbShellType";
 
         /// <summary>
+        /// (string)
+        /// </summary>
+        public const string Context_FileName = "FileName";
+
+        /// <summary>
         /// (uint?)
         /// </summary>
         public const string Context_CryptKey = "CryptKey";
@@ -74,6 +78,11 @@ namespace FreeMote
         /// (List) Archive Item Special FileNames
         /// </summary>
         public const string Context_ArchiveItemFileNames = "ArchiveItemFileNames";
+
+        /// <summary>
+        /// (int) PSB Version
+        /// </summary>
+        public const string Context_PsbVer = "PsbVer";
 
         /// <summary>
         /// (string) MDF Seed (key + filename)
@@ -119,9 +128,6 @@ namespace FreeMote
         /// Perform 16 byte data align or not (when build)
         /// </summary>
         public static bool PsbDataStructureAlign { get; set; } = true;
-
-        //This is a bad design, abandon
-        //public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
 
         /// <summary>
         /// Take more memory when loading, but maybe faster

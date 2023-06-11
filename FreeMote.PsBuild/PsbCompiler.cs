@@ -60,12 +60,29 @@ namespace FreeMote.PsBuild
                         string ext = pure ? ".pure" : ".impure";
                         ext += resx.PsbType.HasValue ? resx.PsbType.Value.DefaultExtension() : ".psb";
 
-                        if (resx.Context != null && resx.Context.ContainsKey(Consts.Context_PsbShellType) && keepShell)
+                        if (resx.Context != null && keepShell)
                         {
-                            var shellType = resx.Context[Consts.Context_PsbShellType] as string;
-                            if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
+                            if (resx.Context.TryGetValue(Consts.Context_FileName, out var fn))
                             {
-                                ext += $".{shellType.ToLowerInvariant()}";
+                                if (fn is string targetName)
+                                {
+                                    var dir = Path.GetDirectoryName(outputPath) ?? string.Empty;
+                                    var targetPath = Path.Combine(dir, targetName);
+                                    if (!File.Exists(targetPath) || string.IsNullOrEmpty(dir)) //allow overwrite if save in current path
+                                    {
+                                        outputPath = targetPath;
+                                        goto COMPILE;
+                                    }
+                                }
+                            }
+
+                            if (resx.Context.TryGetValue(Consts.Context_PsbShellType, out var st))
+                            {
+                                var shellType = st as string;
+                                if (!string.IsNullOrEmpty(shellType) && shellType.ToUpperInvariant() != "PSB")
+                                {
+                                    ext += $".{shellType.ToLowerInvariant()}";
+                                }
                             }
                         }
 
@@ -78,6 +95,7 @@ namespace FreeMote.PsBuild
                 }
             }
 
+            COMPILE: ;
             var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform, keepShell);
 
             // ReSharper disable once AssignNullToNotNullAttribute

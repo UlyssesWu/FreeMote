@@ -9,7 +9,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using BCnEncoder.Decoder;
 using BCnEncoder.Shared;
-using BCnEncoder.Shared.ImageFiles;
 using FreeMote.FastLz;
 using FreeMote.Plugins.Audio;
 using FreeMote.Plugins.Images;

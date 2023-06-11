@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using McMaster.Extensions.CommandLineUtils;
@@ -473,27 +474,52 @@ Example:
                             finalSeed = key + fileName;
                         }
 
+                        context[Context_FileName] = fileName;
                         context[Context_MdfKey] = finalSeed;
                         var success = ShellConvert(s, "", context); //Unpack
 
-                        if (!success && suffixList != null)
+                        if (!success)
                         {
-                            foreach (var suffix in suffixList)
+                            Regex RealNameRegex = new Regex(@"[A-Za-z0-9_-]+\.[A-Za-z0-9]+\.m");
+                            var realName = fileName;
+                            if (RealNameRegex.IsMatch(fileName))
                             {
-                                var allPossibleNames = PsbExtension.ArchiveInfoGetAllPossibleFileNames(fileName, suffix);
+                                realName = RealNameRegex.Match(fileName).Value;
+                            }
 
-                                foreach (var possibleName in allPossibleNames)
+                            if (realName != fileName)
+                            {
+                                if (key != null)
                                 {
-                                    finalSeed = seed;
-                                    if (key != null)
-                                    {
-                                        finalSeed = key + possibleName;
-                                    }
+                                    finalSeed = key + realName;
+                                }
 
-                                    context[Context_MdfKey] = finalSeed;
-                                    if (ShellConvert(s, "", context))
+                                context[Context_MdfKey] = finalSeed;
+                                if (ShellConvert(s, "", context))
+                                {
+                                    goto CONVERT_OK;
+                                }
+                            }
+                            
+                            if (suffixList != null)
+                            {
+                                foreach (var suffix in suffixList)
+                                {
+                                    var allPossibleNames = PsbExtension.ArchiveInfoGetAllPossibleFileNames(fileName, suffix);
+
+                                    foreach (var possibleName in allPossibleNames)
                                     {
-                                        goto CONVERT_OK;
+                                        finalSeed = seed;
+                                        if (key != null)
+                                        {
+                                            finalSeed = key + possibleName;
+                                        }
+
+                                        context[Context_MdfKey] = finalSeed;
+                                        if (ShellConvert(s, "", context))
+                                        {
+                                            goto CONVERT_OK;
+                                        }
                                     }
                                 }
                             }

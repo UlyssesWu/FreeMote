@@ -121,7 +121,7 @@ namespace FreeMote.PsBuild
                 new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
         }
 
-        internal static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbExtractOption extractOption = PsbExtractOption.Original,
+        public static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true)
         {
             var name = Path.GetFileNameWithoutExtension(filePath);

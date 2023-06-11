@@ -17,7 +17,7 @@ namespace FreeMote.Plugins.Shells
         {
             var header = new byte[4];
             var pos = stream.Position;
-            stream.Read(header, 0, 4);
+            _ = stream.Read(header, 0, 4);
             stream.Position = pos;
             if (header[0] == Name[0] && header[1] == Name[1] && header[2] == Name[2] && header[3] == 0)
             {
@@ -53,9 +53,9 @@ namespace FreeMote.Plugins.Shells
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             bool fast = false;
-            if (context != null && context.ContainsKey(Consts.Context_PsbZlibFastCompress))
+            if (context != null && context.TryGetValue(Consts.Context_PsbZlibFastCompress, out var fastCompress))
             {
-                fast = (bool)context[Consts.Context_PsbZlibFastCompress];
+                fast = (bool)fastCompress;
             }
 
             var oriLen = (int)stream.Length;
@@ -65,9 +65,9 @@ namespace FreeMote.Plugins.Shells
             using (var bw = new BinaryWriter(ms, Encoding.UTF8, true))
             {
                 stream.Position = pos;
-                Adler32 checksumer = new Adler32();
-                checksumer.Update(stream);
-                var checksum = (uint)checksumer.Checksum;
+                var adler32 = new Adler32();
+                adler32.Update(stream);
+                var checksum = (uint)adler32.Checksum;
 
                 bw.Write(Signature);
                 bw.Write((int)compressedStream.Length + 4);

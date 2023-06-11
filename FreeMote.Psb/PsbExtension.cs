@@ -686,14 +686,14 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Decode/encode MDF used in archive PSB. (<paramref name="stream"/> will <b>NOT</b> be disposed)
+        /// Decode/encode MDF used in archive PSB. Usually you need to <paramref name="keepHeader"/> when input is a shell type (mdf,mfl etc.) rather than raw data. (<paramref name="stream"/> will <b>NOT</b> be disposed)
         /// </summary>
         /// <param name="stream">will <b>NOT</b> be disposed</param>
         /// <param name="key">a full key a.k.a seed</param>
         /// <param name="keyLength">key buffer length, usually 131, but could be other value</param>
-        /// <param name="keepHeader">if <c>true</c>, skip first 8 bytes (header)</param>
+        /// <param name="keepHeader">if <c>true</c>, skip first 8 bytes (usually MDF header)</param>
         /// <returns></returns>
-        public static MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength, bool keepHeader = true)
+        public static MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength, bool keepHeader)
         {
             //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
             var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));

@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FreeMote.Plugins;
 using FreeMote.Psb;
@@ -411,14 +413,20 @@ Example:
         {
             var ctx = FreeMount.CreateContext(context);
             var ms = ctx.OpenFromShell(stream, ref shellType);
+
+            if (ms is { Length: > 0 })
+            {
+                ctx.Shell = shellType;
+            }
+
+            if (ms.Length == 0 && stream.Length > 0)
+            {
+                throw new InvalidDataException($"Extract data from shell [{shellType}] failed: extracted data length = 0.");
+            }
+
             if (ms != stream)
             {
                 stream.Dispose();
-            }
-
-            if (ms is {Length: > 0})
-            {
-                ctx.Shell = shellType;
             }
 
             return ms;
@@ -499,6 +507,7 @@ Example:
             {
                 var fileName = Path.GetFileName(filePath);
                 var archiveMdfKey = key + fileName;
+                context[Context_FileName] = fileName;
                 context[Context_MdfKey] = archiveMdfKey;
 
                 var dir = Path.GetDirectoryName(Path.GetFullPath(filePath));
@@ -540,19 +549,56 @@ Example:
                 try
                 {
                     PSB psb = null;
+
                     using (var fs = File.OpenRead(filePath))
                     {
                         var shellType = PsbFile.GetSignatureShellType(fs);
-                        psb = shellType == "PSB" ? new PSB(fs) : new PSB(MdfConvert(fs, shellType, context));
+                        if (shellType != "PSB")
+                        {
+                            try
+                            {
+                                var unpacked = MdfConvert(fs, shellType, context);
+                                psb = new PSB(unpacked);
+                            }
+                            catch (InvalidDataException)
+                            {
+                                string realName = fileName;
+                                Regex RealNameRegex = new Regex(@"[A-Za-z0-9_-]+\.[A-Za-z0-9]+\.m");
+                                if (RealNameRegex.IsMatch(fileName))
+                                {
+                                    realName = RealNameRegex.Match(fileName).Value;
+                                }
+                                if (realName != fileName)
+                                {
+                                    Console.WriteLine($"Trying file name: {realName}");
+                                    archiveMdfKey = key + realName;
+                                    context[Context_FileName] = realName;
+                                    context[Context_MdfKey] = archiveMdfKey;
+                                    fs.Seek(0, SeekOrigin.Begin);
+                                    var unpacked = MdfConvert(fs, shellType, context);
+                                    psb = new PSB(unpacked);
+                                }
+                                else
+                                {
+                                    throw;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            psb = new PSB(fs);
+                        }
                     }
-
+                    
                     File.WriteAllText(Path.GetFullPath(filePath) + ".json", PsbDecompiler.Decompile(psb));
                     PsbResourceJson resx = new PsbResourceJson(psb, context);
                     if (!hasBody)
                     {
                         //Write resx.json
-                        resx.Context[Context_ArchiveSource] = new List<string> {name};
-                        File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
+                        //resx.Context[Context_ArchiveSource] = new List<string> {name};
+                        //File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
+                        context[Context_ArchiveSource] = new List<string> { name };
+                        PsbDecompiler.OutputResources(psb, FreeMount.CreateContext(context), Path.GetFullPath(filePath), PsbExtractOption.Extract);
                         return;
                     }
 
@@ -635,7 +681,8 @@ Example:
                                 {
                                     var bodyContext = new Dictionary<string, object>(finalContext)
                                     {
-                                        [Context_MdfKey] = key + possibleFileName
+                                        [Context_MdfKey] = key + possibleFileName,
+                                        [Context_FileName] = possibleFileName
                                     };
 
                                     try
@@ -736,7 +783,8 @@ Example:
                                 {
                                     var bodyContext = new Dictionary<string, object>(finalContext)
                                     {
-                                        [Context_MdfKey] = key + possibleFileName
+                                        [Context_MdfKey] = key + possibleFileName,
+                                        [Context_FileName] = possibleFileName
                                     };
 
                                     try
@@ -799,6 +847,7 @@ Example:
                     resx.Context[Context_MdfMtKey] = key;
                     resx.Context[Context_MdfKey] = archiveMdfKey;
                     resx.Context[Context_ArchiveItemFileNames] = specialItemFileNames;
+                    resx.Context[Context_FileName] = fileName;
                     File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
                 }
                 catch (Exception e)
