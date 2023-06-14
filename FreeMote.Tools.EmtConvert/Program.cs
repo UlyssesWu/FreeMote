@@ -9,6 +9,7 @@ using FreeMote.Plugins;
 using FreeMote.Psb;
 using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
+// ReSharper disable InconsistentNaming
 
 namespace FreeMote.Tools.EmtConvert
 {
@@ -63,6 +64,10 @@ namespace FreeMote.Tools.EmtConvert
         /// Flip PS3
         /// </summary>
         Flip_PS3,
+        /// <summary>
+        /// Decode Tlg
+        /// </summary>
+        TLG,
     }
 
     public enum PsbFixMethod
@@ -133,6 +138,44 @@ Example:
                         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                         {
                             continue;
+                        }
+
+                        switch (optMethod.ParsedValue)
+                        {
+                            case PsbImageConvertMethod.TLG:
+                                var isTlg = Path.GetExtension(path).ToLower().StartsWith(".tlg");
+                                if (isTlg)
+                                {
+                                    using var stream = File.OpenRead(path);
+                                    TlgImageConverter converter = new TlgImageConverter();
+                                    var br = new BinaryReader(stream);
+                                    var img = converter.Read(br);
+                                    img.Save(Path.ChangeExtension(path, ".converted.png"), ImageFormat.Png);
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        var img = new Bitmap(path);
+                                        var context = FreeMount.CreateContext();
+                                        var tlgBytes = context.BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), PsbSpec.none, img);
+                                        if (tlgBytes is {Length: > 0})
+                                        {
+                                            File.WriteAllBytes(Path.ChangeExtension(path, ".converted.tlg"), tlgBytes);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"Cannot convert bitmap to TLG, maybe FreeMote.Plugins.x64 is missing, or you're not working on Windows.");
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(e);
+                                    }
+                                }
+                                continue;
+                            default:
+                                break;
                         }
 
                         int width = 0;
