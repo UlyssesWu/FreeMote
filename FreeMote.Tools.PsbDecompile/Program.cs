@@ -456,7 +456,7 @@ Example:
             {
                 if (psbBadFormatException.Reason == PsbBadFormatReason.Body)
                 {
-                    Console.WriteLine("[ERROR] Your PSB is encrypted. Use `-k` option with a valid key to decrypt it.");
+                    Console.WriteLine("[ERROR] Input file is not a PSB; Or maybe PSB is encrypted, use `-k` option with a valid key to decrypt it.");
                 }
 
                 Console.WriteLine(psbBadFormatException);
