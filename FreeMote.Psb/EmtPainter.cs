@@ -30,7 +30,7 @@ namespace FreeMote.Psb
         {
             if (Source.InferType() != PsbType.Motion)
             {
-                throw new FormatException("PsbPainter only works for Motion(psb) models.");
+                throw new FormatException("EmtPainter only works for Motion PSB models.");
             }
 
             Resources = new List<ImageMetadata>();
