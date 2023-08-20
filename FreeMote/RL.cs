@@ -86,6 +86,11 @@ namespace FreeMote
                     //Rgba2Argb(ref data);
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
+                case PsbPixelFormat.TileLeRGBA4444_SW:
+                    data = Argb428(data);
+                    //Rgba2Argb(ref data);
+                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
                 case PsbPixelFormat.TileLeRGBA8_SW:
                     data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
@@ -258,6 +263,10 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.LeRGBA4444_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Argb428(result, false);
+                    break;
+                case PsbPixelFormat.TileLeRGBA4444_SW:
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.RGBA5650:

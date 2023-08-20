@@ -228,6 +228,10 @@ namespace FreeMote
         /// </summary>
         LeRGBA4444_SW,
         /// <summary>
+        /// RGBA4444_SW (Swizzle, Tile) for PS4
+        /// </summary>
+        TileLeRGBA4444_SW,
+        /// <summary>
         /// RGBA5650 with Swizzle for vita
         /// </summary>
         RGBA5650_SW,

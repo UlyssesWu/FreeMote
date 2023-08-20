@@ -148,6 +148,7 @@ namespace FreeMote
                     return 32;
                 case PsbPixelFormat.LeRGBA4444:
                 case PsbPixelFormat.LeRGBA4444_SW:
+                case PsbPixelFormat.TileLeRGBA4444_SW:
                 case PsbPixelFormat.BeRGBA4444:
                 case PsbPixelFormat.RGBA5650:
                 case PsbPixelFormat.RGBA5650_SW:
@@ -310,7 +311,7 @@ namespace FreeMote
                     return PsbPixelFormat.LeRGBA4444;
                 case "RGBA4444_SW":
                     //TODO: BeRGBA4444_SW?
-                    return PsbPixelFormat.LeRGBA4444_SW;
+                    return useTile? PsbPixelFormat.TileLeRGBA4444_SW : PsbPixelFormat.LeRGBA4444_SW;
                 case "RGBA8":
                     if (spec.UseBigEndian()) //TODO: I'm not sure if psv and psp always use BE, so for now just set for RGBA8 //psv #95
                         return PsbPixelFormat.BeRGBA8;
