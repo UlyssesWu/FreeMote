@@ -596,6 +596,36 @@ namespace FreeMote.Psb
         #region MDF
 
         /// <summary>
+        /// [RequireUsing] <paramref name="stream"/> will be disposed if <paramref name="shellType"/> is MPack (e.g. mdf) types
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="shellType"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        internal static MemoryStream MdfConvert(Stream stream, string shellType, Dictionary<string, object> context = null)
+        {
+            var ctx = FreeMount.CreateContext(context);
+            var ms = ctx.OpenFromShell(stream, ref shellType);
+
+            if (ms is { Length: > 0 })
+            {
+                ctx.Shell = shellType;
+            }
+
+            if (ms.Length == 0 && stream.Length > 0)
+            {
+                throw new InvalidDataException($"Extract data from shell [{shellType}] failed: extracted data length = 0.");
+            }
+
+            if (ms != stream)
+            {
+                stream.Dispose();
+            }
+
+            return ms;
+        }
+
+        /// <summary>
         /// Save PSB as pure MDF file
         /// </summary>
         /// <remarks>can not save as impure MDF (such as MT19937 MDF)</remarks>

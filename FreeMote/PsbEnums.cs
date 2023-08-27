@@ -404,5 +404,12 @@ namespace FreeMote
         /// </summary>
         Auto
     }
+
+    internal enum ArchiveProcessMethod
+    {
+        None = 0,
+        EncodeMPack = 1,
+        Compile = 2,
+    }
 }
 
