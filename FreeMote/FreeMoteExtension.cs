@@ -129,6 +129,7 @@ namespace FreeMote
                 case PsbSpec.ems:
                 case PsbSpec.vita: //TODO: is vita or psp BigEndian?
                 case PsbSpec.psp:
+                case PsbSpec.ps3: //TODO: is ps3 BigEndian?
                     return true;
                 default:
                     return false;
@@ -318,9 +319,21 @@ namespace FreeMote
                     else
                         return PsbPixelFormat.LeRGBA8;
                 case "RGBA8_SW":
-                    return useTile
-                        ? (spec.UseBigEndian() ? PsbPixelFormat.TileBeRGBA8_SW : PsbPixelFormat.TileLeRGBA8_SW)
-                        : (spec.UseBigEndian() ? PsbPixelFormat.BeRGBA8_SW : spec == PsbSpec.ps3? PsbPixelFormat.FlipLeRGBA8_SW : PsbPixelFormat.LeRGBA8_SW);
+                    if (useTile)
+                        if (spec.UseBigEndian())
+                            return PsbPixelFormat.TileBeRGBA8_SW;
+                        else
+                            return PsbPixelFormat.TileLeRGBA8_SW;
+
+                    if (spec.UseBigEndian())
+                        if (spec == PsbSpec.ps3)
+                            return PsbPixelFormat.FlipBeRGBA8_SW;
+                        else
+                            return PsbPixelFormat.BeRGBA8_SW;
+
+                    if (spec == PsbSpec.ps3)
+                        return PsbPixelFormat.FlipLeRGBA8_SW;
+                    return PsbPixelFormat.LeRGBA8_SW;
                 case "A8_SW":
                     return useTile ? PsbPixelFormat.TileA8_SW : PsbPixelFormat.A8_SW;
                 case "L8_SW":
@@ -356,6 +369,7 @@ namespace FreeMote
                 case PsbPixelFormat.TileBeRGBA8_SW:
                 case PsbPixelFormat.TileLeRGBA8_SW:
                 case PsbPixelFormat.FlipLeRGBA8_SW:
+                case PsbPixelFormat.FlipBeRGBA8_SW:
                     return "RGBA8_SW";
                 case PsbPixelFormat.TileA8L8_SW:
                 case PsbPixelFormat.A8L8_SW:

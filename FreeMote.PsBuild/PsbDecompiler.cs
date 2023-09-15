@@ -9,6 +9,7 @@ using FreeMote.Psb.Textures;
 using FreeMote.Psb.Types;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
