@@ -69,9 +69,9 @@ namespace FreeMote.PsBuild
             {
                 stream.Position = 0;
                 uint? key = null;
-                if (ctx.Context.ContainsKey(Consts.Context_CryptKey))
+                if (ctx.Context.TryGetValue(Consts.Context_CryptKey, out var cryptKey))
                 {
-                    key = ctx.Context[Consts.Context_CryptKey] as uint?;
+                    key = cryptKey as uint?;
                 }
                 else
                 {
@@ -83,7 +83,7 @@ namespace FreeMote.PsBuild
                 {
                     try
                     {
-                        using var mms = new MemoryStream((int)stream.Length);
+                        using var mms = new MemoryStream((int) stream.Length);
                         PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, mms);
                         stream.Dispose();
                         psb = new PSB(mms, true, Encoding);
@@ -122,11 +122,13 @@ namespace FreeMote.PsBuild
                 return ArrayCollapseJsonTextWriter.SerializeObject(psb.Root,
                     new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
             }
+
             return JsonConvert.SerializeObject(psb.Root, Formatting.Indented,
                 new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
         }
 
-        public static void OutputResources(PSB psb, FreeMountContext context, string filePath, PsbExtractOption extractOption = PsbExtractOption.Original,
+        public static void OutputResources(PSB psb, FreeMountContext context, string filePath,
+            PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true)
         {
             var name = Path.GetFileNameWithoutExtension(filePath);
@@ -175,6 +177,7 @@ namespace FreeMote.PsBuild
                 {
                     json = JsonConvert.SerializeObject(resx, Formatting.Indented);
                 }
+
                 File.WriteAllText(ChangeExtensionForOutputJson(filePath, ".resx.json"), json);
             }
             else
@@ -183,6 +186,7 @@ namespace FreeMote.PsBuild
                 {
                     throw new NotSupportedException("PSBv4 cannot use legacy res.json format.");
                 }
+
                 File.WriteAllText(ChangeExtensionForOutputJson(filePath, ".res.json"),
                     JsonConvert.SerializeObject(resDictionary.Values.ToList(), Formatting.Indented));
             }
@@ -194,6 +198,7 @@ namespace FreeMote.PsBuild
             {
                 extension = "." + extension;
             }
+
             if (inputPath.EndsWith(".m")) //special handle for .m
             {
                 return inputPath + extension;
@@ -212,7 +217,8 @@ namespace FreeMote.PsBuild
         /// <param name="extractFormat">if extract, what format do you want</param>
         /// <param name="useResx">if false, use array-based resource json (legacy)</param>
         /// <param name="key">PSB CryptKey</param>
-        public static void DecompileToFile(PSB psb, string outputPath, Dictionary<string, object> additionalContext = null, PsbExtractOption extractOption = PsbExtractOption.Original,
+        public static void DecompileToFile(PSB psb, string outputPath, Dictionary<string, object> additionalContext = null,
+            PsbExtractOption extractOption = PsbExtractOption.Original,
             PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null)
         {
             var context = FreeMount.CreateContext(additionalContext);
@@ -236,8 +242,10 @@ namespace FreeMote.PsBuild
         /// <param name="key">PSB CryptKey</param>
         /// <param name="type">Specify PSB type, if not set, infer type automatically</param>
         /// <param name="contextDic">Context, used to set some configurations</param>
-        public static (string OutputPath, PSB Psb) DecompileToFile(string inputPath, PsbExtractOption extractOption = PsbExtractOption.Original,
-            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null, PsbType type = PsbType.PSB, Dictionary<string, object> contextDic = null)
+        public static (string OutputPath, PSB Psb) DecompileToFile(string inputPath,
+            PsbExtractOption extractOption = PsbExtractOption.Original,
+            PsbImageFormat extractFormat = PsbImageFormat.png, bool useResx = true, uint? key = null, PsbType type = PsbType.PSB,
+            Dictionary<string, object> contextDic = null)
         {
             var context = FreeMount.CreateContext(contextDic);
             if (key != null)
@@ -266,7 +274,8 @@ namespace FreeMote.PsBuild
         /// <param name="order"></param>
         /// <param name="format"></param>
         /// <returns>The unlinked PSB path</returns>
-        public static string UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name, PsbImageFormat format = PsbImageFormat.png)
+        public static string UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name,
+            PsbImageFormat format = PsbImageFormat.png)
         {
             if (!File.Exists(inputPath))
             {
@@ -300,7 +309,8 @@ namespace FreeMote.PsBuild
             if (outputUnlinkedPsb)
             {
                 psb.Merge();
-                psbSavePath = Path.ChangeExtension(inputPath, ".unlinked.psb"); //unlink only works with motion.psb so no need for ext rename
+                psbSavePath = Path.ChangeExtension(inputPath,
+                    ".unlinked.psb"); //unlink only works with motion.psb so no need for ext rename
                 File.WriteAllBytes(psbSavePath, psb.Build());
             }
 
@@ -344,6 +354,7 @@ namespace FreeMote.PsBuild
                 {
                     kv.Value.CombinedImage.Save(Path.Combine(dirPath, $"{kv.Key}{texExt}"), texFormat);
                 }
+
                 return;
             }
             else if (psb.Type == PsbType.Pimg)
@@ -377,6 +388,11 @@ namespace FreeMote.PsBuild
             {
                 Logger.LogWarn(
                     "[WARN] It seems that you are trying to extract from a body.bin file. You should extract body.bin by extracting info.psb.m file with `info-psb` command instead.");
+            }
+
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context), $"Context cannot be null, since {Context_MdfKeyLength} has to be set.");
             }
 
             if (File.Exists(filePath))
@@ -433,7 +449,7 @@ namespace FreeMote.PsBuild
                         {
                             try
                             {
-                                var unpacked = PsbExtension.MdfConvert(fs, shellType, context);
+                                using var unpacked = PsbExtension.MdfConvert(fs, shellType, context);
                                 psb = new PSB(unpacked);
                             }
                             catch (InvalidDataException)
@@ -444,6 +460,7 @@ namespace FreeMote.PsBuild
                                 {
                                     realName = RealNameRegex.Match(fileName).Value;
                                 }
+
                                 if (realName != fileName)
                                 {
                                     Logger.Log($"Trying file name: {realName}");
@@ -451,7 +468,7 @@ namespace FreeMote.PsBuild
                                     context[Context_FileName] = realName;
                                     context[Context_MdfKey] = archiveMdfKey;
                                     fs.Seek(0, SeekOrigin.Begin);
-                                    var unpacked = PsbExtension.MdfConvert(fs, shellType, context);
+                                    using var unpacked = PsbExtension.MdfConvert(fs, shellType, context);
                                     psb = new PSB(unpacked);
                                 }
                                 else
@@ -466,15 +483,15 @@ namespace FreeMote.PsBuild
                         }
                     }
 
-                    File.WriteAllText(Path.GetFullPath(filePath) + ".json", PsbDecompiler.Decompile(psb));
+                    File.WriteAllText(Path.GetFullPath(filePath) + ".json", Decompile(psb));
                     PsbResourceJson resx = new PsbResourceJson(psb, context);
                     if (!hasBody)
                     {
                         //Write resx.json
                         //resx.Context[Context_ArchiveSource] = new List<string> {name};
                         //File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
-                        context[Context_ArchiveSource] = new List<string> { name };
-                        PsbDecompiler.OutputResources(psb, FreeMount.CreateContext(context), Path.GetFullPath(filePath), PsbExtractOption.Extract);
+                        context[Context_ArchiveSource] = new List<string> {name};
+                        OutputResources(psb, FreeMount.CreateContext(context), Path.GetFullPath(filePath), PsbExtractOption.Extract);
                         return;
                     }
 
@@ -567,13 +584,16 @@ namespace FreeMote.PsBuild
                                     }
                                     catch (InvalidDataException e)
                                     {
+                                        ms.Dispose();
                                         ms = MsManager.GetStream(bodyBytes);
                                         mms = null;
                                     }
 
                                     if (mms != null)
                                     {
-                                        relativePath = possibleFileName;
+                                        relativePath = possibleFileName.Contains("/") ? possibleFileName :
+                                            pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
+                                            possibleFileName;
                                         finalContext = bodyContext;
                                         if (possibleFileName != possibleFileNames[0])
                                         {
@@ -586,14 +606,21 @@ namespace FreeMote.PsBuild
                             }
 
                             var finalPath = Path.Combine(extractDir, relativePath);
-                            mms ??= ms;
+                            if (mms == null)
+                            {
+                                mms = ms;
+                            }
+                            else
+                            {
+                                ms?.Dispose();
+                            }
 
                             if (extractAll && PsbFile.IsSignaturePsb(mms))
                             {
                                 try
                                 {
                                     PSB bodyPsb = new PSB(mms);
-                                    PsbDecompiler.DecompileToFile(bodyPsb,
+                                    DecompileToFile(bodyPsb,
                                         Path.Combine(extractDir, relativePath + ".json"), //important, must keep suffix for rebuild
                                         finalContext, PsbExtractOption.Extract);
                                 }
@@ -611,6 +638,18 @@ namespace FreeMote.PsBuild
                             {
                                 WriteAllBytes(finalPath, mms);
                                 //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
+                            }
+
+                            try
+                            {
+                                mms?.Dispose();
+                            }
+                            catch (Exception e)
+                            {
+                                // ignored
+#if DEBUG
+                                Debug.WriteLine(e);
+#endif
                             }
                         });
 
@@ -695,7 +734,7 @@ namespace FreeMote.PsBuild
                                 try
                                 {
                                     PSB bodyPsb = new PSB(mms);
-                                    PsbDecompiler.DecompileToFile(bodyPsb,
+                                    DecompileToFile(bodyPsb,
                                         Path.Combine(extractDir, relativePath + ".json"), //important, must keep suffix for rebuild
                                         finalContext, PsbExtractOption.Extract);
                                 }
@@ -715,10 +754,12 @@ namespace FreeMote.PsBuild
                                 //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                             }
                         }
+
+                        specialItemFileNames.AddRange(archiveItemFileNames.Values);
                     }
 
                     //Write resx.json
-                    resx.Context[Context_ArchiveSource] = new List<string> { name };
+                    resx.Context[Context_ArchiveSource] = new List<string> {name};
                     resx.Context[Context_MdfMtKey] = key;
                     resx.Context[Context_MdfKey] = archiveMdfKey;
                     resx.Context[Context_ArchiveItemFileNames] = specialItemFileNames;

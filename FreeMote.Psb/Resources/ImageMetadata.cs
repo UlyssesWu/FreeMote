@@ -173,7 +173,7 @@ namespace FreeMote.Psb
         public PsbSpec Spec { get; set; } = PsbSpec.other;
 
         public PsbType PsbType { get; set; } = PsbType.Motion;
-
+        
         private static bool IsPowOf2(int n)
         {
             return n >= 2 && (n & (n - 1)) == 0;
@@ -202,14 +202,21 @@ namespace FreeMote.Psb
 
             if (Compress == PsbCompressType.None)
             {
-                var bitDepth = PixelFormat.GetBitDepth();
-                if (bitDepth != null)
+                if (PsbType == PsbType.Tachie && IsPowOf2(Width) && IsPowOf2(Height)) //could be combined image
                 {
-                    var shouldBeLength = Math.Ceiling(Width * Height * (bitDepth.Value / 8.0));
-                    if (Math.Abs(shouldBeLength - Data.Length) > 1)
+                    //skip
+                }
+                else
+                {
+                    var bitDepth = PixelFormat.GetBitDepth();
+                    if (bitDepth != null)
                     {
-                        return (false,
-                            $"Data length check failed: Loaded content size = {Data.Length}, expected size = {shouldBeLength}");
+                        var shouldBeLength = Math.Ceiling(Width * Height * (bitDepth.Value / 8.0));
+                        if (Math.Abs(shouldBeLength - Data.Length) > 1)
+                        {
+                            return (false,
+                                $"Data length check failed: Loaded content size = {Data.Length}, expected size = {shouldBeLength}");
+                        }
                     }
                 }
             }

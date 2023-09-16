@@ -49,7 +49,8 @@ namespace FreeMote
             ms.WriteByte(0x78);
             ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
             using (DeflateStream deflateStream =
-                new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal))
+                   new DeflateStream(ms, Consts.ForceCompressionLevel != null ? Consts.ForceCompressionLevel.Value :
+                       fast ? CompressionLevel.Fastest : CompressionLevel.Optimal))
             {
                 input.CopyTo(deflateStream);
             }
@@ -70,7 +71,9 @@ namespace FreeMote
             ms.WriteByte(0x78);
             ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
             using (DeflateStream deflateStream =
-                new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
+                   new DeflateStream(ms,
+                       Consts.ForceCompressionLevel != null ? Consts.ForceCompressionLevel.Value :
+                       fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
             {
                 input.CopyTo(deflateStream);
             }

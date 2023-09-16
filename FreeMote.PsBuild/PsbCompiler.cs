@@ -553,11 +553,22 @@ namespace FreeMote.PsBuild
                     {
                         if (File.Exists(f)) //no need to compile
                         {
-                            files[infoFile] = (f, keepRaw ? ArchiveProcessMethod.None : ArchiveProcessMethod.Compile);
+                            files[infoFile] = (f, keepRaw ? ArchiveProcessMethod.None : ArchiveProcessMethod.EncodeMPack);
                         }
                         else if (File.Exists(source))
                         {
                             files[infoFile] = (f, ArchiveProcessMethod.Compile);
+                        }
+                    }
+                    else
+                    {
+                        if (File.Exists(source))
+                        {
+                            files[infoFile] = (f, ArchiveProcessMethod.Compile);
+                        }
+                        else if (File.Exists(f)) //no need to compile
+                        {
+                            files[infoFile] = (f, keepRaw ? ArchiveProcessMethod.None : ArchiveProcessMethod.EncodeMPack);
                         }
                     }
                 }
@@ -656,7 +667,8 @@ namespace FreeMote.PsBuild
                 }
             }
 
-            Logger.Log($"Packing {files.Count} files ...");
+            var compileCount = files.Values.Count(m => m.Method == ArchiveProcessMethod.Compile);
+            Logger.Log($"Packing {files.Count} files (compile: {compileCount}) ...");
             var bodyBinFileName = Path.GetFileName(jsonPath);
             var packageName = Path.GetFileNameWithoutExtension(bodyBinFileName);
 
@@ -703,18 +715,25 @@ namespace FreeMote.PsBuild
                     if (kv.Value.Method == ArchiveProcessMethod.EncodeMPack)
                     {
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
-
                         //using var fs = File.OpenRead(kv.Value.Path);
                         //https://docs.microsoft.com/en-us/dotnet/api/system.io.memorymappedfiles.memorymappedfile.createviewstream?view=net-6.0
                         //NOTE: To create a complete view of the memory-mapped file, specify 0 (zero) for the size parameter.
                         //If you do this, the size of the view might be larger than the size of the source file on disk.
                         //This is because views are provided in units of system pages, and the size of the view is rounded up to the next system page size.
                         var fileSize = new FileInfo(kv.Value.Path).Length;
-                        contents.Add((relativePathWithoutSuffix, context.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), defaultShellType))); //disposed later
+                        var mmStream = mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read);
+                        if (MPack.IsSignatureMPack(mmStream, out var currentShellType) && currentShellType == defaultShellType) //prevent multiple pack
+                        {
+                            contents.Add((relativePathWithoutSuffix, mmStream)); //disposed later
+                        }
+                        else
+                        {
+                            contents.Add((relativePathWithoutSuffix, context.PackToShell(mmStream, defaultShellType))); //disposed later
+                        }
                     }
                     else
                     {
-                        var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
+                        var content = LoadPsbAndContextFromJsonFile(kv.Value.Path);
                         var stream = content.Psb.ToStream();
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
                         if (!string.IsNullOrEmpty(shellType))

@@ -601,7 +601,7 @@ namespace FreeMote.Psb
         /// <param name="stream"></param>
         /// <param name="shellType"></param>
         /// <param name="context"></param>
-        /// <returns></returns>
+        /// <returns>a new stream unpacked from shell (RequireUsing); or could be the input stream with some tweaks</returns>
         internal static MemoryStream MdfConvert(Stream stream, string shellType, Dictionary<string, object> context = null)
         {
             var ctx = FreeMount.CreateContext(context);
@@ -1098,22 +1098,29 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="name"></param>
         /// <param name="suffix"></param>
+        /// <param name="keepDirectory">if true, the first result will keep folder (used in pack); if false, the folder is stripped (used in extract)</param>
         /// <returns></returns>
-        public static List<string> ArchiveInfoGetAllPossibleFileNames(string name, string suffix)
+        public static List<string> ArchiveInfoGetAllPossibleFileNames(string name, string suffix, bool keepDirectory = false)
         {
-            List<string> exts = new List<string>();
+            List<string> results = new List<string>();
             if (string.IsNullOrWhiteSpace(name))
             {
-                return exts;
+                return results;
             }
+
+            if (name.Contains("/") && !keepDirectory) //There is path, OMG
+            {
+                results.AddRange(ArchiveInfoGetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix, keepDirectory));
+            }
+
+            List<string> exts = new List<string>();
             var name2 = name;
             while (Path.GetExtension(name2) != string.Empty)
             {
                 exts.Add(Path.GetExtension(name2));
                 name2 = Path.ChangeExtension(name2, null);
             }
-
-            List<string> results = new List<string>();
+            
             if (exts.Count == 0)
             {
                 //"image/man003" -> man003.psb.m
@@ -1155,11 +1162,6 @@ namespace FreeMote.Psb
                 }
             }
 
-            if (name.Contains("/")) //There is path, OMG
-            {
-                results.AddRange(ArchiveInfoGetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix));
-            }
-
             //stress test
             //results.Reverse();
 
@@ -1185,7 +1187,7 @@ namespace FreeMote.Psb
                     //{
                     //    yield return fileName;
                     //}
-                    yield return ArchiveInfoGetAllPossibleFileNames(name, suffix).FirstOrDefault();
+                    yield return ArchiveInfoGetAllPossibleFileNames(name, suffix, true).FirstOrDefault();
                 }
             }
         }

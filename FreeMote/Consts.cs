@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.IO;
 
@@ -198,6 +199,11 @@ namespace FreeMote
         /// Output more logs
         /// </summary>
         public static bool Verbose { get; set; } = false;
+
+        /// <summary>
+        /// Override all compression settings
+        /// </summary>
+        public static CompressionLevel? ForceCompressionLevel { get; set; } = null;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

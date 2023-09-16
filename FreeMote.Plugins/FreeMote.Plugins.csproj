@@ -136,6 +136,7 @@ xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsbDecompile\$(O
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.PsBuild\$(OutDir)" /E /Y
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtConvert\$(OutDir)" /E /Y
 xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.EmtMake\$(OutDir)" /E /Y
-xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.Viewer\$(OutDir)" /E /Y</PostBuildEvent>
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tools.Viewer\$(OutDir)" /E /Y
+xcopy "$(TargetDir.TrimEnd('\'))" "$(SolutionDir)FreeMote.Tests\$(OutDir)" /E /Y</PostBuildEvent>
   </PropertyGroup>
 </Project>
