@@ -62,11 +62,11 @@ namespace FreeMote.Psb.Types
                         disableCombinedImage = true;
                     }
 
-                    if (psb.Platform == PsbSpec.ps3)
-                    {
-                        Logger.LogWarn("[WARN] PS3 PSB cannot be recompiled with combined image. Piece images will be used when compiling.");
-                        disableCombinedImage = true;
-                    }
+                    //if (psb.Platform == PsbSpec.ps3)
+                    //{
+                    //    Logger.LogWarn("[WARN] PS3 PSB cannot be recompiled with combined image. Piece images will be used when compiling.");
+                    //    disableCombinedImage = true;
+                    //}
 
                     if (!disableCombinedImage) //try only output combined image, but check if all resources are combined
                     {

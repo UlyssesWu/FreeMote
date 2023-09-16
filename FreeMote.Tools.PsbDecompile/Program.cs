@@ -49,13 +49,13 @@ namespace FreeMote.Tools.PsbDecompile
                 "Disable parallel processing (can be very slow)", CommandOptionType.NoValue, inherited: true);
             var optHex = app.Option("-hex|--json-hex", "(Json) Use hex numbers", CommandOptionType.NoValue, true);
             var optArray = app.Option("-indent|--json-array-indent", "(Json) Indent arrays", CommandOptionType.NoValue, true);
-            var optType = app.Option<PsbType>("-t|--type <TYPE>", "Set PSB type manually", CommandOptionType.SingleValue, inherited: true);
             var optDisableFlattenArray = app.Option("-dfa|--disable-flatten-array",
                 "Disable represent extra resource as flatten arrays", CommandOptionType.NoValue, inherited: true);
-            var optDisableCombinedImage = app.Option("-dci|--disable-combined-image",
-                "Output chunk images (pieces) for image (Tachie) PSB (legacy behaviour)", CommandOptionType.NoValue);
             var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
                 CommandOptionType.SingleValue, inherited: true);
+            var optType = app.Option<PsbType>("-t|--type <TYPE>", "Set PSB type manually", CommandOptionType.SingleValue, inherited: true);
+            var optDisableCombinedImage = app.Option("-dci|--disable-combined-image",
+                "Output chunk images (pieces) for image (Tachie) PSB (try this if you have problem on image type PSB)", CommandOptionType.NoValue);
 
             //args
             var argPath =
@@ -65,7 +65,7 @@ namespace FreeMote.Tools.PsbDecompile
             app.Command("image", imageCmd =>
             {
                 //help
-                imageCmd.Description = "Extract (combined) textures from image type PSBs (with \"imageList\")";
+                imageCmd.Description = "Extract (combined) images from image (Tachie) type PSBs (with \"imageList\")";
                 imageCmd.HelpOption();
                 imageCmd.ExtendedHelpText = @"
 Example:

@@ -48,7 +48,7 @@ namespace FreeMote
         /// </summary>
         Mmo = 3,
         /// <summary>
-        /// Images with Layouts (used in PS4, PSV)
+        /// Images with Layouts (used in PS*)
         /// </summary>
         Tachie = 4,
         /// <summary>
