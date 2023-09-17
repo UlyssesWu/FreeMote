@@ -472,7 +472,7 @@ namespace FreeMote.PsBuild
             int keyLen = 131, bool keepRaw = false)
         {
             if (!File.Exists(jsonPath)) return;
-            PSB infoPsb = PsbCompiler.LoadPsbFromJsonFile(jsonPath);
+            PSB infoPsb = LoadPsbFromJsonFile(jsonPath);
             if (infoPsb.Type != PsbType.ArchiveInfo)
             {
                 Logger.LogWarn($"[WARN] The json ({infoPsb.Type}) seems not to be an ArchiveInfo type.");
@@ -801,11 +801,11 @@ namespace FreeMote.PsBuild
                 //using var ms = mmFile.CreateViewStream();
                 foreach (var kv in files.OrderBy(f => f.Key, StringComparer.Ordinal))
                 { 
-                    Logger.Log($"Packing {kv.Key} ...");
+                    Logger.Log($"{(kv.Value.Method == ArchiveProcessMethod.Compile? "Compiling" : "Packing")} {kv.Key} ...");
                     var relativePathWithoutSuffix = PsbExtension.ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
                     if (fileInfoDic.ContainsKey(relativePathWithoutSuffix))
                     {
-                        Logger.LogWarn($"[WARN] {relativePathWithoutSuffix} is added before, skipping...");
+                        Logger.LogWarn($"[WARN] {relativePathWithoutSuffix} was added before, skipping...");
                         continue;
                     }
                     var fileNameWithSuffix = Path.GetFileName(kv.Key);

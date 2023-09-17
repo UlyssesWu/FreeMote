@@ -666,7 +666,7 @@ namespace FreeMote.PsBuild
 
                         foreach (var pair in dic)
                         {
-                            Logger.Log($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
+                            Logger.Log($"{(extractAll ? "Extracting" : "Unpacking")} {pair.Key} ...");
                             var range = ((PsbList) pair.Value);
                             var (start, len) = PsbExtension.ArchiveInfoGetItemPositionFromRangeList(range, archiveInfoType);
 
@@ -713,8 +713,9 @@ namespace FreeMote.PsBuild
 
                                     if (mms != null)
                                     {
-                                        relativePath = possibleFileName;
-                                        finalContext = bodyContext;
+                                        relativePath = possibleFileName.Contains("/") ? possibleFileName :
+                                            pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
+                                            possibleFileName; finalContext = bodyContext;
                                         if (possibleFileName != possibleFileNames[0])
                                         {
                                             Logger.Log($"  detected key name: {pair.Key} -> {possibleFileName}");
