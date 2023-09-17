@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace FreeMote
@@ -65,7 +64,7 @@ namespace FreeMote
 #endif
             if (OnLogError == null)
             {
-                Console.WriteLine(message);
+                Console.Error.WriteLine(message);
             }
             else
             {
@@ -101,7 +100,7 @@ namespace FreeMote
                 //OnLogWarn += message => Console.WriteLine($"[WARN] {message}");
                 //OnLogError += message => Console.WriteLine($"[ERROR] {message}");
                 OnLogWarn += Console.WriteLine;
-                OnLogError += Console.WriteLine;
+                OnLogError += Console.Error.WriteLine;
                 OnLogHint += Console.WriteLine;
             }
         }

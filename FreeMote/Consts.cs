@@ -111,6 +111,11 @@ namespace FreeMote
         public const string Context_DisableCombinedImage = "DisableCombinedImage";
 
         /// <summary>
+        /// (string?) body.bin file name
+        /// </summary>
+        public const string Context_BodyBinName = "BodyBinName";
+
+        /// <summary>
         /// 0x075BCD15
         /// </summary>
         public const uint Key1 = 123456789;

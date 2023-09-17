@@ -465,10 +465,11 @@ namespace FreeMote.PsBuild
         /// <param name="key">crypt key</param>
         /// <param name="intersect">Only pack files which existed in info.psb.m</param>
         /// <param name="preferPacked">Prefer using PSB files rather than json files in source folder</param>
+        /// <param name="extraContext">extra context</param>
         /// <param name="enableParallel">parallel process</param>
         /// <param name="keyLen">key length</param>
         /// <param name="keepRaw">Do not try to compile json or pack MDF</param>
-        public static void PackArchive(string jsonPath, string key, bool intersect, bool preferPacked, bool enableParallel = true,
+        public static void PackArchive(string jsonPath, string key, bool intersect, bool preferPacked, Dictionary<string, object> extraContext = null, bool enableParallel = true,
             int keyLen = 131, bool keepRaw = false)
         {
             if (!File.Exists(jsonPath)) return;
@@ -479,45 +480,57 @@ namespace FreeMote.PsBuild
             }
 
             var archiveInfoType = infoPsb.GetArchiveInfoType();
+            var jsonName = Path.GetFileName(jsonPath);
+            var packageName = Path.GetFileNameWithoutExtension(jsonName);
+            var coreName = PsbExtension.ArchiveInfoGetPackageName(packageName);
 
             var resx = PsbResourceJson.LoadByPsbJsonPath(jsonPath);
-            if (!resx.Context.ContainsKey(Context_ArchiveSource) ||
-                resx.Context[Context_ArchiveSource] == null)
+            var context = resx.Context;
+            FreeMountContext.Merge(extraContext, ref context);
+
+            if (!context.ContainsKey(Context_ArchiveSource) ||
+                context[Context_ArchiveSource] == null)
             {
-                Logger.Log("ArchiveSource must be specified in resx.json Context.");
-                return;
+                Logger.LogWarn($"ArchiveSource is not specified in resx.json Context. Use default: {coreName}");
+                context[Context_ArchiveSource] = coreName;
             }
+            var bodyBinFileName = string.IsNullOrEmpty(coreName) ? packageName + "_body.bin" : coreName + "_body.bin";
+            if (context.ContainsKey(Context_BodyBinName) && context[Context_BodyBinName] is string bbName && !string.IsNullOrWhiteSpace(bbName))
+            {
+                bodyBinFileName = bbName;
+            }
+            Logger.Log($"Body FileName: {bodyBinFileName}");
 
             var defaultShellType = "MDF";
-            if (resx.Context.ContainsKey(Context_PsbShellType) && resx.Context[Context_PsbShellType] is string st)
+            if (context.ContainsKey(Context_PsbShellType) && context[Context_PsbShellType] is string st)
             {
                 defaultShellType = st;
             }
 
             if (keyLen > 0)
             {
-                resx.Context[Context_MdfKeyLength] = keyLen;
+                context[Context_MdfKeyLength] = keyLen;
             }
 
             string infoKey = null;
-            if (resx.Context[Context_MdfKey] is string mdfKey)
+            if (context[Context_MdfKey] is string mdfKey)
             {
                 infoKey = mdfKey;
             }
 
             List<string> sourceDirs = null;
-            if (resx.Context[Context_ArchiveSource] is string path)
+            if (context[Context_ArchiveSource] is string path)
             {
                 sourceDirs = new List<string> { path };
             }
-            else if (resx.Context[Context_ArchiveSource] is IList paths)
+            else if (context[Context_ArchiveSource] is IList paths)
             {
                 sourceDirs = new List<string>(paths.Count);
                 sourceDirs.AddRange(from object p in paths select p.ToString());
             }
             else
             {
-                Logger.LogError("ArchiveSource incorrect.");
+                Logger.LogError("ArchiveSource incorrect: must be a path string or a list of string.");
                 return;
             }
 
@@ -530,13 +543,15 @@ namespace FreeMote.PsBuild
                 filter = PsbExtension.ArchiveInfoCollectFiles(infoPsb, suffix).Select(p => p.Replace('\\', '/')).ToHashSet();
             }
 
-            if (filter != null && resx.Context[Context_ArchiveItemFileNames] is IList fileNames)
+            if (filter != null && context[Context_ArchiveItemFileNames] is IList fileNames)
             {
                 foreach (var fileName in fileNames)
                 {
                     filter.Add(fileName.ToString());
                 }
             }
+
+            // local functions
 
             void CollectFilesFromList(string targetDir, HashSet<string> infoFiles)
             {
@@ -652,6 +667,20 @@ namespace FreeMote.PsBuild
                 }
             }
 
+            void AddFileInfo(PsbDictionary fileInfoDic, string relativePathWithoutSuffix, long bodyPos, long size)
+            {
+                if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+                {
+                    fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
+                        {PsbNull.Null, new PsbNumber(size), new PsbNumber(bodyPos)}); //We still have no idea about the first parameter
+                }
+                else
+                {
+                    fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
+                        {new PsbNumber(bodyPos), new PsbNumber(size)});
+                }
+            }
+
             //Collect files
             Logger.Log("Collecting files ...");
             foreach (var sourceDir in sourceDirs)
@@ -669,17 +698,12 @@ namespace FreeMote.PsBuild
 
             var compileCount = files.Values.Count(m => m.Method == ArchiveProcessMethod.Compile);
             Logger.Log($"Packing {files.Count} files (compile: {compileCount}) ...");
-            var bodyBinFileName = Path.GetFileName(jsonPath);
-            var packageName = Path.GetFileNameWithoutExtension(bodyBinFileName);
-
-            var coreName = PsbExtension.ArchiveInfoGetPackageName(packageName);
-            bodyBinFileName = string.IsNullOrEmpty(coreName) ? packageName + "_body.bin" : coreName + "_body.bin";
 
             //using var mmFile =
             //    MemoryMappedFile.CreateFromFile(bodyBinFileName, FileMode.Create, coreName, );
             using var bodyFs = File.OpenWrite(bodyBinFileName);
             var fileInfoDic = new PsbDictionary(files.Count);
-            var fmContext = FreeMount.CreateContext(resx.Context);
+            var fmContext = FreeMount.CreateContext(context);
             //byte[] bodyBin = null;
             if (enableParallel)
             {
@@ -695,13 +719,13 @@ namespace FreeMote.PsBuild
                         return;
                     }
 
-                    var mdfContext = new Dictionary<string, object>(resx.Context);
-                    var context = FreeMount.CreateContext(mdfContext);
+                    var mdfContext = new Dictionary<string, object>(context);
+                    var itemContext = FreeMount.CreateContext(mdfContext);
                     if (!string.IsNullOrEmpty(key))
                     {
                         mdfContext[Context_MdfKey] = key + fileNameWithSuffix;
                     }
-                    else if (resx.Context[Context_MdfMtKey] is string mtKey)
+                    else if (context[Context_MdfMtKey] is string mtKey)
                     {
                         mdfContext[Context_MdfKey] = mtKey + fileNameWithSuffix;
                     }
@@ -728,7 +752,7 @@ namespace FreeMote.PsBuild
                         }
                         else
                         {
-                            contents.Add((relativePathWithoutSuffix, context.PackToShell(mmStream, defaultShellType))); //disposed later
+                            contents.Add((relativePathWithoutSuffix, itemContext.PackToShell(mmStream, defaultShellType))); //disposed later
                         }
                     }
                     else
@@ -738,7 +762,7 @@ namespace FreeMote.PsBuild
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
                         if (!string.IsNullOrEmpty(shellType))
                         {
-                            var packedStream = context.PackToShell(stream, shellType); //disposed later
+                            var packedStream = itemContext.PackToShell(stream, shellType); //disposed later
                             stream.Dispose();
                             stream = packedStream;
                         }
@@ -753,24 +777,13 @@ namespace FreeMote.PsBuild
                 {
                     if (fileInfoDic.ContainsKey(item.Name))
                     {
-                        Logger.LogWarn($"[WARN] {item.Name} is added before, skipping...");
+                        Logger.LogWarn($"[WARN] {item.Name} was added before, skipping...");
                         item.Content.Dispose(); //Remember to dispose!
                         continue;
                     }
 
-                    if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
-                    {
-                        fileInfoDic.Add(item.Name,
-                            new PsbList
-                                {PsbNull.Null, new PsbNumber(item.Content.Length), new PsbNumber(bodyFs.Position)});
-                    }
-                    else
-                    {
-                        fileInfoDic.Add(item.Name,
-                            new PsbList
-                                {new PsbNumber(bodyFs.Position), new PsbNumber(item.Content.Length)});
-                    }
-
+                    AddFileInfo(fileInfoDic, item.Name, bodyFs.Position, item.Content.Length);
+                    
                     if (item.Content is MemoryStream ims)
                     {
                         ims.WriteTo(bodyFs);
@@ -815,16 +828,7 @@ namespace FreeMote.PsBuild
                         //using var fs = File.OpenRead(kv.Value.Path);
                         var fileSize = new FileInfo(kv.Value.Path).Length;
                         var fs = mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read);
-                        if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
-                        {
-                            fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
-                                {PsbNull.Null, new PsbNumber(fs.Length), new PsbNumber(bodyFs.Position)}); //We still have no idea about the first parameter
-                        }
-                        else
-                        {
-                            fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
-                                {new PsbNumber(bodyFs.Position), new PsbNumber(fs.Length)});
-                        }
+                        AddFileInfo(fileInfoDic, relativePathWithoutSuffix, bodyFs.Position, fs.Length);
 
                         fs.CopyTo(bodyFs); //CopyTo starts from current position, while WriteTo starts from 0. Use WriteTo if there is.
 
@@ -845,7 +849,7 @@ namespace FreeMote.PsBuild
                         {
                             fmContext.Context[Context_MdfKey] = key + fileNameWithSuffix;
                         }
-                        else if (resx.Context[Context_MdfMtKey] is string mtKey)
+                        else if (context[Context_MdfMtKey] is string mtKey)
                         {
                             fmContext.Context[Context_MdfKey] = mtKey + fileNameWithSuffix;
                         }
@@ -857,13 +861,12 @@ namespace FreeMote.PsBuild
                         using var mmFs = MemoryMappedFile.CreateFromFile(kv.Value.Path, FileMode.Open);
                         var fileSize = new FileInfo(kv.Value.Path).Length;
                         using var outputMdf = fmContext.PackToShell(mmFs.CreateViewStream(0, fileSize, MemoryMappedFileAccess.Read), defaultShellType);
-                        fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
-                            {new PsbNumber(bodyFs.Position), new PsbNumber(outputMdf.Length)});
+                        AddFileInfo(fileInfoDic, relativePathWithoutSuffix, bodyFs.Position, outputMdf.Length);
                         outputMdf.WriteTo(bodyFs);
                     }
                     else
                     {
-                        var content = PsbCompiler.LoadPsbAndContextFromJsonFile(kv.Value.Path);
+                        var content = LoadPsbAndContextFromJsonFile(kv.Value.Path);
                         if (!string.IsNullOrEmpty(key))
                         {
                             fmContext.Context[Context_MdfKey] = key + fileNameWithSuffix;
@@ -881,9 +884,8 @@ namespace FreeMote.PsBuild
                             stream.Dispose();
                             stream = packedStream;
                         }
-
-                        fileInfoDic.Add(relativePathWithoutSuffix, new PsbList
-                            {new PsbNumber(bodyFs.Position), new PsbNumber(stream.Length)});
+                        
+                        AddFileInfo(fileInfoDic, relativePathWithoutSuffix, bodyFs.Position, stream.Length);
                         stream.WriteTo(bodyFs);
                         stream.Dispose();
                     }

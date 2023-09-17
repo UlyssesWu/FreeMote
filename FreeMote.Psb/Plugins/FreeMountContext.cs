@@ -193,5 +193,19 @@ namespace FreeMote.Plugins
 
             return context;
         }
+
+        public static void Merge(Dictionary<string, object> from, ref Dictionary<string, object> to)
+        {
+            from ??= new Dictionary<string, object>();
+            if (to == null)
+            {
+                to = new Dictionary<string, object>(from);
+                return;
+            }
+            foreach (var kv in from)
+            {
+                to[kv.Key] = kv.Value;
+            }
+        }
     }
 }

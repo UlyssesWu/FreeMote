@@ -213,7 +213,7 @@ Example:
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
                 var optBody = archiveCmd.Option<string>("-b|--body <PATH>",
-                    "Set body.bin path. If not set, {name}_body.bin is used.",
+                    "Set body.bin path. Default={xxx}_body.bin",
                     CommandOptionType.SingleValue);
                 //var optNoFolder = archiveCmd.Option("-nf|--no-folder",
                 //    "extract all files into source folder root, ignore the folder structure described in info.psb. May overwrite files; Won't be able to repack.",
