@@ -400,6 +400,7 @@ namespace FreeMote.PsBuild
                 Logger.LogError($"Cannot find input file: {filePath}");
                 return;
             }
+
             var fileName = Path.GetFileName(filePath);
             var archiveMdfKey = key + fileName;
             context[Context_FileName] = fileName;
@@ -518,6 +519,7 @@ namespace FreeMote.PsBuild
                     Logger.LogWarn($"Archive root object ({rootKey}) is null!");
                     dic = new PsbDictionary();
                 }
+
                 var suffixList = (PsbList) psb.Objects["expire_suffix_list"];
                 var suffix = "";
                 if (suffixList.Count > 0)
@@ -728,7 +730,8 @@ namespace FreeMote.PsBuild
                                 {
                                     relativePath = possibleFileName.Contains("/") ? possibleFileName :
                                         pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
-                                        possibleFileName; finalContext = bodyContext;
+                                        possibleFileName;
+                                    finalContext = bodyContext;
                                     if (possibleFileName != possibleFileNames[0])
                                     {
                                         Logger.Log($"  detected key name: {pair.Key} -> {possibleFileName}");
@@ -782,6 +785,7 @@ namespace FreeMote.PsBuild
                 {
                     resx.Context[Context_BodyBinName] = bodyBinName;
                 }
+
                 File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
             }
             catch (Exception e)
