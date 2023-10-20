@@ -421,7 +421,17 @@ namespace FreeMote.PsBuild
             {
                 if (!File.Exists(bodyPath))
                 {
-                    Logger.LogWarn($"Can not find body from specified path: {bodyPath}");
+                    if (!Path.IsPathRooted(bodyPath) && Path.IsPathRooted(filePath))
+                    {
+                        var bodyFullPath = Path.Combine(Path.GetDirectoryName(filePath), bodyPath);
+                        if (File.Exists(bodyFullPath))
+                        {
+                            body = bodyFullPath;
+                            hasBody = true;
+                            bodyBinName = Path.GetFileName(bodyPath);
+                            Logger.Log($"Body FilePath: {bodyFullPath}");
+                        }
+                    }
                 }
                 else
                 {
@@ -429,6 +439,11 @@ namespace FreeMote.PsBuild
                     hasBody = true;
                     bodyBinName = Path.GetFileName(bodyPath);
                     Logger.Log($"Body FilePath: {bodyPath}");
+                }
+
+                if (!hasBody)
+                {
+                    Logger.LogWarn($"Can not find body from specified path: {bodyPath}");
                 }
             }
             else
