@@ -106,14 +106,14 @@
     <PackageReference Include="BCnEncoder.NetStd">
       <Version>2.1.0-CI00002</Version>
     </PackageReference>
+    <PackageReference Include="FreeMote.Psd">
+      <Version>2.5.1.15</Version>
+    </PackageReference>
     <PackageReference Include="FreeMote.XMemCompress">
       <Version>1.0.0.6</Version>
     </PackageReference>
     <PackageReference Include="K4os.Compression.LZ4.Streams">
-      <Version>1.3.5</Version>
-    </PackageReference>
-    <PackageReference Include="Paint.NET.PhotoShop">
-      <Version>2.5.1.13</Version>
+      <Version>1.3.6</Version>
     </PackageReference>
     <PackageReference Include="VGAudio">
       <Version>2.2.1-CI00002</Version>
@@ -126,6 +126,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />

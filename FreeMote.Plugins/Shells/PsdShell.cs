@@ -187,36 +187,7 @@ namespace FreeMote.Plugins.Shells
 
                         continue;
                     }
-
-                    var bitmap = layer.GetBitmap();
-                    bool useTlg = true;
-                    var imageMetadata = new ImageMetadata() {LayerType = id, Resource = new PsbResource(), Compress = PsbCompressType.Tlg};
-                    imageMetadata.SetData(bitmap);
-                    if (imageMetadata.Data == null)
-                    {
-                        useTlg = false;
-                        Logger.LogWarn(
-                            $"Cannot convert bitmap to TLG, maybe FreeMote.Plugins.x64 is missing, or you're not working on Windows.");
-                        using var pngMs = new MemoryStream();
-                        bitmap.Save(pngMs, ImageFormat.Png);
-                        imageMetadata.Data = pngMs.ToArray();
-                    }
-
-                    int sameImageId = -1;
-                    if (imageMetadata.Data != null)
-                    {
-                        var same = imageMetadatas.FirstOrDefault(r => r.Data.SequenceEqual(imageMetadata.Data));
-                        if (same != null)
-                        {
-                            sameImageId = same.LayerType;
-                        }
-                    }
-
-                    if (sameImageId < 0)
-                    {
-                        imageMetadatas.Add(imageMetadata);
-                    }
-
+                    
                     var rect = layer.Rect;
                     var left = rect.X;
                     var top = rect.Y;
@@ -241,17 +212,50 @@ namespace FreeMote.Plugins.Shells
                         obj["group_layer_id"] = currentGroupId.Value.ToPsbNumber();
                     }
 
-                    if (sameImageId < 0)
+                    var bitmap = layer.GetBitmap();
+                    ImageMetadata imageMetadata = null;
+                    if (bitmap != null)
                     {
-                        if (id >= 0)
+                        bool useTlg = true;
+                        imageMetadata = new ImageMetadata() { LayerType = id, Resource = new PsbResource(), Compress = PsbCompressType.Tlg };
+                        imageMetadata.SetData(bitmap);
+                        if (imageMetadata.Data == null)
                         {
-                            //Set resource here
-                            psb.Objects[$"{id}.{(useTlg ? "tlg" : "png")}"] = imageMetadata.Resource;
+                            useTlg = false;
+                            Logger.LogWarn(
+                                $"Cannot convert bitmap to TLG, maybe FreeMote.Plugins.x64 is missing, or you're not working on Windows.");
+                            using var pngMs = new MemoryStream();
+                            bitmap.Save(pngMs, ImageFormat.Png);
+                            imageMetadata.Data = pngMs.ToArray();
                         }
-                    }
-                    else
-                    {
-                        obj["same_image"] = sameImageId.ToPsbNumber();
+
+                        int sameImageId = -1;
+                        if (imageMetadata.Data != null)
+                        {
+                            var same = imageMetadatas.FirstOrDefault(r => r.Data.SequenceEqual(imageMetadata.Data));
+                            if (same != null)
+                            {
+                                sameImageId = same.LayerType;
+                            }
+                        }
+
+                        if (sameImageId < 0)
+                        {
+                            imageMetadatas.Add(imageMetadata);
+                        }
+
+                        if (sameImageId < 0)
+                        {
+                            if (id >= 0)
+                            {
+                                //Set resource here
+                                psb.Objects[$"{id}.{(useTlg ? "tlg" : "png")}"] = imageMetadata.Resource;
+                            }
+                        }
+                        else
+                        {
+                            obj["same_image"] = sameImageId.ToPsbNumber();
+                        }
                     }
 
                     layers.Add(obj);
@@ -341,7 +345,7 @@ namespace FreeMote.Plugins.Shells
                 }
             }
 
-            var psd = ConvertToPsd(painter, Width, Height);
+            var psd = ConvertEmtToPsd(painter, Width, Height);
             var ms = new MemoryStream();
             psd.Save(ms, Encoding.UTF8);
             return ms;
@@ -483,7 +487,7 @@ namespace FreeMote.Plugins.Shells
             return ms;
         }
 
-        private PsdFile ConvertToPsd(EmtPainter painter, int width, int height)
+        private PsdFile ConvertEmtToPsd(EmtPainter painter, int width, int height)
         {
             float offsetX = 0;
             float offsetY = 0;
