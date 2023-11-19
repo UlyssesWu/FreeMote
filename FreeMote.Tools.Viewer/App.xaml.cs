@@ -18,6 +18,7 @@ namespace FreeMote.Tools.Viewer
         public static uint Height { get; set; } = 720;
         public static bool DirectLoad { get; set; } = false;
         public static List<string> PsbPaths { get; set; }
+        public static List<string> TempFilePaths { get; set; } = new List<string>();
         internal static bool NeedRemoveTempFile { get; set; } = false;
     }
 
@@ -106,6 +107,7 @@ namespace FreeMote.Tools.Viewer
                             var tempFile = Path.GetTempFileName();
                             File.WriteAllBytes(tempFile, psb.Build());
                             Core.PsbPaths[i] = tempFile;
+                            Core.TempFilePaths.Add(tempFile);
                             Core.NeedRemoveTempFile = true;
                         }
 
@@ -161,15 +163,17 @@ namespace FreeMote.Tools.Viewer
 
         private static void CleanTempFiles()
         {
-            if (Core.NeedRemoveTempFile && Core.PsbPaths?.Count > 0)
+            if (Core.NeedRemoveTempFile && Core.TempFilePaths?.Count > 0)
             {
-                foreach (var psbPath in Core.PsbPaths)
+                foreach (var tempPath in Core.TempFilePaths)
                 {
-                    File.Delete(psbPath);
+                    File.Delete(tempPath);
                 }
 
                 Core.NeedRemoveTempFile = false;
             }
+
+            Core.TempFilePaths = new List<string>();
         }
 
         private static string PrintHelp()
