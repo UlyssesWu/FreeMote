@@ -139,7 +139,7 @@ namespace FreeMote.Plugins
         /// <summary>
         /// [RequireUsing] Use plugins to compress PSB to shell type
         /// </summary>
-        /// <param name="input">The input stream. Might be disposed!</param>
+        /// <param name="input">The input stream. Usually won't be disposed, but has exception</param>
         /// <param name="type">type name should be Upper case, e.g. MDF</param>
         /// <returns></returns>
         public MemoryStream PackToShell(Stream input, string type = null)
