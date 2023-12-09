@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("FreeMote")]
-[assembly: AssemblyCopyright("Copyright © Ulysses 2017-2023")]
+[assembly: AssemblyCopyright("Copyright © Ulysses 2017-2024")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]
 [assembly: AssemblyCulture("")]
 
@@ -14,5 +14,5 @@ using System.Runtime.InteropServices;
 
 [assembly: Guid("d877dbdb-41d7-4c6f-9a46-957cecdaefa8")]
 
-[assembly: AssemblyVersion("3.7.0.0")]
-[assembly: AssemblyFileVersion("3.7.0.0")]
+[assembly: AssemblyVersion("3.8.0.0")]
+[assembly: AssemblyFileVersion("3.8.0.0")]

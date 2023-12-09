@@ -315,6 +315,7 @@ namespace FreeMote
         VAG,
         ADPCM,
         OGG,
+        P16,
     }
 
     public enum PsbAudioPan

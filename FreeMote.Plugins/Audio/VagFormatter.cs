@@ -58,6 +58,8 @@ namespace FreeMote.Plugins.Audio
 
         public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
+            bool hasTool = File.Exists(ToolPath);
+
             VagFile vag = new VagFile();
             if (vag.LoadFromStream(new MemoryStream(archData.Data.Data)))
             {
