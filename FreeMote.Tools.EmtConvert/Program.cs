@@ -547,7 +547,7 @@ Example:
                             {
                                 foreach (var suffix in suffixList)
                                 {
-                                    var allPossibleNames = PsbExtension.ArchiveInfoGetAllPossibleFileNames(fileName, suffix);
+                                    var allPossibleNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(fileName, suffix);
 
                                     foreach (var possibleName in allPossibleNames)
                                     {

@@ -356,14 +356,14 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestArchiveInfoGetAllPossibleFileNames()
         {
-            var results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("scenario/ca01_06.txt.scn.m", ".psb.m");
+            var results = PsbExtension.ArchiveInfo_GetAllPossibleFileNames("scenario/ca01_06.txt.scn.m", ".psb.m");
             foreach (var result in results)
             {
                 Console.WriteLine(result);
             }
 
             Console.WriteLine();
-            results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("up05_10_03.txt", ".scn.m");
+            results = PsbExtension.ArchiveInfo_GetAllPossibleFileNames("up05_10_03.txt", ".scn.m");
             foreach (var result in results)
             {
                 Console.WriteLine(result);

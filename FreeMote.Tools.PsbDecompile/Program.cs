@@ -400,6 +400,17 @@ Example:
         static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.png,
             uint? key = null, PsbType type = PsbType.PSB, Dictionary<string, object> context = null)
         {
+            if (path.ToLowerInvariant().EndsWith("_body.bin"))
+            {
+                var dir = Path.GetDirectoryName(path);
+                var packageName = PsbExtension.ArchiveInfo_GetPackageNameFromBodyBin(Path.GetFileName(path)) + "_info.psb.m";
+                var infoPath = Path.Combine(dir ?? "", packageName);
+                if (File.Exists(infoPath))
+                {
+                    Logger.LogWarn($"[WARN] It seems that you are trying to decompile a body.bin which is NOT supported. You should extract body.bin by `info-psb {packageName}` command instead.");
+                }
+            }
+
             var name = Path.GetFileNameWithoutExtension(path);
             Console.WriteLine($"Decompiling: {name}");
 
@@ -412,7 +423,7 @@ Example:
                     : PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type, contextDic: context);
                 if (psb.Type == PsbType.ArchiveInfo)
                 {
-                    Console.WriteLine(
+                    Logger.LogWarn(
                         $"[INFO] {name} is an Archive Info PSB. Use `info-psb` command on this PSB to extract content from body.bin .");
                 }
             }

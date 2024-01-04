@@ -19,6 +19,10 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("FreeMote.Psb")]
 [assembly: InternalsVisibleTo("FreeMote.Plugins")]
 [assembly: InternalsVisibleTo("FreeMote.Tests")]
+[assembly: InternalsVisibleTo("PsbDecompile")]
+[assembly: InternalsVisibleTo("PsBuild")]
+[assembly: InternalsVisibleTo("EmtConvert")]
+[assembly: InternalsVisibleTo("EmtMake")]
 
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("3.7.0.0")]

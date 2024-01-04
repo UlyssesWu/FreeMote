@@ -1051,7 +1051,7 @@ namespace FreeMote.Psb
         /// <param name="fileName"></param>
         /// <param name="suffix"></param>
         /// <returns></returns>
-        public static string ArchiveInfoGetFileNameRemoveSuffix(string fileName, string suffix)
+        public static string ArchiveInfo_GetFileNameRemoveSuffix(string fileName, string suffix)
         {
             if (string.IsNullOrEmpty(suffix))
             {
@@ -1072,7 +1072,7 @@ namespace FreeMote.Psb
         /// <param name="name"></param>
         /// <param name="suffix"></param>
         /// <returns></returns>
-        public static string ArchiveInfoGetFileNameAppendSuffix(string name, string suffix)
+        public static string ArchiveInfo_GetFileNameAppendSuffix(string name, string suffix)
         {
             //if a file name ends with .xxx.m (like abc.nut.m), it's a naughty bad file with its own suffix. However, abc.m is not considered as such
             if ((name.EndsWith(".m") && name.Count(c => c == '.') > 1) || name.EndsWith(".psb"))
@@ -1100,7 +1100,7 @@ namespace FreeMote.Psb
         /// <param name="suffix"></param>
         /// <param name="keepDirectory">if true, the first result will keep folder (used in pack); if false, the folder is stripped (used in extract)</param>
         /// <returns></returns>
-        public static List<string> ArchiveInfoGetAllPossibleFileNames(string name, string suffix, bool keepDirectory = false)
+        public static List<string> ArchiveInfo_GetAllPossibleFileNames(string name, string suffix, bool keepDirectory = false)
         {
             List<string> results = new List<string>();
             if (string.IsNullOrWhiteSpace(name))
@@ -1110,7 +1110,7 @@ namespace FreeMote.Psb
 
             if (name.Contains("/") && !keepDirectory) //There is path, OMG
             {
-                results.AddRange(ArchiveInfoGetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix, keepDirectory));
+                results.AddRange(ArchiveInfo_GetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix, keepDirectory));
             }
 
             List<string> exts = new List<string>();
@@ -1174,7 +1174,7 @@ namespace FreeMote.Psb
         /// <param name="psb"></param>
         /// <param name="suffix"></param>
         /// <returns></returns>
-        public static IEnumerable<string> ArchiveInfoCollectFiles(PSB psb, string suffix)
+        public static IEnumerable<string> ArchiveInfo_CollectFiles(PSB psb, string suffix)
         {
             var archiveInfoType = psb.GetArchiveInfoType();
             var rootKey = archiveInfoType.GetRootKey();
@@ -1187,7 +1187,7 @@ namespace FreeMote.Psb
                     //{
                     //    yield return fileName;
                     //}
-                    yield return ArchiveInfoGetAllPossibleFileNames(name, suffix, true).FirstOrDefault();
+                    yield return ArchiveInfo_GetAllPossibleFileNames(name, suffix, true).FirstOrDefault();
                 }
             }
         }
@@ -1197,7 +1197,7 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="psb"></param>
         /// <returns></returns>
-        public static string ArchiveInfoGetSuffix(PSB psb)
+        public static string ArchiveInfo_GetSuffix(PSB psb)
         {
             var suffix = "";
             if (psb.Objects.ContainsKey("expire_suffix_list") &&
@@ -1218,9 +1218,13 @@ namespace FreeMote.Psb
         /// Get package name from a string like {package name}_info.psb.m
         /// </summary>
         /// <param name="fileName">e.g. {package name}_info.psb.m</param>
-        /// <returns>{package name}, can be null if failed</returns>
-        public static string ArchiveInfoGetPackageName(string fileName)
+        /// <returns>{package name}, can be empty if failed</returns>
+        public static string ArchiveInfo_GetPackageNameFromInfoPsb(string fileName)
         {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return string.Empty;
+            }
             var nameSlicePos = fileName.IndexOf("_info.", StringComparison.Ordinal);
             string name = null;
             if (nameSlicePos > 0)
@@ -1240,12 +1244,41 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
+        /// Get package name from a string like {package name}_body.bin
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns>{package name}, can be empty if failed</returns>
+        public static string ArchiveInfo_GetPackageNameFromBodyBin(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return string.Empty;
+            }
+            var nameSlicePos = fileName.IndexOf("_body.", StringComparison.Ordinal);
+            string name = null;
+            if (nameSlicePos > 0)
+            {
+                name = fileName.Substring(0, nameSlicePos);
+            }
+            else
+            {
+                nameSlicePos = fileName.IndexOf("body.", StringComparison.Ordinal);
+                if (nameSlicePos > 0)
+                {
+                    name = fileName.Substring(0, nameSlicePos);
+                }
+            }
+
+            return name;
+        }
+
+        /// <summary>
         /// Get an item's start and length info from info.psb.m
         /// </summary>
         /// <param name="range"></param>
         /// <param name="archiveInfoType"></param>
         /// <returns></returns>
-        public static (uint Start, int Length) ArchiveInfoGetItemPositionFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
+        public static (uint Start, int Length) ArchiveInfo_GetItemPositionFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
         {
             if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
             {

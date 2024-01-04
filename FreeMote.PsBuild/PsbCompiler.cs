@@ -482,7 +482,7 @@ namespace FreeMote.PsBuild
             var archiveInfoType = infoPsb.GetArchiveInfoType();
             var jsonName = Path.GetFileName(jsonPath);
             var packageName = Path.GetFileNameWithoutExtension(jsonName);
-            var coreName = PsbExtension.ArchiveInfoGetPackageName(packageName);
+            var coreName = PsbExtension.ArchiveInfo_GetPackageNameFromInfoPsb(packageName);
 
             var resx = PsbResourceJson.LoadByPsbJsonPath(jsonPath);
             var context = resx.Context;
@@ -536,11 +536,11 @@ namespace FreeMote.PsBuild
 
             var baseDir = Path.GetDirectoryName(jsonPath);
             var files = new Dictionary<string, (string Path, ArchiveProcessMethod Method)>();
-            var suffix = PsbExtension.ArchiveInfoGetSuffix(infoPsb);
+            var suffix = PsbExtension.ArchiveInfo_GetSuffix(infoPsb);
             HashSet<string> filter = null;
             if (intersect) //only collect files appeared in json
             {
-                filter = PsbExtension.ArchiveInfoCollectFiles(infoPsb, suffix).Select(p => p.Replace('\\', '/')).ToHashSet();
+                filter = PsbExtension.ArchiveInfo_CollectFiles(infoPsb, suffix).Select(p => p.Replace('\\', '/')).ToHashSet();
             }
 
             if (filter != null && context[Context_ArchiveItemFileNames] is IList fileNames)
@@ -710,7 +710,7 @@ namespace FreeMote.PsBuild
                 var contents = new ConcurrentBag<(string Name, Stream Content)>();
                 Parallel.ForEach(files, (kv) =>
                 {
-                    var relativePathWithoutSuffix = PsbExtension.ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+                    var relativePathWithoutSuffix = PsbExtension.ArchiveInfo_GetFileNameRemoveSuffix(kv.Key, suffix);
                     var fileNameWithSuffix = Path.GetFileName(kv.Key);
 
                     if (kv.Value.Method == ArchiveProcessMethod.None)
@@ -815,7 +815,7 @@ namespace FreeMote.PsBuild
                 foreach (var kv in files.OrderBy(f => f.Key, StringComparer.Ordinal))
                 { 
                     Logger.Log($"{(kv.Value.Method == ArchiveProcessMethod.Compile? "Compiling" : "Packing")} {kv.Key} ...");
-                    var relativePathWithoutSuffix = PsbExtension.ArchiveInfoGetFileNameRemoveSuffix(kv.Key, suffix);
+                    var relativePathWithoutSuffix = PsbExtension.ArchiveInfo_GetFileNameRemoveSuffix(kv.Key, suffix);
                     if (fileInfoDic.ContainsKey(relativePathWithoutSuffix))
                     {
                         Logger.LogWarn($"[WARN] {relativePathWithoutSuffix} was added before, skipping...");

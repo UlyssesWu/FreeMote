@@ -407,8 +407,8 @@ namespace FreeMote.PsBuild
             context[Context_MdfKey] = archiveMdfKey;
 
             var dir = Path.GetDirectoryName(Path.GetFullPath(filePath));
-            var name = PsbExtension.ArchiveInfoGetPackageName(fileName);
-            if (name == null)
+            var name = PsbExtension.ArchiveInfo_GetPackageNameFromInfoPsb(fileName);
+            if (string.IsNullOrEmpty(name))
             {
                 Logger.LogWarn($"File name incorrect: {fileName}");
                 name = fileName;
@@ -567,7 +567,7 @@ namespace FreeMote.PsBuild
                     {
                         //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
                         var range = (PsbList) pair.Value;
-                        var (start, len) = PsbExtension.ArchiveInfoGetItemPositionFromRangeList(range, archiveInfoType);
+                        var (start, len) = PsbExtension.ArchiveInfo_GetItemPositionFromRangeList(range, archiveInfoType);
 
                         if (start + len > fileLength)
                         {
@@ -590,7 +590,7 @@ namespace FreeMote.PsBuild
 
                         MPack.IsSignatureMPack(bodyBytes, out var shellType);
                         //var shellType = MdfFile.IsSignatureMdf(bodyBytes) ? "MDF" : "";
-                        var possibleFileNames = PsbExtension.ArchiveInfoGetAllPossibleFileNames(pair.Key, suffix);
+                        var possibleFileNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(pair.Key, suffix);
                         var relativePath = pair.Key;
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
@@ -698,7 +698,7 @@ namespace FreeMote.PsBuild
                     {
                         Logger.Log($"{(extractAll ? "Extracting" : "Unpacking")} {pair.Key} ...");
                         var range = ((PsbList) pair.Value);
-                        var (start, len) = PsbExtension.ArchiveInfoGetItemPositionFromRangeList(range, archiveInfoType);
+                        var (start, len) = PsbExtension.ArchiveInfo_GetItemPositionFromRangeList(range, archiveInfoType);
 
                         using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
                         var bodyBytes = new byte[len];
@@ -713,7 +713,7 @@ namespace FreeMote.PsBuild
                         }
 
                         MPack.IsSignatureMPack(bodyBytes, out var shellType);
-                        var possibleFileNames = PsbExtension.ArchiveInfoGetAllPossibleFileNames(pair.Key, suffix);
+                        var possibleFileNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(pair.Key, suffix);
                         var relativePath = pair.Key;
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
