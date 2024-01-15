@@ -47,10 +47,16 @@ namespace FreeMote.PsBuild.Converters
                 {
                     resourceData = RL.Decompress(resourceData);
                 }
-                if (resMd.PixelFormat == PsbPixelFormat.DXT5)
+                else if (resMd.PixelFormat == PsbPixelFormat.DXT5)
                 {
                     resourceData = RL.GetPixelBytesFromImage(
                         DxtUtil.Dxt5Decode(resourceData, resMd.Width, resMd.Height), toPixelFormat);
+                    resMd.TypeString.Value = toPixelFormat.ToStringForPsb();
+                }
+                else if (resMd.PixelFormat == PsbPixelFormat.DXT1)
+                {
+                    resourceData = RL.GetPixelBytesFromImage(
+                        DxtUtil.Dxt1Decode(resourceData, resMd.Width, resMd.Height), toPixelFormat);
                     resMd.TypeString.Value = toPixelFormat.ToStringForPsb();
                 }
                 else

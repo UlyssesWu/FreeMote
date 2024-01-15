@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("FreeMote")]
-[assembly: AssemblyCopyright("Copyright © Ulysses 2017-2023")]
+[assembly: AssemblyCopyright("Copyright © Ulysses 2017-2024")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +19,11 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("FreeMote.Psb")]
 [assembly: InternalsVisibleTo("FreeMote.Plugins")]
 [assembly: InternalsVisibleTo("FreeMote.Tests")]
+[assembly: InternalsVisibleTo("PsbDecompile")]
+[assembly: InternalsVisibleTo("PsBuild")]
+[assembly: InternalsVisibleTo("EmtConvert")]
+[assembly: InternalsVisibleTo("EmtMake")]
 
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.4.2.0")]
-[assembly: AssemblyFileVersion("3.4.2.0")]
+[assembly: AssemblyVersion("3.7.0.0")]
+[assembly: AssemblyFileVersion("3.7.1.0")]

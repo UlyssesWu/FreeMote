@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -833,6 +834,30 @@ namespace FreeMote.Psb
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Remove invalid chars in string for path
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static string EscapeStringForPath(string name)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var n = name.IndexOfAny(invalidChars) != -1 ? string.Join("_", name.Split(invalidChars)) : name;
+            return n.StartsWith("..") ? n.TrimStart('.') : n;
+        }
+
+        public static SizeF MeasureString(string s, Font font)
+        {
+            SizeF result;
+            using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit; 
+                result = g.MeasureString(s, font);
+            }
+
+            return result;
         }
     }
 }

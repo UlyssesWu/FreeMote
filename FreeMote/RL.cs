@@ -51,6 +51,10 @@ namespace FreeMote
                 case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref data);
                     break;
+                case PsbPixelFormat.DXT1:
+                    data = DxtUtil.DecompressDxt1(data, width, height);
+                    Switch_0_2(ref data); //DXT1(for win) need conversion
+                    break;
                 case PsbPixelFormat.DXT5:
                     data = DxtUtil.DecompressDxt5(data, width, height);
                     Switch_0_2(ref data); //DXT5(for win) need conversion
@@ -77,10 +81,21 @@ namespace FreeMote
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     data = PostProcessing.FlipTexturePs3(data, width, height, bmp.PixelFormat);
                     break;
+                case PsbPixelFormat.FlipBeRGBA8_SW:
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.FlipTexturePs3(data, width, height, bmp.PixelFormat);
+                    Switch_0_2(ref data);
+                    Argb2Rgba(ref data, true);
+                    break;
                 case PsbPixelFormat.LeRGBA4444_SW:
                     data = Argb428(data);
                     //Rgba2Argb(ref data);
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.TileLeRGBA4444_SW:
+                    data = Argb428(data);
+                    //Rgba2Argb(ref data);
+                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.TileLeRGBA8_SW:
                     data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
@@ -196,6 +211,10 @@ namespace FreeMote
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb2A8L8(result);
                     break;
+                case PsbPixelFormat.DXT1:
+                    //Switch_0_2(ref result);
+                    result = DxtUtil.Dxt1Encode(result, bmp.Width, bmp.Height);
+                    break;
                 case PsbPixelFormat.DXT5:
                     //Switch_0_2(ref result);
                     result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
@@ -210,6 +229,12 @@ namespace FreeMote
                 case PsbPixelFormat.FlipLeRGBA8_SW:
                     result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    break;
+                case PsbPixelFormat.FlipBeRGBA8_SW:
+                    result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    Argb2Rgba(ref result);
+                    Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.TileLeRGBA8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
@@ -250,6 +275,10 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.LeRGBA4444_SW:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = Argb428(result, false);
+                    break;
+                case PsbPixelFormat.TileLeRGBA4444_SW:
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.RGBA5650:
@@ -494,7 +523,7 @@ namespace FreeMote
         /// RGBA(BE) -> ARGB(LE BGRA) (switch A)
         /// </summary>
         /// <param name="bytes"></param>
-        /// <param name="reverse"></param>
+        /// <param name="reverse">false: ROR; true: ROL</param>
         public static unsafe void Argb2Rgba(ref byte[] bytes, bool reverse = false)
         {
             //Actually bgra -> abgr

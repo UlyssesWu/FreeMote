@@ -6,11 +6,10 @@ using FreeMote.Psb;
 
 namespace FreeMote.Plugins
 {
-
     public class FreeMountContext
     {
         public PsbImageFormat ImageFormat { get; set; } = PsbImageFormat.png;
-        
+
         public Dictionary<string, object> Context { get; set; }
 
         public FreeMountContext(Dictionary<string, object> context)
@@ -36,7 +35,7 @@ namespace FreeMote.Plugins
                 return false;
             }
 
-            result = (T)Context[key];
+            result = (T) Context[key];
             return true;
         }
 
@@ -46,7 +45,8 @@ namespace FreeMote.Plugins
             set => Context[Consts.Context_PsbShellType] = value;
         }
 
-        public bool HasShell => Context.ContainsKey(Consts.Context_PsbShellType) && Context[Consts.Context_PsbShellType] != null && !string.IsNullOrEmpty(Context[Consts.Context_PsbShellType].ToString());
+        public bool HasShell => Context.ContainsKey(Consts.Context_PsbShellType) && Context[Consts.Context_PsbShellType] != null &&
+                                !string.IsNullOrEmpty(Context[Consts.Context_PsbShellType].ToString());
 
         public bool SupportImageExt(string ext)
         {
@@ -81,7 +81,8 @@ namespace FreeMote.Plugins
         /// <param name="waveExt">"ext" in ArchData</param>
         /// <param name="md"></param>
         /// <returns></returns>
-        public bool WaveToArchData(AudioMetadata md, IArchData archData, string ext, in byte[] wave, string fileName = "", string waveExt = ".wav")
+        public bool WaveToArchData(AudioMetadata md, IArchData archData, string ext, in byte[] wave, string fileName = "",
+            string waveExt = ".wav")
         {
             return FreeMount._.WaveToArchData(md, archData, ext, wave, fileName, waveExt, Context);
         }
@@ -138,7 +139,7 @@ namespace FreeMote.Plugins
         /// <summary>
         /// [RequireUsing] Use plugins to compress PSB to shell type
         /// </summary>
-        /// <param name="input">The input stream. Might be disposed!</param>
+        /// <param name="input">The input stream. Usually won't be disposed, but has exception</param>
         /// <param name="type">type name should be Upper case, e.g. MDF</param>
         /// <returns></returns>
         public MemoryStream PackToShell(Stream input, string type = null)
@@ -177,6 +178,34 @@ namespace FreeMote.Plugins
             }
 
             return stream;
+        }
+
+        public static Dictionary<string, object> CreateForArchive(int mdfKeyLength = 0x83, string shellType = null)
+        {
+            var context = new Dictionary<string, object>()
+            {
+                {Consts.Context_MdfKeyLength, mdfKeyLength},
+            };
+            if (shellType != null)
+            {
+                context[Consts.Context_PsbShellType] = shellType;
+            }
+
+            return context;
+        }
+
+        public static void Merge(Dictionary<string, object> from, ref Dictionary<string, object> to)
+        {
+            from ??= new Dictionary<string, object>();
+            if (to == null)
+            {
+                to = new Dictionary<string, object>(from);
+                return;
+            }
+            foreach (var kv in from)
+            {
+                to[kv.Key] = kv.Value;
+            }
         }
     }
 }

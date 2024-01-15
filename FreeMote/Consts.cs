@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.IO;
 
@@ -50,6 +50,11 @@ namespace FreeMote
         public const string Context_PsbShellType = "PsbShellType";
 
         /// <summary>
+        /// (string)
+        /// </summary>
+        public const string Context_FileName = "FileName";
+
+        /// <summary>
         /// (uint?)
         /// </summary>
         public const string Context_CryptKey = "CryptKey";
@@ -74,6 +79,11 @@ namespace FreeMote
         /// (List) Archive Item Special FileNames
         /// </summary>
         public const string Context_ArchiveItemFileNames = "ArchiveItemFileNames";
+
+        /// <summary>
+        /// (int) PSB Version
+        /// </summary>
+        public const string Context_PsbVer = "PsbVer";
 
         /// <summary>
         /// (string) MDF Seed (key + filename)
@@ -101,6 +111,11 @@ namespace FreeMote
         public const string Context_DisableCombinedImage = "DisableCombinedImage";
 
         /// <summary>
+        /// (string?) body.bin file name
+        /// </summary>
+        public const string Context_BodyBinName = "BodyBinName";
+
+        /// <summary>
         /// 0x075BCD15
         /// </summary>
         public const uint Key1 = 123456789;
@@ -119,9 +134,6 @@ namespace FreeMote
         /// Perform 16 byte data align or not (when build)
         /// </summary>
         public static bool PsbDataStructureAlign { get; set; } = true;
-
-        //This is a bad design, abandon
-        //public static Encoding PsbEncoding { get; set; } = Encoding.UTF8;
 
         /// <summary>
         /// Take more memory when loading, but maybe faster
@@ -192,6 +204,11 @@ namespace FreeMote
         /// Output more logs
         /// </summary>
         public static bool Verbose { get; set; } = false;
+
+        /// <summary>
+        /// Override all compression settings
+        /// </summary>
+        public static CompressionLevel? ForceCompressionLevel { get; set; } = null;
     }
 
     //REF: https://stackoverflow.com/a/24987840/4374462

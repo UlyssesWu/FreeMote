@@ -408,7 +408,18 @@ namespace FreeMote.Plugins
                     stream.CopyTo(mms);
                     return mms;
                 }
-                return Shells[type]?.ToPsb(stream, context);
+
+                if (Shells.ContainsKey(type))
+                {
+                    return Shells[type]?.ToPsb(stream, context);
+                }
+
+                if (_container == null)
+                {
+                    throw new NotSupportedException($"Shell type \"{type}\" is not found. The plugin system is not initialized. Call `FreeMount.Init()` first.");
+                }
+
+                throw new NotSupportedException($"Shell type \"{type}\" is not found in plugins. Make sure you have Plugins dlls in right place.");
             }
 
             //Detect signature

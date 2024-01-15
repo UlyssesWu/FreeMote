@@ -102,6 +102,10 @@ namespace FreeMote.Psb
         public PsbString TypeString { get; set; }
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
+        /// <summary>
+        /// PIMG layer_type
+        /// </summary>
+        public int LayerType { get; set; }
 
         /// <summary>
         /// Pal
@@ -169,10 +173,15 @@ namespace FreeMote.Psb
         public PsbSpec Spec { get; set; } = PsbSpec.other;
 
         public PsbType PsbType { get; set; } = PsbType.Motion;
-
+        
         private static bool IsPowOf2(int n)
         {
             return n >= 2 && (n & (n - 1)) == 0;
+        }
+
+        public ImageMetadata Clone()
+        {
+            return (ImageMetadata)MemberwiseClone();
         }
 
         /// <summary>
@@ -193,14 +202,21 @@ namespace FreeMote.Psb
 
             if (Compress == PsbCompressType.None)
             {
-                var bitDepth = PixelFormat.GetBitDepth();
-                if (bitDepth != null)
+                if (PsbType == PsbType.Tachie && IsPowOf2(Width) && IsPowOf2(Height)) //could be combined image
                 {
-                    var shouldBeLength = Math.Ceiling(Width * Height * (bitDepth.Value / 8.0));
-                    if (Math.Abs(shouldBeLength - Data.Length) > 1)
+                    //skip
+                }
+                else
+                {
+                    var bitDepth = PixelFormat.GetBitDepth();
+                    if (bitDepth != null)
                     {
-                        return (false,
-                            $"Data length check failed: Loaded content size = {Data.Length}, expected size = {shouldBeLength}");
+                        var shouldBeLength = Math.Ceiling(Width * Height * (bitDepth.Value / 8.0));
+                        if (Math.Abs(shouldBeLength - Data.Length) > 1)
+                        {
+                            return (false,
+                                $"Data length check failed: Loaded content size = {Data.Length}, expected size = {shouldBeLength}");
+                        }
                     }
                 }
             }
@@ -223,6 +239,20 @@ namespace FreeMote.Psb
         /// <param name="context"></param>
         public void Link(string fullPath, FreeMountContext context)
         {
+            if (string.IsNullOrWhiteSpace(fullPath) || !File.Exists(fullPath))
+            {
+                if (Consts.StrictMode)
+                {
+                    throw new FileNotFoundException("[ERROR] Cannot find file to Link.", fullPath);
+                }
+                else
+                {
+                    Logger.LogWarn($"[WARN] Cannot find file to Link at {fullPath}.");
+                }
+
+                return;
+            }
+
             Data = LoadImageBytes(fullPath, context, out var palette);
             PalData = palette;
             var (valid, checkResult) = Validate();
@@ -311,7 +341,7 @@ namespace FreeMote.Psb
         {
             return $"{Part}/{Name}";
         }
-
+        
         /// <summary>
         /// Name for export and import
         /// </summary>
@@ -321,7 +351,7 @@ namespace FreeMote.Psb
         {
             if (type == PsbType.Pimg && !string.IsNullOrWhiteSpace(Name))
             {
-                return Path.GetFileNameWithoutExtension(Name);
+                return Path.GetFileNameWithoutExtension(PsbResHelper.EscapeStringForPath(Name));
             }
 
             if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(Part))
@@ -334,7 +364,7 @@ namespace FreeMote.Psb
                 return "";
             }
 
-            return $"{Part}{Consts.ResourceNameDelimiter}{Name}";
+            return $"{PsbResHelper.EscapeStringForPath(Part)}{Consts.ResourceNameDelimiter}{PsbResHelper.EscapeStringForPath(Name)}";
         }
 
         internal byte[] LoadImageBytes(string path, FreeMountContext context,
@@ -429,7 +459,7 @@ namespace FreeMote.Psb
                 {
                     //it's not a combined image, do nothing
                 }
-                else if ((image.Width >= Width || image.Height >= Height) && image.Width >= Left && image.Height >= Height)
+                else if ((image.Width >= Width || image.Height >= Height) && (image.Width >= Left || image.Height >= Height)) //there could be some redundant area in pieces in order to fit 2^n
                 {
                     Bitmap chunk = new Bitmap(Width, Height, image.PixelFormat);
                     //it should be a combined image

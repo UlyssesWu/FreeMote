@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
-using Microsoft.IO;
 
 namespace FreeMote
 {
@@ -16,7 +14,7 @@ namespace FreeMote
                     deflateStream.CopyTo(ms);
                 }
 
-                input.Dispose();
+                //input.Dispose();
                 return ms.ToArray();
             }
         }
@@ -38,7 +36,7 @@ namespace FreeMote
                 deflateStream.CopyTo(ms);
             }
 
-            input.Dispose();
+            //input.Dispose();
             ms.Seek(0, SeekOrigin.Begin);
             return ms;
         }
@@ -49,12 +47,13 @@ namespace FreeMote
             ms.WriteByte(0x78);
             ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
             using (DeflateStream deflateStream =
-                new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal))
+                   new DeflateStream(ms, Consts.ForceCompressionLevel != null ? Consts.ForceCompressionLevel.Value :
+                       fast ? CompressionLevel.Fastest : CompressionLevel.Optimal))
             {
                 input.CopyTo(deflateStream);
             }
 
-            input.Dispose();
+            //input.Dispose();
             return ms.GetBuffer();
         }
 
@@ -64,18 +63,26 @@ namespace FreeMote
             output.CopyTo(bw.BaseStream);
         }
 
+        /// <summary>
+        /// Will NOT dispose input stream
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="fast"></param>
+        /// <returns></returns>
         public static MemoryStream CompressToStream(Stream input, bool fast = false)
         {
             MemoryStream ms = new MemoryStream();
             ms.WriteByte(0x78);
             ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
             using (DeflateStream deflateStream =
-                new DeflateStream(ms, fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
+                   new DeflateStream(ms,
+                       Consts.ForceCompressionLevel != null ? Consts.ForceCompressionLevel.Value :
+                       fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
             {
                 input.CopyTo(deflateStream);
             }
 
-            input.Dispose();
+            //input.Dispose(); //DO NOT dispose
             ms.Position = 0;
             return ms;
         }

@@ -22,7 +22,7 @@ namespace FreeMote.Plugins.Shells
         {
             var header = new byte[4];
             var pos = stream.Position;
-            stream.Read(header, 0, 4);
+            _ = stream.Read(header, 0, 4);
             stream.Position = pos;
             if (header.SequenceEqual(Signature))
             {
@@ -42,13 +42,13 @@ namespace FreeMote.Plugins.Shells
             int size = 0;
             if (context != null)
             {
-                if (context.ContainsKey(Context_MdfKey))
+                if (context.TryGetValue(Context_MdfKey, out var mdfKey))
                 {
-                    uint? keyLength = context.ContainsKey(Context_MdfKeyLength)
-                        ? Convert.ToUInt32(context[Context_MdfKeyLength])
+                    uint? keyLength = context.TryGetValue(Context_MdfKeyLength, out var kl)
+                        ? Convert.ToUInt32(kl)
                         : (uint?) null;
 
-                    stream = PsbExtension.EncodeMdf(stream, (string) context[Context_MdfKey], keyLength);
+                    stream = PsbExtension.EncodeMdf(stream, (string) mdfKey, keyLength, true);
                     stream.Position = 0; //A new MemoryStream
                 }
 
@@ -72,26 +72,26 @@ namespace FreeMote.Plugins.Shells
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             bool fast = true; //mdf use fast mode by default
-            if (context != null && context.ContainsKey(Context_PsbZlibFastCompress))
+            if (context != null && context.TryGetValue(Context_PsbZlibFastCompress, out var fastCompress))
             {
-                fast = (bool) context[Context_PsbZlibFastCompress];
+                fast = (bool) fastCompress;
             }
 
-            var ms = MPack.CompressPsbToMdfStream(stream, fast);
+            var ms = MPack.CompressPsbToMdfStream(stream, fast); //this will prepend MDF header
 
-            if (context != null && context.ContainsKey(Context_MdfKey))
+            if (context != null && context.TryGetValue(Context_MdfKey, out var mdfKey))
             {
                 uint? keyLength;
-                if (context.ContainsKey(Context_MdfKeyLength))
+                if (context.TryGetValue(Context_MdfKeyLength, out var kl))
                 {
-                    keyLength = Convert.ToUInt32(context[Context_MdfKeyLength]);
+                    keyLength = Convert.ToUInt32(kl);
                 }
                 else
                 {
                     keyLength = (uint?) null;
                 }
 
-                var mms = PsbExtension.EncodeMdf(ms, (string)context[Context_MdfKey], keyLength);
+                var mms = PsbExtension.EncodeMdf(ms, (string)mdfKey, keyLength, true);
                 ms?.Dispose(); //ms disposed
                 ms = mms;
             }

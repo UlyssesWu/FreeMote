@@ -40,7 +40,7 @@ namespace FreeMote.Plugins.Audio
         {
             if (!File.Exists(ToolPath))
             {
-                Logger.LogWarn($"[WARN] Cannot convert without {EncoderTool}");
+                Logger.LogWarn($"[WARN] External tool missing: {EncoderTool}");
                 return false;
             }
 

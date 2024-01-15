@@ -132,6 +132,131 @@ namespace FreeMote.Psb
         }
     }
 
+    public class P16ArchData : IArchData
+    {
+        public uint Index => Data.Index ?? uint.MaxValue;
+        public string Extension { get; set; } = ".p16";
+        public string WaveExtension { get; set; } = ".wav";
+        public PsbAudioFormat Format => PsbAudioFormat.P16;
+        public PsbAudioPan ChannelPan => PsbAudioPan.Mono;
+
+        private PsbResource _data;
+
+        public PsbResource Data
+        {
+            get => _data;
+            set => _data = value;
+        }
+
+        public IList<PsbResource> DataList => new List<PsbResource> { _data };
+
+        public int SampleRate { get; set; } = 48000;
+        public PsbDictionary PsbArchData { get; set; }
+
+        public IPsbValue ToPsbArchData()
+        {
+            return new PsbDictionary
+            {
+                {"data", Data},
+                {"ext", Extension.ToPsbString()},
+                {"filetype", PsbAudioFormat.P16.ToString().ToLowerInvariant().ToPsbString()},
+                {"samprate", SampleRate.ToPsbNumber()}
+            };
+        }
+
+        public byte[] ToWav()
+        {
+            using MemoryStream ms = new MemoryStream();
+            using BinaryWriter writer = new BinaryWriter(ms);
+            writer.WriteUTF8("RIFF");
+            writer.Write(0);
+
+            writer.WriteUTF8("WAVE");
+
+            writer.WriteUTF8("fmt ");
+            writer.Write(0x10); // Size of WAVEfmt chunk
+            writer.Write((ushort)1); // Compression format (01 = PCM)
+            writer.Write((ushort)1); // Number of channels
+            writer.Write(SampleRate); // Sample rate
+            writer.Write(SampleRate * 2); // Average bytes per second
+            writer.Write((ushort)2); // Block align
+            writer.Write((ushort)0x10); // Significant bits per sample
+
+            writer.WriteUTF8("data");
+            writer.Write(Data.Data.Length);
+            writer.Write(Data.Data);
+
+            //Write length at position 4
+            var len = (uint) writer.BaseStream.Length;
+            writer.Seek(4, SeekOrigin.Begin);
+            writer.Write(len - 8);
+
+            return ms.ToArray();
+        }
+
+        /// <summary>
+        /// This will close the stream
+        /// </summary>
+        /// <param name="ms"></param>
+        public void ReadFromWav(Stream ms)
+        {
+            using BinaryReader br = new BinaryReader(ms, Encoding.ASCII, false);
+
+            var sig = new string(br.ReadChars(4));
+            if (sig != "RIFF")
+            {
+                return;
+            }
+
+            var totalChunkSize = br.ReadUInt32();
+            sig = new string(br.ReadChars(4));
+            //if (sig != "XWMA" && sig != "xWMA")
+            //{
+            //    return;
+            //}
+            byte[] fmt = null, data = null;
+
+            while (br.BaseStream.Position < br.BaseStream.Length && (fmt == null || data == null))
+            {
+                sig = new string(br.ReadChars(4));
+                var chunkSize = br.ReadInt32();
+                var chunk = br.ReadBytes(chunkSize);
+                switch (sig)
+                {
+                    case "fmt ":
+                        fmt = chunk;
+                        break;
+                    case "data":
+                        data = chunk;
+                        break;
+                    default:
+                        continue;
+                }
+            }
+
+            Apply(ref _data, data);
+            if (fmt != null)
+            {
+                //parse samprate
+                SampleRate = BitConverter.ToInt32(fmt, 4);
+            }
+        }
+
+
+        private static void Apply(ref PsbResource res, byte[] resData)
+        {
+            if (resData == null) return;
+            if (res == null)
+            {
+                res = new PsbResource { Data = resData };
+            }
+            else
+            {
+                res.Data = resData;
+            }
+        }
+    }
+
     /// <summary>
     /// Simple ogg/wav
     /// </summary>
@@ -467,7 +592,7 @@ namespace FreeMote.Psb
         public int BodySkipSampleCount { get; set; } = 0;
         public int IntroSkipSampleCount { get; set; } = 0;
 
-        public uint Index => Data.Index ?? uint.MaxValue;
+        public uint Index => DataList.Count > 0? DataList[0].Index?? uint.MaxValue : uint.MaxValue;
         public string Extension => Format.DefaultExtension();
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format { get; set; } = PsbAudioFormat.OPUS;

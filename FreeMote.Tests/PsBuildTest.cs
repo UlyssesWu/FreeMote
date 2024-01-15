@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using FreeMote.Plugins;
 using FreeMote.Plugins.Shells;
@@ -657,6 +658,28 @@ namespace FreeMote.Tests
             var psb = builder.BuildFontPsb("FreeMote Font",
                 new List<(string FontName, HashSet<char> Characters, int Size)>()
                     {("", new HashSet<char>() {'U', 'a', 'f', 'g', '^', '_', '囧', 'の', 'Ｏ'}, 32)}, Color.White, Color.Transparent);
+        }
+
+        [TestMethod]
+        public void TestExtractArchive()
+        {
+            FreeMount.Init();
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "patch_info.psb.m");
+            PsbDecompiler.ExtractArchive(path, "523aad2de7132", FreeMountContext.CreateForArchive(), null, false, false, true);
+        }
+
+        [TestMethod]
+        public void TestPackArchive()
+        {
+            FreeMount.Init();
+            //Consts.ForceCompressionLevel = CompressionLevel.Fastest;
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "patch_info.psb.m.json");
+            //PsbCompiler.PackArchive(path, "523aad2de7132", true, false);
+            PsbCompiler.PackArchive(path, "523aad2de7132", false, false);
+
+            PsbDecompiler.ExtractArchive("patch_info.psb.m", "523aad2de7132", FreeMountContext.CreateForArchive(), null, false, false, true);
         }
 
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)

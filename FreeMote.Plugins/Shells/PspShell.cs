@@ -25,7 +25,7 @@ namespace FreeMote.Plugins.Shells
             var header = new byte[3];
             var pos = stream.Position;
             stream.Seek(5, SeekOrigin.Current);
-            stream.Read(header, 0, 3);
+            _ = stream.Read(header, 0, 3);
             stream.Position = pos;
             if (header.SequenceEqual(MAGIC))
             {

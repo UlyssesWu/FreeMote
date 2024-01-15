@@ -22,6 +22,7 @@ namespace FreeMote
         Resources,
         Array,
         Body,
+        Json,
     }
 
     /// <summary>
@@ -47,7 +48,7 @@ namespace FreeMote
         /// </summary>
         Mmo = 3,
         /// <summary>
-        /// Images with Layouts (used in PS4, PSV)
+        /// Images with Layouts (used in PS*)
         /// </summary>
         Tachie = 4,
         /// <summary>
@@ -214,9 +215,13 @@ namespace FreeMote
         /// </summary>
         LeRGBA8_SW,
         /// <summary>
-        /// LeRGBA8_SW (Swizzle, Flip) for PS3
+        /// LeRGBA8_SW (Swizzle, Flip) for PS3?
         /// </summary>
         FlipLeRGBA8_SW,
+        /// <summary>
+        /// BeRGBA8_SW (Swizzle, Flip) for PS3
+        /// </summary>
+        FlipBeRGBA8_SW,
         /// <summary>
         /// LeRGBA8_SW (Swizzle, Tile) for PS4
         /// </summary>
@@ -229,6 +234,10 @@ namespace FreeMote
         /// Little Endian RGBA4444 with Swizzle for vita
         /// </summary>
         LeRGBA4444_SW,
+        /// <summary>
+        /// RGBA4444_SW (Swizzle, Tile) for PS4
+        /// </summary>
+        TileLeRGBA4444_SW,
         /// <summary>
         /// RGBA5650 with Swizzle for vita
         /// </summary>
@@ -293,6 +302,10 @@ namespace FreeMote
         /// Big Endian BC7 compressed RGBA8 for nx
         /// </summary>
         BC7,
+        /// <summary>
+        /// DXT1
+        /// </summary>
+        DXT1
     }
 
     public enum PsbAudioFormat
@@ -305,6 +318,7 @@ namespace FreeMote
         VAG,
         ADPCM,
         OGG,
+        P16,
     }
 
     public enum PsbAudioPan
@@ -397,6 +411,13 @@ namespace FreeMote
         /// <para>if decrypt, clean header and body both.</para>
         /// </summary>
         Auto
+    }
+
+    internal enum ArchiveProcessMethod
+    {
+        None = 0,
+        EncodeMPack = 1,
+        Compile = 2,
     }
 }
 

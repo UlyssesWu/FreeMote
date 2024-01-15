@@ -207,7 +207,7 @@ namespace FreeMote.Tests
             //var mdfShell = new MdfShell();
             //var ms = mdfShell.ToPsb(File.OpenRead(path), ctx.Context);
             //HINT: brute get info-psb key is nearly impossible, don't waste your time on it and just find the key by yourself
-            var ms = PsbExtension.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131);
+            var ms = PsbExtension.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131, true);
             File.WriteAllBytes(path + ".raw", ms.ToArray());
         }
 
@@ -255,7 +255,7 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "澄怜a_裸-pure.psb");
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
+            var painter = new EmtPainter(psb);
             var bmp = painter.Draw(4096, 4096);
             bmp.Save("RenderKrkr.png", ImageFormat.Png);
         }
@@ -267,7 +267,7 @@ namespace FreeMote.Tests
             var path = Path.Combine(resPath, "emote_logo_d5-pure.psb");
             //var path = Path.Combine(resPath, "vanilla-pure.psb");
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
+            var painter = new EmtPainter(psb);
             var bmp = painter.Draw(4096, 4096);
             bmp.Save("RenderWin.png", ImageFormat.Png);
         }
@@ -278,9 +278,23 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "akira_guide-pure.psb");
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
+            var painter = new EmtPainter(psb);
             var bmp = painter.Draw(2048, 2048);
             bmp.Save("RenderCommon.png", ImageFormat.Png);
+        }
+
+        [TestMethod]
+        public void TestDrawKrkrMtn()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "sd001.mtn");
+            var psb = new PSB(path);
+            var painter = new MtnPainter(psb);
+            var bmps = painter.DrawAll();
+            foreach (var bmp in bmps)
+            {
+                bmp.Image?.Save($"{bmp.Name}.png", ImageFormat.Png);
+            }
         }
 
         [TestMethod]
@@ -342,14 +356,14 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestArchiveInfoGetAllPossibleFileNames()
         {
-            var results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("scenario/ca01_06.txt.scn.m", ".psb.m");
+            var results = PsbExtension.ArchiveInfo_GetAllPossibleFileNames("scenario/ca01_06.txt.scn.m", ".psb.m");
             foreach (var result in results)
             {
                 Console.WriteLine(result);
             }
 
             Console.WriteLine();
-            results = PsbExtension.ArchiveInfoGetAllPossibleFileNames("up05_10_03.txt", ".scn.m");
+            results = PsbExtension.ArchiveInfo_GetAllPossibleFileNames("up05_10_03.txt", ".scn.m");
             foreach (var result in results)
             {
                 Console.WriteLine(result);

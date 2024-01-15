@@ -25,7 +25,7 @@ namespace FreeMote.Plugins.Shells
         {
             var header = new byte[4];
             var pos = stream.Position;
-            stream.Read(header, 0, 4);
+            _ = stream.Read(header, 0, 4);
             stream.Position = pos;
             if (header.SequenceEqual(Signature))
             {
@@ -44,13 +44,13 @@ namespace FreeMote.Plugins.Shells
         {
             if (context != null)
             {
-                if (context.ContainsKey(Context_MdfKey))
+                if (context.TryGetValue(Context_MdfKey, out var mdfKey))
                 {
-                    uint? keyLength = context.ContainsKey(Context_MdfKeyLength)
-                        ? Convert.ToUInt32(context[Context_MdfKeyLength])
+                    uint? keyLength = context.TryGetValue(Context_MdfKeyLength, out var kl)
+                        ? Convert.ToUInt32(kl)
                         : (uint?)null;
 
-                    stream = PsbExtension.EncodeMdf(stream, (string)context[Context_MdfKey], keyLength);
+                    stream = PsbExtension.EncodeMdf(stream, (string)mdfKey, keyLength, true);
                     stream.Position = 0; //A new MemoryStream
                 }
             }
@@ -72,10 +72,11 @@ namespace FreeMote.Plugins.Shells
 
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
+            var unzipLength = (int) stream.Length;
             int? compressLevel = null;
-            if (context != null && context.ContainsKey(Context_PsbZStdCompressLevel))
+            if (context != null && context.TryGetValue(Context_PsbZStdCompressLevel, out var cl))
             {
-                compressLevel = (int) context[Context_PsbZStdCompressLevel];
+                compressLevel = (int) cl;
                 if (compressLevel > CompressionOptions.MaxCompressionLevel)
                 {
                     compressLevel = CompressionOptions.MaxCompressionLevel;
@@ -101,24 +102,30 @@ namespace FreeMote.Plugins.Shells
             var output = compress.Wrap(input);
             var ms = new MemoryStream(output);
 
-            if (context != null && context.ContainsKey(Context_MdfKey))
+            if (context != null && context.TryGetValue(Context_MdfKey, out var mdfKey))
             {
                 uint? keyLength;
-                if (context.ContainsKey(Context_MdfKeyLength))
+                if (context.TryGetValue(Context_MdfKeyLength, out var kl))
                 {
-                    keyLength = Convert.ToUInt32(context[Context_MdfKeyLength]);
+                    keyLength = Convert.ToUInt32(kl);
                 }
                 else
                 {
                     keyLength = (uint?)null;
                 }
 
-                var mms = PsbExtension.EncodeMdf(ms, (string)context[Context_MdfKey], keyLength);
+                var mms = PsbExtension.EncodeMdf(ms, (string)mdfKey, keyLength, false);
                 ms?.Dispose(); //ms disposed
                 ms = mms;
             }
 
-            return ms;
+            var shellMs = new MemoryStream((int) (ms.Length + 8));
+            shellMs.Write(Signature, 0, 4);
+            shellMs.Write(BitConverter.GetBytes(unzipLength), 0, 4);
+            ms.CopyTo(shellMs);
+            ms.Dispose();
+            shellMs.Seek(0, SeekOrigin.Begin);
+            return shellMs;
         }
         
     }

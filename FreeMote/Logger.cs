@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace FreeMote
@@ -44,7 +43,14 @@ namespace FreeMote
                 Debug.WriteLine(message);
             }
 #endif
-            OnLogWarn?.Invoke(message);
+            if (OnLogWarn == null)
+            {
+                Console.WriteLine(message);
+            }
+            else
+            {
+                OnLogWarn?.Invoke(message);
+            }
         }
         internal static void LogWarn(object obj) => LogWarn(obj?.ToString());
 
@@ -56,7 +62,14 @@ namespace FreeMote
                 Debug.WriteLine(message);
             }
 #endif
-            OnLogError?.Invoke(message);
+            if (OnLogError == null)
+            {
+                Console.Error.WriteLine(message);
+            }
+            else
+            {
+                OnLogError?.Invoke(message);
+            }
         }
         internal static void LogError(object obj) => LogError(obj?.ToString());
 
@@ -87,7 +100,7 @@ namespace FreeMote
                 //OnLogWarn += message => Console.WriteLine($"[WARN] {message}");
                 //OnLogError += message => Console.WriteLine($"[ERROR] {message}");
                 OnLogWarn += Console.WriteLine;
-                OnLogError += Console.WriteLine;
+                OnLogError += Console.Error.WriteLine;
                 OnLogHint += Console.WriteLine;
             }
         }

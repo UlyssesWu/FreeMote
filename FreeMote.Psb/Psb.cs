@@ -240,7 +240,7 @@ namespace FreeMote.Psb
         internal void LoadFromStream(Stream stream)
         {
             var sig = new byte[4];
-            stream.Read(sig, 0, 4);
+            var read = stream.Read(sig, 0, 4);
             if (Encoding.ASCII.GetString(sig).ToUpperInvariant().StartsWith("MDF"))
             {
                 stream.Seek(6, SeekOrigin.Current); //Original Length (4 bytes) | Compression Header (78 9C||DA)
@@ -248,7 +248,7 @@ namespace FreeMote.Psb
             }
             else
             {
-                stream.Seek(-4, SeekOrigin.Current);
+                stream.Seek(-read, SeekOrigin.Current);
             }
 
             BinaryReader sourceBr = new BinaryReader(stream, Encoding);
@@ -792,7 +792,7 @@ namespace FreeMote.Psb
             var stringsDic = new Dictionary<string, PsbString>();
             var stringsIndexDic = new Dictionary<uint, PsbString>();
             uint strIdx = 0;
-            TravelCollect(Objects);
+            TravelCollect(Root);
 
             Names = new List<string>(namesSet);
             Names.Sort(string.CompareOrdinal); //FIXED: Compared by bytes

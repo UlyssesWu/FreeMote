@@ -630,7 +630,8 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Check signature and return shell type if possible; return <see cref="String.Empty"/> if cannot recognize
+        /// Check signature and return shell type if possible; return <c>null</c> if cannot recognize
+        /// <para>This is the first fast check; If this failed, there will be a detailed check from Plugins</para>
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
@@ -638,7 +639,7 @@ namespace FreeMote
         {
             var header = new byte[4];
             var pos = stream.Position;
-            stream.Read(header, 0, 4);
+            _ = stream.Read(header, 0, 4);
             stream.Position = pos;
             if (header[0] == 'P' && header[1] == 'S' && header[2] == 'B' && header[3] == 0)
             {
@@ -656,7 +657,11 @@ namespace FreeMote
             {
                 return "MZS"; //ZStandard
             }
-            return string.Empty;
+            if (header[0] == 'm' && header[1] == 'x' && header[2] == 'b' && header[3] == 0)
+            {
+                return "MXB"; //XMemCompress
+            }
+            return null;
         }
     }
 }

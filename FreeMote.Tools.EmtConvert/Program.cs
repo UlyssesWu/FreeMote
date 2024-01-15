@@ -4,10 +4,12 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
+// ReSharper disable InconsistentNaming
 
 namespace FreeMote.Tools.EmtConvert
 {
@@ -62,6 +64,10 @@ namespace FreeMote.Tools.EmtConvert
         /// Flip PS3
         /// </summary>
         Flip_PS3,
+        /// <summary>
+        /// Decode Tlg
+        /// </summary>
+        TLG,
     }
 
     public enum PsbFixMethod
@@ -102,227 +108,16 @@ namespace FreeMote.Tools.EmtConvert
                 app.Argument("Files", "File paths", multipleValues: true);
 
             //command: pixel
-            app.Command("pixel", pixelCmd =>
-            {
-                //help
-                pixelCmd.Description = "Convert pixel colors of extracted images (RGBA BMP/PNG)";
-                pixelCmd.HelpOption();
-                pixelCmd.ExtendedHelpText = @"
-Example:
-  EmtConvert pixel -m Switch02 sample.png
-";
-                //options
-                var optMethod = pixelCmd.Option<PsbImageConvertMethod>("-m|--method <METHOD>",
-                    "Set convert method",
-                    CommandOptionType.SingleValue);
-
-                //args
-                var argPaths = pixelCmd.Argument("Image", "Image Paths", true);
-
-                pixelCmd.OnExecute(() =>
-                {
-                    if (!optMethod.HasValue())
-                    {
-                        Console.WriteLine("Convert Method is not specified!");
-                        return;
-                    }
-
-                    foreach (var path in argPaths.Values)
-                    {
-                        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-                        {
-                            continue;
-                        }
-
-                        int width = 0;
-                        int height = 0;
-                        PixelFormat pixelFormat = PixelFormat.Format32bppArgb;
-                        try
-                        {
-                            var img = Image.FromFile(path);
-                            width = img.Width;
-                            height = img.Height;
-                            pixelFormat = img.PixelFormat;
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                            continue;
-                        }
-
-                        var bts = RL.GetPixelBytesFromImageFile(path);
-
-                        switch (optMethod.ParsedValue)
-                        {
-                            case PsbImageConvertMethod.Switch02:
-                                RL.Switch_0_2(ref bts);
-                                break;
-                            case PsbImageConvertMethod.ROR:
-                                RL.Argb2Rgba(ref bts);
-                                break;
-                            case PsbImageConvertMethod.ROL:
-                                RL.Argb2Rgba(ref bts, true);
-                                break;
-                            case PsbImageConvertMethod.LeARGB_4To8:
-                                bts = RL.Argb428(bts);
-                                break;
-                            case PsbImageConvertMethod.LeARGB_To_L8Grayscale:
-                                bts = RL.Argb2L8(bts);
-                                bts = RL.ReadL8(bts, width, height);
-                                break;
-                            case PsbImageConvertMethod.Tile:
-                                bts = PostProcessing.TileTexture(bts, width, height, pixelFormat);
-                                break;
-                            case PsbImageConvertMethod.Untile:
-                                bts = PostProcessing.UntileTexture(bts, width, height, pixelFormat);
-                                break;
-                            case PsbImageConvertMethod.Swizzle_PSV:
-                                bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat);
-                                break;
-                            case PsbImageConvertMethod.Unswizzle_PSV:
-                                bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat);
-                                break;
-                            case PsbImageConvertMethod.Swizzle_PSP:
-                                bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
-                                break;
-                            case PsbImageConvertMethod.Unswizzle_PSP:
-                                bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
-                                break;
-                            case PsbImageConvertMethod.Flip_PS3:
-                                bts = PostProcessing.FlipTexturePs3(bts, width, height, pixelFormat);
-                                break;
-                            default:
-                                continue;
-                        }
-
-                        RL.ConvertToImageFile(bts, Path.ChangeExtension(path, ".converted.png"), width, height, PsbImageFormat.png);
-                    }
-                   
-                });
-            });
+            app.Command("pixel", PixelCommand);
 
             //command: pack
-            app.Command("pack", packCmd =>
-            {
-                //help
-                packCmd.Description = "Pack/Unpack PSBs to/from shell (FreeMote.Plugins required)";
-                packCmd.HelpOption();
-                packCmd.ExtendedHelpText = @"
-Example:
-  EmtConvert pack -s LZ4 sample.psb 
-";
-                //options
-                var optType = packCmd.Option("-s|--shell <SHELL>",
-                    "Set shell type. No need to specify if unpack",
-                    CommandOptionType.SingleValue);
-                //args
-                var argPsbPaths = packCmd.Argument("PSB", "MDF/PSB Paths", true);
-
-                packCmd.OnExecute(() =>
-                {
-                    string type = optType.HasValue() ? optType.Value() : null;
-                    foreach (var s in argPsbPaths.Values)
-                    {
-                        if (File.Exists(s))
-                        {
-                            ShellConvert(s, type);
-                        }
-                    }
-                });
-            });
+            app.Command("pack", PackCommand);
 
             //command: print
-            app.Command("print", printCmd =>
-            {
-                //help
-                printCmd.Description = "Print an EMT PSB (for its initial state, don't expect it working)";
-                printCmd.HelpOption();
-                printCmd.ExtendedHelpText = @"
-Example:
-  EmtConvert print -w 4096 -h 4096 sample.psb 
-";
-                //options
-                var optWidth = printCmd.Option<int>("-w|--width <INT>",
-                    "Set width. Default=-1 (auto)",
-                    CommandOptionType.SingleValue);
-                var optHeight = printCmd.Option<int>("-h|--height <INT>",
-                    "Set height. Default=-1 (auto)",
-                    CommandOptionType.SingleValue);
-                //args
-                var argPsbPaths = printCmd.Argument("PSB", "MDF/PSB Paths", true);
-
-                printCmd.OnExecute(() =>
-                {
-                    int width = optWidth.HasValue() ? optWidth.ParsedValue : -1;
-                    int height = optHeight.HasValue() ? optHeight.ParsedValue : -1;
-                    foreach (var s in argPsbPaths.Values)
-                    {
-                        if (File.Exists(s))
-                        {
-                            Draw(s, width, height);
-                        }
-                    }
-                });
-            });
+            app.Command("print", PrintCommand);
 
             //command: fix
-            app.Command("fix", fixCmd =>
-            {
-                //help
-                fixCmd.Description = "Some mysterious fixes for PSB";
-                fixCmd.HelpOption();
-                fixCmd.ExtendedHelpText = @"
-Example:
-  EmtConvert fix -m MetadataBase sample.psb 
-";
-                //options
-                var optMethod = fixCmd.Option<PsbFixMethod>("-m|--method <METHOD>",
-                    "Set fix method.", CommandOptionType.SingleValue);
-
-                //args
-                var argPsbPaths = fixCmd.Argument("PSB", "PSB Paths", true);
-
-                fixCmd.OnExecute(() =>
-                {
-                    if (!optMethod.HasValue())
-                    {
-                        Console.WriteLine("Fix Method is not specified!");
-                        return;
-                    }
-
-                    var method = optMethod.ParsedValue;
-                    foreach (var s in argPsbPaths.Values)
-                    {
-                        if (!File.Exists(s))
-                        {
-                            continue;
-                        }
-
-                        switch(method)
-                        {
-                            case PsbFixMethod.MetadataBase:
-                            
-                                {
-                                    Console.Write($"Using {method} to fix {s} ...");
-                                    PSB psb = new PSB(s);
-                                    if (psb.FixMotionMetadata())
-                                    {
-                                        psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
-                                        Console.WriteLine("Fixed!");
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("not fixed.");
-                                    }
-                                }
-                                break;
-                            default:
-                                Console.WriteLine($"Not implemented method: {method}");
-                                break;
-                        }                        
-                    }
-                });
-            });
+            app.Command("fix", FixCommand);
 
             //mdf
             app.Command("mdf", MPackCommand);
@@ -346,6 +141,10 @@ Example:
                         {
                             Convert(key, s);
                         }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Input path not found: {s}");
                     }
                 }
             });
@@ -395,6 +194,262 @@ Example:
             Console.WriteLine("Done.");
         }
 
+        private static void PrintCommand(CommandLineApplication printCmd)
+        {
+            //help
+            printCmd.Description = "Print an EMT/motion PSB (for its initial state, don't expect it working)";
+            printCmd.HelpOption();
+            printCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert print -w 4096 -h 4096 sample.psb 
+";
+            //options
+            var optWidth = printCmd.Option<int>("-w|--width <INT>", "Set width. Default=-1 (auto)", CommandOptionType.SingleValue);
+            var optHeight = printCmd.Option<int>("-h|--height <INT>", "Set height. Default=-1 (auto)", CommandOptionType.SingleValue);
+            //args
+            var argPsbPaths = printCmd.Argument("PSB", "MDF/PSB Paths", true);
+
+            printCmd.OnExecute(() =>
+            {
+                int width = optWidth.HasValue() ? optWidth.ParsedValue : -1;
+                int height = optHeight.HasValue() ? optHeight.ParsedValue : -1;
+                foreach (var s in argPsbPaths.Values)
+                {
+                    if (File.Exists(s))
+                    {
+                        Draw(s, width, height);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Input path not found: {s}");
+                    }
+                }
+            });
+        }
+
+        private static void PackCommand(CommandLineApplication packCmd)
+        {
+            //help
+            packCmd.Description = "Pack/Unpack PSBs to/from shell (FreeMote.Plugins required)";
+            packCmd.HelpOption();
+            packCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert pack -s LZ4 sample.psb 
+";
+            //options
+            var optType = packCmd.Option("-s|--shell <SHELL>", "Set shell type. No need to specify if unpack", CommandOptionType.SingleValue);
+            //args
+            var argPsbPaths = packCmd.Argument("PSB", "MDF/PSB Paths", true);
+
+            packCmd.OnExecute(() =>
+            {
+                string type = optType.HasValue() ? optType.Value() : null;
+                foreach (var s in argPsbPaths.Values)
+                {
+                    if (File.Exists(s))
+                    {
+                        ShellConvert(s, type);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Input path not found: {s}");
+                    }
+                }
+            });
+        }
+
+        private static void PixelCommand(CommandLineApplication pixelCmd)
+        {
+            //help
+            pixelCmd.Description = "Convert pixel colors of extracted images (RGBA BMP/PNG)";
+            pixelCmd.HelpOption();
+            pixelCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert pixel -m Switch02 sample.png
+";
+            //options
+            var optMethod = pixelCmd.Option<PsbImageConvertMethod>("-m|--method <METHOD>", "Set convert method", CommandOptionType.SingleValue);
+
+            //args
+            var argPaths = pixelCmd.Argument("Image", "Image Paths", true);
+
+            pixelCmd.OnExecute(() =>
+            {
+                if (!optMethod.HasValue())
+                {
+                    Console.WriteLine("Convert Method is not specified!");
+                    return;
+                }
+
+                foreach (var path in argPaths.Values)
+                {
+                    if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                    {
+                        continue;
+                    }
+
+                    switch (optMethod.ParsedValue)
+                    {
+                        case PsbImageConvertMethod.TLG:
+                            var isTlg = Path.GetExtension(path).ToLower().StartsWith(".tlg");
+                            if (isTlg)
+                            {
+                                using var stream = File.OpenRead(path);
+                                TlgImageConverter converter = new TlgImageConverter();
+                                var br = new BinaryReader(stream);
+                                var img = converter.Read(br);
+                                img.Save(Path.ChangeExtension(path, ".converted.png"), ImageFormat.Png);
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    var img = new Bitmap(path);
+                                    var context = FreeMount.CreateContext();
+                                    var tlgBytes = context.BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), PsbSpec.none, img);
+                                    if (tlgBytes is {Length: > 0})
+                                    {
+                                        File.WriteAllBytes(Path.ChangeExtension(path, ".converted.tlg"), tlgBytes);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"Cannot convert bitmap to TLG, maybe FreeMote.Plugins.x64 is missing, or you're not working on Windows.");
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
+                                }
+                            }
+
+                            continue;
+                        default:
+                            break;
+                    }
+
+                    int width = 0;
+                    int height = 0;
+                    PixelFormat pixelFormat = PixelFormat.Format32bppArgb;
+                    try
+                    {
+                        var img = Image.FromFile(path);
+                        width = img.Width;
+                        height = img.Height;
+                        pixelFormat = img.PixelFormat;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        continue;
+                    }
+
+                    var bts = RL.GetPixelBytesFromImageFile(path);
+
+                    switch (optMethod.ParsedValue)
+                    {
+                        case PsbImageConvertMethod.Switch02:
+                            RL.Switch_0_2(ref bts);
+                            break;
+                        case PsbImageConvertMethod.ROR:
+                            RL.Argb2Rgba(ref bts);
+                            break;
+                        case PsbImageConvertMethod.ROL:
+                            RL.Argb2Rgba(ref bts, true);
+                            break;
+                        case PsbImageConvertMethod.LeARGB_4To8:
+                            bts = RL.Argb428(bts);
+                            break;
+                        case PsbImageConvertMethod.LeARGB_To_L8Grayscale:
+                            bts = RL.Argb2L8(bts);
+                            bts = RL.ReadL8(bts, width, height);
+                            break;
+                        case PsbImageConvertMethod.Tile:
+                            bts = PostProcessing.TileTexture(bts, width, height, pixelFormat);
+                            break;
+                        case PsbImageConvertMethod.Untile:
+                            bts = PostProcessing.UntileTexture(bts, width, height, pixelFormat);
+                            break;
+                        case PsbImageConvertMethod.Swizzle_PSV:
+                            bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat);
+                            break;
+                        case PsbImageConvertMethod.Unswizzle_PSV:
+                            bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat);
+                            break;
+                        case PsbImageConvertMethod.Swizzle_PSP:
+                            bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
+                            break;
+                        case PsbImageConvertMethod.Unswizzle_PSP:
+                            bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
+                            break;
+                        case PsbImageConvertMethod.Flip_PS3:
+                            bts = PostProcessing.FlipTexturePs3(bts, width, height, pixelFormat);
+                            break;
+                        default:
+                            continue;
+                    }
+
+                    RL.ConvertToImageFile(bts, Path.ChangeExtension(path, ".converted.png"), width, height, PsbImageFormat.png);
+                }
+            });
+        }
+
+        private static void FixCommand(CommandLineApplication fixCmd)
+        {
+            //help
+            fixCmd.Description = "Some mysterious fixes for PSB";
+            fixCmd.HelpOption();
+            fixCmd.ExtendedHelpText = @"
+Example:
+  EmtConvert fix -m MetadataBase sample.psb 
+";
+            //options
+            var optMethod = fixCmd.Option<PsbFixMethod>("-m|--method <METHOD>", "Set fix method.", CommandOptionType.SingleValue);
+
+            //args
+            var argPsbPaths = fixCmd.Argument("PSB", "PSB Paths", true);
+
+            fixCmd.OnExecute(() =>
+            {
+                if (!optMethod.HasValue())
+                {
+                    Console.WriteLine("Fix Method is not specified!");
+                    return;
+                }
+
+                var method = optMethod.ParsedValue;
+                foreach (var s in argPsbPaths.Values)
+                {
+                    if (!File.Exists(s))
+                    {
+                        continue;
+                    }
+
+                    switch (method)
+                    {
+                        case PsbFixMethod.MetadataBase:
+
+                        {
+                            Console.Write($"Using {method} to fix {s} ...");
+                            PSB psb = new PSB(s);
+                            if (psb.FixMotionMetadata())
+                            {
+                                psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
+                                Console.WriteLine("Fixed!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("not fixed.");
+                            }
+                        }
+                            break;
+                        default:
+                            Console.WriteLine($"Not implemented method: {method}");
+                            break;
+                    }
+                }
+            });
+        }
+
         private static void MPackCommand(CommandLineApplication mdfCmd)
         {
             //help
@@ -433,6 +488,10 @@ Example:
                         {
                             ShellConvert(s, "MDF");
                         }
+                        else
+                        {
+                            Console.WriteLine($"Input path not found: {s}");
+                        }
                     }
 
                     return;
@@ -457,27 +516,52 @@ Example:
                             finalSeed = key + fileName;
                         }
 
+                        context[Context_FileName] = fileName;
                         context[Context_MdfKey] = finalSeed;
                         var success = ShellConvert(s, "", context); //Unpack
 
-                        if (!success && suffixList != null)
+                        if (!success)
                         {
-                            foreach (var suffix in suffixList)
+                            Regex RealNameRegex = new Regex(@"[A-Za-z0-9_-]+\.[A-Za-z0-9]+\.m");
+                            var realName = fileName;
+                            if (RealNameRegex.IsMatch(fileName))
                             {
-                                var allPossibleNames = PsbExtension.ArchiveInfoGetAllPossibleFileNames(fileName, suffix);
+                                realName = RealNameRegex.Match(fileName).Value;
+                            }
 
-                                foreach (var possibleName in allPossibleNames)
+                            if (realName != fileName)
+                            {
+                                if (key != null)
                                 {
-                                    finalSeed = seed;
-                                    if (key != null)
-                                    {
-                                        finalSeed = key + possibleName;
-                                    }
+                                    finalSeed = key + realName;
+                                }
 
-                                    context[Context_MdfKey] = finalSeed;
-                                    if (ShellConvert(s, "", context))
+                                context[Context_MdfKey] = finalSeed;
+                                if (ShellConvert(s, "", context))
+                                {
+                                    goto CONVERT_OK;
+                                }
+                            }
+                            
+                            if (suffixList != null)
+                            {
+                                foreach (var suffix in suffixList)
+                                {
+                                    var allPossibleNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(fileName, suffix);
+
+                                    foreach (var possibleName in allPossibleNames)
                                     {
-                                        goto CONVERT_OK;
+                                        finalSeed = seed;
+                                        if (key != null)
+                                        {
+                                            finalSeed = key + possibleName;
+                                        }
+
+                                        context[Context_MdfKey] = finalSeed;
+                                        if (ShellConvert(s, "", context))
+                                        {
+                                            goto CONVERT_OK;
+                                        }
                                     }
                                 }
                             }
@@ -491,23 +575,45 @@ Example:
         private static void Draw(string path, int width, int height)
         {
             var psb = new PSB(path);
-            var painter = new PsbPainter(psb);
-            if (width < 0 || height < 0)
+            if (psb.IsEmt())
             {
-                psb.TryGetCanvasSize(out var cw, out var ch);
-                if (width < 0)
-                {
-                    width = cw;
-                }
+                var painter = new EmtPainter(psb);
+                //if (width < 0 || height < 0)
+                //{
+                //    psb.TryGetCanvasSize(out var cw, out var ch);
+                //    if (width < 0)
+                //    {
+                //        width = cw;
+                //    }
 
-                if (height < 0)
+                //    if (height < 0)
+                //    {
+                //        height = ch;
+                //    }
+                //}
+
+                var bmp = painter.Draw(width, height);
+                bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
+            }
+            else if(psb.Type == PsbType.Motion)
+            {
+                var dirPath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? string.Empty;
+                var outputPath = Path.Combine(dirPath, Path.GetFileNameWithoutExtension(path));
+                if (!Directory.Exists(outputPath))
                 {
-                    height = ch;
+                    Directory.CreateDirectory(outputPath);
+                }
+                var painter = new MtnPainter(psb);
+                var bmps = painter.DrawAll();
+                foreach (var bmp in bmps)
+                {
+                    bmp.Image?.Save(Path.Combine(outputPath, $"{PsbResHelper.EscapeStringForPath(painter.BaseMotion)}-{bmp.Name}.png"), ImageFormat.Png);
                 }
             }
-
-            var bmp = painter.Draw(width, height);
-            bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
+            else
+            {
+                Console.WriteLine("PSB is not drawable.");
+            }
         }
         
         private static bool ShellConvert(string path, string type, Dictionary<string, object> context = null)
