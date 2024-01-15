@@ -179,7 +179,10 @@ namespace FreeMote.PsBuild
         internal PsbDictionary BuildChar(Font font, char character, FontContext context)
         {
             var obj = new PsbDictionary();
-            var glyphs = font.GetGlyphs(new CodePoint(character), ColorFontSupport.None);
+            if (!font.TryGetGlyphs(new CodePoint(character), ColorFontSupport.None, out var glyphs))
+            {
+                return null;
+            }
             if (glyphs.Any())
             {
                 //height = a + d
