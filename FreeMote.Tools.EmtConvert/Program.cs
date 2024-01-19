@@ -170,7 +170,7 @@ namespace FreeMote.Tools.EmtConvert
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("Error: This file is not valid.");
+                            Logger.LogError("Error: This file is not valid.");
                             Console.WriteLine(e);
                         }
                     }
@@ -318,7 +318,7 @@ Example:
                                 }
                                 catch (Exception e)
                                 {
-                                    Console.WriteLine(e);
+                                    Logger.LogError(e);
                                 }
                             }
 
@@ -443,7 +443,7 @@ Example:
                         }
                             break;
                         default:
-                            Console.WriteLine($"Not implemented method: {method}");
+                            Logger.LogError($"Not implemented method: {method}");
                             break;
                     }
                 }
@@ -634,7 +634,7 @@ Example:
                     using var mms = ctx.PackToShell(fs, type);
                     if (mms == null)
                     {
-                        Console.WriteLine($"Shell type unsupported: {type}");
+                        Logger.LogError($"Shell type unsupported: {type}");
                         return false;
                     }
 
@@ -653,7 +653,7 @@ Example:
                         using var mms = ctx.PackToShell(ms, type);
                         if (mms == null)
                         {
-                            Console.WriteLine($"Shell type unsupported: {type}");
+                            Logger.LogError($"Shell type unsupported: {type}");
                             return false;
                         }
 
@@ -662,9 +662,14 @@ Example:
                     }
                 }
             }
+            catch (PsbBadFormatException)
+            {
+                Logger.LogError($"Shell Convert failed. Input is invalid (or encrypted): {path}");
+                return false;
+            }
             catch (Exception)
             {
-                Console.WriteLine($"Shell Convert failed: {path}");
+                Logger.LogError($"Shell Convert failed: {path}");
                 return false;
             }
 
@@ -801,7 +806,7 @@ Example:
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error: This file is not valid.");
+                Logger.LogError("Error: Input is not valid.");
                 Console.WriteLine(e);
                 return false;
             }
