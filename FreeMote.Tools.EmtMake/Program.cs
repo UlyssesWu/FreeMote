@@ -31,7 +31,7 @@ namespace FreeMote.Tools.EmtMake
             }
             catch (Exception e)
             {
-                Console.WriteLine("Input PSB is invalid.");
+                Logger.LogError($"Input PSB is invalid: {e.Message}");
             }
 
             if (psb != null)
