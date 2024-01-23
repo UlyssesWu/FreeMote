@@ -7,7 +7,8 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using FreeMote.Plugins;
-using Troschuetz.Random.Generators;
+using MersenneTwister;
+using MersenneTwister.MT;
 
 namespace FreeMote.Psb
 {
@@ -734,7 +735,7 @@ namespace FreeMote.Psb
             seeds[3] = BitConverter.ToUInt32(bts, 3 * 4);
 
             MemoryStream ms = new MemoryStream((int)stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
-            var gen = new MT19937Generator(seeds);
+            var gen = new MTRandom<mt19937ar_t>(seeds);
 
             using BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true);
             using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
@@ -749,7 +750,7 @@ namespace FreeMote.Psb
             {
                 for (int i = 0; i < keyLength / 4 + 1; i++)
                 {
-                    keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
+                    keys.AddRange(BitConverter.GetBytes(gen.GenerateUInt32()));
                 }
 
                 keys = keys.GetRange(0, (int)keyLength.Value);
@@ -759,7 +760,7 @@ namespace FreeMote.Psb
             {
                 while (keys.Count < br.BaseStream.Length)
                 {
-                    keys.AddRange(BitConverter.GetBytes(gen.NextUIntInclusiveMaxValue()));
+                    keys.AddRange(BitConverter.GetBytes(gen.GenerateUInt32()));
                 }
             }
 
