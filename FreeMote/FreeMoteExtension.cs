@@ -59,7 +59,7 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Get <see cref="PsbType"/>'s default extension
+        /// Get <see cref="PsbType"/>'s default extension (with dot)
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>

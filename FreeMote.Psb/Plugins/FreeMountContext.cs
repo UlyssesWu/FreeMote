@@ -161,9 +161,11 @@ namespace FreeMote.Plugins
         /// [RequireUsing] Open stream from PSB file, unpack the shell if exists
         /// </summary>
         /// <param name="path"></param>
+        /// <param name="hasShell"></param>
         /// <returns></returns>
-        public Stream OpenStreamFromPsbFile(string path)
+        public Stream OpenStreamFromPsbFile(string path, out bool hasShell)
         {
+            hasShell = false;
             var psbFs = File.OpenRead(path);
 
             var ctx = FreeMount.CreateContext();
@@ -172,6 +174,7 @@ namespace FreeMote.Plugins
             var psbMs = ctx.OpenFromShell(psbFs, ref type);
             if (psbMs != null)
             {
+                hasShell = true;
                 ctx.Context[Consts.Context_PsbShellType] = type;
                 psbFs.Dispose();
                 stream = psbMs;

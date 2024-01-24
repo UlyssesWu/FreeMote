@@ -325,7 +325,9 @@ Example:
             var name = Path.GetFileNameWithoutExtension(s);
             var ext = Path.GetExtension(s);
             Console.WriteLine($"Converting {name} to {portSpec} platform...");
-            PSB psb = new PSB(s, _encoding);
+            var ctx = FreeMount.CreateContext();
+            using var psbStream = ctx.OpenStreamFromPsbFile(s, out var hasShell);
+            PSB psb = new PSB(psbStream, true, _encoding);
             if (psb.Platform == portSpec)
             {
                 Console.WriteLine("Already at the same platform, Skip.");
@@ -366,9 +368,15 @@ Example:
                     }
                 }
 
-                PSB psb = new PSB(psbPath, _encoding);
+                var ctx = FreeMount.CreateContext();
+                using var psbStream = ctx.OpenStreamFromPsbFile(psbPath, out var hasShell);
+                PSB psb = new PSB(psbStream, true, _encoding);
                 psb.Link(texs, order: order, isExternal: true);
                 psb.Merge();
+                if (hasShell)
+                {
+                    ext = psb.Type.DefaultExtension();
+                }
                 File.WriteAllBytes(Path.ChangeExtension(psbPath, "linked" + ext), psb.Build());
             }
             catch (Exception e)

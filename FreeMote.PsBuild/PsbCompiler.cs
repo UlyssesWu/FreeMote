@@ -402,7 +402,7 @@ namespace FreeMote.PsBuild
             using var psbFs = File.OpenRead(psbPath);
 
             var ctx = FreeMount.CreateContext();
-            using var psbStream = ctx.OpenStreamFromPsbFile(psbPath);
+            using var psbStream = ctx.OpenStreamFromPsbFile(psbPath, out _);
             var psb = new PSB(psbStream, true, Encoding);
 
             if (jsonPsb.Resources.Count != psb.Resources.Count)
