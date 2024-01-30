@@ -310,6 +310,8 @@ namespace FreeMote.Plugins.Shells
                 return ConvertPimgToPsd(psb);
             }
 
+            Logger.LogWarn(
+                "[WARN] EMT PSB to PSD Conversion is a feature with no support. You're welcomed to contribute or submit samples, but issues won't be fixed.");
             EmtPainter painter = new EmtPainter(psb);
 
             if (TryGetCanvasSize && painter.Resources.Count > 0)
