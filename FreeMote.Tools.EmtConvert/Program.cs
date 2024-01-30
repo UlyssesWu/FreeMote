@@ -217,8 +217,6 @@ Example:
                 {
                     if (File.Exists(s))
                     {
-                        Logger.LogWarn(
-                            "[WARN] EMT PSB render is not really implemented. No further plan. No support. \r\nYou're welcomed to contribute or submit samples, but issues won't be fixed.");
                         Draw(s, width, height);
                     }
                     else
@@ -579,6 +577,8 @@ Example:
             var psb = new PSB(path);
             if (psb.IsEmt())
             {
+                Logger.LogWarn(
+                    "[WARN] EMT PSB render is not really implemented. No further plan. No support. \r\nYou're welcomed to contribute or submit samples, but issues won't be fixed.");
                 var painter = new EmtPainter(psb);
                 //if (width < 0 || height < 0)
                 //{
