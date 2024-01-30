@@ -54,6 +54,7 @@
     <Compile Include="BitmapExtension.cs" />
     <Compile Include="BitmapHelper.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Motion\MmoEnums.cs" />
     <Compile Include="PrefixTree.cs" />
     <Compile Include="DxtCodec.cs" />
     <Compile Include="DxtUtil.cs" />
@@ -88,5 +89,6 @@
       <Version>6.0.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

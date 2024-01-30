@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using FastBitmapLib;
+using FreeMote.Motion;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb
@@ -166,6 +167,8 @@ namespace FreeMote.Psb
         public int Opacity { get; set; } = 10;
         public bool Visible { get; set; } = true;
 
+        internal TexAttribute Attr { get; set; }
+        
         /// <summary>
         /// Platform
         /// <para>Spec can not be get from source part, so set it before use</para>

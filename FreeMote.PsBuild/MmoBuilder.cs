@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using FreeMote.Motion;
 using FreeMote.Psb;
 using FreeMote.Psb.Textures;
 using FreeMote.PsBuild.Properties;

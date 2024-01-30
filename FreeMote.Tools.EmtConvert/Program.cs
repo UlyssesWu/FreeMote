@@ -197,7 +197,7 @@ namespace FreeMote.Tools.EmtConvert
         private static void PrintCommand(CommandLineApplication printCmd)
         {
             //help
-            printCmd.Description = "Print an EMT/motion PSB (for its initial state, don't expect it working)";
+            printCmd.Description = "Print an EMT/motion PSB (not really, don't expect it working)";
             printCmd.HelpOption();
             printCmd.ExtendedHelpText = @"
 Example:
@@ -217,6 +217,8 @@ Example:
                 {
                     if (File.Exists(s))
                     {
+                        Logger.LogWarn(
+                            "[WARN] EMT PSB render is not really implemented. No further plan. No support. \r\nYou're welcomed to contribute or submit samples, but issues won't be fixed.");
                         Draw(s, width, height);
                     }
                     else
@@ -593,7 +595,7 @@ Example:
                 //}
 
                 var bmp = painter.Draw(width, height);
-                bmp.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
+                bmp?.Save(Path.ChangeExtension(path, ".FreeMote.png"), ImageFormat.Png);
             }
             else if(psb.Type == PsbType.Motion)
             {

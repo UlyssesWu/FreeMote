@@ -6,6 +6,7 @@ using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using FreeMote.Motion;
 using FreeMote.Plugins;
 using FreeMote.Psb.Types;
 
@@ -777,6 +778,12 @@ namespace FreeMote.Psb
                 left = (int)nl;
             }
 
+            TexAttribute attr = TexAttribute.None;
+            if (d["attr"] is PsbNumber na)
+            {
+                attr = (TexAttribute)unchecked((ushort)na.UIntValue);
+            }
+
             PsbResource palResource = null;
             PsbString palTypeString = null;
             if (d["pal"] is PsbResource palRes)
@@ -798,6 +805,7 @@ namespace FreeMote.Psb
             {
                 Index = r.Index ?? int.MaxValue,
                 Compress = compress,
+                Attr = attr,
                 Name = name,
                 Part = part,
                 Clip = clip,
