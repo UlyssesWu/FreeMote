@@ -107,7 +107,7 @@
       <Version>2.1.0-CI00002</Version>
     </PackageReference>
     <PackageReference Include="FreeMote.Psd">
-      <Version>2.5.1.15</Version>
+      <Version>2.5.1.16</Version>
     </PackageReference>
     <PackageReference Include="FreeMote.XMemCompress">
       <Version>1.0.0.6</Version>

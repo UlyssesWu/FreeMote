@@ -662,7 +662,8 @@ namespace FreeMote.Plugins.Shells
                 var layerHeight = Object["height"].GetInt();
                 var layerTop = Object["top"].GetInt();
                 var layerLeft = Object["left"].GetInt();
-                var emptyLayer = psd.MakeImageLayer(new Bitmap(layerWidth, layerHeight), Name, layerLeft, layerTop);
+                Bitmap bmp = (layerHeight == 0 || layerWidth == 0) ? null : new Bitmap(layerWidth, layerHeight);
+                var emptyLayer = psd.MakeImageLayer(bmp, Name, layerLeft, layerTop);
                 emptyLayer.Visible = Object["visible"].GetInt() != 0;
                 emptyLayer.Opacity = (byte) Object["opacity"].GetInt();
                 if (LayerId is >= 0 and <= PsdShell.MaxLayerId)
