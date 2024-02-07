@@ -1542,21 +1542,32 @@ namespace FreeMote.Psb
             }
 
             //Load Entries
-            while (br.PeekChar() != (int)PsbObjType.Objects)
+            while (br.BaseStream.Position < br.BaseStream.Length && br.ReadByte() != (int)PsbObjType.Objects)
             {
-                br.ReadByte();
             }
+            if (br.BaseStream.Position == br.BaseStream.Length)
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not find Entries");
+            }
+            br.BaseStream.Seek(-1, SeekOrigin.Current);
 
             Header.OffsetEntries = (uint)br.BaseStream.Position;
             IPsbValue obj = Unpack(br, true);
 
             Objects = obj as PsbDictionary ?? throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
 
+
             //Load Strings
-            while (!PsbArrayDetector.IsPsbArrayType((byte)br.PeekChar()))
+            while (br.BaseStream.Position < br.BaseStream.Length && !PsbArrayDetector.IsPsbArrayType(br.ReadByte()))
             {
-                br.ReadByte();
             }
+            
+            if (br.BaseStream.Position == br.BaseStream.Length)
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not find Strings");
+            }
+
+            br.BaseStream.Seek(-1, SeekOrigin.Current);
 
             Header.OffsetStrings = (uint)br.BaseStream.Position;
             StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
@@ -1607,22 +1618,37 @@ namespace FreeMote.Psb
 
 
             //Load Resources
-            while (br.PeekChar() != (int)PsbObjType.ArrayN1 && br.PeekChar() != (int)PsbObjType.ArrayN2)
+            var probe = br.ReadByte();
+            while (br.BaseStream.Position < br.BaseStream.Length && probe != (int)PsbObjType.ArrayN1 && probe != (int)PsbObjType.ArrayN2)
             {
-                br.ReadByte();
+                probe = br.ReadByte();
             }
+            
+            if (br.BaseStream.Position == br.BaseStream.Length)
+            {
+                Logger.LogWarn("[Dullahan] Can not find Resources");
+                goto AFTER_LOAD;
+            }
+            br.BaseStream.Seek(-1, SeekOrigin.Current);
+            
+
             //currently found a PsbArray, could be ExtraResource or Resource
             var pos1 = (uint)br.BaseStream.Position;
             var array1 = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             var pos2 = (uint)br.BaseStream.Position;
             var array2 = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             var arriveEnd = br.BaseStream.Position == br.BaseStream.Length;
-            //var peek = br.PeekChar();
-            if (!arriveEnd &&
-                (Header.Version >= 4 ||
-                 br.PeekChar() == (int)PsbObjType.ArrayN1 ||
-                 br.PeekChar() == (int)PsbObjType.ArrayN2)
-            )
+            if (!arriveEnd)
+            {
+                probe = br.ReadByte();
+                br.BaseStream.Seek(-1, SeekOrigin.Current);
+            }
+            else
+            {
+                probe = 0;
+            }
+
+            if (!arriveEnd && (Header.Version >= 4 || probe == (int)PsbObjType.ArrayN1 || probe == (int)PsbObjType.ArrayN2))
             {
                 Header.Version = 4;
                 Header.HeaderLength = PsbHeader.GetHeaderLength(Header.Version);
@@ -1682,15 +1708,18 @@ namespace FreeMote.Psb
                 else
                 {
                     Header.OffsetExtraChunkData = (uint)br.BaseStream.Position;
-                    while (!PsbArrayDetector.IsPsbArrayType((byte)br.PeekChar()))
+                    while (br.BaseStream.Position < br.BaseStream.Length && !PsbArrayDetector.IsPsbArrayType(br.ReadByte()))
                     {
-                        br.ReadByte();
                     }
 
-                    //var pos3 = br.BaseStream.Position;
-                    ChunkOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
-                    Header.OffsetChunkLengths = (uint)br.BaseStream.Position;
-                    ChunkLengths = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br); //got it
+                    if (br.BaseStream.Position < br.BaseStream.Length)
+                    {
+                        br.BaseStream.Seek(-1, SeekOrigin.Current);
+                        //var pos3 = br.BaseStream.Position;
+                        ChunkOffsets = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+                        Header.OffsetChunkLengths = (uint) br.BaseStream.Position;
+                        ChunkLengths = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br); //got it
+                    }
                 }
             }
             else //resource chunk
@@ -1745,6 +1774,7 @@ namespace FreeMote.Psb
                 }
             }
 
+            AFTER_LOAD:
             AfterLoad();
         }
     }
