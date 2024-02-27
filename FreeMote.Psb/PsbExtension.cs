@@ -1092,6 +1092,7 @@ namespace FreeMote.Psb
         "script/ikusei.nut.m" -> packed with key ikusei.nut.m (ok fine)
         "sound/bgm.psb" -> not packed (??)
         "bg_c_whit.m" -> packed with key bg_c_whit.m.psb.m (???)
+         tolower might be used
          */
 
         /// <summary>
@@ -1112,6 +1113,12 @@ namespace FreeMote.Psb
             if (name.Contains("/") && !keepDirectory) //There is path, OMG
             {
                 results.AddRange(ArchiveInfo_GetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix, keepDirectory));
+            }
+
+            //check if name is fully lower case
+            if (name.ToLowerInvariant() != name)
+            {
+                results.AddRange(ArchiveInfo_GetAllPossibleFileNames(name.ToLowerInvariant(), suffix, keepDirectory));
             }
 
             List<string> exts = new List<string>();

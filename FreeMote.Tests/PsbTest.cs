@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FreeMote.Plugins;
-using FreeMote.Plugins.Shells;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
 
@@ -223,7 +222,7 @@ namespace FreeMote.Tests
 
             using (var mdfStream = File.OpenRead(path))
             {
-                using (var psbStream = MPack.MdfDecompressToPsbStream(mdfStream))
+                using (var psbStream = MPack.MdfDecompressToStream(mdfStream))
                 {
                     //using (var pureStream = new MemoryStream((int)psbStream.Length))
                     {

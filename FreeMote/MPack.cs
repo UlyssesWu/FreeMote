@@ -118,7 +118,7 @@ namespace FreeMote
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        public static void MdfDecompressToPsbFile(string inputPath, string outputPath)
+        public static void MdfDecompressToFile(string inputPath, string outputPath)
         {
             Stream mfs = File.OpenRead(inputPath);
             mfs.Seek(10, SeekOrigin.Begin);
@@ -126,7 +126,7 @@ namespace FreeMote
             mfs.Dispose();
         }
 
-        public static Stream MdfDecompressToPsbStream(Stream input, int size = 0)
+        public static Stream MdfDecompressToStream(Stream input, int size = 0)
         {
             input.Seek(10, SeekOrigin.Begin);
             return ZlibCompress.DecompressToStream(input, size);

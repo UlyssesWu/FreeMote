@@ -65,7 +65,7 @@ namespace FreeMote.Plugins.Shells
                 stream.Position = pos;
             }
 
-            return MPack.MdfDecompressToPsbStream(stream, size) as MemoryStream;
+            return MPack.MdfDecompressToStream(stream, size) as MemoryStream;
         }
 
         

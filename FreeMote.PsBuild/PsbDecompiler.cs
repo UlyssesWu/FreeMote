@@ -827,5 +827,85 @@ namespace FreeMote.PsBuild
                 Directory.CreateDirectory(baseDir);
             }
         }
+
+        /// <summary>
+        /// Unpack MT19937 MDF
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="outputPath"></param>
+        /// <param name="key"></param>
+        /// <param name="keyLength"></param>
+        /// <param name="fileKey"></param>
+        /// <param name="suffix"></param>
+        /// <exception cref="FormatException"></exception>
+        internal static void MtUnpack(string filePath, string outputPath, string key, int keyLength, string fileKey = "", string suffix = "")
+        {
+            if (!File.Exists(filePath))
+            {
+                Logger.LogError($"Cannot find input file: {filePath}");
+                return;
+            }
+
+            var bodyBytes = File.ReadAllBytes(filePath);
+            MPack.IsSignatureMPack(bodyBytes, out var shellType);
+            var fileName = Path.GetFileName(filePath);
+            fileKey ??= "";
+            var name = string.IsNullOrEmpty(fileKey) ? fileName : fileKey;
+            var possibleFileNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(name, suffix);
+            //var relativePath = fileKey;
+            var finalContext = new Dictionary<string, object>()
+            {
+                {Context_MdfKeyLength, keyLength}
+            };
+            finalContext.Remove(Context_ArchiveSource);
+
+            var ms = MsManager.GetStream(bodyBytes);
+            MemoryStream mms = null;
+
+            if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
+            {
+                foreach (var possibleFileName in possibleFileNames)
+                {
+                    var bodyContext = new Dictionary<string, object>(finalContext)
+                    {
+                        [Context_MdfKey] = key + possibleFileName,
+                        [Context_FileName] = possibleFileName
+                    };
+
+                    try
+                    {
+                        mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                    }
+                    catch (InvalidDataException)
+                    {
+                        ms = MsManager.GetStream(bodyBytes);
+                        mms = null;
+                    }
+
+                    if (mms != null)
+                    {
+                        //relativePath = possibleFileName.Contains("/") ? possibleFileName :
+                        //    fileKey.Contains("/") ? Path.Combine(Path.GetDirectoryName(fileKey), possibleFileName) :
+                        //    possibleFileName;
+                        //finalContext = bodyContext;
+                        if (possibleFileName != possibleFileNames[0])
+                        {
+                            Logger.Log($"  detected key name: {fileKey} -> {possibleFileName}");
+                        }
+
+                        //write to file
+                        using var outFs = File.OpenWrite(string.IsNullOrEmpty(outputPath)
+                            ? Path.ChangeExtension(filePath, ".unpack.psb")
+                            : outputPath);
+                        mms.WriteTo(outFs);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                throw new FormatException("File is not a shell PSB.");
+            }
+        }
     }
 }
