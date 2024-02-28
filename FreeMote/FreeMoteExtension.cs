@@ -90,10 +90,12 @@ namespace FreeMote
         {
             switch (format)
             {
-                case PsbPixelFormat.CI4:
-                case PsbPixelFormat.CI8:
+                case PsbPixelFormat.CI4_SW_PSP:
+                case PsbPixelFormat.CI8_SW_PSP:
                 case PsbPixelFormat.CI8_SW:
                 case PsbPixelFormat.CI4_SW:
+                case PsbPixelFormat.CI4:
+                case PsbPixelFormat.CI8:
                     return true;
                 default:
                     return false;
@@ -165,10 +167,12 @@ namespace FreeMote
                 case PsbPixelFormat.A8_SW:
                 case PsbPixelFormat.TileA8_SW:
                 case PsbPixelFormat.CI8_SW:
+                case PsbPixelFormat.CI8_SW_PSP:
                 case PsbPixelFormat.CI8:
                     return 8;
-                case PsbPixelFormat.CI4:
+                case PsbPixelFormat.CI4_SW_PSP:
                 case PsbPixelFormat.CI4_SW:
+                case PsbPixelFormat.CI4:
                     return 4;
                 case PsbPixelFormat.ASTC_8BPP:
                 case PsbPixelFormat.DXT5:
@@ -295,8 +299,12 @@ namespace FreeMote
             switch (typeStr.ToUpperInvariant())
             {
                 case "CI4":
-                    return PsbPixelFormat.CI4;
+                    return PsbPixelFormat.CI4_SW_PSP;
                 case "CI8":
+                    if (spec == PsbSpec.psp) //TODO: PS4?
+                    {
+                        return PsbPixelFormat.CI8_SW_PSP;
+                    }
                     return PsbPixelFormat.CI8;
                 case "CI4_SW":
                     return PsbPixelFormat.CI4_SW;
@@ -378,6 +386,10 @@ namespace FreeMote
                     return "A8_SW";
                 case PsbPixelFormat.TileL8_SW:
                     return "L8_SW";
+                case PsbPixelFormat.CI8_SW_PSP:
+                    return "CI8";
+                case PsbPixelFormat.CI4_SW_PSP:
+                    return "CI4";
 
                 default:
                     return pixelFormat.ToString();

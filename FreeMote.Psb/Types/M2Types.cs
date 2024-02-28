@@ -89,7 +89,7 @@ namespace FreeMote.Psb.Types
                     Resource = r,
                     Palette = cr,
                     PsbType = PsbType,
-                    TypeString = PsbPixelFormat.CI8_PC.ToStringForPsb().ToPsbString(),
+                    TypeString = PsbPixelFormat.CI8.ToStringForPsb().ToPsbString(),
                 } as T);
             }
 

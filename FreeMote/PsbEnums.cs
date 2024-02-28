@@ -280,26 +280,30 @@ namespace FreeMote
         /// </summary>
         TileA8_SW,
         /// <summary>
+        /// CI8 (without swizzle)
+        /// </summary>
+        CI8,
+        /// <summary>
         /// CI8 (C8) with Swizzle for vita
         /// </summary>
         /// REF: http://wiki.tockdom.com/wiki/Image_Formats#C8_.28CI8.29
         CI8_SW,
         /// <summary>
+        /// CI8 with Swizzle for PSP
+        /// </summary>
+        CI8_SW_PSP,
+        /// <summary>
+        /// CI4 (without swizzle)
+        /// </summary>
+        CI4,
+        /// <summary>
         /// CI4 with Swizzle for vita
         /// </summary>
         CI4_SW,
         /// <summary>
-        /// CI8 with Swizzle for PSP
-        /// </summary>
-        CI8,
-        /// <summary>
         /// CI4 with Swizzle for PSP
         /// </summary>
-        CI4,
-        /// <summary>
-        /// CI8 without swizzle
-        /// </summary>
-        CI8_PC,
+        CI4_SW_PSP,
 
         //Special
 

@@ -16,7 +16,7 @@ namespace FreeMote.Psb
     [DebuggerDisplay("{" + nameof(DebuggerString) + "}")]
     public class ImageMetadata : IResourceMetadata
     {
-        private static readonly List<string> SupportedImageExt = new List<string> { ".png", ".bmp", ".jpg", ".jpeg" };
+        private static readonly List<string> SupportedImageExt = new List<string> {".png", ".bmp", ".jpg", ".jpeg"};
 
         /// <summary>
         /// Name 1
@@ -103,6 +103,7 @@ namespace FreeMote.Psb
         public PsbString TypeString { get; set; }
         public RectangleF Clip { get; set; }
         public PsbResource Resource { get; set; }
+
         /// <summary>
         /// PIMG layer_type
         /// </summary>
@@ -168,7 +169,7 @@ namespace FreeMote.Psb
         public bool Visible { get; set; } = true;
 
         internal TexAttribute Attr { get; set; }
-        
+
         /// <summary>
         /// Platform
         /// <para>Spec can not be get from source part, so set it before use</para>
@@ -176,7 +177,7 @@ namespace FreeMote.Psb
         public PsbSpec Spec { get; set; } = PsbSpec.other;
 
         public PsbType PsbType { get; set; } = PsbType.Motion;
-        
+
         private static bool IsPowOf2(int n)
         {
             return n >= 2 && (n & (n - 1)) == 0;
@@ -184,7 +185,7 @@ namespace FreeMote.Psb
 
         public ImageMetadata Clone()
         {
-            return (ImageMetadata)MemberwiseClone();
+            return (ImageMetadata) MemberwiseClone();
         }
 
         /// <summary>
@@ -224,7 +225,8 @@ namespace FreeMote.Psb
                 }
             }
 
-            if (PixelFormat == PsbPixelFormat.CI4_SW || PixelFormat == PsbPixelFormat.CI8_SW)
+            if (PixelFormat == PsbPixelFormat.CI4_SW || PixelFormat == PsbPixelFormat.CI8_SW 
+                                                     || PixelFormat == PsbPixelFormat.CI4_SW_PSP || PixelFormat == PsbPixelFormat.CI8_SW_PSP)
             {
                 if (!IsPowOf2(Width) || !IsPowOf2(Height))
                 {
@@ -334,6 +336,7 @@ namespace FreeMote.Psb
                         break;
                 }
             }
+
             if (PixelFormat.UsePalette())
             {
                 PalData = bmp.Palette.GetPaletteBytes(PalettePixelFormat);
@@ -344,7 +347,7 @@ namespace FreeMote.Psb
         {
             return $"{Part}/{Name}";
         }
-        
+
         /// <summary>
         /// Name for export and import
         /// </summary>
@@ -373,7 +376,7 @@ namespace FreeMote.Psb
             }
 
             if (string.IsNullOrWhiteSpace(Name))
-            { 
+            {
                 return PsbResHelper.EscapeStringForPath(Part);
             }
 
@@ -434,6 +437,7 @@ namespace FreeMote.Psb
                     {
                         return File.ReadAllBytes(Path.ChangeExtension(path, ".raw"));
                     }
+
                     return File.ReadAllBytes(path);
                 //image
                 default:
@@ -472,7 +476,8 @@ namespace FreeMote.Psb
                 {
                     //it's not a combined image, do nothing
                 }
-                else if ((image.Width >= Width || image.Height >= Height) && (image.Width >= Left || image.Height >= Height)) //there could be some redundant area in pieces in order to fit 2^n
+                else if ((image.Width >= Width || image.Height >= Height) &&
+                         (image.Width >= Left || image.Height >= Height)) //there could be some redundant area in pieces in order to fit 2^n
                 {
                     Bitmap chunk = new Bitmap(Width, Height, image.PixelFormat);
                     //it should be a combined image
@@ -509,6 +514,7 @@ namespace FreeMote.Psb
                         Logger.LogWarn($"[WARN] Can not convert image to ASTC: {path}");
                         //data = File.ReadAllBytes(path);
                     }
+
                     break;
             }
 
@@ -533,6 +539,7 @@ namespace FreeMote.Psb
                             //data = File.ReadAllBytes(path);
                         }
                     }
+
                     break;
                 case PsbCompressType.ByName:
                     var imgExt = Path.GetExtension(Name);
@@ -545,6 +552,7 @@ namespace FreeMote.Psb
                         Logger.LogWarn($"[WARN] Unsupported image: {path}");
                         data = File.ReadAllBytes(path);
                     }
+
                     break;
                 case PsbCompressType.None:
                 default:

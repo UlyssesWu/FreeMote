@@ -190,7 +190,7 @@ namespace FreeMote.Tests
             var imgPath = Path.Combine(resPath, "pm_title.psb", "11.bin");
 
             var bmp = RL.ConvertToImageWithPalette(File.ReadAllBytes(imgPath), File.ReadAllBytes(palPath), 1024,
-                512, PsbPixelFormat.CI8_SW);
+                512, PsbPixelFormat.CI8_SW, PsbPixelFormat.BeRGBA8);
             bmp.Save("ci8_10.png", ImageFormat.Png);
         }
 

@@ -257,8 +257,8 @@ namespace FreeMote
                 case PsbPixelFormat.A8:
                     result = Argb2A8(result);
                     break;
-                case PsbPixelFormat.CI4:
-                case PsbPixelFormat.CI8:
+                case PsbPixelFormat.CI4_SW_PSP:
+                case PsbPixelFormat.CI8_SW_PSP:
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat, SwizzleType.PSP);
                     break;
                 case PsbPixelFormat.CI4_SW:
@@ -323,9 +323,9 @@ namespace FreeMote
 
             switch (colorFormat)
             {
-                case PsbPixelFormat.CI8:
+                case PsbPixelFormat.CI8_SW_PSP:
                 case PsbPixelFormat.CI8_SW:
-                case PsbPixelFormat.CI8_PC:
+                case PsbPixelFormat.CI8:
                     {
                         bmp = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
                         bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
@@ -336,17 +336,18 @@ namespace FreeMote
                         // Assign the edited palette to the bitmap.
                         bmp.Palette = pal;
 
-                        if (colorFormat != PsbPixelFormat.CI8_PC)
+                        if (colorFormat != PsbPixelFormat.CI8)
                         {
                             data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat,
-                                colorFormat == PsbPixelFormat.CI8 ? SwizzleType.PSP : SwizzleType.PSV);
+                                colorFormat == PsbPixelFormat.CI8_SW_PSP ? SwizzleType.PSP : SwizzleType.PSV);
                             //Switch_0_2(ref data);
                         }
                     }
 
                     break;
-                case PsbPixelFormat.CI4:
+                case PsbPixelFormat.CI4_SW_PSP:
                 case PsbPixelFormat.CI4_SW:
+                case PsbPixelFormat.CI4:
                     {
                         bmp = new Bitmap(width, height, PixelFormat.Format4bppIndexed); //ここ重要
                         bmpData = bmp.LockBits(new Rectangle(0, 0, width, height),
@@ -358,8 +359,11 @@ namespace FreeMote
                         bmp.Palette = pal;
                         //data.Length * 2 = 8bppBmp.Width * 8bppBmp.Height
 
-                        data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat,
-                            colorFormat == PsbPixelFormat.CI4 ? SwizzleType.PSP : SwizzleType.PSV);
+                        if (colorFormat != PsbPixelFormat.CI4)
+                        {
+                            data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat,
+                                colorFormat == PsbPixelFormat.CI4_SW_PSP ? SwizzleType.PSP : SwizzleType.PSV);
+                        }
                     }
                     break;
                 default:
