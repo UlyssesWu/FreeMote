@@ -26,7 +26,7 @@ namespace FreeMote.Psb
         /// <param name="psb"></param>
         /// <param name="deDuplication"></param>
         /// <returns></returns>
-        List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T: IResourceMetadata;
+        List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T: class, IResourceMetadata;
 
         /// <summary>
         /// Link
@@ -84,6 +84,7 @@ namespace FreeMote.Psb
             {PsbType.SoundArchive, new SoundArchiveType()},
             {PsbType.BmpFont, new FontType()},
             {PsbType.Map, new MapType()},
+            {PsbType.SprBlock, new SprBlockType()},
             {PsbType.PSB, new MotionType()}, //assume as motion type by default, must put this after Motion
     };
         

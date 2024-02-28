@@ -11,7 +11,7 @@ namespace FreeMote.Psb.Types
             return psb.TypeId == "archive" || (psb.TypeId == "scenario" && psb.Objects.ContainsKey("file_info")); //&& psb.Objects.ContainsKey("file_info")
         }
 
-        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : IResourceMetadata
+        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
             return new List<T>();
         }

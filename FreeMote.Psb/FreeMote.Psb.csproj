@@ -82,6 +82,7 @@
     <Compile Include="Textures\TextureCombiner.cs" />
     <Compile Include="Textures\TexturePacker.cs" />
     <Compile Include="Textures\TextureSpliter.cs" />
+    <Compile Include="Types\SprBlockType.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FreeMote\FreeMote.csproj">

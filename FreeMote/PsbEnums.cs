@@ -71,6 +71,10 @@ namespace FreeMote
         /// Tile Map
         /// </summary>
         Map = 9,
+        /// <summary>
+        /// Sprite Block
+        /// </summary>
+        SprBlock = 10,
     }
 
     /// <summary>
@@ -193,11 +197,11 @@ namespace FreeMote
         /// </summary>
         A8L8,
         /// <summary>
-        /// L8
+        /// L8 (L = Lightness)
         /// </summary>
         L8,
         /// <summary>
-        /// A8
+        /// A8 (A = Alpha)
         /// </summary>
         A8,
 

@@ -15,7 +15,7 @@ namespace FreeMote.Psb.Types
             return psb.TypeId == "map";
         }
 
-        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : IResourceMetadata
+        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
             var resourceList = FindTileResources(psb, deDuplication).Cast<T>().ToList();
 

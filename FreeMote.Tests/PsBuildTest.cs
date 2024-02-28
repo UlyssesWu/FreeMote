@@ -670,6 +670,17 @@ namespace FreeMote.Tests
             PsbDecompiler.ExtractArchive("patch_info.psb.m", "523aad2de7132", FreeMountContext.CreateForArchive(), null, false, false, true);
         }
 
+        [TestMethod]
+        public void TestSpr()
+        {
+            FreeMount.Init();
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "Spr", "1P000.psb");
+
+            var psb = new PSB(path);
+            PsbDecompiler.DecompileToFile(path, extractFormat: PsbImageFormat.png, extractOption: PsbExtractOption.Extract);
+        }
+
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)
         {
             //if (p1.Type != p2.Type && !(p1 is PsbString))

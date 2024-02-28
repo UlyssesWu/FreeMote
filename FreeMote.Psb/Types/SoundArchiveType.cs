@@ -15,7 +15,7 @@ namespace FreeMote.Psb.Types
             return psb.TypeId == "sound_archive";
         }
 
-        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : IResourceMetadata
+        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
             List<T> resourceList = psb.Resources == null
                 ? new List<T>()
