@@ -73,6 +73,7 @@
     <Compile Include="Types\BaseImageType.cs" />
     <Compile Include="Types\FontType.cs" />
     <Compile Include="Types\ImageType.cs" />
+    <Compile Include="Types\M2Types.cs" />
     <Compile Include="Types\MapType.cs" />
     <Compile Include="Types\MmoType.cs" />
     <Compile Include="Types\MotionType.cs" />
@@ -82,7 +83,6 @@
     <Compile Include="Textures\TextureCombiner.cs" />
     <Compile Include="Textures\TexturePacker.cs" />
     <Compile Include="Textures\TextureSpliter.cs" />
-    <Compile Include="Types\SprBlockType.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FreeMote\FreeMote.csproj">

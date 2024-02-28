@@ -367,6 +367,16 @@ namespace FreeMote.Psb
                 return "";
             }
 
+            if (string.IsNullOrWhiteSpace(Part))
+            {
+                return PsbResHelper.EscapeStringForPath(Name);
+            }
+
+            if (string.IsNullOrWhiteSpace(Name))
+            { 
+                return PsbResHelper.EscapeStringForPath(Part);
+            }
+
             return $"{PsbResHelper.EscapeStringForPath(Part)}{Consts.ResourceNameDelimiter}{PsbResHelper.EscapeStringForPath(Name)}";
         }
 

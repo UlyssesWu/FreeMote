@@ -75,6 +75,14 @@ namespace FreeMote
         /// Sprite Block
         /// </summary>
         SprBlock = 10,
+        /// <summary>
+        /// CLUT - Images with Color Look-Up Table
+        /// </summary>
+        ClutImg = 11,
+        /// <summary>
+        /// Chip
+        /// </summary>
+        ChipImg = 12
     }
 
     /// <summary>
@@ -288,6 +296,10 @@ namespace FreeMote
         /// CI4 with Swizzle for PSP
         /// </summary>
         CI4,
+        /// <summary>
+        /// CI8 without swizzle
+        /// </summary>
+        CI8_PC,
 
         //Special
 

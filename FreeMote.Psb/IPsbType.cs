@@ -84,6 +84,7 @@ namespace FreeMote.Psb
             {PsbType.SoundArchive, new SoundArchiveType()},
             {PsbType.BmpFont, new FontType()},
             {PsbType.Map, new MapType()},
+            {PsbType.ClutImg, new ClutType()},
             {PsbType.SprBlock, new SprBlockType()},
             {PsbType.PSB, new MotionType()}, //assume as motion type by default, must put this after Motion
     };

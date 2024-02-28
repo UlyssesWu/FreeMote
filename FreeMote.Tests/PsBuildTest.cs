@@ -681,6 +681,17 @@ namespace FreeMote.Tests
             PsbDecompiler.DecompileToFile(path, extractFormat: PsbImageFormat.png, extractOption: PsbExtractOption.Extract);
         }
 
+        [TestMethod]
+        public void TestClut()
+        {
+            FreeMount.Init();
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "Spr", "image.psb.m");
+
+            var psb = new PSB(path);
+            PsbDecompiler.DecompileToFile(path, extractFormat: PsbImageFormat.png, extractOption: PsbExtractOption.Extract);
+        }
+
         public static bool CompareValue(IPsbValue p1, IPsbValue p2)
         {
             //if (p1.Type != p2.Type && !(p1 is PsbString))
