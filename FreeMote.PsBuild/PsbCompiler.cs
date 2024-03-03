@@ -155,6 +155,11 @@ namespace FreeMote.PsBuild
                         cryptKey = resx.CryptKey;
                     }
 
+                    if (resx.Encoding != null && resx.Encoding > 0)
+                    {
+                        psb.Encoding = Encoding.GetEncoding(resx.Encoding.Value);
+                    }
+
                     context = FreeMount.CreateContext(resx.Context);
 
                     if (resx.HasExtraResources)

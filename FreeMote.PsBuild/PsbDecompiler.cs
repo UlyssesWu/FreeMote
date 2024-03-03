@@ -135,6 +135,11 @@ namespace FreeMote.PsBuild
             var dirPath = Path.Combine(Path.GetDirectoryName(filePath), name);
             PsbResourceJson resx = new PsbResourceJson(psb, context.Context);
 
+            if (Encoding != null && !Equals(Encoding, Encoding.UTF8))
+            {
+                resx.Encoding = Encoding.CodePage;
+            }
+
             if (File.Exists(dirPath))
             {
                 name += "-resources";
@@ -621,9 +626,10 @@ namespace FreeMote.PsBuild
 
                                 if (mms != null)
                                 {
-                                    relativePath = possibleFileName.Contains("/") ? possibleFileName :
-                                        pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
-                                        possibleFileName;
+                                    //should not change file name, in order to keep repack correct :(
+                                    //relativePath = possibleFileName.Contains("/") ? possibleFileName :
+                                    //    pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
+                                    //    possibleFileName;
                                     finalContext = bodyContext;
                                     if (possibleFileName != possibleFileNames[0])
                                     {
@@ -686,9 +692,8 @@ namespace FreeMote.PsBuild
                     specialItemFileNames.AddRange(archiveItemFileNames.Values);
                     Logger.Log($"{dic.Count} files extracted.");
                 }
-                else
+                else //no parallel
                 {
-                    //no parallel
                     //var maxLen = dic?.Values.Max(item => item.Children(1).GetInt()) ?? 0;
                     var archiveItemFileNames = new Dictionary<string, string>();
                     using var mmFile =
@@ -743,9 +748,9 @@ namespace FreeMote.PsBuild
 
                                 if (mms != null)
                                 {
-                                    relativePath = possibleFileName.Contains("/") ? possibleFileName :
-                                        pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
-                                        possibleFileName;
+                                    //relativePath = possibleFileName.Contains("/") ? possibleFileName :
+                                    //    pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
+                                    //    possibleFileName;
                                     finalContext = bodyContext;
                                     if (possibleFileName != possibleFileNames[0])
                                     {

@@ -80,6 +80,10 @@ namespace FreeMote
         /// </summary>
         public const string Context_ArchiveItemFileNames = "ArchiveItemFileNames";
 
+        //public const string Context_Encoding = "Encoding";
+        //For netcore: var enc = CodePagesEncodingProvider.Instance.GetEncoding(932);
+        //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
         /// <summary>
         /// (int) PSB Version
         /// </summary>

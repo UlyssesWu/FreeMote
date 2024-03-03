@@ -76,13 +76,17 @@ namespace FreeMote
         /// </summary>
         SprBlock = 10,
         /// <summary>
+        /// Sprite Data (define)
+        /// </summary>
+        SprData = 11,
+        /// <summary>
         /// CLUT - Images with Color Look-Up Table
         /// </summary>
-        ClutImg = 11,
+        ClutImg = 12,
         /// <summary>
         /// Chip
         /// </summary>
-        ChipImg = 12
+        ChipImg = 13
     }
 
     /// <summary>

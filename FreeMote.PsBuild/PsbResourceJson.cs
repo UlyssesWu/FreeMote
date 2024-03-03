@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -67,6 +68,9 @@ namespace FreeMote.PsBuild
         [JsonIgnore]
         public bool HasExtraResources => ExtraFlattenArrays is {Count: > 0} ||
                                          ExtraResources is {Count: > 0};
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? Encoding { get; set; }
 
         public PsbResourceJson()
         {

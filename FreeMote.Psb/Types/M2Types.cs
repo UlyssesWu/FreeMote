@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 
 namespace FreeMote.Psb.Types
 {
@@ -17,17 +17,35 @@ namespace FreeMote.Psb.Types
 
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
-            //8bit (1 byte 1 pixel)
             if (psb.Objects["image"] is PsbResource res)
             {
+                //test bit depth, for image it's 8bit (1 byte 1 pixel); for palette it's 32bit (4 byte 1 pixel)
+                var width = psb.Objects["w"].GetInt();
+                var height = psb.Objects["h"].GetInt();
+                var dataLen = res.Data.Length;
+                var depth = dataLen / (width * height);
+                PsbPixelFormat format = PsbPixelFormat.A8;
+                switch (depth)
+                {
+                    case 1:
+                        format = PsbPixelFormat.A8;
+                        break;
+                    case 4:
+                        format = PsbPixelFormat.LeRGBA8;
+                        break;
+                    default:
+                        Logger.LogWarn($"Unknown color format: {depth} bytes per pixel. Please submit sample.");
+                        return [];
+                }
+
                 ImageMetadata md = new ImageMetadata()
                 {
                     PsbType = PsbType,
                     Resource = res,
-                    Width = psb.Objects["w"].GetInt(),
-                    Height = psb.Objects["h"].GetInt(),
+                    Width = width,
+                    Height = height,
                     Spec = PsbSpec.none,
-                    TypeString = PsbPixelFormat.A8.ToStringForPsb().ToPsbString()
+                    TypeString = format.ToStringForPsb().ToPsbString()
                 };
                 return [md as T];
             }
@@ -35,6 +53,30 @@ namespace FreeMote.Psb.Types
             return [];
         }
     }
+
+    //spr: data: 0: image no. 1:max to 1024 2:max to block[0]-1 3:max to block[1]-1
+    //block: [0] * [1] = total sprites in a tex
+    class SprDataType : BaseImageType, IPsbType
+    {
+        public PsbType PsbType => PsbType.SprData;
+        public bool IsThisType(PSB psb)
+        {
+            return psb.Objects != null && psb.Objects.ContainsKey("spr_data") && psb.Objects.ContainsKey("tex_size");
+        }
+
+        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
+        {
+            if (string.IsNullOrEmpty(psb.FilePath) || !File.Exists(psb.FilePath))
+            {
+                //Logger.LogHint("To get images from SprData PSB, you have to put all related PSBs in a folder first.");
+                return [];
+            }
+
+            //TODO: parse header_ex later, no sample yet.
+            return [];
+        }
+    }
+
 
     class ClutType : BaseImageType, IPsbType
     {
@@ -107,8 +149,8 @@ namespace FreeMote.Psb.Types
 
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
-            //TODO:
-            return default;
+            //there is nothing we can do for a 3D model's UV tex
+            return [];
         }
     }
 }
