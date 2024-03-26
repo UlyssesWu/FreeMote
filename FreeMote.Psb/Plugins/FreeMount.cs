@@ -20,6 +20,7 @@ namespace FreeMote.Plugins
         private const string PLUGIN_X64_DLL = "FreeMote.Plugins.x64.dll";
         private const string PLUGIN_DIR = "Plugins";
         private const string LIB_DIR = "lib";
+        public const string ARG_DISABLE_PLUGINS = "--disable-plugins";
 
 
         [ImportMany] private IEnumerable<Lazy<IPsbShell, IPsbPluginInfo>> _shells;
