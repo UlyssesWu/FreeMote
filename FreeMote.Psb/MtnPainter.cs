@@ -267,8 +267,8 @@ namespace FreeMote.Psb
                                         nRes.Label = labelName;
                                         nRes.MotionName = motionName;
                                         //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
-                                        nRes.OriginX = location.x + ox;
-                                        nRes.OriginY = location.y + oy;
+                                        nRes.OriginX = location.x - ox;
+                                        nRes.OriginY = location.y - oy;
                                         nRes.ZIndex = location.z;
                                         nRes.Opacity = opa;
                                         nRes.Visible = time <= 0 && visible;
