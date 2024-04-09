@@ -88,8 +88,16 @@ namespace FreeMote.Tools.EmtConvert
             Console.WriteLine("FreeMote PSB Converter");
             Console.WriteLine("by Ulysses, wdwxy12345@gmail.com");
             Logger.InitConsole();
-            FreeMount.Init();
-            Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
+            if (args.Length > 0 && args[0] == FreeMount.ARG_DISABLE_PLUGINS)
+            {
+                Console.WriteLine("Plugins disabled.");
+            }
+            else
+            {
+                FreeMount.Init();
+                Console.WriteLine($"{FreeMount.PluginsCount} Plugins Loaded.");
+            }
+
             Console.WriteLine();
 
             var app = new CommandLineApplication();
