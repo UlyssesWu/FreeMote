@@ -130,7 +130,7 @@ namespace FreeMote.Tools.EmtConvert
 
                 foreach (var s in argPath.Values)
                 {
-                    if (File.Exists(s))
+                    if (!string.IsNullOrEmpty(s) && File.Exists(s))
                     {
                         if (key != null && newKey != null) //Transfer
                         {
@@ -139,7 +139,27 @@ namespace FreeMote.Tools.EmtConvert
                         }
                         else
                         {
-                            Convert(key, s);
+                            //quick access tlg conversion
+                            var ext = Path.GetExtension(s)!.ToLower();
+                            if (ext is ".tlg" or ".tlg5" or ".tlg6")
+                            {
+                                try
+                                {
+                                    using var stream = File.OpenRead(s);
+                                    TlgImageConverter converter = new TlgImageConverter();
+                                    var br = new BinaryReader(stream);
+                                    var img = converter.Read(br);
+                                    img.Save(Path.ChangeExtension(s, ".png"), ImageFormat.Png);
+                                }
+                                catch (Exception e)
+                                {
+                                    Logger.LogError($"Convert TLG to PNG failed: {s}");
+                                }
+                            }
+                            else
+                            {
+                                Convert(key, s);
+                            }
                         }
                     }
                     else
@@ -685,6 +705,7 @@ Example:
             sb.AppendLine(FreeMount.PrintPluginInfos(2));
             sb.AppendLine(@"Examples: 
   EmtConvert sample.psb    //Unpack from shell, and decrypt if there is a KeyProvider plugin
+  EmtConvert image.tlg    //Convert TLG image to PNG
   EmtConvert -k 123456789 sample.psb    //Decrypt or encrypt using key
   EmtConvert -k 123456789 -nk 987654321 sample.psb    //Transfer from old key to new key
   Hint: If EmtConvert can't decrypt your PSB, try PsbDecompile.");
