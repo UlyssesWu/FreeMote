@@ -178,57 +178,20 @@ namespace FreeMote.Psb
             {
                 if (layer is PsbDictionary o)
                 {
-                    Travel(o, subMotion, null);
+                    Travel(o, subMotion, (0f, 0f, 0f));
                 }
             }
             
             result = result.OrderBy(metadata => metadata.ZIndex).ToList();
             //TODO: mesh\bp&cc
             //Travel
-            void Travel(IPsbCollection collection, string motionName, (float x, float y, float z)? baseLocation, bool baseVisible = true)
+            void Travel(IPsbCollection collection, string motionName, (float x, float y, float z) baseLocation, bool baseVisible = true)
             {
                 if (collection is PsbDictionary dic)
                 {
                     if (dic.ContainsKey("frameList") && dic["frameList"] is PsbList col)
                     {
                         var labelName = dic["label"].ToString(); //part label, e.g. "涙R"
-                        //Collect Locations
-                        var coordObj = col
-                            .Where(o => o is PsbDictionary d && d.ContainsKey("content") &&
-                                        d["content"] is PsbDictionary d2 && d2.ContainsKey("coord"))
-                            .Select(v => v.Children("content").Children("coord"));
-
-                        float ox = 0, oy = 0;
-                        if (coordObj.Any())
-                        {
-                            var coord = coordObj.First() as PsbList;
-                            var coordTuple = (x: (float) (PsbNumber) coord[0], y: (float) (PsbNumber) coord[1], z: (float) (PsbNumber) coord[2]);
-
-                            if (coord.Parent is PsbDictionary content)
-                            {
-                                if (content.ContainsKey("ox"))
-                                {
-                                    ox = content["ox"].GetFloat();
-                                }
-
-                                if (content.ContainsKey("oy"))
-                                {
-                                    oy = content["oy"].GetFloat();
-                                }
-                            }
-
-                            if (baseLocation == null)
-                            {
-                                //Console.WriteLine($"Set coord: {coordTuple.x},{coordTuple.y},{coordTuple.z}");
-                                baseLocation = coordTuple;
-                            }
-                            else
-                            {
-                                var loc = baseLocation.Value;
-                                baseLocation = (loc.x + coordTuple.x, loc.y + coordTuple.y, loc.z + coordTuple.z);
-                                //Console.WriteLine($"Update coord: {loc.x},{loc.y},{loc.z} -> {baseLocation?.x},{baseLocation?.y},{baseLocation?.z}");
-                            }
-                        }
 
                         //Collect Parts
                         var srcObj = col
@@ -241,6 +204,28 @@ namespace FreeMote.Psb
                             foreach (var obj in srcObj)
                             {
                                 var content = (PsbDictionary) obj["content"];
+
+                                if (content.ContainsKey("coord"))
+                                {
+                                    var coord = content["coord"] as PsbList;
+                                    var coordTuple = (x: (float) (PsbNumber) coord[0], y: (float) (PsbNumber) coord[1], z: (float) (PsbNumber) coord[2]);
+
+                                    baseLocation = (baseLocation.x + coordTuple.x, baseLocation.y + coordTuple.y, baseLocation.z + coordTuple.z);
+                                }
+
+                                float ox = 0f, oy = 0f;
+                                if (content.ContainsKey("ox"))
+                                {
+                                    ox = content["ox"].GetFloat();
+                                }
+
+                                if (content.ContainsKey("oy"))
+                                {
+                                    oy = content["oy"].GetFloat();
+                                }
+
+                                //Console.WriteLine($"Update coord: {loc.x},{loc.y},{loc.z} -> {baseLocation?.x},{baseLocation?.y},{baseLocation?.z}");
+
                                 var s = content["src"] as PsbString;
                                 var opa = content.ContainsKey("opa") ? (int) (PsbNumber) content["opa"] : 10;
                                 var icon = content.ContainsKey("icon") ? content["icon"].ToString() : null;
@@ -259,17 +244,16 @@ namespace FreeMote.Psb
                                         .ToArray());
                                     var res = _allResources.FirstOrDefault(resMd =>
                                         resMd.Part == partName && resMd.Name == iconName);
-                                    if (baseLocation != null && res != null)
+                                    if (res != null)
                                     {
                                         //copy from res
                                         var nRes = res.Clone();
-                                        var location = baseLocation.Value;
                                         nRes.Label = labelName;
                                         nRes.MotionName = motionName;
-                                        //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
-                                        nRes.OriginX = location.x - ox;
-                                        nRes.OriginY = location.y - oy;
-                                        nRes.ZIndex = location.z;
+                                        // Console.WriteLine($"Locate {partName}/{iconName} at {baseLocation.x},{baseLocation.y},{baseLocation.z}");
+                                        nRes.OriginX = baseLocation.x - ox;
+                                        nRes.OriginY = baseLocation.y - oy;
+                                        nRes.ZIndex = baseLocation.z;
                                         nRes.Opacity = opa;
                                         nRes.Visible = time <= 0 && visible;
                                         result.Add(nRes);
@@ -277,14 +261,13 @@ namespace FreeMote.Psb
                                 }
                                 else if (s.Value.StartsWith("motion/"))
                                 {
-                                    if (baseLocation != null)
-                                    {
-                                        var ps = s.Value.Substring("motion/".Length)
-                                            .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                                        Travel(
-                                            (IPsbCollection) Source.Objects["object"].Children(ps[0]).Children("motion")
-                                                .Children(ps[1]).Children("layer"), ps[1], baseLocation, suggestVisible);
-                                    }
+                                    var ps = s.Value.Substring("motion/".Length)
+                                        .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                    Debug.WriteLine($"Other motion {ps[0]}/{ps[1]}");
+                                    Travel(
+                                        (IPsbCollection) Source.Objects["object"].Children(ps[0]).Children("motion")
+                                            .Children(ps[1]).Children("layer"), ps[1], baseLocation, suggestVisible);
                                 }
                                 //win
                                 else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary) Source.Objects["source"]).ContainsKey(s.Value))
@@ -292,17 +275,16 @@ namespace FreeMote.Psb
                                     //src
                                     var res = _allResources.FirstOrDefault(resMd =>
                                         resMd.Part == s.Value && resMd.Name == icon);
-                                    if (baseLocation != null && res != null)
+                                    if (res != null)
                                     {
                                         //copy from res
                                         var nRes = res.Clone();
-                                        var location = baseLocation.Value;
                                         nRes.Label = labelName;
                                         nRes.MotionName = motionName;
-                                        //Console.WriteLine($"Locate {partName}/{iconName} at {location.x},{location.y},{location.z}");
-                                        nRes.OriginX = location.x + ox;
-                                        nRes.OriginY = location.y + oy;
-                                        nRes.ZIndex = location.z;
+                                        //Console.WriteLine($"Locate {partName}/{iconName} at {baseLocation.x},{baseLocation.y},{baseLocation.z}");
+                                        nRes.OriginX = baseLocation.x + ox;
+                                        nRes.OriginY = baseLocation.y + oy;
+                                        nRes.ZIndex = baseLocation.z;
                                         nRes.Opacity = opa;
                                         nRes.Visible = time <= 0 && visible;
                                         result.Add(nRes);
@@ -311,12 +293,9 @@ namespace FreeMote.Psb
                                 else if (!string.IsNullOrEmpty(icon) && ((PsbDictionary) Source.Objects["object"]).ContainsKey(s.Value))
                                 {
                                     //motion
-                                    if (baseLocation != null)
-                                    {
-                                        Travel(
-                                            (IPsbCollection) Source.Objects["object"].Children(s.Value).Children("motion")
-                                                .Children(icon).Children("layer"), icon, baseLocation, suggestVisible);
-                                    }
+                                    Travel(
+                                        (IPsbCollection) Source.Objects["object"].Children(s.Value).Children("motion")
+                                            .Children(icon).Children("layer"), icon, baseLocation, suggestVisible);
                                 }
                             }
                         }
