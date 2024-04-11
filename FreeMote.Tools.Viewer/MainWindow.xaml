@@ -1,7 +1,7 @@
 ﻿<Window x:Class="FreeMote.Tools.Viewer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Project AZUSA © FreeMote Viewer"
+        Title="FreeMote Viewer by Ulysses"
         Width="1280"
         Height="720"
         WindowStartupLocation="CenterScreen"

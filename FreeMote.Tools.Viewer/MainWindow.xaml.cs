@@ -1,6 +1,5 @@
 ﻿/*
- *  Project AZUSA © 2015-2023
- *  AUTHOR:	Ulysses (wdwxy12345@gmail.com)
+ *  Copyright © Ulysses Wu 2015-2024
  */
 
 using System;
@@ -277,7 +276,7 @@ namespace FreeMote.Tools.Viewer
             _player.GetCoord(out float cx, out float cy);
             var (wx, wy) = CharacterWorldToWindowWorld(cx, cy);
             UpdateCharaMark(wx, wy);
-            Title = $"Project AZUSA © FreeMote Viewer - Center: {-cx:F2},{-cy:F2} Mouse: {mx:F2},{my:F2}";
+            Title = $"FreeMote Viewer by Ulysses - Center: {-cx:F2},{-cy:F2} Mouse: {mx:F2},{my:F2}";
         }
 
         private void UpdateCharaMark(double wx, double wy)
