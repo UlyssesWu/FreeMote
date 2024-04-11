@@ -5,7 +5,7 @@ using System.Windows;
 [assembly: AssemblyTitle("FreeMote Viewer")]
 [assembly: AssemblyDescription("View EMT PSB models.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Project AZUSA")]
+[assembly: AssemblyCompany("Ulysses")]
 [assembly: AssemblyProduct("FreeMote")]
 [assembly: AssemblyCopyright("Copyright © Ulysses 2015-2024")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]

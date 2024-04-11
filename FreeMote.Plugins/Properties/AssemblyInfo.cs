@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("FreeMote.Plugins")]
 [assembly: AssemblyDescription("FreeMote official plugins.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Project AZUSA")]
+[assembly: AssemblyCompany("Ulysses")]
 [assembly: AssemblyProduct("FreeMote")]
 [assembly: AssemblyCopyright("Copyright © Ulysses 2018-2024")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]

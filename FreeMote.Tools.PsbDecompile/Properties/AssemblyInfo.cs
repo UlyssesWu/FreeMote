@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("FreeMote.Tools.PsbDecompile")]
 [assembly: AssemblyDescription("PSB Decompiler")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Project AZUSA")]
+[assembly: AssemblyCompany("Ulysses")]
 [assembly: AssemblyProduct("FreeMote")]
 [assembly: AssemblyCopyright("Copyright © Ulysses 2017-2024")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]

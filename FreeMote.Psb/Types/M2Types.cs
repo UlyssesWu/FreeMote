@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using FreeMote.Plugins;
 
 namespace FreeMote.Psb.Types
 {
@@ -73,6 +74,19 @@ namespace FreeMote.Psb.Types
             }
 
             //TODO: parse header_ex later, no sample yet.
+            return [];
+        }
+
+        public override Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
+            PsbExtractOption extractOption = PsbExtractOption.Original)
+        {
+            if (string.IsNullOrEmpty(psb.FilePath) || !File.Exists(psb.FilePath))
+            {
+                Logger.LogHint("To get images from SprData PSB, you have to put all related PSBs in a folder first.");
+                return [];
+            }
+
+            var basePath = Path.GetDirectoryName(psb.FilePath);
             return [];
         }
     }

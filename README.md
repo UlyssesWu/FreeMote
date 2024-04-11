@@ -24,7 +24,7 @@ Basic functions. Decrypt or encrypt EMT PSB files.
 ### FreeMote [SDK](https://github.com/Project-AZUSA/FreeMote-SDK)
 Special API libs for EMT engine, which take _pure_ (unencrypted) PSB files as input.
 ### FreeMote.Psb
-Parse PSB format. Draw the EMT model (statically) without EMT engine.
+Parse and generate PSB.
 ### FreeMote.PsBuild
 Compile and decompile PSB files. Convert PSB among different platforms. Recover EMT projects.
 ### FreeMote.Plugins
@@ -47,7 +47,7 @@ Decompile PSB files to json files and resources.
 ### PsBuild (FreeMote.Tools.PsBuild)
 Compile PSB json files and resources to PSB.
 ### EmtMake (FreeMote.Tools.EmtMake) (Preview)
-Convert an EMT PSB to MMO project. **The output file is always licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
+Convert an EMT PSB to MMO project. **The output file is always licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
 ### FreeMote Viewer (FreeMote.Tools.Viewer)
 Open and render EMT _pure_ PSB. This tool is powered by [FreeMote.NET](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer).
 
@@ -56,7 +56,7 @@ This project requires **VS 2022** and .NET **4.8** to build.
 
 **FreeMote.Plugins** / **FreeMote.Plugins.x64** require a [MyGet feed](https://www.myget.org/feed/monarchsolutions/package/nuget/FreeMote.Tlg) to get external libs made by us. If you don't need FreeMote Plugins, you can unload Plugins projects and remove them from other projects' reference.
 
-To install our own nuget packages, add this feed to VS:
+To install our own nuget packages, add this feed to your IDE:
 
 `https://www.myget.org/F/monarchsolutions/api/v3/index.json`
 
@@ -67,7 +67,7 @@ Get PSB samples for test and research from [FreeMote.Samples](https://github.com
 Thanks for everyone who provided these samples!
 
 ---
-by **Ulysses** (wdwxy12345@gmail.com) from Project AZUSA
+by **Ulysses** (wdwxy12345@gmail.com)
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />FreeMote is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a> (CC-BY-NC-SA 4.0).
 
@@ -90,7 +90,7 @@ Some outputs of FreeMote (mmo/psd etc.) are transformed from FreeMote code and a
 * @morkt for [ImageTLG](https://github.com/morkt/GARbro/blob/master/ArcFormats/KiriKiri/ImageTLG.cs), [ArcPSB](https://github.com/morkt/GARbro/blob/master/ArcFormats/Emote/ArcPSB.cs), [PspDecompression](https://github.com/morkt/GARbro/blob/master/ArcFormats/Will/ArcPulltop.cs), [Bc7Decoder](https://github.com/morkt/GARbro/blob/master/ArcFormats/Unity/Bc7Decoder.cs) code. LICENSE: MIT
 * @xdaniel & @FireyFly for [GetPixelCoordinatesPSP](https://github.com/xdanieldzd/Scarlet/blob/8d9e9cd34f6563da4a0f9b8797c3a1dd35542a4c/Scarlet/Drawing/ImageBinary.cs#L1278) and [PostProcessing](https://github.com/xdanieldzd/GXTConvert/blob/master/GXTConvert/Conversion/PostProcessing.cs) code. LICENSE: MIT
 * @Nyerguds for [BitmapHelper](https://stackoverflow.com/a/45100442) code.
-* @[**HopelessHiro**](https://forums.fuwanovel.net/profile/25739-hoplesshiro/), @skilittle as sponsors!
+* @[HopelessHiro](https://forums.fuwanovel.net/profile/25739-hoplesshiro/), @skilittle as sponsors!
 * [vgmstream](https://github.com/vgmstream/vgmstream) and @SilicaAndPina for VAG related code.
 * @mafaca for [AstcDecoder](https://github.com/mafaca/UtinyRipper/blob/master/uTinyRipperGUI/ThirdParty/Texture%20converters/AstcDecoder.cs) code. LICENSE: MIT
 * @RickStrahl for [ColorConsole](https://gist.github.com/RickStrahl/52c9ee43bd2723bcdf7bf4d24b029768) code.

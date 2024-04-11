@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("FreeMote.Psb")]
 [assembly: AssemblyDescription("PSB Parser & Painter")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Project AZUSA")]
+[assembly: AssemblyCompany("Ulysses")]
 [assembly: AssemblyProduct("FreeMote")]
 [assembly: AssemblyCopyright("Copyright © Ulysses 2017-2024")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]
@@ -21,5 +21,5 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("FreeMote.Editor")]
 
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.8.0.0")]
-[assembly: AssemblyFileVersion("3.8.0.0")]
+[assembly: AssemblyVersion("3.9.0.0")]
+[assembly: AssemblyFileVersion("3.9.0.0")]
