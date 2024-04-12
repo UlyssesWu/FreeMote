@@ -40,7 +40,7 @@ namespace FreeMote.PsBuild.Converters
         /// </summary>
         public bool UseMeaningfulName { get; set; } = true;
         /// <summary>
-        /// If enable, scale down the image to match the target resolution, maybe causing bad quality.
+        /// If enabled, scale down the image to match the target resolution, maybe causing bad quality.
         /// <para>If not enable, ignore and remove "resolution" in icon (reset resolution to 1, making the image clear)</para>
         /// </summary>
         public bool EnableResolution { get; set; } = false;

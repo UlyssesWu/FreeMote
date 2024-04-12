@@ -78,9 +78,9 @@ namespace FreeMote.Psb
         {
             get
             {
-                if (TypeHandlers.ContainsKey(Type))
+                if (TypeHandlers.TryGetValue(Type, out var handler))
                 {
-                    return TypeHandlers[Type];
+                    return handler;
                 }
 
                 return new MotionType();
@@ -163,23 +163,21 @@ namespace FreeMote.Psb
 #if DEBUG_OBJECT_WRITE
             _tw = new StreamWriter(path + ".debug");
 #endif
-            using (var fs = new FileStream(path, FileMode.Open))
+            using var fs = new FileStream(path, FileMode.Open);
+            try
             {
-                try
+                LoadFromStream(fs);
+            }
+            catch (PsbBadFormatException e)
+            {
+                if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array)
                 {
-                    LoadFromStream(fs);
+                    fs.Seek(0, SeekOrigin.Begin);
+                    LoadFromDullahan(fs);
                 }
-                catch (PsbBadFormatException e)
+                else
                 {
-                    if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array)
-                    {
-                        fs.Seek(0, SeekOrigin.Begin);
-                        LoadFromDullahan(fs);
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    throw;
                 }
             }
         }
@@ -262,7 +260,7 @@ namespace FreeMote.Psb
             }
 
             //Switch MemoryMapped IO
-            bool memoryPreload = Consts.InMemoryLoading && !(stream is MemoryStream);
+            bool memoryPreload = Consts.InMemoryLoading && stream is not MemoryStream;
             if (memoryPreload)
             {
                 sourceBr.BaseStream.Position = 0;
@@ -322,15 +320,9 @@ namespace FreeMote.Psb
 #endif
             {
                 obj = Unpack(br);
-                if (obj == null)
-                {
-                    throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
-                }
 
-                Root = obj;
-                //Objects = obj as PsbDictionary ??
-                //          throw new PsbBadFormatException(PsbBadFormatReason.Objects,
-                //              "Wrong offset when parsing objects");
+                Root = obj ?? throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
+    
             }
 #if !DEBUG
             catch (Exception e)
@@ -430,7 +422,7 @@ namespace FreeMote.Psb
 
                 //Debug.WriteLine("");
                 list.Reverse();
-                var str = Encoding.UTF8.GetString(list.ToArray()); //That's why we don't use StringBuilder here.
+                var str = Encoding.UTF8.GetString([.. list]); //That's why we don't use StringBuilder here.
                 Names.Add(str);
             }
         }
@@ -562,7 +554,7 @@ namespace FreeMote.Psb
                 case PsbObjType.List:
                     return LoadList(br, lazyLoad);
                 case PsbObjType.Objects:
-                    return LoadObjects(br, lazyLoad);
+                    return Header.Version != 1 ? LoadObjects(br, lazyLoad) : LoadObjectsV1(br, lazyLoad);
                 //Compiler used
                 case PsbObjType.Integer:
                 case PsbObjType.String:
@@ -624,6 +616,52 @@ namespace FreeMote.Psb
                     Logger.LogWarn($"[WARN] Bad PSB format: at position:{pos}, offset index {i} >= offsets count ({offsets.Count}), skipping.");
                 }
 
+                if (obj != null)
+                {
+                    if (obj is IPsbChild c)
+                    {
+                        c.Parent = dictionary;
+                    }
+
+                    if (obj is IPsbSingleton s)
+                    {
+                        s.Parents.Add(dictionary);
+                    }
+
+                    dictionary.Add(name, obj);
+                }
+
+                if (lazyLoad && offset == maxOffset)
+                {
+                    endPos = br.BaseStream.Position;
+                }
+            }
+
+            if (lazyLoad)
+            {
+                br.BaseStream.Position = endPos;
+            }
+
+            return dictionary;
+        }
+
+        private PsbDictionary LoadObjectsV1(BinaryReader br, bool lazyLoad = false)
+        {
+            var offsets = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            uint? maxOffset = null;
+            if (lazyLoad && offsets.Count > 0)
+            {
+                maxOffset = offsets.Max();
+            }
+            var pos = br.BaseStream.Position;
+            var endPos = pos;
+            PsbDictionary dictionary = new PsbDictionary(offsets.Count);
+            foreach (var offset in offsets)
+            {
+                br.BaseStream.Seek(pos + offset, SeekOrigin.Begin);
+                var nameIdx = new PsbNumber((PsbObjType) br.ReadByte(), br);
+                var name = Names[(int) nameIdx];
+                var obj = Unpack(br, lazyLoad);
                 if (obj != null)
                 {
                     if (obj is IPsbChild c)
@@ -780,8 +818,8 @@ namespace FreeMote.Psb
         /// Fill fields based on <see cref="Objects"/>
         /// </summary>
         /// <param name="mergeString"></param>
-        /// <param name="mergeRes">Whether to merge resources with exact same data. Be careful!</param>
-        internal void Collect(bool mergeString = false, bool mergeRes = false)
+        /// <param name="mergeResources">Whether to merge resources with exact same data. Be careful!</param>
+        internal void Collect(bool mergeString = false, bool mergeResources = false)
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
@@ -814,7 +852,7 @@ namespace FreeMote.Psb
                 {
                     case PsbResource r:
                         var resList = r.IsExtra ? ExtraResources : Resources;
-                        if (!mergeRes)
+                        if (!mergeResources)
                         {
                             //Still have to merge by index, otherwise you will have mismatched resource reference in objects!
                             if (r.Index != null)
@@ -958,9 +996,9 @@ namespace FreeMote.Psb
         /// <summary>
         /// Update fields and indexes based on <see cref="Objects"/>
         /// </summary>
-        public void Merge(bool mergeString = false)
+        public void Merge(bool mergeString = false, bool mergeResources = false)
         {
-            Collect(mergeString);
+            Collect(mergeString, mergeResources);
             UpdateIndexes();
 
             //UniqueString(Objects);
@@ -1298,7 +1336,14 @@ namespace FreeMote.Psb
                     SaveCollection(bw, pCol);
                     return;
                 case PsbDictionary pDic:
-                    SaveObjects(bw, pDic);
+                    if (Header.Version != 1)
+                    {
+                        SaveObjects(bw, pDic);
+                    }
+                    else
+                    {
+                        SaveObjectsV1(bw, pDic);
+                    }
                     return;
                 default:
                     return;
@@ -1310,51 +1355,93 @@ namespace FreeMote.Psb
             bw.Write((byte)pDic.Type);
             var namesList = new List<uint>(pDic.Count);
             var indexList = new List<uint>(pDic.Count);
-            using (var ms = Consts.MsManager.GetStream())
+            using var ms = Consts.MsManager.GetStream();
+            BinaryWriter mbw = new BinaryWriter(ms, Encoding);
+            if (Consts.PsbObjectOrderByKey)
             {
-                BinaryWriter mbw = new BinaryWriter(ms, Encoding);
-                if (Consts.PsbObjectOrderByKey)
+                foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
-                    foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
+                    //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
+                    //var index = Names.FindIndex(s => s == pair.Key);
+                    var index = Names.IndexOf(pair.Key);
+                    if (index < 0)
                     {
-                        //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
-                        //var index = Names.FindIndex(s => s == pair.Key);
-                        var index = Names.IndexOf(pair.Key);
-                        if (index < 0)
-                        {
-                            throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
-                        }
-
-                        namesList.Add((uint)index);
-                        indexList.Add((uint)mbw.BaseStream.Position);
-                        Pack(mbw, pair.Value);
+                        throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
                     }
+
+                    namesList.Add((uint)index);
+                    indexList.Add((uint)mbw.BaseStream.Position);
+                    Pack(mbw, pair.Value);
                 }
-                else
-                {
-                    foreach (var pair in pDic)
-                    {
-                        //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
-                        //var index = Names.FindIndex(s => s == pair.Key);
-                        var index = Names.IndexOf(pair.Key);
-                        if (index < 0)
-                        {
-                            throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
-                        }
-
-                        namesList.Add((uint)index);
-                        indexList.Add((uint)mbw.BaseStream.Position);
-                        Pack(mbw, pair.Value);
-                    }
-                }
-
-
-                mbw.Flush();
-                new PsbArray(namesList).WriteTo(bw);
-                new PsbArray(indexList).WriteTo(bw);
-                ms.WriteTo(bw.BaseStream);
-                //bw.Write(ms.ToArray());
             }
+            else
+            {
+                foreach (var pair in pDic)
+                {
+                    //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
+                    //var index = Names.FindIndex(s => s == pair.Key);
+                    var index = Names.IndexOf(pair.Key);
+                    if (index < 0)
+                    {
+                        throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
+                    }
+
+                    namesList.Add((uint)index);
+                    indexList.Add((uint)mbw.BaseStream.Position);
+                    Pack(mbw, pair.Value);
+                }
+            }
+
+
+            mbw.Flush();
+            new PsbArray(namesList).WriteTo(bw);
+            new PsbArray(indexList).WriteTo(bw);
+            ms.WriteTo(bw.BaseStream);
+            //bw.Write(ms.ToArray());
+        }
+
+        private void SaveObjectsV1(BinaryWriter bw, PsbDictionary pDic)
+        {
+            bw.Write((byte) pDic.Type);
+            var indexList = new List<uint>(pDic.Count);
+            using var ms = Consts.MsManager.GetStream();
+            BinaryWriter mbw = new BinaryWriter(ms, Encoding);
+            if (Consts.PsbObjectOrderByKey)
+            {
+                foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
+                {
+                    var index = Names.IndexOf(pair.Key);
+                    if (index < 0)
+                    {
+                        throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
+                    }
+
+                    indexList.Add((uint) mbw.BaseStream.Position);
+                    new PsbNumber(index).WriteTo(mbw, true);
+                    Pack(mbw, pair.Value);
+                }
+            }
+            else
+            {
+                foreach (var pair in pDic)
+                {
+                    var index = Names.IndexOf(pair.Key);
+                    if (index < 0)
+                    {
+                        throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
+                    }
+
+                    indexList.Add((uint) mbw.BaseStream.Position);
+                    new PsbNumber(index).WriteTo(mbw, true);
+                    Pack(mbw, pair.Value);
+                }
+            }
+
+
+            mbw.Flush();
+            new PsbArray(indexList).WriteTo(bw);
+            ms.WriteTo(bw.BaseStream);
+            //bw.Write(ms.ToArray());
         }
 
         /// <summary>
@@ -1405,7 +1492,7 @@ namespace FreeMote.Psb
         }
 
         /// <summary>
-        /// Try skip header and load. May (not) work on any PSB only if body is not encrypted
+        /// Try skip header and load. May (not) work on any PSB only if body is not encrypted. Not working on PSBv1.
         /// <para>Can not use <see cref="Consts.InMemoryLoading"/> so it will be slow.</para>
         /// <remarks>DuRaRaRa!!</remarks>
         /// </summary>
@@ -1452,8 +1539,8 @@ namespace FreeMote.Psb
             //    oldStream.Dispose();
             //}
 
-            byte[] wNumbers = { 1, 0, 0, 0 };
-            byte[] nNumbers = { 1, 0 };
+            byte[] wNumbers = [1, 0, 0, 0];
+            byte[] nNumbers = [1, 0];
             var possibleHeader = new byte[detectSize];
             stream.Read(possibleHeader, 0, detectSize);
             var namePos = -1;
@@ -1554,8 +1641,11 @@ namespace FreeMote.Psb
             Header.OffsetEntries = (uint)br.BaseStream.Position;
             IPsbValue obj = Unpack(br, true);
 
-            Objects = obj as PsbDictionary ?? throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
-
+            Root = obj;
+            if (obj is not (PsbDictionary or PsbList))
+            {
+                throw new PsbBadFormatException(PsbBadFormatReason.Objects, "Can not parse objects");
+            }
 
             //Load Strings
             while (br.BaseStream.Position < br.BaseStream.Length && !PsbArrayDetector.IsPsbArrayType(br.ReadByte()))
@@ -1583,21 +1673,19 @@ namespace FreeMote.Psb
                 var strsLength = strsEndPos - Header.OffsetStringsData;
                 br.BaseStream.Seek(-strsLength, SeekOrigin.Current);
 
-                using (var strMs = new MemoryStream(br.ReadBytes((int)strsLength)))
-                using (var strBr = new BinaryReader(strMs, Encoding))
+                using var strMs = new MemoryStream(br.ReadBytes((int)strsLength));
+                using var strBr = new BinaryReader(strMs, Encoding);
+                for (var i = 0; i < Strings.Count; i++)
                 {
-                    for (var i = 0; i < Strings.Count; i++)
+                    var str = Strings[i];
+                    if (str.Index == null)
                     {
-                        var str = Strings[i];
-                        if (str.Index == null)
-                        {
-                            continue;
-                        }
-
-                        strBr.BaseStream.Seek(StringOffsets[(int)str.Index], SeekOrigin.Begin);
-                        var strValue = strBr.ReadStringZeroTrim(Encoding);
-                        str.Value = strValue;
+                        continue;
                     }
+
+                    strBr.BaseStream.Seek(StringOffsets[(int)str.Index], SeekOrigin.Begin);
+                    var strValue = strBr.ReadStringZeroTrim(Encoding);
+                    str.Value = strValue;
                 }
             }
             else

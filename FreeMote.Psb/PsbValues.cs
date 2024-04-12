@@ -237,6 +237,10 @@ namespace FreeMote.Psb
                 case PsbObjType.NumberN2:
                 case PsbObjType.NumberN3:
                 case PsbObjType.NumberN4:
+                case PsbObjType.KeyNameN1:
+                case PsbObjType.KeyNameN2:
+                case PsbObjType.KeyNameN3:
+                case PsbObjType.KeyNameN4:
                     NumberType = PsbNumberType.Int;
                     Data = new byte[4];
                     break;
@@ -265,15 +269,19 @@ namespace FreeMote.Psb
                     IntValue = 0;
                     return;
                 case PsbObjType.NumberN1:
+                case PsbObjType.KeyNameN1:
                     br.ReadAndUnzip(1, Data);
                     return;
                 case PsbObjType.NumberN2:
+                case PsbObjType.KeyNameN2:
                     br.ReadAndUnzip(2, Data);
                     return;
                 case PsbObjType.NumberN3:
+                case PsbObjType.KeyNameN3:
                     br.ReadAndUnzip(3, Data);
                     return;
                 case PsbObjType.NumberN4:
+                case PsbObjType.KeyNameN4:
                     br.ReadAndUnzip(4, Data);
                     return;
                 case PsbObjType.NumberN5:
@@ -661,9 +669,30 @@ namespace FreeMote.Psb
             return Value.ToString();
         }
 
-        public void WriteTo(BinaryWriter bw)
+        public void WriteTo(BinaryWriter bw) => WriteTo(bw, false);
+        
+        public void WriteTo(BinaryWriter bw, bool nameKey)
         {
-            bw.Write((byte) Type);
+            if (!nameKey)
+            {
+                bw.Write((byte) Type);
+            }
+            else
+            {
+                if (NumberType != PsbNumberType.Int && NumberType != PsbNumberType.Long)
+                {
+                    throw new InvalidOperationException("NameKey should be int.");
+                }
+
+                if (IntValue == 0)
+                {
+                    bw.Write((byte) PsbObjType.KeyNameN1);
+                    bw.Write((byte) 0);
+                    return;
+                }
+
+                bw.Write((byte) ((byte) PsbObjType.KeyNameN1 + IntValue.GetSize() - 1));
+            }
             switch (NumberType)
             {
                 case PsbNumberType.Int:

@@ -107,7 +107,7 @@ namespace FreeMote.Tests
         public void TestPsbV1()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "c01c.txt.scn");
+            var path = Path.Combine(resPath, "psb-v1.psb");
             PSB psb = new PSB(path);
             psb.Header.Version = 1;
             var pathV1 = Path.ChangeExtension(path, "v1.psb");
