@@ -46,9 +46,9 @@ namespace FreeMote.Plugins.Shells
             {
                 if (context.TryGetValue(Context_MdfKey, out var mdfKey))
                 {
-                    uint? keyLength = context.TryGetValue(Context_MdfKeyLength, out var kl)
-                        ? Convert.ToUInt32(kl)
-                        : (uint?)null;
+                    int? keyLength = context.TryGetValue(Context_MdfKeyLength, out var kl)
+                        ? Convert.ToInt32(kl)
+                        : (int?)null;
 
                     stream = PsbExtension.EncodeMdf(stream, (string)mdfKey, keyLength, true);
                     stream.Position = 0; //A new MemoryStream
@@ -104,14 +104,14 @@ namespace FreeMote.Plugins.Shells
 
             if (context != null && context.TryGetValue(Context_MdfKey, out var mdfKey))
             {
-                uint? keyLength;
+                int? keyLength;
                 if (context.TryGetValue(Context_MdfKeyLength, out var kl))
                 {
-                    keyLength = Convert.ToUInt32(kl);
+                    keyLength = Convert.ToInt32(kl);
                 }
                 else
                 {
-                    keyLength = (uint?)null;
+                    keyLength = (int?)null;
                 }
 
                 var mms = PsbExtension.EncodeMdf(ms, (string)mdfKey, keyLength, false);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -720,12 +721,17 @@ namespace FreeMote.Psb
         /// Decode/encode MDF used in archive PSB. Usually you need to <paramref name="keepHeader"/> when input is a shell type (mdf,mfl etc.) rather than raw data. (<paramref name="stream"/> will <b>NOT</b> be disposed)
         /// </summary>
         /// <param name="stream">will <b>NOT</b> be disposed</param>
-        /// <param name="key">a full key a.k.a seed</param>
+        /// <param name="key">a full key a.k.a. seed</param>
         /// <param name="keyLength">key buffer length, usually 131, but could be other value</param>
         /// <param name="keepHeader">if <c>true</c>, skip first 8 bytes (usually MDF header)</param>
         /// <returns></returns>
-        public static MemoryStream EncodeMdf(Stream stream, string key, uint? keyLength, bool keepHeader)
+        public static MemoryStream EncodeMdf(Stream stream, string key, int? keyLength, bool keepHeader)
         {
+            if (keyLength is < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(keyLength));
+            }
+
             //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
             var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
             uint[] seeds = new uint[4];
@@ -743,43 +749,42 @@ namespace FreeMote.Psb
             {
                 bw.Write(br.ReadBytes(8));
             }
-            //uint count = 0;
 
-            List<byte> keys = new List<byte>();
+            int genCount = (keyLength ?? (int) br.BaseStream.Length) / 4 + 1;
+
+            if (genCount > int.MaxValue / 4)
+            {
+                throw new ArgumentOutOfRangeException(nameof(keyLength));
+            }
+
+            Span<byte> keySpan = stackalloc byte[genCount * 4];
             if (keyLength != null)
             {
-                for (int i = 0; i < keyLength / 4 + 1; i++)
+                for (int i = 0; i < genCount; i++)
                 {
-                    keys.AddRange(BitConverter.GetBytes(gen.GenerateUInt32()));
+                    BinaryPrimitives.WriteUInt32LittleEndian(keySpan.Slice(i * 4, 4), gen.GenerateUInt32());
                 }
 
-                keys = keys.GetRange(0, (int)keyLength.Value);
-                //keys = keys.Take((int) keyLength.Value).ToList();
+                keySpan = keySpan.Slice(0, keyLength.Value);
             }
             else
             {
-                while (keys.Count < br.BaseStream.Length)
+                var i = 0;
+                while (i * 4 < br.BaseStream.Length)
                 {
-                    keys.AddRange(BitConverter.GetBytes(gen.GenerateUInt32()));
+                    BinaryPrimitives.WriteUInt32LittleEndian(keySpan.Slice(i * 4, 4), gen.GenerateUInt32());
+                    i++;
                 }
             }
 
             int currentKey = 0;
+            int kLength = keySpan.Length;
             while (br.BaseStream.Position < br.BaseStream.Length)
             {
                 var current = br.ReadByte();
-                if (currentKey >= keys.Count)
-                {
-                    currentKey = 0;
-                }
-
-                current ^= keys[currentKey];
+                current ^= keySpan[currentKey % kLength];
                 currentKey++;
 
-                //if (keyLength == null || (count < keyLength.Value))
-                //{
-                //    current ^= gen.NextUIntInclusiveMaxValue();
-                //}
                 bw.Write(current);
             }
 
