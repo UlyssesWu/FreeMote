@@ -757,37 +757,44 @@ namespace FreeMote.Psb
                 throw new ArgumentOutOfRangeException(nameof(keyLength));
             }
 
-            Span<byte> keySpan = stackalloc byte[genCount * 4];
             if (keyLength != null)
             {
+                Span<byte> keySpan = stackalloc byte[genCount * 4];
+
                 for (int i = 0; i < genCount; i++)
                 {
                     BinaryPrimitives.WriteUInt32LittleEndian(keySpan.Slice(i * 4, 4), gen.GenerateUInt32());
                 }
 
                 keySpan = keySpan.Slice(0, keyLength.Value);
+                int currentKey = 0;
+                int kLength = keySpan.Length;
+                while (br.BaseStream.Position < br.BaseStream.Length)
+                {
+                    var current = br.ReadByte();
+                    current ^= keySpan[currentKey % kLength];
+                    currentKey++;
+
+                    bw.Write(current);
+                }
             }
             else
             {
-                var i = 0;
-                while (i * 4 < br.BaseStream.Length)
+                Span<byte> keySpan = stackalloc byte[4];
+                long count = 0;
+                while (br.BaseStream.Position < br.BaseStream.Length)
                 {
-                    BinaryPrimitives.WriteUInt32LittleEndian(keySpan.Slice(i * 4, 4), gen.GenerateUInt32());
-                    i++;
+                    if (count % 4 == 0)
+                    {
+                        BinaryPrimitives.WriteUInt32LittleEndian(keySpan, gen.GenerateUInt32());
+                    }
+                    var current = br.ReadByte();
+                    current ^= keySpan[(int)(count % 4)]; 
+                    bw.Write(current);
+                    count++;
                 }
             }
-
-            int currentKey = 0;
-            int kLength = keySpan.Length;
-            while (br.BaseStream.Position < br.BaseStream.Length)
-            {
-                var current = br.ReadByte();
-                current ^= keySpan[currentKey % kLength];
-                currentKey++;
-
-                bw.Write(current);
-            }
-
+            
             return ms;
         }
 
