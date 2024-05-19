@@ -17,10 +17,15 @@ namespace FreeMote.Psb
     /// <summary>
     /// Packaged Struct Binary
     /// </summary>
-    /// Photo Shop Big
+    /// Not Photo Shop Big
     /// Pretty SB
     public partial class PSB
     {
+        /// <summary>
+        /// Try Dullahan Load no matter what Exception occurs
+        /// </summary>
+        private bool _tryDullahanIfLoadFailed = false;
+
         /// <summary>
         /// Header
         /// </summary>
@@ -170,8 +175,21 @@ namespace FreeMote.Psb
             }
             catch (PsbBadFormatException e)
             {
-                if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array)
+                if (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array || _tryDullahanIfLoadFailed)
                 {
+                    fs.Seek(0, SeekOrigin.Begin);
+                    LoadFromDullahan(fs);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            catch (Exception)
+            {
+                if (_tryDullahanIfLoadFailed)
+                {
+                    _tryDullahanIfLoadFailed = false;
                     fs.Seek(0, SeekOrigin.Begin);
                     LoadFromDullahan(fs);
                 }
@@ -194,11 +212,25 @@ namespace FreeMote.Psb
             }
             catch (PsbBadFormatException e)
                 when (tryDullahanLoading &&
-                      (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array))
+                      (e.Reason == PsbBadFormatReason.Header || e.Reason == PsbBadFormatReason.Array || _tryDullahanIfLoadFailed))
             {
                 stream.Seek(0, SeekOrigin.Begin);
                 Header = new PsbHeader { Version = 3 };
                 LoadFromDullahan(stream);
+            }
+            catch (Exception)
+            {
+                if (tryDullahanLoading && _tryDullahanIfLoadFailed)
+                {
+                    _tryDullahanIfLoadFailed = false;
+                    stream.Seek(0, SeekOrigin.Begin);
+                    Header = new PsbHeader { Version = 3 };
+                    LoadFromDullahan(stream);
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 
@@ -251,12 +283,18 @@ namespace FreeMote.Psb
 
             BinaryReader sourceBr = new BinaryReader(stream, Encoding);
             BinaryReader br = sourceBr;
+            _tryDullahanIfLoadFailed = false;
 
             //Load Header
             Header = PsbHeader.Load(br);
             if (Header.IsHeaderEncrypted)
             {
-                throw new PsbBadFormatException(PsbBadFormatReason.Header);
+                if (!Header.IsOffsetNamesCorrect)
+                {
+                    throw new PsbBadFormatException(PsbBadFormatReason.Header);
+                }
+
+                _tryDullahanIfLoadFailed = true;
             }
 
             //Switch MemoryMapped IO
@@ -275,6 +313,11 @@ namespace FreeMote.Psb
             //Load Names
             if (Header.Version == 1)
             {
+                //don't believe HeaderLength
+                if (Header.HeaderLength >= br.BaseStream.Length)
+                {
+                    Header.HeaderLength = Header.GetHeaderLength();
+                }
                 br.BaseStream.Seek(Header.HeaderLength, SeekOrigin.Begin);
                 NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
                 LoadKeys(br);
@@ -1629,8 +1672,13 @@ namespace FreeMote.Psb
             }
 
             //Load Entries
-            while (br.BaseStream.Position < br.BaseStream.Length && br.ReadByte() != (int)PsbObjType.Objects)
+            while (br.BaseStream.Position < br.BaseStream.Length)
             {
+                var currentByte = br.ReadByte();
+                if (currentByte is (byte) PsbObjType.Objects or (byte) PsbObjType.List)
+                {
+                    break;
+                }
             }
             if (br.BaseStream.Position == br.BaseStream.Length)
             {

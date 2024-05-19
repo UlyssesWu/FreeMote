@@ -32,7 +32,7 @@ namespace FreeMote
 
         /// <summary>
         /// Header Length (or OffsetKeyIndexes for PSBv1)
-        /// <para>Usually same as <see cref="OffsetNames"/> in v2+</para>
+        /// <para>Usually same as <see cref="OffsetNames"/> in v2+; Don't trust it; use <see cref="GetHeaderLength(ushort)"/></para>
         /// </summary>
         //[FieldOffset(8)]
         public uint HeaderLength;
@@ -121,8 +121,9 @@ namespace FreeMote
             //{
             //    return header;
             //}
-            if (header.HeaderLength < br.BaseStream.Length
-                && header.OffsetNames < br.BaseStream.Length) //&& (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0)
+            //if (header.HeaderLength < br.BaseStream.Length
+            //    && header.OffsetNames < br.BaseStream.Length) //&& (header.HeaderLength == header.OffsetNames || header.HeaderLength == 0)
+            if (header.OffsetNames < br.BaseStream.Length)
             {
                 header.OffsetStrings = br.ReadUInt32();
                 header.OffsetStringsData = br.ReadUInt32();
@@ -314,5 +315,10 @@ namespace FreeMote
         /// Similar as <see cref="PsbFile.TestHeaderEncrypted()"/> but not based on file.
         /// </summary>
         public bool IsHeaderEncrypted => HeaderLength > (MAX_HEADER_LENGTH + 16) || OffsetNames == 0 || (Version > 1 && HeaderLength != OffsetNames && HeaderLength != 0);
+
+        /// <summary>
+        /// If OffsetNames is not just after header, there must be some protection
+        /// </summary>
+        internal bool IsOffsetNamesCorrect => OffsetNames == GetHeaderLength();
     }
 }
