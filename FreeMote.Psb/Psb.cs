@@ -289,12 +289,13 @@ namespace FreeMote.Psb
             Header = PsbHeader.Load(br);
             if (Header.IsHeaderEncrypted)
             {
-                if (!Header.IsOffsetNamesCorrect)
-                {
-                    throw new PsbBadFormatException(PsbBadFormatReason.Header);
-                }
+                throw new PsbBadFormatException(PsbBadFormatReason.Header);
 
-                _tryDullahanIfLoadFailed = true;
+                //if (!Header.IsOffsetNamesCorrect || Consts.StrictMode)
+                //{
+                //    throw new PsbBadFormatException(PsbBadFormatReason.Header);
+                //}
+                //_tryDullahanIfLoadFailed = true;
             }
 
             //Switch MemoryMapped IO
