@@ -716,7 +716,7 @@ namespace FreeMote.PsBuild
                             File.WriteAllBytes(rawPath, bodyBytes);
                             continue;
                         }
-
+                        
                         MPack.IsSignatureMPack(bodyBytes, out var shellType);
                         var possibleFileNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(pair.Key, suffix);
                         var relativePath = pair.Key;
@@ -739,6 +739,12 @@ namespace FreeMote.PsBuild
                                 try
                                 {
                                     mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                                    if (mms.Length < len)
+                                    {
+                                        Logger.Log($"  bad decompression detected for key name: {possibleFileName}, size {len} -> {mms.Length}");
+                                        ms = MsManager.GetStream(bodyBytes);
+                                        mms = null;
+                                    }
                                 }
                                 catch (InvalidDataException)
                                 {

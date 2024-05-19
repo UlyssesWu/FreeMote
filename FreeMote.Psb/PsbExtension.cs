@@ -1105,6 +1105,9 @@ namespace FreeMote.Psb
         "sound/bgm.psb" -> not packed (??)
         "bg_c_whit.m" -> packed with key bg_c_whit.m.psb.m (???)
          tolower might be used
+
+        "expire_suffix_list": [".scn.m"]
+        "mmm22.ks" -> packed with key mmm22.ks.scn.m
          */
 
         /// <summary>
@@ -1161,12 +1164,13 @@ namespace FreeMote.Psb
                     //"scenario/ca01_06.txt.scn.m" -> ca01_06.txt.scn.m
                     //"script/ikusei.nut.m" -> ikusei.nut.m
                     //"sound/bgm.psb" -> null
-                    if (name.EndsWith(".txt") && suffix.StartsWith(".scn"))
+                    //"mmm22.ks" -> mmm22.ks.scn.m
+                    if ((name.EndsWith(".txt") || name.EndsWith(".ks")) && suffix.StartsWith(".scn"))
                     {
                         results.Add(name + suffix);
                         results.Add(name);
                     }
-                    else
+                    else //naughty nut
                     {
                         results.Add(name);
                         results.Add(name + suffix);
