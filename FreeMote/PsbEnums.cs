@@ -227,6 +227,10 @@ namespace FreeMote
         /// LeRGBA8_SW (Swizzle) for vita
         /// </summary>
         LeRGBA8_SW,
+        ///// <summary>
+        ///// LeRGBX8_SW (Swizzle, Flip) for PS3 //map to RGBA8_SW
+        ///// </summary>
+        //LeRGBX8_SW,
         /// <summary>
         /// LeRGBA8_SW (Swizzle, Flip) for PS3?
         /// </summary>

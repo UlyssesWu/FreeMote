@@ -327,6 +327,7 @@ namespace FreeMote
                     else
                         return PsbPixelFormat.LeRGBA8;
                 case "RGBA8_SW":
+                case "RGBX8_SW":
                     if (useTile)
                         if (spec.UseBigEndian())
                             return PsbPixelFormat.TileBeRGBA8_SW;

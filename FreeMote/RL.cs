@@ -528,6 +528,36 @@ namespace FreeMote
         }
 
         /// <summary>
+        /// Set Alpha to 0xFF
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="visible"></param>
+        public static unsafe void Rgbx2Rgba(ref byte[] bytes, bool visible = true)
+        {
+            fixed (byte* ptr = bytes)
+            {
+                int i = 0;
+                int len = bytes.Length / 4;
+                while (i < len)
+                {
+                    uint* iPtr = (uint*) ptr + i;
+                    if (*iPtr != 0)
+                    {
+                        if (visible)
+                        {
+                            *iPtr = (*iPtr & 0xFFFFFF00) | 0x000000FF;
+                        }
+                        else
+                        {
+                            *iPtr = (*iPtr & 0xFFFFFF00);
+                        } }
+
+                    i++;
+                }
+            }
+        }
+
+        /// <summary>
         /// RGBA(BE) -> ARGB(LE BGRA) (switch A)
         /// </summary>
         /// <param name="bytes"></param>
