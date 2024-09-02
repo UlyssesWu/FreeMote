@@ -209,7 +209,7 @@ namespace FreeMote
         /// </summary>
         RGBA5650,
         /// <summary>
-        /// RGB5A3 (plat: revo, aka. 5553)
+        /// BE RGB5A3 (plat: revo, aka. 5553)
         /// </summary>
         RGB5A3,
         /// <summary>

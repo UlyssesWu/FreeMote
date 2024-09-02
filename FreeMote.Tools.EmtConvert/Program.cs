@@ -402,10 +402,10 @@ Example:
                             bts = RL.ReadL8(bts, width, height);
                             break;
                         case PsbImageConvertMethod.Tile:
-                            bts = PostProcessing.TileTexture(bts, width, height, pixelFormat);
+                            bts = PostProcessing.TileTexture(bts, width, height, bitDepth);
                             break;
                         case PsbImageConvertMethod.Untile:
-                            bts = PostProcessing.UntileTexture(bts, width, height, pixelFormat);
+                            bts = PostProcessing.UntileTexture(bts, width, height, bitDepth);
                             break;
                         case PsbImageConvertMethod.Tile_RVL:
                             bts = PostProcessing.TileTextureRvl(bts, width, height, bitDepth);
@@ -426,7 +426,7 @@ Example:
                             bts = PostProcessing.UnswizzleTexture(bts, width, height, bitDepth, SwizzleType.PSP);
                             break;
                         case PsbImageConvertMethod.Flip_PS3:
-                            bts = PostProcessing.FlipTexturePs3(bts, width, height, pixelFormat);
+                            bts = PostProcessing.FlipTexturePs3(bts, width, height, bitDepth);
                             break;
                         default:
                             continue;

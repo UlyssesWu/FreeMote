@@ -48,9 +48,9 @@ namespace FreeMote
             return (int) ((((tileOrder[t] / 8) + y) * width) + ((tileOrder[t] % 8) + x));
         }
 
-        private static int GetTilePixelOffset(int t, int x, int y, int width, PixelFormat pixelFormat)
+        private static int GetTilePixelOffset(int t, int x, int y, int width, int bitDepth = 32)
         {
-            return (GetTilePixelIndex(t, x, y, width) * (Image.GetPixelFormatSize(pixelFormat) / 8));
+            return (GetTilePixelIndex(t, x, y, width) * (bitDepth / 8));
         }
 
         /// <summary>
@@ -59,10 +59,10 @@ namespace FreeMote
         /// <param name="pixelData"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        /// <param name="pixelFormat"></param>
+        /// <param name="bitDepth"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static byte[] FlipTexturePs3(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        public static byte[] FlipTexturePs3(byte[] pixelData, int width, int height, int bitDepth = 32)
         {
             var lw = Math.Log(width, 2);
             if (lw != (int) lw)
@@ -77,7 +77,7 @@ namespace FreeMote
             }
 
             byte[] flipped = new byte[pixelData.Length];
-            var bpp = Image.GetPixelFormatSize(pixelFormat) / 8;
+            var bpp = bitDepth / 8;
             bool wide = width > height;
             int tileLength = wide ? height : width;
 
@@ -107,7 +107,7 @@ namespace FreeMote
             return flipped;
         }
 
-        public static byte[] UntileTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        public static byte[] UntileTexture(byte[] pixelData, int width, int height, int bitDepth = 32)
         {
             byte[] untiled = new byte[pixelData.Length];
 
@@ -118,7 +118,7 @@ namespace FreeMote
                 {
                     for (int t = 0; t < (8 * 8); t++)
                     {
-                        int pixelOffset = GetTilePixelOffset(t, x, y, width, pixelFormat);
+                        int pixelOffset = GetTilePixelOffset(t, x, y, width, bitDepth);
                         Buffer.BlockCopy(pixelData, s, untiled, pixelOffset, 4);
                         s += 4;
                     }
@@ -128,7 +128,7 @@ namespace FreeMote
             return untiled;
         }
 
-        public static byte[] TileTexture(byte[] pixelData, int width, int height, PixelFormat pixelFormat)
+        public static byte[] TileTexture(byte[] pixelData, int width, int height, int bitDepth = 32)
         {
             byte[] tiled = new byte[pixelData.Length];
 
@@ -139,7 +139,7 @@ namespace FreeMote
                 {
                     for (int t = 0; t < (8 * 8); t++)
                     {
-                        int pixelOffset = GetTilePixelOffset(t, x, y, width, pixelFormat);
+                        int pixelOffset = GetTilePixelOffset(t, x, y, width, bitDepth);
                         Buffer.BlockCopy(pixelData, pixelOffset, tiled, s, 4);
                         s += 4;
                     }

@@ -68,7 +68,7 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.TileA8L8_SW:
                     data = ReadA8L8(data, width, height);
-                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UntileTexture(data, width, height);
                     break;
                 case PsbPixelFormat.BeRGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
@@ -83,11 +83,11 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.FlipLeRGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
-                    data = PostProcessing.FlipTexturePs3(data, width, height, bmp.PixelFormat);
+                    data = PostProcessing.FlipTexturePs3(data, width, height);
                     break;
                 case PsbPixelFormat.FlipBeRGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
-                    data = PostProcessing.FlipTexturePs3(data, width, height, bmp.PixelFormat);
+                    data = PostProcessing.FlipTexturePs3(data, width, height);
                     Switch_0_2(ref data);
                     Argb2Rgba(ref data, true);
                     break;
@@ -99,13 +99,13 @@ namespace FreeMote
                 case PsbPixelFormat.TileLeRGBA4444_SW:
                     data = Argb428(data);
                     //Rgba2Argb(ref data);
-                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.TileLeRGBA8_SW:
-                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.TileBeRGBA8_SW:
-                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UntileTexture(data, bmp.Width, bmp.Height);
                     Argb2Rgba(ref data);
                     break;
                 case PsbPixelFormat.A8:
@@ -117,7 +117,7 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.TileA8_SW:
                     data = ReadA8(data, width, height);
-                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UntileTexture(data, width, height);
                     break;
                 case PsbPixelFormat.L8:
                     data = ReadL8(data, width, height);
@@ -128,12 +128,11 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.TileL8_SW:
                     data = ReadL8(data, width, height);
-                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UntileTexture(data, width, height);
                     break;
                 case PsbPixelFormat.RGB5A3:
                     data = ReadRgb5A3(data);
                     data = PostProcessing.UntileTextureRvl(data, width, height);
-                    //data = DecodeRGB5A3(data, width, height);
                     break;
                 case PsbPixelFormat.RGBA5650:
                     data = ReadRgba5650(data);
@@ -144,7 +143,7 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.TileRGBA5650_SW:
                     data = ReadRgba5650(data);
-                    data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UntileTexture(data, width, height);
                     break;
                 case PsbPixelFormat.ASTC_8BPP:
                     data = AstcDecoder.DecodeASTC(data, width, height, 4, 4);
@@ -218,7 +217,7 @@ namespace FreeMote
                     result = Argb2A8L8(result);
                     break;
                 case PsbPixelFormat.TileA8L8_SW:
-                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2A8L8(result);
                     break;
                 case PsbPixelFormat.DXT1:
@@ -237,20 +236,20 @@ namespace FreeMote
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     break;
                 case PsbPixelFormat.FlipLeRGBA8_SW:
-                    result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bitDepth);
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     break;
                 case PsbPixelFormat.FlipBeRGBA8_SW:
-                    result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bitDepth);
                     result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     Argb2Rgba(ref result);
                     Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.TileLeRGBA8_SW:
-                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     break;
                 case PsbPixelFormat.TileBeRGBA8_SW:
-                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     Argb2Rgba(ref result, true);
                     break;
                 case PsbPixelFormat.L8:
@@ -261,7 +260,7 @@ namespace FreeMote
                     result = Argb2A8(result);
                     break;
                 case PsbPixelFormat.TileA8_SW:
-                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2A8(result);
                     break;
                 case PsbPixelFormat.A8:
@@ -280,7 +279,7 @@ namespace FreeMote
                     result = Argb2L8(result);
                     break;
                 case PsbPixelFormat.TileL8_SW:
-                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2L8(result);
                     break;
                 case PsbPixelFormat.LeRGBA4444_SW:
@@ -288,7 +287,7 @@ namespace FreeMote
                     result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.TileLeRGBA4444_SW:
-                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.RGB5A3:
@@ -302,7 +301,7 @@ namespace FreeMote
                     result = Argb2Rgba5650(result);
                     break;
                 case PsbPixelFormat.TileRGBA5650_SW:
-                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2Rgba5650(result);
                     break;
             }
