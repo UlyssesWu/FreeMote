@@ -64,25 +64,29 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.A8L8_SW:
                     data = ReadA8L8(data, width, height);
-                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UnswizzleTexture(data, width, height);
                     break;
                 case PsbPixelFormat.TileA8L8_SW:
                     data = ReadA8L8(data, width, height);
                     data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
                     break;
                 case PsbPixelFormat.BeRGBA8_SW:
-                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
                     Switch_0_2(ref data);
                     break;
                 case PsbPixelFormat.LeRGBA8_SW:
-                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
+                    break;
+                case PsbPixelFormat.TileBeRGBA8_Rvl:
+                    Argb2Rgba(ref data);
+                    data = PostProcessing.UntileTextureRvl(data, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.FlipLeRGBA8_SW:
-                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
                     data = PostProcessing.FlipTexturePs3(data, width, height, bmp.PixelFormat);
                     break;
                 case PsbPixelFormat.FlipBeRGBA8_SW:
-                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
                     data = PostProcessing.FlipTexturePs3(data, width, height, bmp.PixelFormat);
                     Switch_0_2(ref data);
                     Argb2Rgba(ref data, true);
@@ -90,7 +94,7 @@ namespace FreeMote
                 case PsbPixelFormat.LeRGBA4444_SW:
                     data = Argb428(data);
                     //Rgba2Argb(ref data);
-                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.TileLeRGBA4444_SW:
                     data = Argb428(data);
@@ -109,7 +113,7 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.A8_SW:
                     data = ReadA8(data, width, height);
-                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UnswizzleTexture(data, width, height);
                     break;
                 case PsbPixelFormat.TileA8_SW:
                     data = ReadA8(data, width, height);
@@ -120,18 +124,23 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.L8_SW:
                     data = ReadL8(data, width, height);
-                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UnswizzleTexture(data, width, height);
                     break;
                 case PsbPixelFormat.TileL8_SW:
                     data = ReadL8(data, width, height);
                     data = PostProcessing.UntileTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    break;
+                case PsbPixelFormat.RGB5A3:
+                    data = ReadRgb5A3(data);
+                    data = PostProcessing.UntileTextureRvl(data, width, height);
+                    //data = DecodeRGB5A3(data, width, height);
                     break;
                 case PsbPixelFormat.RGBA5650:
                     data = ReadRgba5650(data);
                     break;
                 case PsbPixelFormat.RGBA5650_SW:
                     data = ReadRgba5650(data);
-                    data = PostProcessing.UnswizzleTexture(data, width, height, PixelFormat.Format32bppArgb);
+                    data = PostProcessing.UnswizzleTexture(data, width, height);
                     break;
                 case PsbPixelFormat.TileRGBA5650_SW:
                     data = ReadRgba5650(data);
@@ -178,6 +187,7 @@ namespace FreeMote
             //var bitsPerPixel = Image.GetPixelFormatSize(bmp.PixelFormat); //TODO: Check input bpp and convert?
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
                 ImageLockMode.ReadOnly, bmp.PixelFormat);
+            var bitDepth = Image.GetPixelFormatSize(bmp.PixelFormat);
 
             int stride = bmpData.Stride; // 扫描线的宽度
             int offset = stride - bmp.Width; // 显示宽度与扫描线宽度的间隙
@@ -204,7 +214,7 @@ namespace FreeMote
                     result = Argb2A8L8(result);
                     break;
                 case PsbPixelFormat.A8L8_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2A8L8(result);
                     break;
                 case PsbPixelFormat.TileA8L8_SW:
@@ -220,19 +230,19 @@ namespace FreeMote
                     result = DxtUtil.Dxt5Encode(result, bmp.Width, bmp.Height);
                     break;
                 case PsbPixelFormat.BeRGBA8_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     Switch_0_2(ref result);
                     break;
                 case PsbPixelFormat.LeRGBA8_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     break;
                 case PsbPixelFormat.FlipLeRGBA8_SW:
                     result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     break;
                 case PsbPixelFormat.FlipBeRGBA8_SW:
                     result = PostProcessing.FlipTexturePs3(result, bmp.Width, bmp.Height, bmp.PixelFormat);
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     Argb2Rgba(ref result);
                     Switch_0_2(ref result);
                     break;
@@ -247,7 +257,7 @@ namespace FreeMote
                     result = Argb2L8(result);
                     break;
                 case PsbPixelFormat.A8_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2A8(result);
                     break;
                 case PsbPixelFormat.TileA8_SW:
@@ -259,14 +269,14 @@ namespace FreeMote
                     break;
                 case PsbPixelFormat.CI4_SW_PSP:
                 case PsbPixelFormat.CI8_SW_PSP:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat, SwizzleType.PSP);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth, SwizzleType.PSP);
                     break;
                 case PsbPixelFormat.CI4_SW:
                 case PsbPixelFormat.CI8_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     break;
                 case PsbPixelFormat.L8_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2L8(result);
                     break;
                 case PsbPixelFormat.TileL8_SW:
@@ -274,18 +284,21 @@ namespace FreeMote
                     result = Argb2L8(result);
                     break;
                 case PsbPixelFormat.LeRGBA4444_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.TileLeRGBA4444_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
                     result = Argb428(result, false);
                     break;
+                case PsbPixelFormat.RGB5A3:
+                    result = ReadRgb5A3(result);
+                    break;
                 case PsbPixelFormat.RGBA5650:
                     result = Argb2Rgba5650(result);
                     break;
                 case PsbPixelFormat.RGBA5650_SW:
-                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bmp.PixelFormat);
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2Rgba5650(result);
                     break;
                 case PsbPixelFormat.TileRGBA5650_SW:
@@ -319,10 +332,26 @@ namespace FreeMote
                 case PsbPixelFormat.BeRGBA8:
                     Switch_0_2(ref palette);
                     break;
+                case PsbPixelFormat.RGB5A3:
+                    palette = ReadRgb5A3(palette);
+                    break;
+            }
+
+            if (colorFormat.IsCI_Tile())
+            {
+                data = PostProcessing.UntileTextureRvl(data, width, height, colorFormat.GetBitDepth()!.Value);
+            }
+
+            if (colorFormat.IsCI_SW())
+            {
+                data = PostProcessing.UnswizzleTexture(data, width, height, colorFormat.GetBitDepth()!.Value,
+                    colorFormat.IsPSP_SW() ? SwizzleType.PSP : SwizzleType.PSV);
+                //Switch_0_2(ref data);
             }
 
             switch (colorFormat)
             {
+                case PsbPixelFormat.TileCI8:
                 case PsbPixelFormat.CI8_SW_PSP:
                 case PsbPixelFormat.CI8_SW:
                 case PsbPixelFormat.CI8:
@@ -335,16 +364,10 @@ namespace FreeMote
                             pal.Entries[i] = Color.FromArgb(BitConverter.ToInt32(palette, i * 4));
                         // Assign the edited palette to the bitmap.
                         bmp.Palette = pal;
-
-                        if (colorFormat != PsbPixelFormat.CI8)
-                        {
-                            data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat,
-                                colorFormat == PsbPixelFormat.CI8_SW_PSP ? SwizzleType.PSP : SwizzleType.PSV);
-                            //Switch_0_2(ref data);
-                        }
                     }
 
                     break;
+                case PsbPixelFormat.TileCI4:
                 case PsbPixelFormat.CI4_SW_PSP:
                 case PsbPixelFormat.CI4_SW:
                 case PsbPixelFormat.CI4:
@@ -358,12 +381,6 @@ namespace FreeMote
                         // Assign the edited palette to the bitmap.
                         bmp.Palette = pal;
                         //data.Length * 2 = 8bppBmp.Width * 8bppBmp.Height
-
-                        if (colorFormat != PsbPixelFormat.CI4)
-                        {
-                            data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height, bmp.PixelFormat,
-                                colorFormat == PsbPixelFormat.CI4_SW_PSP ? SwizzleType.PSP : SwizzleType.PSV);
-                        }
                     }
                     break;
                 default:
@@ -610,6 +627,40 @@ namespace FreeMote
                 result[i * 4 + 1] = g;
                 result[i * 4 + 2] = r;
                 result[i * 4 + 3] = 0xFF;
+            }
+
+            return result;
+        }
+
+        public static byte[] ReadRgb5A3(byte[] data)
+        {
+            // https://wiki.tockdom.com/wiki/Image_Formats#RGB5A3 was not correct on endianess
+            var result = new byte[data.Length * 2];
+            var shorts = MemoryMarshal.Cast<byte, ushort>(data.AsSpan()); //note the endianess issue here. Rvl looks like BE
+            for (int i = 0; i < shorts.Length; i++)
+            {
+                var c2 = shorts[i];
+                c2 = (ushort) ((c2 >> 8) | (c2 << 8)); //switch endianess, 0AAARRRRGGGGBBBB <- GGGGBBBB0AAARRRR
+                byte r, g, b, a;
+                if ((c2 & 0b1000000000000000) == 0) //RGB4A3
+                {
+                    a = (byte) ((c2 >> 12 & 0b111) * 0x20);
+                    b = (byte) ((c2 >> 8 & 0b1111) * 0x11);
+                    g = (byte) ((c2 >> 4 & 0b1111) * 0x11);
+                    r = (byte) ((c2 & 0b1111) * 0x11);
+                }
+                else //RGB555
+                {
+                    a = 0xFF;
+                    b = (byte) ((c2 >> 10 & 0b11111) * 0x8);
+                    g = (byte) ((c2 >> 5 & 0b11111) * 0x8);
+                    r = (byte) ((c2 & 0b11111) * 0x8);
+                }
+
+                result[i * 4] = r;
+                result[i * 4 + 1] = g;
+                result[i * 4 + 2] = b;
+                result[i * 4 + 3] = a;
             }
 
             return result;

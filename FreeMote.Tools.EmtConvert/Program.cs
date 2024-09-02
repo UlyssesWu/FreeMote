@@ -41,9 +41,17 @@ namespace FreeMote.Tools.EmtConvert
         /// </summary>
         Tile,
         /// <summary>
-        /// Untitle
+        /// UnTile
         /// </summary>
         Untile,
+        /// <summary>
+        /// Tile for Wii
+        /// </summary>
+        Tile_RVL,
+        /// <summary>
+        /// UnTile for Wii
+        /// </summary>
+        Untile_RVL,
         /// <summary>
         /// Swizzle PSV
         /// </summary>
@@ -358,12 +366,14 @@ Example:
                     int width = 0;
                     int height = 0;
                     PixelFormat pixelFormat = PixelFormat.Format32bppArgb;
+                    int bitDepth = 32;
                     try
                     {
                         var img = Image.FromFile(path);
                         width = img.Width;
                         height = img.Height;
                         pixelFormat = img.PixelFormat;
+                        bitDepth = Image.GetPixelFormatSize(pixelFormat);
                     }
                     catch (Exception e)
                     {
@@ -397,17 +407,23 @@ Example:
                         case PsbImageConvertMethod.Untile:
                             bts = PostProcessing.UntileTexture(bts, width, height, pixelFormat);
                             break;
+                        case PsbImageConvertMethod.Tile_RVL:
+                            bts = PostProcessing.TileTextureRvl(bts, width, height, bitDepth);
+                            break;
+                        case PsbImageConvertMethod.Untile_RVL:
+                            bts = PostProcessing.UntileTextureRvl(bts, width, height, bitDepth);
+                            break;
                         case PsbImageConvertMethod.Swizzle_PSV:
-                            bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat);
+                            bts = PostProcessing.SwizzleTexture(bts, width, height, bitDepth);
                             break;
                         case PsbImageConvertMethod.Unswizzle_PSV:
-                            bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat);
+                            bts = PostProcessing.UnswizzleTexture(bts, width, height, bitDepth);
                             break;
                         case PsbImageConvertMethod.Swizzle_PSP:
-                            bts = PostProcessing.SwizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
+                            bts = PostProcessing.SwizzleTexture(bts, width, height, bitDepth, SwizzleType.PSP);
                             break;
                         case PsbImageConvertMethod.Unswizzle_PSP:
-                            bts = PostProcessing.UnswizzleTexture(bts, width, height, pixelFormat, SwizzleType.PSP);
+                            bts = PostProcessing.UnswizzleTexture(bts, width, height, bitDepth, SwizzleType.PSP);
                             break;
                         case PsbImageConvertMethod.Flip_PS3:
                             bts = PostProcessing.FlipTexturePs3(bts, width, height, pixelFormat);

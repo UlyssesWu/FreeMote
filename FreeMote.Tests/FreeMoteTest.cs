@@ -351,8 +351,8 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "textfont14.psb", "4.bin");
             var pixels = File.ReadAllBytes(path);
-            var cleanPixels = PostProcessing.UnswizzleTexturePSP(pixels, 512, 512, PixelFormat.Format4bppIndexed);
-            var swizzledPixels = PostProcessing.SwizzleTexturePSP(cleanPixels, 512, 512, PixelFormat.Format4bppIndexed);
+            var cleanPixels = PostProcessing.UnswizzleTexturePSP(pixels, 512, 512, 4);
+            var swizzledPixels = PostProcessing.SwizzleTexturePSP(cleanPixels, 512, 512, 4);
 
             for (int i = 0; i < pixels.Length; i++)
             {
@@ -370,10 +370,10 @@ namespace FreeMote.Tests
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             var path = Path.Combine(resPath, "base_00b33f69d51e22005fd754f79e494968", "2.bin");
             var pixels = File.ReadAllBytes(path);
-            var p1 = PostProcessing.UnswizzleTexture(pixels, 1024, 256, PixelFormat.Format32bppArgb);
+            var p1 = PostProcessing.UnswizzleTexture(pixels, 1024, 256);
             var p2 = PostProcessing.FlipTexturePs3(p1, 1024, 256, PixelFormat.Format32bppArgb);
             var p3 = PostProcessing.FlipTexturePs3(p2, 1024, 256, PixelFormat.Format32bppArgb);
-            var p4 = PostProcessing.SwizzleTexture(p3, 1024, 256, PixelFormat.Format32bppArgb);
+            var p4 = PostProcessing.SwizzleTexture(p3, 1024, 256);
 
             Assert.IsTrue(pixels.SequenceEqual(p4.Take(pixels.Length)));
         }

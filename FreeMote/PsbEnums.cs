@@ -131,7 +131,7 @@ namespace FreeMote
         /// </summary>
         ps4,
         /// <summary>
-        /// NSwitch
+        /// N Switch
         /// </summary>
         nx,
         /// <summary>
@@ -146,6 +146,10 @@ namespace FreeMote
         /// XBox 360
         /// </summary>
         x360,
+        /// <summary>
+        /// N Wii (Revolution)
+        /// </summary>
+        revo,
 
         other = Byte.MaxValue,
     }
@@ -205,6 +209,10 @@ namespace FreeMote
         /// </summary>
         RGBA5650,
         /// <summary>
+        /// RGB5A3 (plat: revo, aka. 5553)
+        /// </summary>
+        RGB5A3,
+        /// <summary>
         /// A8L8
         /// </summary>
         A8L8,
@@ -247,6 +255,10 @@ namespace FreeMote
         /// BeRGBA8_SW (Swizzle, Tile) for ?
         /// </summary>
         TileBeRGBA8_SW,
+        /// <summary>
+        /// Tile RGBA8 for Wii
+        /// </summary>
+        TileBeRGBA8_Rvl,
         /// <summary>
         /// Little Endian RGBA4444 with Swizzle for vita
         /// </summary>
@@ -301,6 +313,10 @@ namespace FreeMote
         /// </summary>
         CI8_SW_PSP,
         /// <summary>
+        /// CI8 (Tile)
+        /// </summary> for Wii
+        TileCI8,
+        /// <summary>
         /// CI4 (without swizzle)
         /// </summary>
         CI4,
@@ -312,6 +328,10 @@ namespace FreeMote
         /// CI4 with Swizzle for PSP
         /// </summary>
         CI4_SW_PSP,
+        /// <summary>
+        /// CI4 (Tile) for Wii
+        /// </summary>
+        TileCI4,
 
         //Special
 

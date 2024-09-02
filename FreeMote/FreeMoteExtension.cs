@@ -112,6 +112,7 @@ namespace FreeMote
             switch (spec)
             {
                 case PsbSpec.ps4:
+                case PsbSpec.revo:
                     return true;
                 default:
                     return false;
@@ -137,6 +138,10 @@ namespace FreeMote
                     return false;
             }
         }
+
+        public static bool IsCI_Tile(this PsbPixelFormat format) => format == PsbPixelFormat.TileCI4 || format == PsbPixelFormat.TileCI8;
+        public static bool IsCI_SW(this PsbPixelFormat format) => format == PsbPixelFormat.CI4_SW_PSP || format == PsbPixelFormat.CI8_SW_PSP || format == PsbPixelFormat.CI4_SW || format == PsbPixelFormat.CI8_SW;
+        public static bool IsPSP_SW(this PsbPixelFormat format) => format == PsbPixelFormat.CI4_SW_PSP || format == PsbPixelFormat.CI8_SW_PSP;
 
         public static int? GetBitDepth(this PsbPixelFormat format)
         {
@@ -168,10 +173,12 @@ namespace FreeMote
                 case PsbPixelFormat.TileA8_SW:
                 case PsbPixelFormat.CI8_SW:
                 case PsbPixelFormat.CI8_SW_PSP:
+                case PsbPixelFormat.TileCI8:
                 case PsbPixelFormat.CI8:
                     return 8;
                 case PsbPixelFormat.CI4_SW_PSP:
                 case PsbPixelFormat.CI4_SW:
+                case PsbPixelFormat.TileCI4:
                 case PsbPixelFormat.CI4:
                     return 4;
                 case PsbPixelFormat.ASTC_8BPP:
@@ -202,7 +209,27 @@ namespace FreeMote
                 case PsbSpec.krkr:
                 case PsbSpec.win:
                     return PsbPixelFormat.LeRGBA8;
-                case PsbSpec.other:
+                default:
+                    return PsbPixelFormat.None;
+            }
+        }
+
+        public static PsbPixelFormat DefaultPalettePixelFormat(this PsbSpec spec)
+        {
+            switch (spec)
+            {
+                case PsbSpec.common:
+                case PsbSpec.ems:
+                case PsbSpec.vita:
+                case PsbSpec.psp:
+                    return PsbPixelFormat.BeRGBA8;
+                case PsbSpec.nx:
+                case PsbSpec.ps4:
+                case PsbSpec.krkr:
+                case PsbSpec.win:
+                    return PsbPixelFormat.LeRGBA8;
+                case PsbSpec.revo:
+                    return PsbPixelFormat.RGB5A3;
                 default:
                     return PsbPixelFormat.None;
             }
@@ -299,13 +326,15 @@ namespace FreeMote
             switch (typeStr.ToUpperInvariant())
             {
                 case "CI4":
-                    return PsbPixelFormat.CI4_SW_PSP;
+                    return spec == PsbSpec.revo ? PsbPixelFormat.TileCI4 : PsbPixelFormat.CI4_SW_PSP;
                 case "CI8":
-                    if (spec == PsbSpec.psp) //TODO: PS4?
+                    return spec switch
                     {
-                        return PsbPixelFormat.CI8_SW_PSP;
-                    }
-                    return PsbPixelFormat.CI8;
+                        //TODO: PS4?
+                        PsbSpec.psp => PsbPixelFormat.CI8_SW_PSP,
+                        PsbSpec.revo => PsbPixelFormat.TileCI8,
+                        _ => PsbPixelFormat.CI8
+                    };
                 case "CI4_SW":
                     return PsbPixelFormat.CI4_SW;
                 case "CI8_SW":
@@ -322,6 +351,10 @@ namespace FreeMote
                     //TODO: BeRGBA4444_SW?
                     return useTile? PsbPixelFormat.TileLeRGBA4444_SW : PsbPixelFormat.LeRGBA4444_SW;
                 case "RGBA8":
+                    if (spec == PsbSpec.revo)
+                    {
+                        return PsbPixelFormat.TileBeRGBA8_Rvl;
+                    }
                     if (spec.UseBigEndian()) //TODO: I'm not sure if psv and psp always use BE, so for now just set for RGBA8 //psv #95
                         return PsbPixelFormat.BeRGBA8;
                     else

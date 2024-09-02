@@ -121,7 +121,7 @@ namespace FreeMote.Psb
         /// </summary>
         public string PalType => PaletteTypeString?.Value;
 
-        public PsbPixelFormat PalettePixelFormat => PalType.ToPsbPixelFormat(Spec);
+        public PsbPixelFormat PalettePixelFormat => PalType?.ToPsbPixelFormat(Spec) ?? Spec.DefaultPalettePixelFormat();
 
         public byte[] Data
         {
