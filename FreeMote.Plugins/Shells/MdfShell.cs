@@ -50,6 +50,8 @@ namespace FreeMote.Plugins.Shells
 
                     stream = PsbExtension.EncodeMdf(stream, (string) mdfKey, keyLength, true);
                     stream.Position = 0; //A new MemoryStream
+                    //File.WriteAllBytes("test.mdf", ((MemoryStream) stream).ToArray());
+                    //stream.Position = 0;
                 }
 
                 var pos = stream.Position;

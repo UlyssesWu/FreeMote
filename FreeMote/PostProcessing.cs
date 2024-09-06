@@ -233,26 +233,70 @@ namespace FreeMote
 
         public static byte[] TileTextureRvl(byte[] pixelData, int width, int height, int bitDepth = 32)
         {
-            int tileSize = 4; // every tile is 4x4 pixels
+            int xTileSize = 4;
+            int yTileSize = 4;
+            if (bitDepth <= 8)
+            {
+                xTileSize = 8; // 4x8
+            }
+
+            if (bitDepth <= 4)
+            {
+                yTileSize = 8; // 8x8 
+            }
+
+            bool wide = width > height;
+            var byteSizePerPixel = bitDepth / 8.0f;
+            var scale = 1;
+            bool compactMode = false;
             int bpp = bitDepth / 8;
-            byte[] tiledData = new byte[width * height * bpp];
+            byte[] tiledData;
+            if (byteSizePerPixel < 1.0f)
+            {
+                compactMode = true;
+                scale = (int) (1.0f / byteSizePerPixel);
+                tiledData = new byte[width * height / scale];
+                bpp = 1;
+            }
+            else
+            {
+                tiledData = new byte[width * height * bpp];
+            }
 
             int dataIndex = 0;
 
-            for (int yt = 0; yt < height; yt += tileSize)
+            for (int yt = 0; yt < height; yt += yTileSize)
             {
-                for (int xt = 0; xt < width; xt += tileSize)
+                for (int xt = 0; xt < width; xt += xTileSize)
                 {
-                    for (int y = yt; y < yt + tileSize; y++)
+                    for (int y = yt; y < yt + yTileSize; y++)
                     {
-                        for (int x = xt; x < xt + tileSize; x++)
+                        for (int x = xt; x < xt + xTileSize; x++)
                         {
                             if (x >= width || y >= height) continue;
 
                             int pixelIndex = ((y * width) + x) * bpp;
 
-                            Buffer.BlockCopy(pixelData, pixelIndex, tiledData, dataIndex, bpp);
-                            dataIndex += bpp;
+                            if (!compactMode)
+                            {
+                                Buffer.BlockCopy(pixelData, pixelIndex, tiledData, dataIndex, bpp);
+                                dataIndex += bpp;
+                            }
+                            else
+                            {
+                                var currentPos = pixelIndex / scale;
+                                if (currentPos >= tiledData.Length)
+                                {
+                                    return tiledData;
+                                }
+                                var srcData = pixelData[currentPos];
+                                var dstPosition = dataIndex / scale;
+                                var dstSubIndex = dataIndex % scale;
+                                tiledData[dstPosition] = dstSubIndex == 0
+                                    ? (byte) ((tiledData[dstPosition] & 0xF0) | srcData)
+                                    : (byte) ((tiledData[dstPosition] & 0x0F) | (srcData << 4));
+                                dataIndex++;
+                            }
                         }
                     }
                 }

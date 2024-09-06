@@ -513,6 +513,7 @@ Example:
             var optMdfKey = mdfCmd.Option("-k|--key <KEY>", "Set key (Infer file name from path)", CommandOptionType.SingleValue);
             var optMdfKeyLen = mdfCmd.Option<uint>("-l|--length <LEN>", "Set key length. Usually use 131. If not set, it will be the length of the file (usually you don't expect this).", CommandOptionType.SingleValue);
             var optSuffixList = mdfCmd.Option("-x|--suffix <SUFFIX>", "Set expire_suffix_list if the file name is not correctly named.", CommandOptionType.MultipleValue);
+            var optRaw = mdfCmd.Option("-r|--raw", "Only perform MT19937 decryption, output pure MDF", CommandOptionType.NoValue);
             //args
             var argPsbPaths = mdfCmd.Argument("PSB", "PSB Paths", true);
 
@@ -560,8 +561,16 @@ Example:
                             finalSeed = key + fileName;
                         }
 
+                        if (optRaw.HasValue())
+                        {
+                            var ms = PsbExtension.EncodeMdf(File.OpenRead(s), finalSeed, keyLen.HasValue ? (int) keyLen : null, true);
+                            File.WriteAllBytes(Path.ChangeExtension(s, ".converted.mdf"), ms.ToArray());
+                            continue;
+                        }
+
                         context[Context_FileName] = fileName;
                         context[Context_MdfKey] = finalSeed;
+                        
                         var success = ShellConvert(s, "", context); //Unpack
 
                         if (!success)

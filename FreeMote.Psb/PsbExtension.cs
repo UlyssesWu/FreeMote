@@ -734,12 +734,13 @@ namespace FreeMote.Psb
 
             //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
             var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
-            uint[] seeds = new uint[4];
-            seeds[0] = BitConverter.ToUInt32(bts, 0);
-            seeds[1] = BitConverter.ToUInt32(bts, 1 * 4);
-            seeds[2] = BitConverter.ToUInt32(bts, 2 * 4);
-            seeds[3] = BitConverter.ToUInt32(bts, 3 * 4);
-
+            uint[] seeds =
+            [
+                BitConverter.ToUInt32(bts, 0),
+                BitConverter.ToUInt32(bts, 1 * 4),
+                BitConverter.ToUInt32(bts, 2 * 4),
+                BitConverter.ToUInt32(bts, 3 * 4),
+            ];
             MemoryStream ms = new MemoryStream((int)stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
             var gen = new MTRandom<mt19937ar_t>(seeds);
 

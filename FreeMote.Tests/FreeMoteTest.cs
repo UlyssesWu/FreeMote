@@ -413,6 +413,12 @@ namespace FreeMote.Tests
             bitmap2.Save("bc7-plugin2.png");
         }
 
+        [TestMethod]
+        public void TestRgb5A3()
+        {
+            //TODO:
+        }
+
         //[TestMethod]
         //public void TestGraphics()
         //{

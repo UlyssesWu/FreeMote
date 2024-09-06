@@ -291,7 +291,8 @@ namespace FreeMote
                     result = Argb428(result, false);
                     break;
                 case PsbPixelFormat.RGB5A3:
-                    result = ReadRgb5A3(result);
+                    result = PostProcessing.TileTextureRvl(result, bmp.Width, bmp.Height, bitDepth);
+                    result = Argb2Rgb5A3(result);
                     break;
                 case PsbPixelFormat.RGBA5650:
                     result = Argb2Rgba5650(result);
@@ -633,7 +634,7 @@ namespace FreeMote
 
         public static byte[] ReadRgb5A3(byte[] data)
         {
-            // https://wiki.tockdom.com/wiki/Image_Formats#RGB5A3 was not correct on endianess
+            // https://wiki.tockdom.com/wiki/Image_Formats#RGB5A3
             var result = new byte[data.Length * 2];
             var shorts = MemoryMarshal.Cast<byte, ushort>(data.AsSpan()); //note the endianess issue here. Rvl looks like BE
             for (int i = 0; i < shorts.Length; i++)
@@ -660,6 +661,32 @@ namespace FreeMote
                 result[i * 4 + 1] = g;
                 result[i * 4 + 2] = b;
                 result[i * 4 + 3] = a;
+            }
+
+            return result;
+        }
+
+        public static byte[] Argb2Rgb5A3(byte[] data)
+        {
+            var result = new byte[data.Length / 2];
+            var shorts = MemoryMarshal.Cast<byte, ushort>(result.AsSpan());
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                var b = data[i];
+                var g = data[i + 1];
+                var r = data[i + 2];
+                var a = data[i + 3];
+                ushort c2;
+                if (a == 0xFF)
+                {
+                    c2 = (ushort) (0x8000 | r / 8 << 10 | g / 8 << 5 | b / 8);
+                }
+                else
+                {
+                    c2 = (ushort) (r / 0x11 << 12 | g / 0x11 << 8 | b / 0x11 << 4 | a / 0x20);
+                }
+
+                shorts[i / 4] = (ushort) ((c2 >> 8) | (c2 << 8)); //switch endianess
             }
 
             return result;
