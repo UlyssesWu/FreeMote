@@ -35,6 +35,9 @@ namespace FreeMote
                 case PsbPixelFormat.BeRGBA8:
                     RL.Switch_0_2(ref bytes);
                     break;
+                case PsbPixelFormat.RGB5A3:
+                    bytes = RL.Argb2Rgb5A3(bytes);
+                    break;
             }
 
             return bytes;
@@ -96,6 +99,8 @@ namespace FreeMote
                 case PsbPixelFormat.CI4_SW:
                 case PsbPixelFormat.CI4:
                 case PsbPixelFormat.CI8:
+                case PsbPixelFormat.TileCI4:
+                case PsbPixelFormat.TileCI8:
                     return true;
                 default:
                     return false;
@@ -164,6 +169,7 @@ namespace FreeMote
                 case PsbPixelFormat.A8L8:
                 case PsbPixelFormat.A8L8_SW:
                 case PsbPixelFormat.TileA8L8_SW:
+                case PsbPixelFormat.RGB5A3:
                     return 16;
                 case PsbPixelFormat.L8:
                 case PsbPixelFormat.L8_SW:

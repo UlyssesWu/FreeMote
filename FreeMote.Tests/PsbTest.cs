@@ -162,12 +162,6 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestPsbStrings()
         {
-            var se1 = PsbString.Empty;
-            var se2 = PsbString.Empty;
-            se1.Index = 114514;
-            var se2i = se2.Index;
-            return;
-
             var p1 = new PsbString("PSB");
             var p2 = new PsbString("PSB", index: 1);
             var p3 = new PsbString("MDF", 1);
@@ -205,7 +199,8 @@ namespace FreeMote.Tests
 
             //var mdfShell = new MdfShell();
             //var ms = mdfShell.ToPsb(File.OpenRead(path), ctx.Context);
-            //HINT: brute get info-psb key is nearly impossible, don't waste your time on it and just find the key by yourself
+            //HINT: brute get info-psb key is nearly impossible, don't waste your time on it and just find the key by yourself.
+            //You have been warned for (times): 3
             var ms = PsbExtension.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131, true);
             File.WriteAllBytes(path + ".raw", ms.ToArray());
         }

@@ -225,8 +225,7 @@ namespace FreeMote.Psb
                 }
             }
 
-            if (PixelFormat == PsbPixelFormat.CI4_SW || PixelFormat == PsbPixelFormat.CI8_SW 
-                                                     || PixelFormat == PsbPixelFormat.CI4_SW_PSP || PixelFormat == PsbPixelFormat.CI8_SW_PSP)
+            if (PixelFormat.IsCI_SW())
             {
                 if (!IsPowOf2(Width) || !IsPowOf2(Height))
                 {

@@ -416,7 +416,14 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestRgb5A3()
         {
-            //TODO:
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "rebirth-texture.bin");
+            var buffer = File.ReadAllBytes(path);
+            RL.ConvertToImageFile(buffer, "rgb5a3.png", 512, 128, PsbImageFormat.png, PsbPixelFormat.RGB5A3);
+
+            var buffer2 = RL.GetPixelBytesFromImageFile("rgb5a3.png", PsbPixelFormat.RGB5A3);
+            RL.ConvertToImageFile(buffer2, "rgb5a3-2.png", 512, 128, PsbImageFormat.png, PsbPixelFormat.RGB5A3);
+            Assert.IsTrue(buffer2.SequenceEqual(buffer));
         }
 
         //[TestMethod]

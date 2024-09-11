@@ -294,6 +294,10 @@ namespace FreeMote
                     result = PostProcessing.TileTextureRvl(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2Rgb5A3(result);
                     break;
+                case PsbPixelFormat.TileCI4:
+                case PsbPixelFormat.TileCI8:
+                    result = PostProcessing.TileTextureRvl(result, bmp.Width, bmp.Height, bitDepth);
+                    break;
                 case PsbPixelFormat.RGBA5650:
                     result = Argb2Rgba5650(result);
                     break;
@@ -672,21 +676,23 @@ namespace FreeMote
             var shorts = MemoryMarshal.Cast<byte, ushort>(result.AsSpan());
             for (int i = 0; i < data.Length; i += 4)
             {
-                var b = data[i];
-                var g = data[i + 1];
-                var r = data[i + 2];
-                var a = data[i + 3];
+                byte r = data[i + 2];
+                byte g = data[i + 1];
+                byte b = data[i];
+                byte a = data[i + 3];
                 ushort c2;
-                if (a == 0xFF)
-                {
-                    c2 = (ushort) (0x8000 | r / 8 << 10 | g / 8 << 5 | b / 8);
-                }
-                else
-                {
-                    c2 = (ushort) (r / 0x11 << 12 | g / 0x11 << 8 | b / 0x11 << 4 | a / 0x20);
-                }
 
-                shorts[i / 4] = (ushort) ((c2 >> 8) | (c2 << 8)); //switch endianess
+                if (a < 0xE0) // RGB4A3
+                {                    
+                    c2 = (ushort)(((a >> 5) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4));
+                }
+                else // RGB555
+                {                    
+                    c2 = (ushort)(0x8000 | ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3));
+                }
+               
+                c2 = (ushort)((c2 << 8) | (c2 >> 8)); //switch endianess
+                shorts[i / 4] = c2;
             }
 
             return result;
