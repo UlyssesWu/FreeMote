@@ -1,94 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C0B2C2FF-D8F4-497E-8312-C2AF1BB6E7F7}</ProjectGuid>
+    <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FreeMote.Psb</RootNamespace>
-    <AssemblyName>FreeMote.Psb</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>default</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>default</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>bin\Release\FreeMote.Psb.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="MtnPainter.cs" />
-    <Compile Include="Plugins\ManagedTlgFormatter.cs" />
-    <Compile Include="Plugins\AudioFileFormatter.cs" />
-    <Compile Include="Resources\ArchDatas.cs" />
-    <Compile Include="Resources\AudioMetadata.cs" />
-    <Compile Include="IPsbType.cs" />
-    <Compile Include="IResourceMetadata.cs" />
-    <Compile Include="Plugins\FreeMount.cs" />
-    <Compile Include="Plugins\FreeMountContext.cs" />
-    <Compile Include="Plugins\IPsbAudioFormatter.cs" />
-    <Compile Include="Plugins\IPsbImageFormatter.cs" />
-    <Compile Include="Plugins\IPsbKeyProvider.cs" />
-    <Compile Include="Plugins\IPsbPluginInfo.cs" />
-    <Compile Include="Plugins\IPsbShell.cs" />
-    <Compile Include="Plugins\IPsbSpecialType.cs" />
-    <Compile Include="PSB.cs" />
-    <Compile Include="PsbExtension.cs" />
-    <Compile Include="EmtPainter.cs" />
-    <Compile Include="PsbResHelper.cs" />
-    <Compile Include="PsbValues.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources\FlattenArrayMetadata.cs" />
-    <Compile Include="Resources\IArchData.cs" />
-    <Compile Include="Resources\ImageMetadata.cs" />
-    <Compile Include="Plugins\WavFormatter.cs" />
-    <Compile Include="Types\ArchiveType.cs" />
-    <Compile Include="Types\BaseImageType.cs" />
-    <Compile Include="Types\FontType.cs" />
-    <Compile Include="Types\ImageType.cs" />
-    <Compile Include="Types\M2Types.cs" />
-    <Compile Include="Types\MapType.cs" />
-    <Compile Include="Types\MmoType.cs" />
-    <Compile Include="Types\MotionType.cs" />
-    <Compile Include="Types\PimgType.cs" />
-    <Compile Include="Types\ScnType.cs" />
-    <Compile Include="Types\SoundArchiveType.cs" />
-    <Compile Include="Textures\TextureCombiner.cs" />
-    <Compile Include="Textures\TexturePacker.cs" />
-    <Compile Include="Textures\TextureSpliter.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FreeMote\FreeMote.csproj">
-      <Project>{D43CA425-6476-4AE3-A3D8-BBCAC0F0383C}</Project>
-      <Name>FreeMote</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\FreeMote\FreeMote.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FastBitmapLib">
@@ -100,6 +26,7 @@
     <PackageReference Include="System.Buffers">
       <Version>4.5.1</Version>
     </PackageReference>
+    <PackageReference Include="System.ComponentModel.Composition" Version="8.0.0" />
     <PackageReference Include="System.Memory">
       <Version>4.5.5</Version>
     </PackageReference>
@@ -115,6 +42,4 @@
       <Link>.editorconfig</Link>
     </None>
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,0 +1,52 @@
+name: Build and Package
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '4.8.x'
+
+    - name: Restore NuGet packages
+      run: nuget restore FreeMote.sln
+
+    - name: Build solution
+      run: msbuild FreeMote.sln /p:Configuration=Release
+
+    - name: Run post-build script
+      shell: pwsh
+      run: |
+        cd $env:GITHUB_WORKSPACE
+        mkdir FreeMoteToolkit -Force
+        Copy-Item FreeMote.Tools.EmtConvert/bin/Release/net48/* FreeMoteToolkit -Recurse -Force
+        Copy-Item FreeMote.Tools.PsbDecompile/bin/Release/net48/* FreeMoteToolkit -Recurse -Force
+        Copy-Item FreeMote.Tools.PsBuild/bin/Release/net48/* FreeMoteToolkit -Recurse -Force
+        Copy-Item FreeMote.Tools.EmtMake/bin/Release/net48/* FreeMoteToolkit -Recurse -Force
+        Copy-Item FreeMote.Tools.Viewer/bin/Release/net48/* FreeMoteToolkit -Recurse -Force
+        del FreeMoteToolkit\*.pdb
+        del FreeMoteToolkit\*.xml
+        mkdir FreeMoteToolkit\lib -Force
+        Move-Item FreeMoteToolkit/*.dll FreeMoteToolkit/lib
+        Move-Item FreeMoteToolkit/x86 FreeMoteToolkit/lib/
+        Move-Item FreeMoteToolkit/x64 FreeMoteToolkit/lib/
+        7z a FreeMote.zip FreeMoteToolkit\*
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: FreeMote
+        path: FreeMote.zip

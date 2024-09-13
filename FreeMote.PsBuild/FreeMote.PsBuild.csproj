@@ -1,75 +1,27 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{717A63DE-E599-4134-92AB-40A17C326DA3}</ProjectGuid>
+    <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FreeMote.PsBuild</RootNamespace>
-    <AssemblyName>FreeMote.PsBuild</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UserSecretsId>5118e00b-0de7-4935-9013-b6ebe83c8397</UserSecretsId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>default</LangVersion>
     <DocumentationFile>bin\Release\FreeMote.PsBuild.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="MmoCompiler.cs" />
-    <Compile Include="MmoBuilder.cs" />
-    <Compile Include="MmoTypes.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
+    <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="PsbCompiler.cs" />
-    <Compile Include="PsbDecompiler.cs" />
-    <Compile Include="PsBuildHelper.cs" />
-    <Compile Include="PsbResourceJson.cs" />
-    <Compile Include="PsbJsonConverter.cs" />
-    <Compile Include="PsbSpecConverter.cs" />
-    <Compile Include="Converters\CommonWinConverter.cs" />
-    <Compile Include="Converters\ISpecConverter.cs" />
-    <Compile Include="Converters\Krkr2CommonConverter.cs" />
-    <Compile Include="Converters\Common2KrkrConverter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj">
-      <Project>{c0b2c2ff-d8f4-497e-8312-c2af1bb6e7f7}</Project>
-      <Name>FreeMote.Psb</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FreeMote\FreeMote.csproj">
-      <Project>{d43ca425-6476-4ae3-a3d8-bbcac0f0383c}</Project>
-      <Name>FreeMote</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj" />
+    <ProjectReference Include="..\FreeMote\FreeMote.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">
@@ -80,10 +32,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
+    <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
