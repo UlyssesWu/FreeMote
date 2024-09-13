@@ -426,6 +426,22 @@ namespace FreeMote.Tests
             Assert.IsTrue(buffer2.SequenceEqual(buffer));
         }
 
+        [TestMethod]
+        public void TestTileCI8()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var path = Path.Combine(resPath, "sora2.bin");
+            var pathPal = Path.Combine(resPath, "sora2-pal.bin");
+            RL.ConvertToImageFileWithPalette(File.ReadAllBytes(path), File.ReadAllBytes(pathPal), "tile-ci8.png", 512, 128, PsbPixelFormat.TileCI8, PsbPixelFormat.RGB5A3);
+
+            var image = BitmapHelper.LoadBitmap(File.ReadAllBytes("tile-ci8.png"));
+            var palette = image.Palette.GetPaletteBytes(PsbPixelFormat.RGB5A3);
+
+            var buffer = RL.GetPixelBytesFromImage(image, PsbPixelFormat.TileCI8);
+
+            RL.ConvertToImageFileWithPalette(buffer, palette, "tile-ci8-2.png", 512, 128, PsbPixelFormat.TileCI8, PsbPixelFormat.RGB5A3);
+        }
+
         //[TestMethod]
         //public void TestGraphics()
         //{

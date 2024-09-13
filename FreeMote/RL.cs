@@ -315,7 +315,7 @@ namespace FreeMote
         }
 
         /// <summary>
-        /// Convert a PSB image resource which contains pal and palType to Bitmap. For now we only support 32Bpp palettes
+        /// Convert a PSB image resource which contains pal and palType to Bitmap. Only support BeRGBA8 & RGB5A3 palettes
         /// </summary>
         /// <param name="data"></param>
         /// <param name="palette"></param>
@@ -494,6 +494,13 @@ namespace FreeMote
                     bmp.Save(path, ImageFormat.Png);
                     break;
             }
+        }
+
+        public static void ConvertToImageFileWithPalette(byte[] data, byte[] palette,string path, int width, int height, PsbPixelFormat colorFormat, PsbPixelFormat paletteColorFormat)
+        {
+            Bitmap bmp = ConvertToImageWithPalette(data, palette, width, height, colorFormat, paletteColorFormat);
+            
+            bmp.Save(path, ImageFormat.Png);
         }
 
         private static byte[] Decompress(Stream stream, int width, int height, int align = 4)
