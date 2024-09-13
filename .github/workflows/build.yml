@@ -23,7 +23,7 @@ jobs:
       run: nuget restore FreeMote.sln
 
     - name: Build solution
-      run: msbuild FreeMote.sln /p:Configuration=Release
+      run: dotnet build -c Release FreeMote.sln
 
     - name: Run post-build script
       shell: pwsh
