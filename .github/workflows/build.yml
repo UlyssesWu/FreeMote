@@ -16,6 +16,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Add NuGet source
+      run: nuget sources add -Name MonarchSolutions -Source https://www.myget.org/F/monarchsolutions/api/v3/index.json
+
     - name: Restore NuGet packages
       run: nuget restore FreeMote.sln
 
