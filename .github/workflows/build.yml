@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Add NuGet source
       run: nuget sources add -Name MonarchSolutions -Source https://www.myget.org/F/monarchsolutions/api/v3/index.json

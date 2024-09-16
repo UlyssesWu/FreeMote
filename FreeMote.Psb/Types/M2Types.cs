@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using FreeMote.Plugins;
 
 namespace FreeMote.Psb.Types
@@ -12,46 +13,54 @@ namespace FreeMote.Psb.Types
 
         public bool IsThisType(PSB psb)
         {
-            return psb.Objects is {Count: 3} && psb.Objects.ContainsKey("w") && psb.Objects.ContainsKey("h") &&
-                   psb.Objects.ContainsKey("image");
+            return psb.Objects.All(kv => kv.Value is PsbDictionary {Count: 3} dic && dic.ContainsKey("w") &&
+                                         dic.ContainsKey("h") &&
+                                         dic.ContainsKey("image"));
         }
 
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
-            if (psb.Objects["image"] is PsbResource res)
+            var results = new List<IResourceMetadata>();
+            foreach (var kv in psb.Objects)
             {
-                //test bit depth, for image it's 8bit (1 byte 1 pixel); for palette it's 32bit (4 byte 1 pixel)
-                var width = psb.Objects["w"].GetInt();
-                var height = psb.Objects["h"].GetInt();
-                var dataLen = res.Data.Length;
-                var depth = dataLen / (width * height);
-                PsbPixelFormat format = PsbPixelFormat.A8;
-                switch (depth)
+                var dic = kv.Value as PsbDictionary;
+                if (dic?["image"] is PsbResource res)
                 {
-                    case 1:
-                        format = PsbPixelFormat.A8;
-                        break;
-                    case 4:
-                        format = PsbPixelFormat.LeRGBA8;
-                        break;
-                    default:
-                        Logger.LogWarn($"Unknown color format: {depth} bytes per pixel. Please submit sample.");
-                        return [];
+                    var name = kv.Key;
+                    //test bit depth, for image it's 8bit (1 byte 1 pixel); for palette it's 32bit (4 byte 1 pixel)
+                    var width = dic["w"].GetInt();
+                    var height = dic["h"].GetInt();
+                    var dataLen = res.Data.Length;
+                    var depth = dataLen / (width * height);
+                    PsbPixelFormat format = PsbPixelFormat.A8;
+                    switch (depth)
+                    {
+                        case 1:
+                            format = PsbPixelFormat.A8;
+                            break;
+                        case 4:
+                            format = PsbPixelFormat.LeRGBA8;
+                            break;
+                        default:
+                            Logger.LogWarn($"Unknown color format: {depth} bytes per pixel. Please submit sample.");
+                            return [];
+                    }
+
+                    ImageMetadata md = new ImageMetadata()
+                    {
+                        Name = name,
+                        PsbType = PsbType,
+                        Resource = res,
+                        Width = width,
+                        Height = height,
+                        Spec = PsbSpec.none,
+                        TypeString = format.ToStringForPsb().ToPsbString()
+                    };
+                    results.Add(md);
                 }
-
-                ImageMetadata md = new ImageMetadata()
-                {
-                    PsbType = PsbType,
-                    Resource = res,
-                    Width = width,
-                    Height = height,
-                    Spec = PsbSpec.none,
-                    TypeString = format.ToStringForPsb().ToPsbString()
-                };
-                return [md as T];
             }
-
-            return [];
+            
+            return results.Cast<T>().ToList();
         }
     }
 
@@ -60,6 +69,7 @@ namespace FreeMote.Psb.Types
     class SprDataType : BaseImageType, IPsbType
     {
         public PsbType PsbType => PsbType.SprData;
+
         public bool IsThisType(PSB psb)
         {
             return psb.Objects != null && psb.Objects.ContainsKey("spr_data") && psb.Objects.ContainsKey("tex_size");
@@ -137,6 +147,7 @@ namespace FreeMote.Psb.Types
                     Logger.LogWarn($"Not supported: clut [{i}] is a > 256 colors palette ({cw}x{ch}). Skip.");
                     continue;
                 }
+
                 resList.Add(new ImageMetadata()
                 {
                     Name = i.ToString(),
@@ -156,9 +167,10 @@ namespace FreeMote.Psb.Types
     class ChipType : BaseImageType, IPsbType
     {
         public PsbType PsbType => PsbType.ChipImg;
+
         public bool IsThisType(PSB psb)
         {
-            return psb.Objects is { Count: 1 } && psb.Objects.ContainsKey("chip") && psb.Objects["chip"] is PsbList;
+            return psb.Objects is {Count: 1} && psb.Objects.ContainsKey("chip") && psb.Objects["chip"] is PsbList;
         }
 
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
