@@ -13,59 +13,97 @@ namespace FreeMote.Psb.Types
 
         public bool IsThisType(PSB psb)
         {
-            return psb.Objects.All(kv => kv.Value is PsbDictionary {Count: 3} dic && dic.ContainsKey("w") &&
-                                         dic.ContainsKey("h") &&
-                                         dic.ContainsKey("image"));
+            if (psb.Objects.All(kv => kv.Value is PsbDictionary {Count: 3} dic && dic.ContainsKey("w") &&
+                                      dic.ContainsKey("h") &&
+                                      dic.ContainsKey("image"))) return true;
+
+            if (psb.Objects is PsbDictionary { Count: 3}
+            dic2 && dic2.ContainsKey("w") &&
+                dic2.ContainsKey("h") &&
+                dic2.ContainsKey("image"))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
             var results = new List<IResourceMetadata>();
+            if (psb.Objects is { Count: 3 }
+                    dic && dic.ContainsKey("w") &&
+                dic.ContainsKey("h") &&
+                dic.ContainsKey("image"))
+            {
+                var md = GenerateMetadata("0", dic, dic["image"] as PsbResource);
+                results.Add(md);
+            }
             foreach (var kv in psb.Objects)
             {
-                var dic = kv.Value as PsbDictionary;
-                if (dic?["image"] is PsbResource res)
+                var d = kv.Value as PsbDictionary;
+                if (d?["image"] is PsbResource res)
                 {
-                    var name = kv.Key;
-                    //test bit depth, for image it's 8bit (1 byte 1 pixel); for palette it's 32bit (4 byte 1 pixel)
-                    var width = dic["w"].GetInt();
-                    var height = dic["h"].GetInt();
-                    var dataLen = res.Data.Length;
-                    var depth = dataLen / (width * height);
-                    PsbPixelFormat format = PsbPixelFormat.A8;
-                    switch (depth)
-                    {
-                        case 1:
-                            format = PsbPixelFormat.A8;
-                            break;
-                        case 4:
-                            format = PsbPixelFormat.LeRGBA8;
-                            break;
-                        default:
-                            Logger.LogWarn($"Unknown color format: {depth} bytes per pixel. Please submit sample.");
-                            return [];
-                    }
-
-                    ImageMetadata md = new ImageMetadata()
-                    {
-                        Name = name,
-                        PsbType = PsbType,
-                        Resource = res,
-                        Width = width,
-                        Height = height,
-                        Spec = PsbSpec.none,
-                        TypeString = format.ToStringForPsb().ToPsbString()
-                    };
+                    var md = GenerateMetadata(kv.Key, d, res);
                     results.Add(md);
                 }
             }
             
             return results.Cast<T>().ToList();
+
+            ImageMetadata GenerateMetadata(string name, PsbDictionary dic, PsbResource res)
+            {
+                //test bit depth, for image it's 8bit (1 byte 1 pixel); for palette it's 32bit (4 byte 1 pixel)
+                var width = dic["w"].GetInt();
+                var height = dic["h"].GetInt();
+                var dataLen = res.Data.Length;
+                var depth = dataLen / (width * height);
+                PsbPixelFormat format = PsbPixelFormat.A8;
+                switch (depth)
+                {
+                    case 1:
+                        format = PsbPixelFormat.A8;
+                        break;
+                    case 4:
+                        format = PsbPixelFormat.LeRGBA8;
+                        break;
+                    default:
+                        Logger.LogWarn($"Unknown color format: {depth} bytes per pixel. Please submit sample.");
+                        return null;
+                }
+
+                var md = new ImageMetadata()
+                {
+                    Name = name,
+                    PsbType = PsbType,
+                    Resource = res,
+                    Width = width,
+                    Height = height,
+                    Spec = PsbSpec.none,
+                    TypeString = format.ToStringForPsb().ToPsbString()
+                };
+
+                return md;
+            }
+        }
+    }
+
+    internal struct SprTile
+    {
+        public ushort TexId;
+        public ushort Id;
+        public int X;
+        public int Y;
+
+        public override string ToString()
+        {
+            return $"[{TexId},{Id},{X},{Y}]";
         }
     }
 
     //spr: data: 0: image no. 1:max to 1024 2:max to block[0]-1 3:max to block[1]-1
     //block: [0] * [1] = total sprites in a tex
+    //spr tile: 32x32 tile
     class SprDataType : BaseImageType, IPsbType
     {
         public PsbType PsbType => PsbType.SprData;
@@ -77,26 +115,33 @@ namespace FreeMote.Psb.Types
 
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
-            if (string.IsNullOrEmpty(psb.FilePath) || !File.Exists(psb.FilePath))
-            {
-                //Logger.LogHint("To get images from SprData PSB, you have to put all related PSBs in a folder first.");
-                return [];
-            }
-
-            //TODO: parse header_ex later, no sample yet.
             return [];
         }
 
         public override Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
             PsbExtractOption extractOption = PsbExtractOption.Original)
         {
-            if (string.IsNullOrEmpty(psb.FilePath) || !File.Exists(psb.FilePath))
+            string basePath = string.Empty;
+            if (context.TryGet(Consts.Context_RT_SprBasePath, out string sprBasePath))
             {
-                Logger.LogHint("To get images from SprData PSB, you have to put all related PSBs in a folder first.");
-                return [];
+                context.Context.Remove(Consts.Context_RT_SprBasePath);
+                if (Directory.Exists(sprBasePath))
+                {
+                    basePath = sprBasePath;
+                }
             }
 
-            var basePath = Path.GetDirectoryName(psb.FilePath);
+            if (string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(psb.FilePath))
+            {
+                basePath = Path.GetDirectoryName(psb.FilePath);
+            }
+
+            if (string.IsNullOrEmpty(basePath) || !Directory.Exists(basePath))
+            {
+                //Logger.LogWarn("Cannot find related files. To get images from SprData PSB, you have to put all related PSBs in same folder.");
+                return [];
+            }
+            
             return [];
         }
     }

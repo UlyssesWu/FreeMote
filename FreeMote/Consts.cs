@@ -120,6 +120,11 @@ namespace FreeMote
         public const string Context_BodyBinName = "BodyBinName";
 
         /// <summary>
+        /// (string?) Base path to find Sprites for SprData type
+        /// </summary>
+        public const string Context_RT_SprBasePath = "[RT]SprBasePath";
+
+        /// <summary>
         /// 0x075BCD15
         /// </summary>
         public const uint Key1 = 123456789;

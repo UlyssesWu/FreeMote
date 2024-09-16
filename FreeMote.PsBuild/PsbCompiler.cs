@@ -245,6 +245,8 @@ namespace FreeMote.PsBuild
 
             //Parse
             PSB psb = Parse(File.ReadAllText(inputPath), version ?? 3);
+            psb.FilePath = inputPath;
+
             //Link
             Dictionary<string, object> context = null;
             if (!string.IsNullOrWhiteSpace(inputResJson))
@@ -311,7 +313,7 @@ namespace FreeMote.PsBuild
         {
             PSB psb = new PSB(version)
             {
-                Encoding = Encoding
+                Encoding = Encoding,
             };
             var converter = new PsbJsonConverter();
             var j = json.TrimStart();

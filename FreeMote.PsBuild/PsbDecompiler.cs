@@ -825,6 +825,11 @@ namespace FreeMote.PsBuild
 
         static void WriteAllBytes(string path, MemoryStream ms)
         {
+            if (Directory.Exists(path))
+            {
+                Logger.LogError($"[ERROR] There is a folder with same name when trying to Write file.\r\n Please remove the folder if you do want to overwrite: {path}");
+                return;
+            }
             EnsureDirectory(path);
             using var fs = new FileStream(path, FileMode.Create);
             ms.WriteTo(fs);

@@ -9,6 +9,7 @@ using FreeMote.Plugins;
 using FreeMote.Plugins.Shells;
 using FreeMote.Psb;
 using FreeMote.Psb.Textures;
+using FreeMote.Psb.Types;
 using FreeMote.PsBuild;
 using FreeMote.PsBuild.Converters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,6 +21,8 @@ namespace FreeMote.Tests
     [TestClass]
     public class PsBuildTest
     {
+        public string ResPath = Path.Combine(Environment.CurrentDirectory, @"..\..\..\Res");
+
         public PsBuildTest()
         {
         }
@@ -52,8 +55,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestDecompile()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var paths = Directory.GetFiles(resPath, "*pure.psb");
+            var paths = Directory.GetFiles(ResPath, "*pure.psb");
             var target = paths[0];
             var json = PsbDecompiler.Decompile(target);
             File.WriteAllText(target + ".json", json);
@@ -62,8 +64,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestDecompile2()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var psbPath = Path.Combine(resPath, "ako.pure.psb");
+            var psbPath = Path.Combine(ResPath, "ako.pure.psb");
             var json = PsbDecompiler.Decompile(psbPath);
         }
 
@@ -71,10 +72,9 @@ namespace FreeMote.Tests
         public void TestInplaceReplace()
         {
             FreeMount.Init();
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "dx_ふかみ_駅員服.psb");
-            var path = Path.Combine(resPath, "dx_ふかみ_駅員服.lz4.psb");
-            var jsonPath = Path.Combine(resPath, "dx_ふかみ_駅員服.json");
+            var path = Path.Combine(ResPath, "dx_ふかみ_駅員服.lz4.psb");
+            var jsonPath = Path.Combine(ResPath, "dx_ふかみ_駅員服.json");
             PsbCompiler.InplaceReplaceToFile(path, jsonPath);
         }
 
@@ -82,8 +82,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestDirectCompile()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "emote_test2-pure.psb");
+            var path = Path.Combine(ResPath, "emote_test2-pure.psb");
             PSB psb = new PSB(path);
             psb.Header.Version = 3;
             psb.UpdateIndexes();
@@ -93,8 +92,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestJsonContext()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "dx_ふかみ_駅員服.resx.json");
+            var path = Path.Combine(ResPath, "dx_ふかみ_駅員服.resx.json");
             var obj = JsonConvert.DeserializeObject<PsbResourceJson>(File.ReadAllText(path));
             //var flattenArrays = obj.Context[Consts.Context_FlattenArray];
             //Console.WriteLine();
@@ -103,27 +101,24 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestCompileKrkr()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
-            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
+            var path = Path.Combine(ResPath, "e-mote38_KRKR-pure.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
         }
 
         [TestMethod]
         public void TestCompileWin()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "D愛子a_春服-pure.psb.json");
-            var path = Path.Combine(resPath, "dx_れいなh1a1.psb.json");
+            var path = Path.Combine(ResPath, "dx_れいなh1a1.psb.json");
             PsbCompiler.CompileToFile(path, path + ".psbuild.psb", null, 4, null, PsbSpec.win);
         }
 
         [TestMethod]
         public void TestCompileCommon()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "emote396-a8l8.pure.json");
-            var path2 = Path.Combine(resPath, "emote396-a8l8.pure.psb");
+            var path = Path.Combine(ResPath, "emote396-a8l8.pure.json");
+            var path2 = Path.Combine(ResPath, "emote396-a8l8.pure.psb");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             var psb2 = new PSB(path2);
             //File.WriteAllBytes("396.psb", psb.Build());
@@ -133,9 +128,8 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestCompileEms()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
             //var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
-            var path = Path.Combine(resPath, "emote_test2-pure.psb.json");
+            var path = Path.Combine(ResPath, "emote_test2-pure.psb.json");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             psb.Platform = PsbSpec.ems;
             psb.Merge();
@@ -146,8 +140,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestBTree()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb");
+            var path = Path.Combine(ResPath, "澄怜a_裸.psb-pure.psb");
             PSB psb = new PSB(path);
             var tree = PrefixTree.Build(psb.Names, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
             var list = PrefixTree.Load(oNames, oTrees, oOffsets);
@@ -192,11 +185,9 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestGraft()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-
             //var path = Path.Combine(resPath, "澄怜a_裸.psb-pure.psb.json");
-            var path = Path.Combine(resPath, "e-mote38_KRKR-pure.psb.json");
-            var path2 = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(ResPath, "e-mote38_KRKR-pure.psb.json");
+            var path2 = Path.Combine(ResPath, "e-mote38_win-pure.psb.json");
             PSB psbKrkr = PsbCompiler.LoadPsbFromJsonFile(path);
             PSB psbWin = PsbCompiler.LoadPsbFromJsonFile(path2);
             psbWin.SwitchSpec(PsbSpec.krkr);
@@ -231,9 +222,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestFindByPath()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-
-            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(ResPath, "e-mote38_win-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
             var obj = psb.Objects.FindByPath("/object/all_parts/motion/タイムライン構造/bounds");
@@ -258,11 +247,9 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestSplitTexture()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-
             //var path = Path.Combine(resPath, "dx_e-mote3.0ショコラパジャマa-pure.psb.json");
             //var path = Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb.json");
-            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(ResPath, "e-mote38_win-pure.psb.json");
             //var path = Path.Combine(resPath, "akira_guide-pure.psb.json");
             //PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
             PSB psb = new PSB("emote_krkr2win.psb");
@@ -272,9 +259,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestPackTexture()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-
-            var path = Path.Combine(resPath, "澄怜a_裸.psb-pure");
+            var path = Path.Combine(ResPath, "澄怜a_裸.psb-pure");
             var savePath = Path.Combine(path, "packed");
             Dictionary<string, Image> imgs = new Dictionary<string, Image>();
             foreach (var file in Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories))
@@ -299,9 +284,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestPathTravel()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-
-            var path = Path.Combine(resPath, "e-mote38_win-pure.psb.json");
+            var path = Path.Combine(ResPath, "e-mote38_win-pure.psb.json");
             PSB psb = PsbCompiler.LoadPsbFromJsonFile(path);
 
             var targetPath = "/object/all_parts/motion/タイムライン構造/bounds";
@@ -502,8 +485,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestLz4()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "dx_真闇_裸_lz4_linked.psb");
+            var path = Path.Combine(ResPath, "dx_真闇_裸_lz4_linked.psb");
             Lz4Shell shell = new Lz4Shell();
             var context = new Dictionary<string, object>();
             var oriStream = File.OpenRead(path);
@@ -516,8 +498,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestPsd()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "dx_れいなh1a1.freemote-krkr-pure.win.psb");
+            var path = Path.Combine(ResPath, "dx_れいなh1a1.freemote-krkr-pure.win.psb");
             PsdShell shell = new PsdShell();
             var stream = File.OpenRead(path);
             var inShell = shell.IsInShell(stream);
@@ -528,8 +509,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestLoadResxJson()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "image_info.psb.m.json");
+            var path = Path.Combine(ResPath, "image_info.psb.m.json");
             var resx = PsbResourceJson.LoadByPsbJsonPath(path);
             Console.WriteLine(resx.Context[Consts.Context_ArchiveItemFileNames]);
             //JObject j = (JObject)resx.Context[Consts.Context_ArchiveItemFileNames];
@@ -550,7 +530,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestCompareDecompile()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
+            var resPath = Path.Combine(ResPath, "c01c.txt.scn");
 
             var pccPsb = new PSB(Path.Combine(resPath, "c01c.txt.scn"));
             //var pccPsb = new PSB(Path.Combine(resPath, "ca01_l_body_1.psz.psb-pure.psb"));
@@ -583,9 +563,8 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestGraft2()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var pathGood = Path.Combine(resPath, "goodstr.freemote.psb");
-            var pathBad = Path.Combine(resPath, "goodStr.psb");
+            var pathGood = Path.Combine(ResPath, "goodstr.freemote.psb");
+            var pathBad = Path.Combine(ResPath, "goodStr.psb");
 
             var psbGood = new PSB(pathGood);
             var psbBad = new PSB(pathBad);
@@ -622,8 +601,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestWin2Krkr2Win()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var pathGood = Path.Combine(resPath, "goodstr.freemote.psb");
+            var pathGood = Path.Combine(ResPath, "goodstr.freemote.psb");
             var psb = new PSB(pathGood);
             psb.SwitchSpec(PsbSpec.krkr, PsbSpec.krkr.DefaultPixelFormat());
             psb.Merge();
@@ -635,9 +613,7 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestTrie()
         {
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            //var path = Path.Combine(resPath, "e-mote38基本テンプレート(正面zバイナリ専用)_free.json");
-            var path = Path.Combine(resPath, "test_kazuma.txt.scn.m.json");
+            var path = Path.Combine(ResPath, "test_kazuma.txt.scn.m.json");
             var psb = PsbCompiler.LoadPsbFromJsonFile(path);
             var names = psb.Names;
             var s1 = psb.ToStream().Length;
@@ -652,8 +628,7 @@ namespace FreeMote.Tests
         public void TestExtractArchive()
         {
             FreeMount.Init();
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "patch_info.psb.m");
+            var path = Path.Combine(ResPath, "patch_info.psb.m");
             PsbDecompiler.ExtractArchive(path, "523aad2de7132", FreeMountContext.CreateForArchive(), null, false, false, true);
         }
 
@@ -662,31 +637,105 @@ namespace FreeMote.Tests
         {
             FreeMount.Init();
             //Consts.ForceCompressionLevel = CompressionLevel.Fastest;
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "patch_info.psb.m.json");
+            var path = Path.Combine(ResPath, "patch_info.psb.m.json");
             //PsbCompiler.PackArchive(path, "523aad2de7132", true, false);
             PsbCompiler.PackArchive(path, "523aad2de7132", false, false);
 
             PsbDecompiler.ExtractArchive("patch_info.psb.m", "523aad2de7132", FreeMountContext.CreateForArchive(), null, false, false, true);
         }
-
+        
         [TestMethod]
         public void TestSpr()
         {
             FreeMount.Init();
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "Spr", "1P000.psb");
+            var path = Path.Combine(ResPath, "Spr", "1PTYOURYOU.spr.psb.m.json");
 
-            var psb = new PSB(path);
-            PsbDecompiler.DecompileToFile(path, extractFormat: PsbImageFormat.png, extractOption: PsbExtractOption.Extract);
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+
+            Dictionary<int, int> counter = new Dictionary<int, int>();
+            Dictionary<int, List<SprTile>> imageCounter = new();
+            Dictionary<int, List<SprTile>> sprDic = new();
+            foreach (var spr in psb.Objects["spr_data"] as PsbList)
+            {
+                PsbList p = spr.Children("data") as PsbList;
+                int images = spr.Children("images").GetInt();
+                foreach (var inner in p)
+                {
+                    PsbList inner2 = inner as PsbList;
+                    SprTile tile = new SprTile
+                        {TexId = (ushort) inner2[0].GetInt(), Id = (ushort) inner2[1].GetInt(), X = inner2[2].GetInt(), Y = inner2[3].GetInt()};
+                    if (sprDic.ContainsKey(tile.TexId))
+                    {
+                        sprDic[tile.TexId].Add(tile);
+                    }
+                    else
+                    {
+                        sprDic[tile.TexId] = new List<SprTile> { tile };
+                    }
+
+                    if (imageCounter.ContainsKey(images))
+                    {
+                        imageCounter[images].Add(tile);
+                    }
+                    else
+                    {
+                        imageCounter[images] = new List<SprTile>() {tile};
+                    }
+
+                    var i = inner2[0].GetInt();
+                    if (counter.ContainsKey(i))
+                    {
+                        counter[i] += 1;
+                    }
+                    else
+                    {
+                        counter[i] = 1;
+                    }
+                }
+            }
+
+            //foreach (var kv in counter.OrderBy(k => k.Key))
+            //{
+            //    Console.WriteLine($"{kv.Key}: {kv.Value}");
+            //}
+
+            //var spr1 = sprDic[1];
+            //foreach (var sp in spr1)
+            //{
+            //    Console.WriteLine($"TexId: {sp.TexId}, Id: {sp.Id}, X: {sp.X}, Y: {sp.Y}");
+            //}
+            // 99: 15L 468 ref
+
+            var image22 = imageCounter[22];
+            foreach (var sp in image22)
+            {
+                Console.WriteLine(sp);
+            }
+        }
+
+        [TestMethod]
+        public void TestSprPainter()
+        {
+            var path = Path.Combine(ResPath, "Spr", "1PTYOURYOU.spr.psb.m.json");
+            var psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            var painter = new SprPainter(psb, Path.GetDirectoryName(path));
+            var results = painter.Draw();
+            var dir = Path.Combine(ResPath, "Spr", "1PTYOURYOU");
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            foreach (var kv in results)
+            {
+                kv.Value.Save(Path.Combine(dir, $"{kv.Key}.png"));
+            }
         }
 
         [TestMethod]
         public void TestClut()
         {
             FreeMount.Init();
-            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");
-            var path = Path.Combine(resPath, "Spr", "image.psb.m");
+            var path = Path.Combine(ResPath, "Spr", "image.psb.m");
 
             var psb = new PSB(path);
             PsbDecompiler.DecompileToFile(path, extractFormat: PsbImageFormat.png, extractOption: PsbExtractOption.Extract);

@@ -121,7 +121,7 @@ namespace FreeMote.Psb
             }
         }
 
-        internal string FilePath { get; private set; }
+        public string FilePath { get; set; }
 
         public string TypeId
         {
