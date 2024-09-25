@@ -59,10 +59,20 @@ namespace FreeMote.Psb.Types
                 var dataLen = res.Data.Length;
                 var depth = dataLen / (width * height);
                 PsbPixelFormat format = PsbPixelFormat.A8;
+                byte[] palette = null;
                 switch (depth)
                 {
                     case 1:
-                        format = PsbPixelFormat.A8;
+                        format = PsbPixelFormat.CI8;
+                        palette = new byte[256 * 4];
+                        // fill with 256 degrees of gray
+                        for (int i = 0; i < 256; i++)
+                        {
+                            palette[i * 4] = (byte)i;
+                            palette[i * 4 + 1] = (byte)i;
+                            palette[i * 4 + 2] = (byte)i;
+                            palette[i * 4 + 3] = 0xFF;
+                        }
                         break;
                     case 4:
                         format = PsbPixelFormat.LeRGBA8;
@@ -80,7 +90,8 @@ namespace FreeMote.Psb.Types
                     Width = width,
                     Height = height,
                     Spec = PsbSpec.none,
-                    TypeString = format.ToStringForPsb().ToPsbString()
+                    TypeString = format.ToStringForPsb().ToPsbString(),
+                    Palette = new PsbResource(){Data = palette},
                 };
 
                 return md;

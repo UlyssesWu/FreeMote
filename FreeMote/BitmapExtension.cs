@@ -17,7 +17,43 @@ namespace FreeMote
         /// <exception cref="ArgumentException">The provided source bitmap is the same bitmap locked in this FastBitmap</exception>
         public static void CopyRegion(this Bitmap target, Bitmap source, Rectangle srcRect, Rectangle destRect)
         {
-            //TODO:
+            if (srcRect.Width != destRect.Width || srcRect.Height != destRect.Height)
+            {
+                throw new ArgumentException("Source and destination rectangles must have the same dimensions.");
+            }
+            
+            var srcData = source.LockBits(srcRect, ImageLockMode.ReadOnly, source.PixelFormat);
+            var destData = target.LockBits(destRect, ImageLockMode.WriteOnly, target.PixelFormat);
+
+            try
+            {
+                unsafe
+                {
+                    byte* srcPtr = (byte*)srcData.Scan0;
+                    byte* destPtr = (byte*)destData.Scan0;
+
+                    int bytesPerPixel = Image.GetPixelFormatSize(source.PixelFormat) / 8;
+                    int stride = srcData.Stride;
+                    int height = srcRect.Height;
+                    int widthInBytes = srcRect.Width * bytesPerPixel;
+
+                    for (int y = 0; y < height; y++)
+                    {
+                        byte* srcRow = srcPtr + (y * stride);
+                        byte* destRow = destPtr + (y * destData.Stride);
+
+                        for (int x = 0; x < widthInBytes; x++)
+                        {
+                            destRow[x] = srcRow[x];
+                        }
+                    }
+                }
+            }
+            finally
+            {                
+                source.UnlockBits(srcData);
+                target.UnlockBits(destData);
+            }
         }
 
         /// <summary>
