@@ -16,6 +16,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>FreeMote.Tools.Viewer.Program</StartupObject>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <AppDesigner Include="Properties\" />
