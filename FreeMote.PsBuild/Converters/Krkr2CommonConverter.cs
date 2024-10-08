@@ -65,6 +65,7 @@ namespace FreeMote.PsBuild.Converters
             Travel((PsbDictionary) psb.Objects["object"], iconInfo);
             Add(psb);
             TranslateTimeline(psb);
+            psb.FixTimelineContentValueType(); // ur cats are broken SYR
             psb.Platform = ToWin ? PsbSpec.win : PsbSpec.common;
         }
 

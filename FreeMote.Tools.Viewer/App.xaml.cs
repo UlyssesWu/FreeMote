@@ -43,7 +43,7 @@ namespace FreeMote.Tools.Viewer
             var optWidth = app.Option<uint>("-w|--width", "Set Window width", CommandOptionType.SingleValue);
             var optHeight = app.Option<uint>("-h|--height", "Set Window height", CommandOptionType.SingleValue);
             var optDirectLoad = app.Option("-d|--direct", "Just load with EMT driver, don't try parsing with FreeMote first", CommandOptionType.NoValue);
-            var optFixMetadata = app.Option("-nf|--no-fix", "Don't try to apply metadata fix (for partial exported PSBs). Can't work together with `-d`", CommandOptionType.NoValue);
+            var optFixMetadata = app.Option("-nf|--no-fix", "Don't try to apply metadata fix (for partial exported or krkr PSBs). Can't work together with `-d`", CommandOptionType.NoValue);
 
             //args
             var argPath = app.Argument("Files", "File paths", multipleValues: true);
@@ -99,7 +99,15 @@ namespace FreeMote.Tools.Viewer
 
                             if (!optFixMetadata.HasValue())
                             {
-                                psb.FixMotionMetadata();
+                                try
+                                {
+                                    psb.FixMotionMetadata();
+                                    //psb.FixTimelineContentValueType();
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
+                                }
                             }
 
                             psb.Merge();

@@ -134,6 +134,42 @@ namespace FreeMote.Psb
             return false;
         }
 
+        public static bool FixTimelineContentValueType(this PSB psb)
+        {
+            bool hasError = false;
+            if (psb.Objects.FindByPath("/metadata/timelineControl") is PsbList list)
+            {
+                foreach (var timeline in list)
+                {
+                    if (timeline is PsbDictionary t && t.ContainsKey("variableList") && t["variableList"] is PsbList vl)
+                    {
+                        foreach (var variable in vl)
+                        {
+                            if (variable is PsbDictionary varDic && varDic.ContainsKey("frameList") && varDic["frameList"] is PsbList frameList)
+                            {
+                                foreach (var c in frameList)
+                                {
+                                    if (c is PsbDictionary c1 && c1.ContainsKey("content") && c1["content"] is PsbDictionary content && content.ContainsKey("value") && content["value"] is PsbString s)
+                                    {
+                                        if (int.TryParse(s, out var v))
+                                        {
+                                            content["value"] = v.ToPsbNumber();
+                                        }
+                                        else
+                                        {
+                                            hasError = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return !hasError;
+        }
+
         /// <summary>
         /// Try to measure EMT PSB Canvas Size
         /// </summary>

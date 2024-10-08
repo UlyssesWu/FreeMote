@@ -376,7 +376,7 @@ namespace FreeMote.Tools.Viewer
             if (_di.IsFrontBufferAvailable)
             {
                 // create a custom D3D scene and get a pointer to its surface
-                _scene = new IntPtr(_emote.D3DSurface);
+                _scene = _emote.D3DSurface;
 
                 // set the back buffer using the new scene pointer
                 _di.Lock();

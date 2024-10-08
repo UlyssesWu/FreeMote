@@ -84,6 +84,10 @@ namespace FreeMote.Tools.EmtConvert
         /// Fix [/metadata/base/motion] missing issue for partial exported motion PSB
         /// </summary>
         MetadataBase,
+        /// <summary>
+        /// Fix [/metadata/timelineControl/variableList/frameList/content/value] type error appeared in Cat Hell series. WTF Sayori
+        /// </summary>
+        KrkrTimelineTypeError
     }
 
     class Program
@@ -476,6 +480,21 @@ Example:
                             Console.Write($"Using {method} to fix {s} ...");
                             PSB psb = new PSB(s);
                             if (psb.FixMotionMetadata())
+                            {
+                                psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
+                                Console.WriteLine("Fixed!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("not fixed.");
+                            }
+                        }
+                            break;
+                        case PsbFixMethod.KrkrTimelineTypeError:
+                        {
+                            Console.Write($"Using {method} to fix {s} ...");
+                            PSB psb = new PSB(s);
+                            if (psb.FixTimelineContentValueType())
                             {
                                 psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
                                 Console.WriteLine("Fixed!");
