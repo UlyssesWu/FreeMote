@@ -7,6 +7,7 @@
     <LangVersion>default</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FreeMote.PsBuild\FreeMote.PsBuild.csproj" />
     <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj" />
     <ProjectReference Include="..\FreeMote\FreeMote.csproj" />
   </ItemGroup>

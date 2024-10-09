@@ -72,7 +72,7 @@ namespace FreeMote.Tools.PsbDecompile
             app.Command("image", imageCmd =>
             {
                 //help
-                imageCmd.Description = "Extract (combined) images from image (Tachie) type PSBs (with \"imageList\")";
+                imageCmd.Description = "Extract (combined) images from image (Tachie) PSB (with \"imageList\")";
                 imageCmd.HelpOption();
                 imageCmd.ExtendedHelpText = @"
 Example:

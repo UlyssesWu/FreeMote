@@ -222,7 +222,7 @@ namespace FreeMote.Psb.Types
 
     class ChipType : BaseImageType, IPsbType
     {
-        public PsbType PsbType => PsbType.ChipImg;
+        public PsbType PsbType => PsbType.Chip;
 
         public bool IsThisType(PSB psb)
         {

@@ -86,7 +86,7 @@ namespace FreeMote
         /// <summary>
         /// Chip
         /// </summary>
-        ChipImg = 13
+        Chip = 13
     }
 
     /// <summary>

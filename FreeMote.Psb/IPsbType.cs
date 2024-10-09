@@ -86,8 +86,10 @@ namespace FreeMote.Psb
             {PsbType.Map, new MapType()},
             {PsbType.ClutImg, new ClutType()},
             {PsbType.SprBlock, new SprBlockType()},
+            {PsbType.SprData, new SprDataType()},
+            {PsbType.Chip, new ChipType()},
             {PsbType.PSB, new MotionType()}, //assume as motion type by default, must put this after Motion
-    };
+        };
         
     }
 }

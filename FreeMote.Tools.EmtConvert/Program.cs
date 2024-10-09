@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using FreeMote.Plugins;
 using FreeMote.Psb;
+using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
 // ReSharper disable InconsistentNaming
@@ -135,6 +136,7 @@ namespace FreeMote.Tools.EmtConvert
 
             //command: print
             app.Command("print", PrintCommand);
+            app.Command("paint", PrintCommand);
 
             //command: fix
             app.Command("fix", FixCommand);
@@ -237,11 +239,12 @@ namespace FreeMote.Tools.EmtConvert
         private static void PrintCommand(CommandLineApplication printCmd)
         {
             //help
-            printCmd.Description = "Print an EMT/motion PSB (not really, don't expect it working)";
+            printCmd.Description = "Print a Motion/SprData PSB (not accurate)";
             printCmd.HelpOption();
             printCmd.ExtendedHelpText = @"
 Example:
   EmtConvert print -w 4096 -h 4096 sample.psb 
+  EmtConvert paint spr.psb.m.json
 ";
             //options
             var optWidth = printCmd.Option<int>("-w|--width <INT>", "Set width. Default=-1 (auto)", CommandOptionType.SingleValue);
@@ -646,7 +649,15 @@ Example:
 
         private static void Draw(string path, int width, int height)
         {
-            var psb = new PSB(path);
+            PSB psb;
+            if (path.ToLowerInvariant().EndsWith(".json"))
+            {
+                psb = PsbCompiler.LoadPsbFromJsonFile(path);
+            }
+            else
+            {
+                psb = new PSB(path);
+            }
             if (psb.IsEmt())
             {
                 Logger.LogWarn(
@@ -671,17 +682,50 @@ Example:
             }
             else if(psb.Type == PsbType.Motion)
             {
+                Logger.LogWarn(
+                    "[WARN] Motion PSB render is not accurate.");
                 var dirPath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? string.Empty;
                 var outputPath = Path.Combine(dirPath, Path.GetFileNameWithoutExtension(path));
+                if (File.Exists(outputPath))
+                {
+                    outputPath = "output";
+                }
                 if (!Directory.Exists(outputPath))
                 {
                     Directory.CreateDirectory(outputPath);
                 }
+                Logger.Log($"Render output path: {outputPath}");
+                
                 var painter = new MtnPainter(psb);
                 var bmps = painter.DrawAll();
                 foreach (var bmp in bmps)
                 {
                     bmp.Image?.Save(Path.Combine(outputPath, $"{PsbResHelper.EscapeStringForPath(painter.BaseMotion)}-{bmp.Name}.png"), ImageFormat.Png);
+                }
+            }
+            else if (psb.Type == PsbType.SprData)
+            {
+                var dirPath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? string.Empty;
+                var fileName = Path.GetFileName(path);
+
+                var baseName = fileName.Split('.')[0];
+                var outputPath = Path.Combine(dirPath, baseName);
+                if (File.Exists(outputPath))
+                {
+                    outputPath = "output";
+                }
+                if (!Directory.Exists(outputPath))
+                {
+                    Directory.CreateDirectory(outputPath);
+                }
+
+                Logger.Log($"Render output path: {outputPath}");
+
+                var painter = new SprPainter(psb, dirPath);
+                var bmps = painter.Draw();
+                foreach (var bmp in bmps)
+                {
+                    bmp.Value.Save(Path.Combine(outputPath, $"{bmp.Key}.png"), ImageFormat.Png);
                 }
             }
             else

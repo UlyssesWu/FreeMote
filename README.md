@@ -49,7 +49,7 @@ Compile PSB json files and resources to PSB.
 ### EmtMake (FreeMote.Tools.EmtMake) (Preview)
 Convert an EMT PSB to MMO project. **The output file is always licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). No commercial usage allowed!**
 ### FreeMote Viewer (FreeMote.Tools.Viewer)
-Open and render EMT _pure_ PSB. This tool is powered by [FreeMote.NET](https://github.com/Project-AZUSA/FreeMote.NET#freemoteviewer).
+Open and render EMT _pure_ PSB. This tool is powered by [FreeMote.NET](https://github.com/UlyssesWu/FreeMote.NET#freemoteviewer).
 
 ## Build
 This project requires **VS 2022** and .NET **4.8** to build.
