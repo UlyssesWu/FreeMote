@@ -233,7 +233,7 @@ namespace FreeMote.Tools.Viewer
 
         void MainWindow_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed) //&& e.GetPosition(MotionPanel).X < 0
+            if (e.LeftButton == MouseButtonState.Pressed || e.MiddleButton == MouseButtonState.Pressed) //&& e.GetPosition(MotionPanel).X < 0
             {
                 var ex = e.GetPosition(this);
                 _player.OffsetCoord((int) (ex.X - _lastX), (int) (ex.Y - _lastY));
@@ -484,11 +484,12 @@ namespace FreeMote.Tools.Viewer
                 {
                     //Name = _player.GetDiffTimelineLabelAt(i),
                     Content = _player.GetMainTimelineLabelAt(i),
-                    Width = 180,
+                    Width = 185,
                     Tag = "main",
                     Margin = new Thickness(0, 0, 5, 5),
                     Background = Brushes.Transparent,
-                    Foreground = Brushes.Khaki,
+                    Foreground = Brushes.DarkOrange,
+                    FontWeight = FontWeights.Bold
                 };
                 btn.Click += PlayTimeline;
                 MotionPanel.Children.Add(btn);
@@ -507,11 +508,12 @@ namespace FreeMote.Tools.Viewer
                 {
                     //Name = _player.GetDiffTimelineLabelAt(i),
                     Content = _player.GetDiffTimelineLabelAt(i),
-                    Width = 180,
+                    Width = 185,
                     Tag = "diff",
                     Margin = new Thickness(0, 0, 5, 5),
                     Background = Brushes.Transparent,
-                    Foreground = Brushes.Khaki,
+                    Foreground = Brushes.DarkOrange,
+                    FontWeight = FontWeights.Bold
                 };
                 btn.Click += PlayTimeline;
                 MotionPanel.Children.Add(btn);
