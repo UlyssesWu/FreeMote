@@ -84,30 +84,35 @@ namespace FreeMote.Plugins.Audio
                     Format = PsbAudioFormat.ADPCM
                 };
 
-                if (channel["pan"] is PsbList panList)
-                {
-                    newData.Pan = panList;
-
-                    if (panList.Count == 2)
-                    {
-                        var left = panList[0].GetFloat();
-                        var right = panList[1].GetFloat();
-                        if (left == 1.0f && right == 0.0f)
-                        {
-                            newData.ChannelPan = PsbAudioPan.Left;
-                        }
-                        else if (left == 0.0f && right == 1.0f)
-                        {
-                            newData.ChannelPan = PsbAudioPan.Right;
-                        }
-                    }
-                }
+                ExtractPan(channel, newData);
 
                 data = newData;
                 return true;
             }
 
             return false;
+        }
+
+        private static void ExtractPan(PsbDictionary channel, AdpcmArchData newData)
+        {
+            if (channel["pan"] is PsbList panList)
+            {
+                newData.Pan = panList;
+
+                if (panList.Count == 2)
+                {
+                    var left = panList[0].GetFloat();
+                    var right = panList[1].GetFloat();
+                    if (left == 1.0f && right == 0.0f)
+                    {
+                        newData.ChannelPan = PsbAudioPan.Left;
+                    }
+                    else if (left == 0.0f && right == 1.0f)
+                    {
+                        newData.ChannelPan = PsbAudioPan.Right;
+                    }
+                }
+            }
         }
     }
 }

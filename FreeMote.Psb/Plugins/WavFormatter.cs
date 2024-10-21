@@ -92,19 +92,58 @@ namespace FreeMote.Plugins
                 }
             }
 
-            if (channel.Count == 1 && channel["archData"] is PsbDictionary p16Arch && p16Arch["filetype"] is PsbString fileType && fileType == "p16" && p16Arch["data"] is PsbResource p16Data && p16Arch["samprate"] is PsbNumber sampRate)
             {
-                var newData = new P16ArchData
+                if (channel.Count == 1 && channel["archData"] is PsbDictionary p16Arch && p16Arch["filetype"] is PsbString fileType && fileType == "p16" && p16Arch["data"] is PsbResource p16Data && p16Arch["samprate"] is PsbNumber sampRate)
                 {
-                    Data = p16Data,
-                    SampleRate = sampRate.AsInt
-                };
-                data = newData;
-                return true;
+                    var newData = new P16ArchData
+                    {
+                        Data = p16Data,
+                        SampleRate = sampRate.AsInt
+                    };
+                    data = newData;
+                    return true;
+                }
+            }
+
+            // android 2ch P16
+            {
+                if (channel["archData"] is PsbDictionary p16Arch && p16Arch["ext"] is PsbString ext && ext == ".p16" && p16Arch["data"] is PsbResource p16Data && p16Arch["samprate"] is PsbNumber sampRate)
+                {
+                    var newData = new P16ArchData
+                    {
+                        Data = p16Data,
+                        SampleRate = sampRate.AsInt
+                    };
+
+                    ExtractPan(channel, newData);
+                    data = newData;
+                    return true;
+                }
             }
 
             return false;
         }
-    
+
+        private static void ExtractPan(PsbDictionary channel, P16ArchData newData)
+        {
+            if (channel["pan"] is PsbList panList)
+            {
+                newData.Pan = panList;
+
+                if (panList.Count == 2)
+                {
+                    var left = panList[0].GetFloat();
+                    var right = panList[1].GetFloat();
+                    if (left == 1.0f && right == 0.0f)
+                    {
+                        newData.ChannelPan = PsbAudioPan.Left;
+                    }
+                    else if (left == 0.0f && right == 1.0f)
+                    {
+                        newData.ChannelPan = PsbAudioPan.Right;
+                    }
+                }
+            }
+        }
     }
 }

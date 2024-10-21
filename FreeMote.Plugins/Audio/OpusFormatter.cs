@@ -154,6 +154,11 @@ namespace FreeMote.Plugins.Audio
                 hasIntro = true;
             }
 
+            if (archDic["data"] is PsbResource res)
+            {
+                opus.Data = res;
+            }
+
             //if (opus.Body != null && opus.Intro == null)
             //{
             //    opus.Data = opus.Body.Data;

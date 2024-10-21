@@ -138,7 +138,7 @@ namespace FreeMote.Psb
         public string Extension { get; set; } = ".p16";
         public string WaveExtension { get; set; } = ".wav";
         public PsbAudioFormat Format => PsbAudioFormat.P16;
-        public PsbAudioPan ChannelPan => PsbAudioPan.Mono;
+        public PsbAudioPan ChannelPan { get; set; } = PsbAudioPan.Mono;
 
         private PsbResource _data;
 
@@ -147,6 +147,8 @@ namespace FreeMote.Psb
             get => _data;
             set => _data = value;
         }
+
+        public PsbList Pan { get; set; }
 
         public IList<PsbResource> DataList => new List<PsbResource> { _data };
 
@@ -534,7 +536,17 @@ namespace FreeMote.Psb
 
         public PsbResource Data { get; set; }
 
-        public IList<PsbResource> DataList => new List<PsbResource> { Body?.Data, Intro?.Data };
+        public IList<PsbResource> DataList {
+            get
+            {
+                if (Data != null)
+                {
+                    return [Data];
+                }
+
+                return [Body.Data, Intro.Data];
+            }
+        }
 
 
         public PsbDictionary PsbArchData { get; set; }
@@ -580,7 +592,7 @@ namespace FreeMote.Psb
 
                 if (Body == null && Intro == null)
                 {
-                    return 0;
+                    return DataList.Count;
                 }
                 
                 return 1;
@@ -609,7 +621,7 @@ namespace FreeMote.Psb
 
                 if (Body == null && Intro == null)
                 {
-                    return PsbAudioPan.IntroBody;
+                    return DataList.Count > 2 ? PsbAudioPan.Multiple : DataList.Count == 2 ? PsbAudioPan.LeftRight : PsbAudioPan.Mono;
                 }
 
                 return Body == null ? PsbAudioPan.Intro : PsbAudioPan.Body;
