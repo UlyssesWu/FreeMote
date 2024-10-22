@@ -553,6 +553,15 @@ namespace FreeMote.Psb
 
         public IPsbValue ToPsbArchData()
         {
+            if (Data != null && PsbArchData != null) //android raw ogg
+            {
+                if (PsbArchData.ContainsKey("archData"))
+                {
+                    return PsbArchData["archData"];
+                }
+                return PsbArchData;
+            }
+
             var archData = new PsbDictionary
             {
                 {"channelCount", ChannelCount.ToPsbNumber()},

@@ -104,7 +104,7 @@ namespace FreeMote.Psb
             {
                 return;
             }
-            if (ChannelList.Count > 1 && AudioFormat != PsbAudioFormat.Unknown && AudioFormat != PsbAudioFormat.ADPCM)
+            if (ChannelList.Count > 1 && Pan != PsbAudioPan.LeftRight && AudioFormat != PsbAudioFormat.Unknown && AudioFormat != PsbAudioFormat.ADPCM)
             {
                 Logger.LogWarn("[WARN] Audio with multiple channels is not supported. Send me the sample for research.");
             }

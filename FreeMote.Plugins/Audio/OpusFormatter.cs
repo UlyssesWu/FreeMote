@@ -14,7 +14,7 @@ namespace FreeMote.Plugins.Audio
     [Export(typeof(IPsbAudioFormatter))]
     [ExportMetadata("Name", "FreeMote.NxOpus")]
     [ExportMetadata("Author", "Ulysses")]
-    [ExportMetadata("Comment", "NX Opus support via VGAudio.")]
+    [ExportMetadata("Comment", "NX/Android Opus support via VGAudio.")]
     class OpusFormatter : IPsbAudioFormatter
     {
         public List<string> Extensions { get; } = new List<string> {".opus"};
@@ -29,9 +29,13 @@ namespace FreeMote.Plugins.Audio
             return wave != null;
         }
 
+        public static bool IsOgg(byte[] data)
+        {
+            return data != null && data.Length > 4 && data[0] == 'O' && data[1] == 'g' && data[2] == 'g' && data[3] == 'S';
+        }
+
         public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
-            NxOpusReader reader = new NxOpusReader();
             byte[] rawData = archData.Data?.Data;
 
             if (archData is OpusArchData data)
@@ -44,7 +48,7 @@ namespace FreeMote.Plugins.Audio
                 {
                     rawData = data.Body.Data.Data;
                 }
-                else
+                else if (rawData == null)
                 {
                     rawData = data.Body?.Data?.Data ?? data.Intro?.Data?.Data;
                 }
@@ -55,6 +59,12 @@ namespace FreeMote.Plugins.Audio
                 return null;
             }
 
+            if (IsOgg(rawData))
+            {
+                return rawData;
+            }
+
+            NxOpusReader reader = new NxOpusReader();
             var audioData = reader.Read(rawData);
             using MemoryStream oms = new MemoryStream();
             WaveWriter writer = new WaveWriter();
@@ -68,6 +78,13 @@ namespace FreeMote.Plugins.Audio
             {
                 return false;
             }
+
+            if (IsOgg(wave))
+            {
+                data.Data.Data = wave; //must link to existed PsbResource
+                return true;
+            }
+
             WaveReader reader = new WaveReader();
             var rawData = reader.Read(wave);
             using MemoryStream oms = new MemoryStream();
@@ -157,6 +174,10 @@ namespace FreeMote.Plugins.Audio
             if (archDic["data"] is PsbResource res)
             {
                 opus.Data = res;
+                if (IsOgg(res.Data))
+                {
+                    opus.WaveExtension = ".ogg";
+                }
             }
 
             //if (opus.Body != null && opus.Intro == null)
