@@ -1279,20 +1279,23 @@ namespace FreeMote.Psb
             if (Consts.OptimizeMode)
             {
                 using var strMs = new MemoryStream();
-                List<uint> offsets = new List<uint>(Strings.Count);
+                uint[] offsets = new uint[Strings.Count];
                 BinaryWriter strBw = new BinaryWriter(strMs, Encoding);
-                List<(string Value, uint Offset, byte[] Bytes)> writtenStrings = new List<(string, uint, byte[])>();
+                Dictionary<string, (uint Offset, byte[] Bytes)> writtenStrings = new();
+
+                List<PsbString> orderedStrings = Strings.OrderByDescending(s => s.Value.Length).ToList();
 
                 // collect strings
-                for (var i = 0; i < Strings.Count; i++)
+                for (var i = 0; i < orderedStrings.Count; i++)
                 {
-                    var psbString = Strings[i];
+                    var psbString = orderedStrings[i];
                     bool foundMatch = false;
                     uint offset = 0;
-                    byte[] stringBytes = Encoding.GetBytes(psbString.Value + '\0');
+                    byte[] stringBytes = Encoding.GetBytes(psbString + '\0');
 
-                    foreach (var (prevValue, prevOffset, prevBytes) in writtenStrings)
+                    foreach (var kv in writtenStrings)
                     {
+                        var prevBytes = kv.Value.Bytes;
                         if (prevBytes.Length >= stringBytes.Length)
                         {
                             int index = prevBytes.Length - stringBytes.Length;
@@ -1308,9 +1311,11 @@ namespace FreeMote.Psb
                             if (isSuffix)
                             {
                                 // found suffix, set offset
+                                var prevOffset = kv.Value.Offset;
                                 offset = prevOffset + (uint) index;
+                                offsets[Strings.IndexOf(psbString)] = offset;
                                 foundMatch = true;
-                                Debug.WriteLine($"Found suffix: {psbString.Value} is suffix of {prevValue} at {offset}");
+                                Debug.WriteLine($"Found suffix: {psbString} is suffix of {kv.Key} at {offset}");
                                 break;
                             }
                         }
@@ -1320,16 +1325,15 @@ namespace FreeMote.Psb
                     {
                         // not found, write new string
                         offset = (uint) strBw.BaseStream.Position;
+                        offsets[Strings.IndexOf(psbString)] = offset;
                         strBw.Write(stringBytes);
-                        writtenStrings.Add((psbString.Value, offset, stringBytes));
+                        writtenStrings.Add(psbString, (offset, stringBytes));
                     }
-
-                    offsets.Add(offset);
                 }
 
                 strBw.Flush();
                 Header.OffsetStrings = (uint) bw.BaseStream.Position;
-                StringOffsets = new PsbArray(offsets);
+                StringOffsets = new PsbArray(offsets.ToList());
                 StringOffsets.WriteTo(bw);
                 Header.OffsetStringsData = (uint) bw.BaseStream.Position;
                 strMs.WriteTo(bw.BaseStream);
