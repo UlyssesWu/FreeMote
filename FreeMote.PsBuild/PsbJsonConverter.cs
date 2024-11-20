@@ -140,6 +140,10 @@ namespace FreeMote.PsBuild
                 case JTokenType.Float:
                     //var numberStr = token.Value<string>();
                     var d = token.Value<double>();
+                    if (d == 0.0)
+                    {
+                        return new PsbNumber(0f);
+                    }
                     if (UseDoubleOnly)
                     {
                         return new PsbNumber(d);

@@ -85,7 +85,6 @@ namespace FreeMote.Tests
             var path = Path.Combine(ResPath, "emote_test2-pure.psb");
             PSB psb = new PSB(path);
             psb.Header.Version = 3;
-            psb.UpdateIndexes();
             File.WriteAllBytes(path + ".build.psb", psb.Build());
         }
 

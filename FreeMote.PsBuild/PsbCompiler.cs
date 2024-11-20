@@ -186,11 +186,11 @@ namespace FreeMote.PsBuild
             }
 
             //Build
-            psb.Merge();
+            psb.Merge(true);
             if (spec != null && spec != psb.Platform)
             {
                 psb.SwitchSpec(spec.Value, spec.Value.DefaultPixelFormat());
-                psb.Merge();
+                psb.Merge(true);
             }
 
             var bytes = psb.Build();
@@ -765,6 +765,7 @@ namespace FreeMote.PsBuild
                     else
                     {
                         var content = LoadPsbAndContextFromJsonFile(kv.Value.Path);
+                        content.Psb.Merge(true);
                         var stream = content.Psb.ToStream();
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
                         if (content.Context.TryGetValue(Context_PsbShellType, out var contextShellType))
@@ -887,6 +888,7 @@ namespace FreeMote.PsBuild
                             fmContext.Context = content.Context;
                         }
 
+                        content.Psb.Merge(true);
                         var stream = content.Psb.ToStream();
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
                         if (!string.IsNullOrEmpty(shellType))

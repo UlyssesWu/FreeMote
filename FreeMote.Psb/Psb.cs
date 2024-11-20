@@ -41,6 +41,8 @@ namespace FreeMote.Psb
         /// </summary>
         public List<string> Names { get; internal set; }
 
+        private Dictionary<string, int> _nameIndexes = null;
+
         private PsbArray StringOffsets;
         /// <summary>
         /// Strings
@@ -874,22 +876,59 @@ namespace FreeMote.Psb
         /// </summary>
         /// <param name="mergeString"></param>
         /// <param name="mergeResources">Whether to merge resources with exact same data. Be careful!</param>
-        internal void Collect(bool mergeString = false, bool mergeResources = false)
+        /// <param name="sortString">Whether to sort string (for json view)</param>
+        internal void Collect(bool mergeString = false, bool mergeResources = false, bool sortString = true)
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
             ExtraResources = new List<PsbResource>();
-            var namesSet = new HashSet<string>(); //Keep names unique, HashSet is faster than List
+            var nameUsages = new Dictionary<string, int>(); //Keep names unique, and count appear times for optimization
             //Strings can be unique to save space, but can also be redundant for some reasons like translation.
             //We suggest users handle redundant strings before Merge, or in Json, or rewrite their own Merge. That's why PSB.Merge is not directly called in PSB.Build.
             var stringsDic = new Dictionary<string, PsbString>();
+            var stringUsages = new Dictionary<string, int>();
             var stringsIndexDic = new Dictionary<uint, PsbString>();
             uint strIdx = 0;
             TravelCollect(Root);
 
-            Names = new List<string>(namesSet);
-            Names.Sort(string.CompareOrdinal); //FIXED: Compared by bytes
-            Strings = new List<PsbString>(stringsDic.Values);
+            if (sortString)
+            {
+                Names = nameUsages.Keys.ToList();
+                Names.Sort(string.CompareOrdinal); //FIXED: Compared by bytes
+            }
+            else
+            {
+                Names = nameUsages.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToList();
+            }
+            //Names.Sort(string.CompareOrdinal); //FIXED: Compared by bytes
+            //Strings = new List<PsbString>(stringsDic.Values);
+
+            //Update Indexes
+            if (sortString)
+            {
+                Strings = stringsDic.Values.ToList();
+                Strings.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
+            }
+            else
+            {
+                Strings = stringsDic.Values.OrderByDescending(s => stringUsages[s]).ToList();
+            }
+            for (int i = 0; i < Strings.Count; i++)
+            {
+                Strings[i].Index = (uint) i;
+            }
+
+            Resources.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
+            for (int i = 0; i < Resources.Count; i++)
+            {
+                Resources[i].Index = (uint) i;
+            }
+
+            ExtraResources.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
+            for (int i = 0; i < ExtraResources.Count; i++)
+            {
+                ExtraResources[i].Index = (uint) i;
+            }
 
             uint NextIndex(Dictionary<uint, PsbString> dic, ref uint idx)
             {
@@ -946,9 +985,10 @@ namespace FreeMote.Psb
                     case PsbString s:
                         if (mergeString)
                         {
-                            if (stringsDic.ContainsKey(s.Value))
+                            if (stringsDic.TryGetValue(s.Value, out var str))
                             {
-                                return stringsDic[s.Value];
+                                stringUsages[s.Value]++;
+                                return str;
                             }
                             else //add new string
                             {
@@ -958,6 +998,7 @@ namespace FreeMote.Psb
                                     s.Index = newIdx;
                                 }
 
+                                stringUsages[s.Value] = 0;
                                 stringsIndexDic.Add(s.Index.Value, s);
                                 stringsDic.Add(s.Value, s);
                             }
@@ -966,6 +1007,7 @@ namespace FreeMote.Psb
                         {
                             if (!stringsDic.ContainsKey(s.Value))
                             {
+                                stringUsages[s.Value] = 0;
                                 stringsDic.Add(s.Value, s); //Ensure value is unique
                                 if (s.Index == null || stringsIndexDic.ContainsKey(s.Index.Value))
                                 //However index can be null or conflict
@@ -981,8 +1023,13 @@ namespace FreeMote.Psb
                             else if (s.Index != stringsDic[s.Value].Index)
                             //if value is same but has different index, should let them point to same object
                             {
+                                stringUsages[s.Value]++;
                                 //s.Index = stringsDic[s.Value].Index; //set index
                                 return stringsDic[s.Value];
+                            }
+                            else
+                            {
+                                stringUsages[s.Value]++;
                             }
                         }
 
@@ -1003,10 +1050,14 @@ namespace FreeMote.Psb
 
                         foreach (var key in d.Keys.ToList())
                         {
-                            if (!namesSet.Contains(key))
+                            if (!nameUsages.ContainsKey(key))
                             {
-                                namesSet.Add(key);
+                                nameUsages.Add(key, 0);
                                 //Does Name appears in String Table? No.
+                            }
+                            else
+                            {
+                                nameUsages[key]++; //Count for duplicate names
                             }
 
                             var result = TravelCollect(d[key]);
@@ -1050,11 +1101,18 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Update fields and indexes based on <see cref="Objects"/>
+        /// <param name="compileOptimize">If true, merge same items and reorder them to make output compat</param>
         /// </summary>
-        public void Merge(bool mergeString = false, bool mergeResources = false)
+        public void Merge(bool compileOptimize = false)
         {
-            Collect(mergeString, mergeResources);
-            UpdateIndexes();
+            if (compileOptimize)
+            {
+                Collect(true, true, false);
+            }
+            else
+            {
+                Collect(false, false, true);
+            }
 
             //UniqueString(Objects);
             //[Obsolete]
@@ -1095,27 +1153,6 @@ namespace FreeMote.Psb
             }
         }
 
-        internal void UpdateIndexes()
-        {
-            Strings.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
-            for (int i = 0; i < Strings.Count; i++)
-            {
-                Strings[i].Index = (uint)i;
-            }
-
-            Resources.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
-            for (int i = 0; i < Resources.Count; i++)
-            {
-                Resources[i].Index = (uint)i;
-            }
-
-            ExtraResources.Sort((s1, s2) => (int)((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
-            for (int i = 0; i < ExtraResources.Count; i++)
-            {
-                ExtraResources[i].Index = (uint)i;
-            }
-        }
-
         /// <summary>
         /// Build PSB
         /// <para>Make sure you have called <see cref="Merge"/> or the output can be invalid.</para>
@@ -1132,10 +1169,14 @@ namespace FreeMote.Psb
 
         /// <summary>
         /// Build PSB to file
-        /// <para>Make sure you have called <see cref="Merge"/> or the output can be invalid.</para>
+        /// <para>This will call <see cref="Merge"/> first.</para>
         /// </summary>
         /// <param name="path"></param>
-        public void BuildToFile(string path) => File.WriteAllBytes(path, Build());
+        public void BuildToFile(string path)
+        {
+            Merge(true);
+            File.WriteAllBytes(path, Build());
+        }
 
         /// <summary>
         /// Build as <see cref="MemoryStream"/>, make sure you have called <see cref="Merge"/> before.
@@ -1162,6 +1203,12 @@ namespace FreeMote.Psb
 
             #region Compile Names
 
+            _nameIndexes = new Dictionary<string, int>();
+            for (var i = 0; i < Names.Count; i++)
+            {
+                _nameIndexes[Names[i]] = i;
+            }
+
             if (Header.Version == 1)
             {
                 using var keyMs = new MemoryStream();
@@ -1172,7 +1219,7 @@ namespace FreeMote.Psb
                 {
                     var name = Names[i];
                     offsets.Add((uint) nameBw.BaseStream.Position);
-                    nameBw.WriteStringZeroTrim(name);
+                    nameBw.WriteStringZeroTrim(name, Encoding);
                 }
 
                 nameBw.Flush();
@@ -1206,15 +1253,15 @@ namespace FreeMote.Psb
 
             #region Compile Entries
 
-            if (Consts.OptimizeMode)
-            {
-                //make longer strings first
-                Strings.Sort((s1, s2) => s2.Value.Length - s1.Value.Length);
-                for (int i = 0; i < Strings.Count; i++)
-                {
-                    Strings[i].Index = (uint) i;
-                }
-            }
+            //if (Consts.OptimizeMode)
+            //{
+            //    //make longer strings first - if you want to see what is called a Negative optimization
+            //    Strings.Sort((s1, s2) => s2.Value.Length - s1.Value.Length);
+            //    for (int i = 0; i < Strings.Count; i++)
+            //    {
+            //        Strings[i].Index = (uint) i;
+            //    }
+            //}
             Header.OffsetEntries = (uint)bw.BaseStream.Position;
             Pack(bw, Root);
 #if DEBUG
@@ -1300,7 +1347,7 @@ namespace FreeMote.Psb
                 {
                     var psbString = Strings[i];
                     offsets.Add((uint) strBw.BaseStream.Position);
-                    strBw.WriteStringZeroTrim(psbString.Value);
+                    strBw.WriteStringZeroTrim(psbString.Value, Encoding);
                 }
 
                 strBw.Flush();
@@ -1407,6 +1454,7 @@ namespace FreeMote.Psb
 
             #endregion
 
+            _nameIndexes = null;
             ms.Position = 0;
             return ms;
         }
@@ -1485,6 +1533,25 @@ namespace FreeMote.Psb
             }
         }
 
+        private static int GetWritePriority(PsbObjType t)
+        {
+            return t switch
+            {
+                PsbObjType.Null => 0,
+                PsbObjType.True => 1,
+                PsbObjType.False => 1,
+                PsbObjType.NumberN0 => 2,
+                PsbObjType.NumberN1 => 3,
+                PsbObjType.ArrayN1 => 3,
+                PsbObjType.Float0 => 4,
+                PsbObjType.StringN1 => 4,
+                PsbObjType.NumberN2 => 4,
+                PsbObjType.ResourceN1 => 4,
+                PsbObjType.StringN2 => 5,
+                _ => 10
+            };
+        }
+
         private void SaveObjects(BinaryWriter bw, PsbDictionary pDic)
         {
             bw.Write((byte)pDic.Type);
@@ -1493,12 +1560,33 @@ namespace FreeMote.Psb
             using var ms = Consts.MsManager.GetStream();
             BinaryWriter mbw = new BinaryWriter(ms, Encoding);
 
-            int objNullOffset = -1;
+            int nullOffset = -1;
             int objEmptyOffset = -1;
             int listEmptyOffset = -1;
-            List<(PsbNumber Number, uint Offset)> numberSet = new();
+            Lazy<List<(PsbNumber Number, uint Offset)>> numberSet = new();
+            Lazy<Dictionary<string, uint>> stringSet = new();
 
-            if (Consts.PsbObjectOrderByKey)
+            if (Consts.OptimizeMode)
+            {
+                //reorder pDic, Null at first
+                var pairs = pDic.ToList();
+                pairs.Sort((p1, p2) =>
+                {
+                    var p1p = GetWritePriority(p1.Value.Type);
+                    var p2p = GetWritePriority(p2.Value.Type);
+                    //if (p1p == p2p)
+                    //{
+                    //    return _nameIndexes[p1.Key] - _nameIndexes[p2.Key];
+                    //}
+                    return p1p - p2p;
+                });
+
+                foreach (var pair in pairs)
+                {
+                    WriteKeyValue(pair.Key, pair.Value);
+                }
+            }
+            else if (Consts.PsbObjectOrderByKey)
             {
                 foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
@@ -1526,8 +1614,7 @@ namespace FreeMote.Psb
 
             void WriteKeyValue(string key, IPsbValue value)
             {
-                var index = Names.IndexOf(key);
-                if (index < 0)
+                if (!_nameIndexes.TryGetValue(key, out var index))
                 {
                     throw new IndexOutOfRangeException($"Can not find Name [{key}] in Name Table");
                 }
@@ -1538,22 +1625,22 @@ namespace FreeMote.Psb
                     switch (value)
                     {
                         case PsbNull:
-                            if (objNullOffset < 0)
+                            if (nullOffset < 0)
                             {
-                                objNullOffset = (int) mbw.BaseStream.Position;
-                                indexList.Add((uint) objNullOffset);
+                                nullOffset = (int) mbw.BaseStream.Position;
+                                indexList.Add((uint) nullOffset);
                                 Pack(mbw, value);
                             }
                             else
                             {
-                                indexList.Add((uint)objNullOffset);
+                                indexList.Add((uint)nullOffset);
                             }
                             break;
-                        case PsbNumber n:
+                        case PsbNumber pn:
                             bool foundNum = false;
-                            foreach (var tuple in numberSet)
+                            foreach (var tuple in numberSet.Value)
                             {
-                                if (tuple.Number == n)
+                                if (tuple.Number == pn)
                                 {
                                     //Debug.WriteLine($"Found number {n} at {tuple.Offset}");
                                     indexList.Add(tuple.Offset);
@@ -1568,8 +1655,21 @@ namespace FreeMote.Psb
                             }
                             var pos = (uint) mbw.BaseStream.Position;
                             indexList.Add(pos);
-                            numberSet.Add((n, pos));
+                            numberSet.Value.Add((pn, pos));
                             Pack(mbw, value);
+                            break;
+                        case PsbString ps:
+                            if (stringSet.Value.TryGetValue(ps.Value, out var strOffset))
+                            {
+                                indexList.Add(strOffset);
+                            }
+                            else
+                            {
+                                var strPos = (uint) mbw.BaseStream.Position;
+                                indexList.Add(strPos);
+                                Pack(mbw, value);
+                                stringSet.Value.Add(ps.Value, strPos);
+                            }
                             break;
                         case PsbDictionary {Count: 0}:
                             if (objEmptyOffset < 0)
@@ -1619,12 +1719,10 @@ namespace FreeMote.Psb
             {
                 foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
-                    var index = Names.IndexOf(pair.Key);
-                    if (index < 0)
+                    if (!_nameIndexes.TryGetValue(pair.Key, out var index))
                     {
                         throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
                     }
-                    
                     indexList.Add((uint) mbw.BaseStream.Position);
                     new PsbNumber(index).WriteTo(mbw, true);
                     Pack(mbw, pair.Value);
@@ -1634,8 +1732,7 @@ namespace FreeMote.Psb
             {
                 foreach (var pair in pDic)
                 {
-                    var index = Names.IndexOf(pair.Key);
-                    if (index < 0)
+                    if (!_nameIndexes.TryGetValue(pair.Key, out var index))
                     {
                         throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
                     }
@@ -1665,35 +1762,62 @@ namespace FreeMote.Psb
             using (var ms = Consts.MsManager.GetStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms, Encoding);
-                List<(PsbNumber Number, uint Offset)> numberSet = new();
+                Lazy<List<(PsbNumber Number, uint Offset)>> numberSet = new();
+                Lazy<Dictionary<string, uint>> stringSet = new();
+                int nullOffset = -1;
 
                 foreach (var obj in pCol)
                 {
                     if (Consts.OptimizeMode)
                     {
-                        if (obj is PsbNumber n)
+                        switch (obj)
                         {
-                            bool foundNum = false;
-                            foreach (var tuple in numberSet)
-                            {
-                                if (tuple.Number == n)
+                            case PsbNull:
+                                if (nullOffset < 0)
                                 {
-                                    //Debug.WriteLine($"Found number {n} at {tuple.Offset}");
-                                    indexList.Add(tuple.Offset);
-                                    foundNum = true;
-                                    break;
+                                    nullOffset = (int) mbw.BaseStream.Position;
+                                    indexList.Add((uint) nullOffset);
+                                    Pack(mbw, obj);
                                 }
-                            }
-
-                            if (foundNum)
-                            {
+                                else
+                                {
+                                    indexList.Add((uint) nullOffset);
+                                }
                                 continue;
-                            }
-                            var pos = (uint) mbw.BaseStream.Position;
-                            indexList.Add(pos);
-                            numberSet.Add((n, pos));
-                            Pack(mbw, n);
-                            continue;
+                            case PsbNumber n:
+                                bool foundNum = false;
+                                foreach (var tuple in numberSet.Value)
+                                {
+                                    if (tuple.Number == n)
+                                    {
+                                        //Debug.WriteLine($"Found number {n} at {tuple.Offset}");
+                                        indexList.Add(tuple.Offset);
+                                        foundNum = true;
+                                        break;
+                                    }
+                                }
+                                if (foundNum)
+                                {
+                                    continue;
+                                }
+                                var pos = (uint) mbw.BaseStream.Position;
+                                indexList.Add(pos);
+                                numberSet.Value.Add((n, pos));
+                                Pack(mbw, n);
+                                continue;
+                            case PsbString s:
+                                if (stringSet.Value.TryGetValue(s.Value, out var strOffset))
+                                {
+                                    indexList.Add(strOffset);
+                                }
+                                else
+                                {
+                                    var strPos = (uint) mbw.BaseStream.Position;
+                                    indexList.Add(strPos);
+                                    Pack(mbw, s);
+                                    stringSet.Value.Add(s.Value, strPos);
+                                }
+                                continue;
                         }
                     }
                     indexList.Add((uint)mbw.BaseStream.Position);
