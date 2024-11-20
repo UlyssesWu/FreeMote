@@ -767,6 +767,10 @@ namespace FreeMote.PsBuild
                         var content = LoadPsbAndContextFromJsonFile(kv.Value.Path);
                         var stream = content.Psb.ToStream();
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
+                        if (content.Context.TryGetValue(Context_PsbShellType, out var contextShellType))
+                        {
+                            shellType = contextShellType as string;
+                        }
                         if (!string.IsNullOrEmpty(shellType))
                         {
                             var packedStream = itemContext.PackToShell(stream, shellType); //disposed later

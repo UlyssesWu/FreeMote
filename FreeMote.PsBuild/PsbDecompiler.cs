@@ -627,9 +627,10 @@ namespace FreeMote.PsBuild
                                 if (mms != null)
                                 {
                                     //should not change file name, in order to keep repack correct :(
-                                    //relativePath = possibleFileName.Contains("/") ? possibleFileName :
-                                    //    pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
-                                    //    possibleFileName;
+                                    //↑ reverted. If I recalled the reason, I should keep a more detailed note.
+                                    relativePath = possibleFileName.Contains("/") ? possibleFileName :
+                                        pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
+                                        possibleFileName;
                                     finalContext = bodyContext;
                                     if (possibleFileName != possibleFileNames[0])
                                     {
@@ -754,9 +755,9 @@ namespace FreeMote.PsBuild
 
                                 if (mms != null)
                                 {
-                                    //relativePath = possibleFileName.Contains("/") ? possibleFileName :
-                                    //    pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
-                                    //    possibleFileName;
+                                    relativePath = possibleFileName.Contains("/") ? possibleFileName :
+                                        pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
+                                        possibleFileName;
                                     finalContext = bodyContext;
                                     if (possibleFileName != possibleFileNames[0])
                                     {
