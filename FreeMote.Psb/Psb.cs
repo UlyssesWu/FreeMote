@@ -311,6 +311,13 @@ namespace FreeMote.Psb
             StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             Strings = new List<PsbString>();
 
+#if DEBUG
+            var stringSize = Header.OffsetChunkOffsets - Header.OffsetStrings;
+            Debug.WriteLine($"Strings: {stringSize}");
+            var objectSize = Header.OffsetStrings - Header.OffsetEntries;
+            Debug.WriteLine($"Objects: {objectSize}");
+#endif
+
             //Load Names
             if (Header.Version == 1)
             {
@@ -330,6 +337,10 @@ namespace FreeMote.Psb
                 NamesData = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
                 NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
                 LoadNames();
+#if DEBUG
+                var nameSectionSize = br.BaseStream.Position - Header.OffsetNames;
+                Debug.WriteLine($"Names: {nameSectionSize}");
+#endif
             }
             
             //Pre Load Resources (Chunks)
@@ -1185,15 +1196,30 @@ namespace FreeMote.Psb
                 treeArray.WriteTo(bw);
                 var nameArray = new PsbArray(tNames);
                 nameArray.WriteTo(bw);
+
+#if DEBUG
+                Debug.WriteLine($"Names: {bw.BaseStream.Position - Header.OffsetNames}");
+#endif
             }
 
             #endregion
 
             #region Compile Entries
 
+            if (Consts.OptimizeMode)
+            {
+                //make longer strings first
+                Strings.Sort((s1, s2) => s2.Value.Length - s1.Value.Length);
+                for (int i = 0; i < Strings.Count; i++)
+                {
+                    Strings[i].Index = (uint) i;
+                }
+            }
             Header.OffsetEntries = (uint)bw.BaseStream.Position;
             Pack(bw, Root);
-
+#if DEBUG
+            Debug.WriteLine($"Objects: {bw.BaseStream.Position - Header.OffsetEntries}");
+#endif
             #endregion
 
             #region Compile Strings
@@ -1202,28 +1228,93 @@ namespace FreeMote.Psb
             {
                 Debug.WriteLine("Strings.Count == 0. Maybe forgot Merge() ?");
             }
-            using (var strMs = new MemoryStream())
+
+            if (Consts.OptimizeMode)
             {
+                using var strMs = new MemoryStream();
+                List<uint> offsets = new List<uint>(Strings.Count);
+                BinaryWriter strBw = new BinaryWriter(strMs, Encoding);
+                List<(string Value, uint Offset, byte[] Bytes)> writtenStrings = new List<(string, uint, byte[])>();
+
+                // collect strings
+                for (var i = 0; i < Strings.Count; i++)
+                {
+                    var psbString = Strings[i];
+                    bool foundMatch = false;
+                    uint offset = 0;
+                    byte[] stringBytes = Encoding.GetBytes(psbString.Value + '\0');
+
+                    foreach (var (prevValue, prevOffset, prevBytes) in writtenStrings)
+                    {
+                        if (prevBytes.Length >= stringBytes.Length)
+                        {
+                            int index = prevBytes.Length - stringBytes.Length;
+                            bool isSuffix = true;
+                            for (int j = 0; j < stringBytes.Length; j++)
+                            {
+                                if (prevBytes[index + j] != stringBytes[j])
+                                {
+                                    isSuffix = false;
+                                    break;
+                                }
+                            }
+                            if (isSuffix)
+                            {
+                                // found suffix, set offset
+                                offset = prevOffset + (uint) index;
+                                foundMatch = true;
+                                Debug.WriteLine($"Found suffix: {psbString.Value} is suffix of {prevValue} at {offset}");
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!foundMatch)
+                    {
+                        // not found, write new string
+                        offset = (uint) strBw.BaseStream.Position;
+                        strBw.Write(stringBytes);
+                        writtenStrings.Add((psbString.Value, offset, stringBytes));
+                    }
+
+                    offsets.Add(offset);
+                }
+
+                strBw.Flush();
+                Header.OffsetStrings = (uint) bw.BaseStream.Position;
+                StringOffsets = new PsbArray(offsets);
+                StringOffsets.WriteTo(bw);
+                Header.OffsetStringsData = (uint) bw.BaseStream.Position;
+                strMs.WriteTo(bw.BaseStream);
+#if DEBUG
+                Debug.WriteLine($"Strings: {strMs.Length}");
+#endif
+            }
+            else
+            {
+                using var strMs = new MemoryStream();
                 List<uint> offsets = new List<uint>(Strings.Count);
                 BinaryWriter strBw = new BinaryWriter(strMs, Encoding);
                 //Collect Strings
                 for (var i = 0; i < Strings.Count; i++)
                 {
                     var psbString = Strings[i];
-                    offsets.Add((uint)strBw.BaseStream.Position);
+                    offsets.Add((uint) strBw.BaseStream.Position);
                     strBw.WriteStringZeroTrim(psbString.Value);
                 }
 
                 strBw.Flush();
                 //Mark Offset Strings
-                Header.OffsetStrings = (uint)bw.BaseStream.Position;
+                Header.OffsetStrings = (uint) bw.BaseStream.Position;
                 StringOffsets = new PsbArray(offsets);
                 StringOffsets.WriteTo(bw);
-                Header.OffsetStringsData = (uint)bw.BaseStream.Position;
+                Header.OffsetStringsData = (uint) bw.BaseStream.Position;
                 strMs.WriteTo(bw.BaseStream);
                 //bw.Write(strMs.ToArray());
+#if DEBUG
+                Debug.WriteLine($"Strings: {strMs.Length}");
+#endif
             }
-
             #endregion
 
             #region Compile Resources
@@ -1401,21 +1492,19 @@ namespace FreeMote.Psb
             var indexList = new List<uint>(pDic.Count);
             using var ms = Consts.MsManager.GetStream();
             BinaryWriter mbw = new BinaryWriter(ms, Encoding);
+
+            int objNullOffset = -1;
+            int objEmptyOffset = -1;
+            int listEmptyOffset = -1;
+            List<(PsbNumber Number, uint Offset)> numberSet = new();
+
             if (Consts.PsbObjectOrderByKey)
             {
                 foreach (var pair in pDic.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
                     //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
                     //var index = Names.FindIndex(s => s == pair.Key);
-                    var index = Names.IndexOf(pair.Key);
-                    if (index < 0)
-                    {
-                        throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
-                    }
-
-                    namesList.Add((uint)index);
-                    indexList.Add((uint)mbw.BaseStream.Position);
-                    Pack(mbw, pair.Value);
+                    WriteKeyValue(pair.Key, pair.Value);
                 }
             }
             else
@@ -1424,24 +1513,100 @@ namespace FreeMote.Psb
                 {
                     //var index = Names.BinarySearch(pair.Key); //Sadly, we may not use it for performance
                     //var index = Names.FindIndex(s => s == pair.Key);
-                    var index = Names.IndexOf(pair.Key);
-                    if (index < 0)
-                    {
-                        throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
-                    }
-
-                    namesList.Add((uint)index);
-                    indexList.Add((uint)mbw.BaseStream.Position);
-                    Pack(mbw, pair.Value);
+                    WriteKeyValue(pair.Key, pair.Value);
                 }
             }
-
 
             mbw.Flush();
             new PsbArray(namesList).WriteTo(bw);
             new PsbArray(indexList).WriteTo(bw);
             ms.WriteTo(bw.BaseStream);
             //bw.Write(ms.ToArray());
+
+
+            void WriteKeyValue(string key, IPsbValue value)
+            {
+                var index = Names.IndexOf(key);
+                if (index < 0)
+                {
+                    throw new IndexOutOfRangeException($"Can not find Name [{key}] in Name Table");
+                }
+
+                namesList.Add((uint)index);
+                if (Consts.OptimizeMode)
+                {
+                    switch (value)
+                    {
+                        case PsbNull:
+                            if (objNullOffset < 0)
+                            {
+                                objNullOffset = (int) mbw.BaseStream.Position;
+                                indexList.Add((uint) objNullOffset);
+                                Pack(mbw, value);
+                            }
+                            else
+                            {
+                                indexList.Add((uint)objNullOffset);
+                            }
+                            break;
+                        case PsbNumber n:
+                            bool foundNum = false;
+                            foreach (var tuple in numberSet)
+                            {
+                                if (tuple.Number == n)
+                                {
+                                    //Debug.WriteLine($"Found number {n} at {tuple.Offset}");
+                                    indexList.Add(tuple.Offset);
+                                    foundNum = true;
+                                    break;
+                                }
+                            }
+
+                            if (foundNum)
+                            {
+                                break;
+                            }
+                            var pos = (uint) mbw.BaseStream.Position;
+                            indexList.Add(pos);
+                            numberSet.Add((n, pos));
+                            Pack(mbw, value);
+                            break;
+                        case PsbDictionary {Count: 0}:
+                            if (objEmptyOffset < 0)
+                            {
+                                objEmptyOffset = (int) mbw.BaseStream.Position;
+                                indexList.Add((uint) objEmptyOffset);
+                                Pack(mbw, value);
+                            }
+                            else
+                            {
+                                indexList.Add((uint) objEmptyOffset);
+                            }
+                            break;
+                        case PsbList {Count: 0}:
+                            if (listEmptyOffset < 0)
+                            {
+                                listEmptyOffset = (int) mbw.BaseStream.Position;
+                                indexList.Add((uint) listEmptyOffset);
+                                Pack(mbw, value);
+                            }
+                            else
+                            {
+                                indexList.Add((uint) listEmptyOffset);
+                            }
+                            break;
+                        default:
+                            indexList.Add((uint) mbw.BaseStream.Position);
+                            Pack(mbw, value);
+                            break;
+                    }
+                }
+                else
+                {
+                    indexList.Add((uint) mbw.BaseStream.Position);
+                    Pack(mbw, value);
+                }
+            }
         }
 
         private void SaveObjectsV1(BinaryWriter bw, PsbDictionary pDic)
@@ -1459,7 +1624,7 @@ namespace FreeMote.Psb
                     {
                         throw new IndexOutOfRangeException($"Can not find Name [{pair.Key}] in Name Table");
                     }
-
+                    
                     indexList.Add((uint) mbw.BaseStream.Position);
                     new PsbNumber(index).WriteTo(mbw, true);
                     Pack(mbw, pair.Value);
@@ -1500,9 +1665,37 @@ namespace FreeMote.Psb
             using (var ms = Consts.MsManager.GetStream())
             {
                 BinaryWriter mbw = new BinaryWriter(ms, Encoding);
+                List<(PsbNumber Number, uint Offset)> numberSet = new();
 
                 foreach (var obj in pCol)
                 {
+                    if (Consts.OptimizeMode)
+                    {
+                        if (obj is PsbNumber n)
+                        {
+                            bool foundNum = false;
+                            foreach (var tuple in numberSet)
+                            {
+                                if (tuple.Number == n)
+                                {
+                                    //Debug.WriteLine($"Found number {n} at {tuple.Offset}");
+                                    indexList.Add(tuple.Offset);
+                                    foundNum = true;
+                                    break;
+                                }
+                            }
+
+                            if (foundNum)
+                            {
+                                continue;
+                            }
+                            var pos = (uint) mbw.BaseStream.Position;
+                            indexList.Add(pos);
+                            numberSet.Add((n, pos));
+                            Pack(mbw, n);
+                            continue;
+                        }
+                    }
                     indexList.Add((uint)mbw.BaseStream.Position);
                     Pack(mbw, obj);
                 }

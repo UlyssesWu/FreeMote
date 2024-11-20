@@ -160,6 +160,11 @@ namespace FreeMote
         public static bool StrictMode { get; set; } = false;
 
         /// <summary>
+        /// Optimize the output to minimum size, may take more time
+        /// </summary>
+        public static bool OptimizeMode { get; set; } = true;
+
+        /// <summary>
         /// Use hex numbers in json to keep all float numbers correct
         /// </summary>
         public static bool JsonUseHexNumber { get; set; } = false;
