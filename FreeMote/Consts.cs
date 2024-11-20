@@ -180,7 +180,8 @@ namespace FreeMote
         public static bool JsonUseDoubleOnly { get; set; } = false;
 
         /// <summary>
-        /// Whether to sort the object order by key when build PSB
+        /// Whether to sort the object order by key when build/decompile PSB;
+        /// However, when <see cref="OptimizeMode"/> is set, this will be ignored for smaller size
         /// </summary>
         public static bool PsbObjectOrderByKey { get; set; } = true;
 

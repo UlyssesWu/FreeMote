@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using FreeMote.Psb;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,7 +12,8 @@ namespace FreeMote.PsBuild
     /// <summary>
     /// <see cref="JsonConverter"/> for PSB types
     /// </summary>
-    class PsbJsonConverter : JsonConverter
+    class PsbJsonConverter(bool useDoubleOnly = false, bool useHexNumber = false, bool sortObjectByKey = true)
+        : JsonConverter
     {
         //WARN: some tricks are used to keep original values as exact
         //"0x0000C0FFf" will be convert to (float)NaN
@@ -22,14 +24,9 @@ namespace FreeMote.PsBuild
         //    typeof(PsbList),typeof(PsbDictionary),
         //};
 
-        public bool UseDoubleOnly { get; set; }
-        public bool UseHexNumber { get; set; }
-
-        public PsbJsonConverter(bool useDoubleOnly = false, bool useHexNumber = false)
-        {
-            UseDoubleOnly = useDoubleOnly;
-            UseHexNumber = useHexNumber;
-        }
+        public bool UseDoubleOnly { get; set; } = useDoubleOnly;
+        public bool UseHexNumber { get; set; } = useHexNumber;
+        public bool SortObjectByKey { get; set; } = sortObjectByKey;
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
@@ -96,11 +93,23 @@ namespace FreeMote.PsBuild
                     break;
                 case PsbDictionary dictionary:
                     writer.WriteStartObject();
-                    foreach (var obj in dictionary)
+                    if (SortObjectByKey)
                     {
-                        writer.WritePropertyName(obj.Key);
-                        WriteJson(writer, obj.Value, serializer);
+                        foreach (var obj in dictionary.OrderBy(kv => kv.Key, StringComparer.Ordinal))
+                        {
+                            writer.WritePropertyName(obj.Key);
+                            WriteJson(writer, obj.Value, serializer);
+                        }
                     }
+                    else
+                    {
+                        foreach (var obj in dictionary)
+                        {
+                            writer.WritePropertyName(obj.Key);
+                            WriteJson(writer, obj.Value, serializer);
+                        }
+                    }
+
                     writer.WriteEndObject();
                     break;
                 default:
