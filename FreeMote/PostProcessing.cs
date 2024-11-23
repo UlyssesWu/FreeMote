@@ -205,6 +205,10 @@ namespace FreeMote
 
                             if (!compactMode)
                             {
+                                if (dataIndex >= pixelData.Length)
+                                {
+                                    break;
+                                }
                                 Buffer.BlockCopy(pixelData, dataIndex, untiledData, pixelIndex, bpp);
                                 dataIndex += bpp;
                             }
