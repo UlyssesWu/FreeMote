@@ -52,6 +52,9 @@ namespace FreeMote
             }
         }
 
+        /// <summary>
+        /// store the end node ID for each string, count = string count
+        /// </summary>
         private readonly List<uint> _names = new List<uint>();
         private readonly List<uint> _tree = new List<uint>();
         private readonly List<uint> _offsets = new List<uint>();
@@ -65,6 +68,9 @@ namespace FreeMote
 
         internal List<string> Values = new List<string>();
 
+        /// <summary>
+        /// string, index
+        /// </summary>
         public Dictionary<string, uint> Results { get; } = new();
 
         public PrefixTree()
@@ -150,14 +156,14 @@ namespace FreeMote
             {
                 var list = new List<byte>();
                 var index = _names[tid];
-                var chr = _tree[(int)index];
-                while (chr != 0)
+                var lastValue = _tree[(int)index];
+                while (lastValue != 0)
                 {
-                    var code = _tree[(int)chr];
-                    var d = _tree[(int)code];
-                    var realChr = chr - d;
+                    var currentValue = _tree[(int)lastValue];
+                    var prevValue = _tree[(int)currentValue];
+                    var realChr = lastValue - prevValue;
                     //Debug.Write(realChr.ToString("X2") + " ");
-                    chr = code;
+                    lastValue = currentValue;
 
                     //REF: https://stackoverflow.com/questions/18587267/does-list-insert-have-any-performance-penalty
                     list.Add((byte)realChr);
