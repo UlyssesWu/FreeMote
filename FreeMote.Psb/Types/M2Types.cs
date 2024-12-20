@@ -13,7 +13,7 @@ namespace FreeMote.Psb.Types
 
         public bool IsThisType(PSB psb)
         {
-            if (psb.Objects.All(kv => kv.Value is PsbDictionary {Count: 3} dic && dic.ContainsKey("w") &&
+            if (psb.Objects != null && psb.Objects.All(kv => kv.Value is PsbDictionary {Count: 3} dic && dic.ContainsKey("w") &&
                                       dic.ContainsKey("h") &&
                                       dic.ContainsKey("image"))) return true;
 
