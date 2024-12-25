@@ -407,7 +407,7 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"]; //TODO: should we set all to default?
                     var parameter = (PsbList)motionItem["parameter"];
                     objectChildrenItem["parameterize"] = motionItem["parameterize"] is PsbNull
-                        ? FillDefaultParameterize()
+                        ? FillDefaultParameterize(dic)
                         : parameter[((PsbNumber)motionItem["parameterize"]).IntValue];
                     objectChildrenItem["priorityFrameList"] = BuildPriorityFrameList((PsbList)motionItem["priority"]);
                     objectChildrenItem["referenceModelFileList"] = motionItem["referenceModelFileList"];
@@ -452,12 +452,6 @@ namespace FreeMote.PsBuild
                     dic["className"] = classType.ToString().ToPsbString();
                     dic["comment"] = PsbString.Empty;
 
-                    //remove meshCombinator
-                    if (dic.ContainsKey("meshCombinator"))
-                    {
-                        dic.Remove("meshCombinator");
-                    }
-
                     //Build frameList
                     MmoFrameMask frameMask = 0;
                     MmoFrameMaskEx frameMaskEx = 0;
@@ -476,7 +470,13 @@ namespace FreeMote.PsBuild
                     }
                     else
                     {
-                        dic["parameterize"] = FillDefaultParameterize();
+                        dic["parameterize"] = FillDefaultParameterize(dic);
+                    }
+
+                    //remove meshCombinator //TODO: recover this
+                    if (dic.ContainsKey("meshCombinator"))
+                    {
+                        dic.Remove("meshCombinator");
                     }
 
                     //Disable features
@@ -1473,8 +1473,22 @@ namespace FreeMote.PsBuild
             return;
         }
 
-        private static IPsbValue FillDefaultParameterize()
+        private static IPsbValue FillDefaultParameterize(PsbDictionary parent)
         {
+            if (parent["parameterize"] is PsbNull && parent.ContainsKey("meshCombinator") && parent["meshCombinator"] is PsbDictionary meshCombinator
+                && meshCombinator.TryGetValue("combinatorList", out var combinatorListObj) && combinatorListObj is PsbList
+                    { Count: > 0 } combinatorList && combinatorList[0] is PsbDictionary combinator
+                && combinator.TryGetValue("variable", out var variableObj) && variableObj is PsbDictionary variable) // pick from meshCombinator
+            {
+                return new PsbDictionary(5)
+                {
+                    {"discretization", PsbNumber.Zero},
+                    {"enabled", 1.ToPsbNumber()},
+                    {"id", variable["key"]},
+                    {"rangeBegin", variable["rangeBegin"]},
+                    {"rangeEnd", variable["rangeEnd"]},
+                };
+            }
             return new PsbDictionary(5)
             {
                 {"discretization", PsbNumber.Zero },
