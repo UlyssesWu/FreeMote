@@ -475,9 +475,11 @@ namespace FreeMote.Psb
                 {
                     //it's not a combined image, do nothing
                 }
-                else if ((image.Width >= Width || image.Height >= Height) &&
-                         (image.Width >= Left || image.Height >= Height)) //there could be some redundant area in pieces in order to fit 2^n
+                else 
+                //if ((image.Width >= Width || image.Height >= Height) &&
+                //         (image.Width >= Left || image.Height >= Height))
                 {
+                    //there could be some redundant area in pieces in order to fit 2^n
                     Bitmap chunk = new Bitmap(Width, Height, image.PixelFormat);
                     //it should be a combined image
                     using (FastBitmap f = chunk.FastLock())

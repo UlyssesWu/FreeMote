@@ -1475,7 +1475,7 @@ namespace FreeMote.PsBuild
 
         private static IPsbValue FillDefaultParameterize(PsbDictionary parent)
         {
-            if (parent["parameterize"] is PsbNull && parent.ContainsKey("meshCombinator") && parent["meshCombinator"] is PsbDictionary meshCombinator
+            if (parent != null && parent["parameterize"] is PsbNull && parent.ContainsKey("meshCombinator") && parent["meshCombinator"] is PsbDictionary meshCombinator
                 && meshCombinator.TryGetValue("combinatorList", out var combinatorListObj) && combinatorListObj is PsbList
                     { Count: > 0 } combinatorList && combinatorList[0] is PsbDictionary combinator
                 && combinator.TryGetValue("variable", out var variableObj) && variableObj is PsbDictionary variable) // pick from meshCombinator
