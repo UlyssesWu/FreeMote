@@ -304,10 +304,10 @@ namespace FreeMote.PsBuild
             var context = FreeMount.CreateContext();
             context.ImageFormat = format;
             var psb = new PSB(inputPath, Encoding);
-            if (psb.TypeHandler is BaseImageType imageType)
-            {
-                imageType.UnlinkToFile(psb, context, name, dirPath, outputUnlinkedPsb, order);
-            }
+            //if (psb.TypeHandler is BaseImageType imageType)
+            //{
+            //    imageType.UnlinkToFile(psb, context, name, dirPath, outputUnlinkedPsb, order);
+            //}
 
             psb.TypeHandler.UnlinkToFile(psb, context, name, dirPath, outputUnlinkedPsb, order);
 
