@@ -309,6 +309,95 @@ namespace FreeMote
             return tiledData;
         }
 
+        /// <summary>
+        /// Untile / Deswizzle texture data using a fixed 8x8 tile order (like PS4)
+        /// </summary>
+        /// <param name="pixelData">Input swizzled pixel data</param>
+        /// <param name="width">Image width in units (e.g., pixels, or 4x4 blocks for BC7)</param>
+        /// <param name="height">Image height in units</param>
+        /// <param name="bytesPerUnit">Number of bytes per unit (e.g., bytes per pixel, or bytes per 4x4 BC7 block)</param>
+        /// <returns>Untiled / Deswizzled pixel data</returns>
+        public static byte[] UntileTextureV2(byte[] pixelData, int width, int height, int bytesPerUnit)
+        {
+            byte[] untiled = new byte[pixelData.Length];
+
+            int s = 0;
+            for (int y = 0; y < height; y += 8)
+            {
+                for (int x = 0; x < width; x += 8)
+                {
+                    for (int t = 0; t < (8 * 8); t++)
+                    {
+                        // Calculate the target pixel offset in the untiled output array
+                        // The tileOrderPs4 provides the relative (x, y) coordinates within the 8x8 block
+                        // for the 't'th unit from the swizzled input stream.
+                        int pixelOffset = GetTilePixelOffset(t, x, y, width, bytesPerUnit * 8); // Pass bitDepth, so bytesPerUnit * 8
+
+                        // Perform the copy
+                        // Ensure we don't read or write out of bounds
+                        if (s + bytesPerUnit > pixelData.Length)
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(pixelData), "Input pixelData is too short for the specified dimensions and bytesPerUnit.");
+                        }
+
+                        if (pixelOffset + bytesPerUnit > untiled.Length)
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(untiled), "Calculated pixelOffset is out of bounds for the output untiled array.");
+                        }
+
+                        Buffer.BlockCopy(pixelData, s, untiled, pixelOffset, bytesPerUnit);
+                        s += bytesPerUnit;
+                    }
+                }
+            }
+
+            return untiled;
+        }
+
+        /// <summary>
+        /// Tile / Swizzle texture data using a fixed 8x8 tile order (like PS4)
+        /// </summary>
+        /// <param name="pixelData">Input linear pixel data</param>
+        /// <param name="width">Image width in units (e.g., pixels, or 4x4 blocks for BC7)</param>
+        /// <param name="height">Image height in units</param>
+        /// <param name="bytesPerUnit">Number of bytes per unit (e.g., bytes per pixel, or bytes per 4x4 BC7 block)</param>
+        /// <returns>Tiled / Swizzled pixel data</returns>
+        public static byte[] TileTextureV2(byte[] pixelData, int width, int height, int bytesPerUnit)
+        {
+            byte[] tiled = new byte[pixelData.Length];
+
+            int s = 0;
+            for (int y = 0; y < height; y += 8)
+            {
+                for (int x = 0; x < width; x += 8)
+                {
+                    for (int t = 0; t < (8 * 8); t++)
+                    {
+                        // Calculate the source pixel offset in the linear input array
+                        // The tileOrderPs4 provides the relative (x, y) coordinates within the 8x8 block
+                        // for the 't'th unit to be written to the swizzled output stream.
+                        int pixelOffset = GetTilePixelOffset(t, x, y, width, bytesPerUnit * 8); // Pass bitDepth, so bytesPerUnit * 8
+
+                        // Perform the copy
+                        // Ensure we don't read or write out of bounds
+                        if (pixelOffset + bytesPerUnit > pixelData.Length)
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(pixelData), "Input pixelData is too short for the specified dimensions and bytesPerUnit.");
+                        }
+
+                        if (s + bytesPerUnit > tiled.Length)
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(tiled), "Calculated output position is out of bounds for the tiled array.");
+                        }
+
+                        Buffer.BlockCopy(pixelData, pixelOffset, tiled, s, bytesPerUnit);
+                        s += bytesPerUnit;
+                    }
+                }
+            }
+
+            return tiled;
+        }
         #endregion
 
         #region Unswizzle (Morton)

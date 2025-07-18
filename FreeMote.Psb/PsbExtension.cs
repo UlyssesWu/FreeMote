@@ -65,6 +65,7 @@ namespace FreeMote.Psb
                 case PsbPixelFormat.ASTC_8BPP:
                     return ".astc";
                 case PsbPixelFormat.BC7:
+                case PsbPixelFormat.BC7_SW:
                     return ".bc7";
                 default:
                     return "";

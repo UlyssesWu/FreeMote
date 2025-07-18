@@ -348,6 +348,10 @@ namespace FreeMote
         /// </summary>
         BC7,
         /// <summary>
+        /// BC7 compressed RGBA8 with Tile for PS4
+        /// </summary>
+        BC7_SW,
+        /// <summary>
         /// DXT1
         /// </summary>
         DXT1

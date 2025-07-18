@@ -145,7 +145,7 @@ namespace FreeMote
         }
 
         public static bool IsCI_Tile(this PsbPixelFormat format) => format == PsbPixelFormat.TileCI4 || format == PsbPixelFormat.TileCI8;
-        public static bool IsCI_SW(this PsbPixelFormat format) => format == PsbPixelFormat.CI4_SW_PSP || format == PsbPixelFormat.CI8_SW_PSP || format == PsbPixelFormat.CI4_SW || format == PsbPixelFormat.CI8_SW;
+        public static bool IsCI_SW(this PsbPixelFormat format) => format == PsbPixelFormat.CI4_SW_PSP || format == PsbPixelFormat.CI8_SW_PSP || format == PsbPixelFormat.CI4_SW || format == PsbPixelFormat.CI8_SW || format == PsbPixelFormat.BC7_SW;
         public static bool IsPSP_SW(this PsbPixelFormat format) => format == PsbPixelFormat.CI4_SW_PSP || format == PsbPixelFormat.CI8_SW_PSP;
 
         public static int? GetBitDepth(this PsbPixelFormat format)
@@ -191,6 +191,7 @@ namespace FreeMote
                 case PsbPixelFormat.DXT5:
                 case PsbPixelFormat.DXT1:
                 case PsbPixelFormat.BC7:
+                case PsbPixelFormat.BC7_SW:
                 default:
                     return null;
             }

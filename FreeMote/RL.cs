@@ -151,6 +151,11 @@ namespace FreeMote
                 case PsbPixelFormat.BC7:
                     data = new Bc7Decoder(data, width, height).Unpack();
                     break;
+                case PsbPixelFormat.BC7_SW:
+                    //  BC7 图像是 4x4 像素的块压缩，所以 width 和 height 参数应该是图像的块数，而不是像素数。因此需要将实际像素宽高除以 4
+                    data = PostProcessing.UntileTextureV2(data, width / 4, height / 4, 16);
+                    data = new Bc7Decoder(data, width, height).Unpack();
+                    break;
             }
 
             int stride = bmpData.Stride; // 扫描线的宽度

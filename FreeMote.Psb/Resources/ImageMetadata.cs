@@ -316,6 +316,7 @@ namespace FreeMote.Psb
             {
                 case PsbPixelFormat.ASTC_8BPP:
                 case PsbPixelFormat.BC7:
+                case PsbPixelFormat.BC7_SW:
                     Data = FreeMount.CreateContext().BitmapToResource(PixelFormat.ToExtensionString(), Spec, bmp);
                     break;
             }
@@ -497,9 +498,15 @@ namespace FreeMote.Psb
             {
                 case PsbPixelFormat.ASTC_8BPP:
                 case PsbPixelFormat.BC7:
+                case PsbPixelFormat.BC7_SW:
                     data = context.BitmapToResource(PixelFormat.ToExtensionString(), Spec, image);
                     if (data != null)
                     {
+                        if (PixelFormat == PsbPixelFormat.BC7_SW)
+                        {
+                            //Swizzle
+                            PostProcessing.TileTextureV2(data, Width / 4, Height / 4, 16);
+                        }
                         return data;
                     }
 
@@ -515,7 +522,6 @@ namespace FreeMote.Psb
                         Logger.LogWarn($"[WARN] Can not convert image to ASTC: {path}");
                         //data = File.ReadAllBytes(path);
                     }
-
                     break;
             }
 
