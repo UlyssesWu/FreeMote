@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace FreeMote.Plugins.Images
@@ -19,6 +18,8 @@ namespace FreeMote.Plugins.Images
     [ExportMetadata("Comment", "BC7 support via bc7enc.")]
     class Bc7Formatter : IPsbImageFormatter
     {
+        public const string Bc7FastEncode = "Bc7FastEncode";
+
         private const string EncoderTool = "bc7enc.exe";
         public List<string> Extensions { get; } = new() {".bc7", ".dds"};
         public string ToolPath { get; set; } = null;
@@ -81,7 +82,24 @@ namespace FreeMote.Plugins.Images
                     bitmap.Save(tempFile);
                     var tempOutFile = Path.ChangeExtension(tempFile, ".bc7");
 
-                    ProcessStartInfo info = new ProcessStartInfo(ToolPath, $"-R -C -e -g -q -o \"{tempFile}\"")
+                    const string parameters_ISPC = "-R -U -g -q -o";
+                    const string parameters_CPP_Fast = "-R -C -e -g -q -o"; //Faster ~20% but lower quality
+
+                    var param = parameters_ISPC;
+
+                    if (context != null)
+                    {
+                        if (context.ContainsKey(Bc7FastEncode))
+                        {
+                            if (context[Bc7FastEncode] is string fast && fast.Equals("true", StringComparison.InvariantCultureIgnoreCase) || context[Bc7FastEncode] is 1)
+                            {
+                                param = parameters_CPP_Fast;
+                                //Logger.LogHint("[BC7] Fast mode (Lower quality)");
+                            }
+                        }
+                    }
+
+                    ProcessStartInfo info = new ProcessStartInfo(ToolPath, $"{param} \"{tempFile}\"")
                     {
                         UseShellExecute = false,
                         WindowStyle = ProcessWindowStyle.Hidden,
