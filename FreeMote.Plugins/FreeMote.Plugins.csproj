@@ -17,9 +17,6 @@
     <ProjectReference Include="..\FreeMote\FreeMote.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BCnEncoder.NetStd">
-      <Version>2.1.0-CI00002</Version>
-    </PackageReference>
     <PackageReference Include="FreeMote.Psd">
       <Version>2.5.1.16</Version>
     </PackageReference>
@@ -45,6 +42,11 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Tools\bc7enc.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 	<Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <PropertyGroup>

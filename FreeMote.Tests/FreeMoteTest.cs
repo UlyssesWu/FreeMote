@@ -1,4 +1,13 @@
-﻿using System;
+﻿using BCnEncoder.Decoder;
+using BCnEncoder.Shared;
+using FreeMote.FastLz;
+using FreeMote.Plugins.Audio;
+using FreeMote.Plugins.Images;
+using FreeMote.Plugins.Shells;
+using FreeMote.Psb;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -7,14 +16,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using BCnEncoder.Decoder;
-using BCnEncoder.Shared;
-using FreeMote.FastLz;
-using FreeMote.Plugins.Audio;
-using FreeMote.Plugins.Images;
-using FreeMote.Plugins.Shells;
-using FreeMote.Psb;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VGAudio.Containers.Dsp;
 using VGAudio.Containers.Wave;
 
@@ -395,6 +396,23 @@ namespace FreeMote.Tests
             var pixels = decoder.DecodeRaw(buffer, width, height, CompressionFormat.Bc7);
             var pixelBytes = MemoryMarshal.Cast<ColorRgba32, byte>(pixels);
             RL.ConvertToImageFile(pixelBytes.ToArray(), "bc7-be.png", width, height, PsbImageFormat.png, PsbPixelFormat.BeRGBA8);
+        }
+
+        [TestMethod]
+        public void TestBc7_2()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\..\Res");
+            var path = Path.Combine(resPath, "4ch.psb", "0.bin");
+            var buffer = File.ReadAllBytes(path);
+
+            var width = 4096;
+            var height = 4096;
+            buffer = PostProcessing.UntileTextureV2(buffer, width / 4, height / 4, 16);
+
+            var decoder = new Bc7Decoder(buffer, width, height);
+            var raw = decoder.Unpack();
+
+            RL.ConvertToImageFile(raw, "bc7-raw.png", width, height, PsbImageFormat.png);
         }
 
         [TestMethod]

@@ -505,7 +505,7 @@ namespace FreeMote.Psb
                         if (PixelFormat == PsbPixelFormat.BC7_SW)
                         {
                             //Swizzle
-                            PostProcessing.TileTextureV2(data, Width / 4, Height / 4, 16);
+                            data = PostProcessing.TileTextureV2(data, Width / 4, Height / 4, 16);
                         }
                         return data;
                     }
