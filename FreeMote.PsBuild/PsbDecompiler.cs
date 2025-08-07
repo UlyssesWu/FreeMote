@@ -453,15 +453,32 @@ namespace FreeMote.PsBuild
             }
             else
             {
-                body = Path.Combine(dir ?? "", name + "_body.bin");
+                string[] possibleBodyNames =
+                [
+                    $"{name}_body.bin",
+                    $"{name}body.bin",
+                    $"{name}.bin"
+                ];
 
-                if (!File.Exists(body))
+                for (var i = 0; i < possibleBodyNames.Length; i++)
                 {
-                    Logger.LogWarn($"Can not find body (use `-b` to set body.bin path manually): {body} ");
+                    var possibleBodyName = possibleBodyNames[i];
+                    body = Path.Combine(dir ?? "", possibleBodyName);
+                    if (File.Exists(body))
+                    {
+                        hasBody = true;
+                        bodyBinName = possibleBodyName;
+                        break;
+                    }
+                }
+
+                if (hasBody)
+                {
+                    Logger.Log($"Assume Body FilePath: {body}");
                 }
                 else
                 {
-                    hasBody = true;
+                    Logger.LogWarn($"Can not find body (use `-b` to set body.bin path manually): {body} ");
                 }
             }
 
