@@ -317,7 +317,7 @@ namespace FreeMote.Psb
                 //don't believe HeaderLength
                 if (Header.HeaderLength >= br.BaseStream.Length)
                 {
-                    Header.HeaderLength = Header.GetHeaderLength();
+                    Header.HeaderLength = (uint)Header.GetHeaderLength();
                 }
                 br.BaseStream.Seek(Header.HeaderLength, SeekOrigin.Begin);
                 NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
@@ -1147,7 +1147,7 @@ namespace FreeMote.Psb
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms, Encoding);
             bw.Pad((int)Header.GetHeaderLength());
-            Header.HeaderLength = Header.GetHeaderLength();
+            Header.HeaderLength = (uint)Header.GetHeaderLength();
 
             #region Compile Names
 
@@ -1242,7 +1242,7 @@ namespace FreeMote.Psb
                     offsets.Add((uint)resBw.BaseStream.Position);
                     if (psbResource.Data == null)
                     {
-                        lengths.Add((uint)0);
+                        lengths.Add(0);
                     }
                     else
                     {
@@ -1281,7 +1281,7 @@ namespace FreeMote.Psb
                     offsets.Add((uint)resBw.BaseStream.Position);
                     if (psbResource.Data == null)
                     {
-                        lengths.Add((uint)0);
+                        lengths.Add(0);
                     }
                     else
                     {
@@ -1788,7 +1788,7 @@ namespace FreeMote.Psb
             if (!arriveEnd && (Header.Version >= 4 || probe == (int)PsbObjType.ArrayN1 || probe == (int)PsbObjType.ArrayN2))
             {
                 Header.Version = 4;
-                Header.HeaderLength = PsbHeader.GetHeaderLength(Header.Version);
+                Header.HeaderLength = (uint)PsbHeader.GetHeaderLength(Header.Version);
                 Header.OffsetExtraChunkOffsets = pos1;
                 Header.OffsetExtraChunkLengths = pos2;
                 ExtraChunkOffsets = array1;
