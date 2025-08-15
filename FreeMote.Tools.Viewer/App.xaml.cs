@@ -1,6 +1,7 @@
 ﻿//#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -43,7 +44,8 @@ namespace FreeMote.Tools.Viewer
             var optWidth = app.Option<uint>("-w|--width", "Set Window width", CommandOptionType.SingleValue);
             var optHeight = app.Option<uint>("-h|--height", "Set Window height", CommandOptionType.SingleValue);
             var optDirectLoad = app.Option("-d|--direct", "Just load with EMT driver, don't try parsing with FreeMote first", CommandOptionType.NoValue);
-            var optFixMetadata = app.Option("-nf|--no-fix", "Don't try to apply metadata fix (for partial exported or krkr PSBs). Can't work together with `-d`", CommandOptionType.NoValue);
+            var optNoFixMetadata = app.Option("-nf|--no-fix", "Don't try to apply metadata fix (for partial exported or krkr PSBs). Can't work together with `-d`", CommandOptionType.NoValue);
+            var optFixAll = app.Option("-f|--fix", "Try to apply all known fixes. Can't work together with `-d`", CommandOptionType.NoValue);
 
             //args
             var argPath = app.Argument("Files", "File paths", multipleValues: true);
@@ -97,12 +99,42 @@ namespace FreeMote.Tools.Viewer
                                 psb.SwitchSpec(PsbSpec.win, PsbSpec.win.DefaultPixelFormat());
                             }
 
-                            if (!optFixMetadata.HasValue())
+                            //apply fixes
+                            if (!optNoFixMetadata.HasValue())
                             {
                                 try
                                 {
-                                    psb.FixMotionMetadata();
+                                    if (psb.FixMotionMetadata())
+                                    {
+                                        Debug.WriteLine("Apply FixMotionMetadata");
+                                    }
                                     //psb.FixTimelineContentValueType();
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
+                                }
+                            }
+                            if (optFixAll.HasValue())
+                            {
+                                try
+                                {
+                                    if (psb.FixTimelineContentValueType())
+                                    {
+                                        Debug.WriteLine("Apply FixTimelineContentValueType");
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
+                                }
+
+                                try
+                                {
+                                    if (psb.FixTextureSize())
+                                    {
+                                        Debug.WriteLine("Apply FixTextureSize");
+                                    }
                                 }
                                 catch (Exception e)
                                 {

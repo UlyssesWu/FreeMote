@@ -88,7 +88,11 @@ namespace FreeMote.Tools.EmtConvert
         /// <summary>
         /// Fix [/metadata/timelineControl/variableList/frameList/content/value] type error appeared in Cat Hell series. WTF Sayori
         /// </summary>
-        KrkrTimelineTypeError
+        KrkrTimelineTypeError,
+        /// <summary>
+        /// Fix texture incomplete for damaged PSB
+        /// </summary>
+        TextureSize,
     }
 
     class Program
@@ -498,6 +502,21 @@ Example:
                             Console.Write($"Using {method} to fix {s} ...");
                             PSB psb = new PSB(s);
                             if (psb.FixTimelineContentValueType())
+                            {
+                                psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
+                                Console.WriteLine("Fixed!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("not fixed.");
+                            }
+                        }
+                            break;
+                        case PsbFixMethod.TextureSize:
+                        {
+                            Console.Write($"Using {method} to fix {s} ...");
+                            PSB psb = new PSB(s);
+                            if (psb.FixTextureSize())
                             {
                                 psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
                                 Console.WriteLine("Fixed!");

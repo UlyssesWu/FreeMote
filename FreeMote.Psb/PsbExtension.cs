@@ -102,7 +102,7 @@ namespace FreeMote.Psb
         /// Fix [metadata/base/motion] missing issue for <seealso cref="PsbType.Motion"/> PSB 
         /// </summary>
         /// <param name="psb"></param>
-        /// <returns>Whether the PSB is confirmed to be fine already or fine after fixed</returns>
+        /// <returns>Whether the PSB is fixed by this method (if it's already fine, return false)</returns>
         public static bool FixMotionMetadata(this PSB psb)
         {
             if (psb.Objects.FindByPath("/metadata/base") is PsbDictionary dic && dic["chara"] is PsbString chara && dic["motion"] is PsbString motion)
@@ -125,7 +125,7 @@ namespace FreeMote.Psb
 
                 if (realMotion.ContainsKey(motion)) //ok, no need to fix
                 {
-                    return true;
+                    return false;
                 }
 
                 dic["motion"] = realMotion.Keys.Last().ToPsbString(); //pick the last motion to replace it, the last usually covers most 
@@ -137,7 +137,7 @@ namespace FreeMote.Psb
 
         public static bool FixTimelineContentValueType(this PSB psb)
         {
-            bool hasError = false;
+            bool fix = false;
             if (psb.Objects.FindByPath("/metadata/timelineControl") is PsbList list)
             {
                 foreach (var timeline in list)
@@ -155,10 +155,11 @@ namespace FreeMote.Psb
                                         if (int.TryParse(s, out var v))
                                         {
                                             content["value"] = v.ToPsbNumber();
+                                            fix = true;
                                         }
                                         else
                                         {
-                                            hasError = true;
+                                            // If the value is not a number, we can not fix it
                                         }
                                     }
                                 }
@@ -168,7 +169,49 @@ namespace FreeMote.Psb
                 }
             }
 
-            return !hasError;
+            return fix;
+        }
+
+        public static bool FixTextureSize(this PSB psb)
+        {
+            if (psb.Platform != PsbSpec.win)
+            {
+                return false;
+            }
+
+            var resList = psb.CollectResources<ImageMetadata>();
+
+            bool fix = false;
+            foreach (var imageMetadata in resList)
+            {
+                if (imageMetadata.Data == null || imageMetadata.Data.Length == 0)
+                {
+                    continue;
+                }
+                var bitDepth = imageMetadata.PixelFormat.GetBitDepth();
+                if (bitDepth == null)
+                {
+                    continue;
+                }
+                var width = imageMetadata.Width;
+                var height = imageMetadata.Height;
+
+                if (width <= 0 || height <= 0)
+                {
+                    continue;
+                }
+
+                var shouldBeLength = (int)Math.Ceiling(width * height * (bitDepth.Value / 8.0));
+                if (shouldBeLength > 0 && imageMetadata.Resource.Data.Length < shouldBeLength)
+                {
+                    var extendedBuffer = new byte[shouldBeLength];
+                    Array.Copy(imageMetadata.Resource.Data, extendedBuffer, imageMetadata.Resource.Data.Length);
+                    imageMetadata.Resource.Data = extendedBuffer;
+                    fix = true;
+                }
+            }
+
+            return fix;
         }
 
         /// <summary>
