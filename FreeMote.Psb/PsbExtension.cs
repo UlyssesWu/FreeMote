@@ -807,6 +807,21 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static MemoryStream EncodeMdf(Stream stream, string key, int? keyLength, bool keepHeader)
         {
+            var ms = new MemoryStream((int) stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
+            EncodeMdf(stream, ms, key, keyLength, keepHeader);
+            return ms;
+        }
+
+        /// <summary>
+        /// Decode/encode MDF used in archive PSB. Usually you need to <paramref name="keepHeader"/> when input is a shell type (mdf,mfl etc.) rather than raw data. (<paramref name="stream"/> will <b>NOT</b> be disposed)
+        /// </summary>
+        /// <param name="stream">will <b>NOT</b> be disposed</param>
+        /// <param name="key">a full key a.k.a. seed</param>
+        /// <param name="keyLength">key buffer length, usually 131, but could be other value</param>
+        /// <param name="keepHeader">if <c>true</c>, skip first 8 bytes (usually MDF header)</param>
+        /// <returns></returns>
+        public static void EncodeMdf(Stream stream, MemoryStream output, string key, int? keyLength, bool keepHeader)
+        {
             if (keyLength is < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(keyLength));
@@ -821,11 +836,10 @@ namespace FreeMote.Psb
                 BitConverter.ToUInt32(bts, 2 * 4),
                 BitConverter.ToUInt32(bts, 3 * 4),
             ];
-            MemoryStream ms = new MemoryStream((int)stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
             var gen = new MTRandom<mt19937ar_t>(seeds);
 
             using BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true);
-            using BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            using BinaryWriter bw = new BinaryWriter(output, Encoding.UTF8, true);
             if (keepHeader)
             {
                 bw.Write(br.ReadBytes(8));
@@ -870,13 +884,13 @@ namespace FreeMote.Psb
                         BinaryPrimitives.WriteUInt32LittleEndian(keySpan, gen.GenerateUInt32());
                     }
                     var current = br.ReadByte();
-                    current ^= keySpan[(int)(count % 4)]; 
+                    current ^= keySpan[(int) (count % 4)];
                     bw.Write(current);
                     count++;
                 }
             }
-            
-            return ms;
+
+            return;
         }
 
         #endregion
@@ -1391,6 +1405,16 @@ namespace FreeMote.Psb
             }
 
             return (((PsbNumber) range[0]).UIntValue, ((PsbNumber) range[1]).IntValue);
+        }
+
+        public static int ArchiveInfo_GetLengthFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
+        {
+            if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
+            {
+                return ((PsbNumber) range[range.Count - 2]).IntValue;
+            }
+
+            return ((PsbNumber) range[1]).IntValue;
         }
 
         #endregion

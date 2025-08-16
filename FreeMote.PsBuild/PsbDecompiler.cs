@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -585,7 +586,7 @@ namespace FreeMote.PsBuild
                     var fileLength = new FileInfo(body).Length;
                     using var mmFile =
                         MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
-                    Parallel.ForEach(dic, pair =>
+                    Parallel.ForEach(dic.OrderByDescending(kv => PsbExtension.ArchiveInfo_GetLengthFromRangeList((PsbList) kv.Value, archiveInfoType)), new ParallelOptions { MaxDegreeOfParallelism = 4}, pair => //Math.Max(Environment.ProcessorCount / 2, 2)
                     {
                         //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
                         var range = (PsbList) pair.Value;
@@ -599,7 +600,16 @@ namespace FreeMote.PsBuild
                         }
 
                         using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
-                        var bodyBytes = new byte[len];
+                        byte[] bodyBytes;
+                        if (outputRaw)
+                        {
+                            bodyBytes = new byte[len];
+                        }
+                        else
+                        {
+                            bodyBytes = ArrayPool<byte>.Shared.Rent(len);
+                            bodyBytes.AsSpan().Clear();
+                        }
                         mmAccessor.ReadArray(0, bodyBytes, 0, len);
 
                         var rawPath = Path.Combine(extractDir, pair.Key);
@@ -617,8 +627,14 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = MsManager.GetStream(bodyBytes);
+                        var ms = new MemoryStream(bodyBytes);
                         MemoryStream mms = null;
+                        byte[] mdfDecompressed = null;
+                        var mdfOptimizedMode = shellType == MdfShell.ShellName && Consts.FastMode;
+                        if (mdfOptimizedMode) //optimized for decompressed size known shell
+                        {
+                            mdfDecompressed = ArrayPool<byte>.Shared.Rent(ms.MdfGetOriginalLength());
+                        }
 
                         if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
                         {
@@ -632,12 +648,20 @@ namespace FreeMote.PsBuild
 
                                 try
                                 {
-                                    mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                                    if (mdfOptimizedMode)
+                                    {
+                                        MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
+                                        mms = new MemoryStream(mdfDecompressed);
+                                    }
+                                    else
+                                    {
+                                        mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                                    }
                                 }
                                 catch (InvalidDataException e)
                                 {
                                     ms.Dispose();
-                                    ms = MsManager.GetStream(bodyBytes);
+                                    ms = new MemoryStream(bodyBytes);
                                     mms = null;
                                 }
 
@@ -659,14 +683,17 @@ namespace FreeMote.PsBuild
                             }
                         }
 
+                        bool returnedToPool = false;
                         var finalPath = Path.Combine(extractDir, relativePath);
-                        if (mms == null)
+                        if (mms == null) //no shell
                         {
                             mms = ms;
                         }
                         else
                         {
                             ms?.Dispose();
+                            ArrayPool<byte>.Shared.Return(bodyBytes);
+                            returnedToPool = true;
                         }
 
                         if (extractAll && PsbFile.IsSignaturePsb(mms))
@@ -697,6 +724,14 @@ namespace FreeMote.PsBuild
                         try
                         {
                             mms?.Dispose();
+                            if (!returnedToPool)
+                            {
+                                ArrayPool<byte>.Shared.Return(bodyBytes);
+                            }
+                            if (mdfOptimizedMode)
+                            {
+                                ArrayPool<byte>.Shared.Return(mdfDecompressed);
+                            }
                         }
                         catch (Exception e)
                         {
@@ -724,7 +759,16 @@ namespace FreeMote.PsBuild
                         var (start, len) = PsbExtension.ArchiveInfo_GetItemPositionFromRangeList(range, archiveInfoType);
 
                         using var mmAccessor = mmFile.CreateViewAccessor(start, len, MemoryMappedFileAccess.Read);
-                        var bodyBytes = new byte[len];
+                        byte[] bodyBytes;
+                        if (outputRaw)
+                        {
+                            bodyBytes = new byte[len];
+                        }
+                        else
+                        {
+                            bodyBytes = ArrayPool<byte>.Shared.Rent(len);
+                            bodyBytes.AsSpan().Clear();
+                        }
                         mmAccessor.ReadArray(0, bodyBytes, 0, len);
 
                         var rawPath = Path.Combine(extractDir, pair.Key);
@@ -741,8 +785,14 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = MsManager.GetStream(bodyBytes);
+                        var ms = new MemoryStream(bodyBytes);
                         MemoryStream mms = null;
+                        byte[] mdfDecompressed = null;
+                        var mdfOptimizedMode = shellType == MdfShell.ShellName && Consts.FastMode;
+                        if (mdfOptimizedMode) //optimized for decompressed size known shell
+                        {
+                            mdfDecompressed = ArrayPool<byte>.Shared.Rent(ms.MdfGetOriginalLength());
+                        }
 
                         if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
                         {
@@ -756,17 +806,26 @@ namespace FreeMote.PsBuild
 
                                 try
                                 {
-                                    mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                                    if (mdfOptimizedMode)
+                                    {
+                                        MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
+                                        mms = new MemoryStream(mdfDecompressed);
+                                    }
+                                    else
+                                    {
+                                        mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                                    }
                                     if (mms.Length < len)
                                     {
                                         Logger.Log($"  bad decompression detected for key name: {possibleFileName}, size {len} -> {mms.Length}");
-                                        ms = MsManager.GetStream(bodyBytes);
+                                        ms.Dispose();
+                                        ms = new MemoryStream(bodyBytes);
                                         mms = null;
                                     }
                                 }
                                 catch (InvalidDataException)
                                 {
-                                    ms = MsManager.GetStream(bodyBytes);
+                                    ms = new MemoryStream(bodyBytes);
                                     mms = null;
                                 }
 
@@ -814,8 +873,15 @@ namespace FreeMote.PsBuild
                             WriteAllBytes(finalPath, mms);
                             //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                         }
-                    }
 
+                        mms?.Dispose();
+                        ArrayPool<byte>.Shared.Return(bodyBytes);
+                        if (mdfOptimizedMode)
+                        {
+                            ArrayPool<byte>.Shared.Return(mdfDecompressed);
+                        }
+                    }
+                    
                     specialItemFileNames.AddRange(archiveItemFileNames.Values);
                 }
 
@@ -852,6 +918,19 @@ namespace FreeMote.PsBuild
             using var fs = new FileStream(path, FileMode.Create);
             ms.WriteTo(fs);
         }
+
+        //static async Task WriteAllBytesAsync(string path, MemoryStream ms)
+        //{
+        //    if (Directory.Exists(path))
+        //    {
+        //        Logger.LogError($"[ERROR] There is a folder with same name when trying to Write file.\r\n Please remove the folder if you do want to overwrite: {path}");
+        //        return;
+        //    }
+        //    EnsureDirectory(path);
+        //    using var fs = new FileStream(path, FileMode.Create);
+        //    ms.Seek(0, SeekOrigin.Begin);
+        //    await ms.CopyToAsync(fs);
+        //}
 
         static void EnsureDirectory(string path)
         {
@@ -893,7 +972,7 @@ namespace FreeMote.PsBuild
             };
             finalContext.Remove(Context_ArchiveSource);
 
-            var ms = MsManager.GetStream(bodyBytes);
+            var ms = new MemoryStream(bodyBytes);
             MemoryStream mms = null;
 
             if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
@@ -912,8 +991,8 @@ namespace FreeMote.PsBuild
                     }
                     catch (InvalidDataException)
                     {
-                        ms = MsManager.GetStream(bodyBytes);
-                        mms = null;
+                        ms.Dispose();
+                        mms = new MemoryStream(bodyBytes);
                     }
 
                     if (mms != null)
@@ -932,6 +1011,7 @@ namespace FreeMote.PsBuild
                             ? Path.ChangeExtension(filePath, ".unpack.psb")
                             : outputPath);
                         mms.WriteTo(outFs);
+                        mms.Dispose();
                         break;
                     }
                 }

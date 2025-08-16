@@ -7,16 +7,22 @@ namespace FreeMote
     {
         public static byte[] Decompress(Stream input)
         {
-            using (var ms = Consts.MsManager.GetStream())
+            using var ms = new MemoryStream();
+            using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
             {
-                using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
-                {
-                    deflateStream.CopyTo(ms);
-                }
-
-                //input.Dispose();
-                return ms.ToArray();
+                deflateStream.CopyTo(ms);
             }
+
+            //input.Dispose();
+            return ms.ToArray();
+        }
+
+        public static void Decompress(Stream input, byte[] output)
+        {
+            using var ms = new MemoryStream(output);
+            using DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+            deflateStream.CopyTo(ms);
+            return;
         }
 
         /// <summary>
@@ -27,10 +33,11 @@ namespace FreeMote
         /// <returns></returns>
         public static Stream DecompressToStream(Stream input, int size = 0)
         {
-            MemoryStream ms = size <= 0
-                ? Consts.MsManager.GetStream()
-                : Consts.MsManager.GetStream("DecompressToStream", size);
+            //MemoryStream ms = size <= 0
+            //    ? Consts.MsManager.GetStream()
+            //    : Consts.MsManager.GetStream("DecompressToStream", size);
             //var ms = Consts.MsManager.GetStream();
+            var ms = size <= 0 ? new MemoryStream() : new MemoryStream(size);
             using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
             {
                 deflateStream.CopyTo(ms);
@@ -40,7 +47,7 @@ namespace FreeMote
             ms.Seek(0, SeekOrigin.Begin);
             return ms;
         }
-
+        
         public static byte[] Compress(Stream input, bool fast = false)
         {
             using var ms = new MemoryStream();

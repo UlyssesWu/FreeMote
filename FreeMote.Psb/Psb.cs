@@ -869,7 +869,7 @@ namespace FreeMote.Psb
             Resources = new List<PsbResource>();
             ExtraResources = new List<PsbResource>();
             var namesSet = new HashSet<string>(); //Keep names unique, HashSet is faster than List
-            //Strings can be unique to save space, but can also be redundant for some reasons like translation.
+            //Strings can be unique to save space, but can also be redundant for some reason like translation.
             //We suggest users handle redundant strings before Merge, or in Json, or rewrite their own Merge. That's why PSB.Merge is not directly called in PSB.Build.
             var stringsDic = new Dictionary<string, PsbString>();
             var stringsIndexDic = new Dictionary<uint, PsbString>();

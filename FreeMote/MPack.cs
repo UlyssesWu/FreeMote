@@ -165,19 +165,15 @@ namespace FreeMote
             Adler32 adler32 = new Adler32();
             adler32.Update(bytes);
             var checksum = (uint) adler32.Checksum;
-            adler32 = null;
-            MemoryStream ms = Consts.MsManager.GetStream(bytes);
-            using (FileStream fs = new FileStream(outputPath ?? psbFile.Path + ".mdf", FileMode.Create))
-            {
-                BinaryWriter bw = new BinaryWriter(fs);
-                bw.WriteStringZeroTrim(MdfSignature);
-                bw.Write((uint) ms.Length);
-                //bw.Write(ZlibCompress.Compress(ms, fast));
-                ZlibCompress.CompressToBinaryWriter(bw, ms, fast);
-                bw.WriteBE(checksum);
-                ms.Dispose();
-                bw.Flush();
-            }
+            using var ms = new MemoryStream(bytes);
+            using FileStream fs = new FileStream(outputPath ?? psbFile.Path + ".mdf", FileMode.Create);
+            BinaryWriter bw = new BinaryWriter(fs);
+            bw.WriteStringZeroTrim(MdfSignature);
+            bw.Write((uint) ms.Length);
+            //bw.Write(ZlibCompress.Compress(ms, fast));
+            ZlibCompress.CompressToBinaryWriter(bw, ms, fast);
+            bw.WriteBE(checksum);
+            bw.Flush();
         }
     }
 }
