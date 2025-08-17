@@ -586,7 +586,7 @@ namespace FreeMote.PsBuild
                     var fileLength = new FileInfo(body).Length;
                     using var mmFile =
                         MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
-                    Parallel.ForEach(dic.OrderByDescending(kv => PsbExtension.ArchiveInfo_GetLengthFromRangeList((PsbList) kv.Value, archiveInfoType)), new ParallelOptions { MaxDegreeOfParallelism = 4}, pair => //Math.Max(Environment.ProcessorCount / 2, 2)
+                    Parallel.ForEach(dic.OrderByDescending(kv => PsbExtension.ArchiveInfo_GetLengthFromRangeList((PsbList) kv.Value, archiveInfoType)), new ParallelOptions { MaxDegreeOfParallelism = Math.Max(Environment.ProcessorCount / 2, 2) }, pair => //Math.Max(Environment.ProcessorCount / 2, 2)
                     {
                         //Console.WriteLine($"{(extractAll ? "Decompiling" : "Extracting")} {pair.Key} ...");
                         var range = (PsbList) pair.Value;

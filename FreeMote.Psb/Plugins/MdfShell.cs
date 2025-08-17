@@ -108,7 +108,7 @@ namespace FreeMote.Plugins
                 toBeDecompressedStream.Position = pos;
             }
 
-            toBeDecompressedStream.Seek(10, SeekOrigin.Current);
+            toBeDecompressedStream.Seek(10, SeekOrigin.Begin);
             ZlibCompress.Decompress(toBeDecompressedStream, outBuffer);
             if (encoded)
             {
