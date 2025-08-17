@@ -288,7 +288,7 @@ namespace FreeMote
                 bw.Write(Signature);
                 bw.Write(Version);
                 bw.Write(HeaderEncrypt);
-                bw.Write(Version == 1? HeaderLength : GetHeaderLength());
+                bw.Write(Version == 1? HeaderLength : (uint) GetHeaderLength()); //FIXED: may write long!
                 bw.Write(OffsetNames);
                 bw.Write(OffsetStrings);
                 bw.Write(OffsetStringsData);
