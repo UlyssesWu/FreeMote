@@ -86,7 +86,11 @@ namespace FreeMote
         /// <summary>
         /// Chip
         /// </summary>
-        Chip = 13
+        Chip = 13,
+        /// <summary>
+        /// Map Data - Legend of Mana
+        /// </summary>
+        Mpd = 14
     }
 
     /// <summary>

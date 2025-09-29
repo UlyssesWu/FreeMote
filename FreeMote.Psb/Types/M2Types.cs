@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,11 +15,14 @@ namespace FreeMote.Psb.Types
         public bool IsThisType(PSB psb)
         {
             if (psb.Objects != null && psb.Objects.All(kv => kv.Value is PsbDictionary {Count: 3} dic && dic.ContainsKey("w") &&
-                                      dic.ContainsKey("h") &&
-                                      dic.ContainsKey("image"))) return true;
+                                                             dic.ContainsKey("h") &&
+                                                             dic.ContainsKey("image"))) return true;
 
-            if (psb.Objects is PsbDictionary { Count: 3}
-            dic2 && dic2.ContainsKey("w") &&
+            if (psb.Objects is PsbDictionary
+                    {
+                        Count: 3
+                    }
+                    dic2 && dic2.ContainsKey("w") &&
                 dic2.ContainsKey("h") &&
                 dic2.ContainsKey("image"))
             {
@@ -31,7 +35,10 @@ namespace FreeMote.Psb.Types
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
         {
             var results = new List<IResourceMetadata>();
-            if (psb.Objects is { Count: 3 }
+            if (psb.Objects is
+                    {
+                        Count: 3
+                    }
                     dic && dic.ContainsKey("w") &&
                 dic.ContainsKey("h") &&
                 dic.ContainsKey("image"))
@@ -39,6 +46,7 @@ namespace FreeMote.Psb.Types
                 var md = GenerateMetadata("0", dic, dic["image"] as PsbResource);
                 results.Add(md);
             }
+
             foreach (var kv in psb.Objects)
             {
                 var d = kv.Value as PsbDictionary;
@@ -48,7 +56,7 @@ namespace FreeMote.Psb.Types
                     results.Add(md);
                 }
             }
-            
+
             return results.Cast<T>().ToList();
 
             ImageMetadata GenerateMetadata(string name, PsbDictionary dic, PsbResource res)
@@ -68,11 +76,12 @@ namespace FreeMote.Psb.Types
                         // fill with 256 degrees of gray
                         for (int i = 0; i < 256; i++)
                         {
-                            palette[i * 4] = (byte)i;
-                            palette[i * 4 + 1] = (byte)i;
-                            palette[i * 4 + 2] = (byte)i;
+                            palette[i * 4] = (byte) i;
+                            palette[i * 4 + 1] = (byte) i;
+                            palette[i * 4 + 2] = (byte) i;
                             palette[i * 4 + 3] = 0xFF;
                         }
+
                         break;
                     case 4:
                         format = PsbPixelFormat.LeRGBA8;
@@ -91,7 +100,7 @@ namespace FreeMote.Psb.Types
                     Height = height,
                     Spec = PsbSpec.none,
                     TypeString = format.ToStringForPsb().ToPsbString(),
-                    Palette = new PsbResource(){Data = palette},
+                    Palette = new PsbResource() {Data = palette},
                 };
 
                 return md;
@@ -152,7 +161,7 @@ namespace FreeMote.Psb.Types
                 //Logger.LogWarn("Cannot find related files. To get images from SprData PSB, you have to put all related PSBs in same folder.");
                 return [];
             }
-            
+
             return [];
         }
     }
@@ -233,6 +242,103 @@ namespace FreeMote.Psb.Types
         {
             //there is nothing we can do for a 3D model's UV tex
             return [];
+        }
+    }
+
+    class MpdType : IPsbType
+    {
+        public PsbType PsbType => PsbType.Mpd;
+
+        public bool IsThisType(PSB psb)
+        {
+            return psb.Objects.ContainsKey("mpd") && psb.Objects["mpd"] is PsbResource && psb.Objects.ContainsKey("tex") && psb.Objects.ContainsKey("draw_range_v");
+        }
+
+        public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
+        {
+            List<T> resourceList = psb.Resources == null
+                ? new List<T>()
+                : new List<T>(psb.Resources.Count);
+
+            if (psb.Objects.ContainsKey("mpd") && psb.Objects["mpd"] is PsbResource mpd)
+            {
+                resourceList.Add((T)(IResourceMetadata)new BinaryMetadata() { Resource = mpd });
+            }
+            return resourceList;
+        }
+
+        public void Link(PSB psb, FreeMountContext context, IList<string> resPaths, string baseDir = null, PsbLinkOrderBy order = PsbLinkOrderBy.Convention)
+        {
+            var path = resPaths.Select(p => Path.Combine(baseDir ?? string.Empty, p)).FirstOrDefault(File.Exists);
+            if (path == null)
+            {
+                return;
+            }
+
+            var mpd = psb.Resources.FirstOrDefault();
+            if (mpd == null)
+            {
+                mpd = new PsbResource();
+                psb.Objects["mpd"] = mpd;
+            }
+
+            mpd.Data = File.ReadAllBytes(path);
+        }
+
+        public void Link(PSB psb, FreeMountContext context, IDictionary<string, string> resPaths, string baseDir = null)
+        {
+            if (!resPaths.TryGetValue("mpd", out var path))
+            {
+                return;
+            }
+
+            var fullPath = Path.Combine(baseDir ?? string.Empty, path);
+            if (!File.Exists(fullPath))
+            {
+                return;
+            }
+
+            var mpd = psb.Resources.FirstOrDefault();
+            if (mpd == null)
+            {
+                mpd = new PsbResource();
+                psb.Objects["mpd"] = mpd;
+            }
+
+            mpd.Data = File.ReadAllBytes(fullPath);
+        }
+
+        public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
+            PsbLinkOrderBy order = PsbLinkOrderBy.Name)
+        {
+            var mpd = psb.Resources.FirstOrDefault();
+            if (mpd == null)
+            {
+                return;
+            }
+
+            //var pureName = Path.GetFileNameWithoutExtension(name);
+            var outPath = Path.Combine(dirPath, $"{name}/0.mpd");
+            File.WriteAllBytes(outPath, mpd.Data);
+            if (outputUnlinkedPsb)
+            {
+                psb.Objects["mpd"] = null;
+                psb.Resources.Remove(mpd);
+            }
+        }
+
+        public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
+            PsbExtractOption extractOption = PsbExtractOption.Original)
+        {
+            var mpd = psb.Resources.FirstOrDefault();
+            if (mpd == null)
+            {
+                return [];
+            }
+            //var pureName = Path.GetFileNameWithoutExtension(name);
+            var outPath = Path.Combine(dirPath, "0.mpd");
+            File.WriteAllBytes(outPath, mpd.Data);
+            return new Dictionary<string, string> { { "mpd", $"{name}/0.mpd" } };
         }
     }
 }
