@@ -28,10 +28,8 @@ namespace FreeMote
                 throw new FileNotFoundException("Can not load file.", Path);
             }
 
-            using (var fs = File.OpenRead(Path))
-            {
-                ParseHeader(fs);
-            }
+            using var fs = File.OpenRead(Path);
+            ParseHeader(fs);
         }
 
         private void ParseHeader(Stream stream)
@@ -82,19 +80,7 @@ namespace FreeMote
 
             return true;
         }
-
-        [Obsolete("Not Implemented")]
-        private static bool TestKeyValidForHeader()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Obsolete("Not Implemented")]
-        private static bool TestKeyValidForBody()
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public static bool TestHeaderEncrypted(Stream stream, PsbHeader header)
         {
             //MARK: Not always works
@@ -502,7 +488,7 @@ namespace FreeMote
                                 WriteOriginalBody(br, bw);
                                 break;
                             }
-                            else //Header Clean; Body Encrpyted
+                            else //Header Clean; Body Encrypted
                             {
                                 bw.Write((ushort) 0); //
                                 if (headerEnc)

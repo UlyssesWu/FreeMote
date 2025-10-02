@@ -1,5 +1,6 @@
 ﻿// Untile/Unswizzle by xdaniel. Copyright(c) 2016 xdaniel(Daniel R.) / DigitalZero Domain. License: The MIT License (MIT) 
 // Tile/Swizzle by Ulysses (wdwxy12345@gmail.com). License: same as FreeMote
+// UntileTextureRvl/TileTextureRvl was fixed by Krisp (FreeMote#139)
 
 using System;
 using System.Drawing;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 namespace FreeMote
 {
     /// <summary>
-    /// PS Related Post Process
+    /// Texture Post Process for consoles
     /// </summary>
     public static class PostProcessing
     {
@@ -152,160 +153,219 @@ namespace FreeMote
         /// <summary>
         /// UnTile for Revolution (Wii)
         /// </summary>
-        /// <param name="pixelData"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="bitDepth"></param>
-        /// <returns></returns>
+        /// <param name="pixelData">The source tiled pixel data.</param>
+        /// <param name="width">Image width.</param>
+        /// <param name="height">Image height.</param>
+        /// <param name="bitDepth">Image bit depth (e.g., 4 for CI4, 8 for CI8, 32 for RGBA8).</param>
+        /// <returns>The untiled (linear) pixel data.</returns>
         public static byte[] UntileTextureRvl(byte[] pixelData, int width, int height, int bitDepth = 32)
         {
             // ref: Revolution SDK Graphics Library (GX)
+            // Determine tile dimensions based on bit depth.
             int xTileSize = 4;
             int yTileSize = 4;
             if (bitDepth <= 8)
             {
-                xTileSize = 8; // 4x8
+                xTileSize = 8; // 8x4 for CI8/I8
             }
-
             if (bitDepth <= 4)
             {
-                yTileSize = 8; // 8x8 
+                yTileSize = 8; // 8x8 for CI4/I4
             }
-            bool wide = width > height;
+
             var byteSizePerPixel = bitDepth / 8.0f;
             var scale = 1;
             bool compactMode = false;
             int bpp = bitDepth / 8;
             byte[] untiledData;
+
+            // Handle compact formats where one byte stores multiple pixels (e.g., 4bpp).
             if (byteSizePerPixel < 1.0f)
             {
                 compactMode = true;
-                scale = (int) (1.0f / byteSizePerPixel);
+                scale = (int) (1.0f / byteSizePerPixel); // For 4bpp, scale is 2.
                 untiledData = new byte[width * height / scale];
-                bpp = 1;
             }
             else
             {
                 untiledData = new byte[width * height * bpp];
             }
 
-            int dataIndex = 0;
+            int dataIndex = 0; // Tracks the current read position in the source tiled data.
 
+            // Iterate through the image by tile blocks.
             for (int yt = 0; yt < height; yt += yTileSize)
             {
                 for (int xt = 0; xt < width; xt += xTileSize)
                 {
+                    // Iterate through pixels within a tile.
                     for (int y = yt; y < yt + yTileSize; y++)
                     {
                         for (int x = xt; x < xt + xTileSize; x++)
                         {
                             if (x >= width || y >= height) continue;
 
-                            int pixelIndex = ((y * width) + x) * bpp;
-
                             if (!compactMode)
                             {
-                                if (dataIndex >= pixelData.Length)
+                                // Standard copy for formats with 1 or more bytes per pixel.
+                                int pixelIndex = ((y * width) + x) * bpp;
+                                if (dataIndex + bpp <= pixelData.Length && pixelIndex + bpp <= untiledData.Length)
                                 {
-                                    break;
+                                    Buffer.BlockCopy(pixelData, dataIndex, untiledData, pixelIndex, bpp);
                                 }
-                                Buffer.BlockCopy(pixelData, dataIndex, untiledData, pixelIndex, bpp);
                                 dataIndex += bpp;
                             }
                             else
                             {
-                                var currentPos = dataIndex / scale;
-                                if (currentPos >= pixelData.Length)
+                                // Corrected logic for compact formats (e.g., CI4).
+                                // dataIndex tracks the current 4-bit pixel in the tiled source data.
+                                int srcByteIndex = dataIndex / scale; // Which source byte holds our 4-bit pixel.
+                                if (srcByteIndex >= pixelData.Length) continue;
+
+                                byte sourceByte = pixelData[srcByteIndex];
+
+                                // Extract the correct 4-bit nibble from the source byte.
+                                // Even index = high bits, odd index = low bits.
+                                byte pixelValue = (dataIndex % 2 == 0)
+                                    ? (byte) (sourceByte >> 4)      // Get the left nibble.
+                                    : (byte) (sourceByte & 0x0F);   // Get the right nibble.
+
+                                // Calculate the destination linear pixel position.
+                                int destPixelLinearIndex = (y * width) + x;
+                                int destByteIndex = destPixelLinearIndex / scale; // Which byte to write to in the destination.
+                                int destNibblePos = destPixelLinearIndex % 2;     // Which nibble (0 or 1) to write to.
+
+                                if (destByteIndex >= untiledData.Length) continue;
+
+                                // Place the 4-bit pixelValue into the correct nibble of the destination byte,
+                                // preserving the other nibble that might already be there.
+                                if (destNibblePos == 0)
                                 {
-                                    return untiledData;
+                                    // Even linear position: write to the high bits (left nibble).
+                                    untiledData[destByteIndex] = (byte) ((untiledData[destByteIndex] & 0x0F) | (pixelValue << 4));
                                 }
-                                var srcData = pixelData[currentPos];
-                                var dstPosition = pixelIndex / scale;
-                                var dstSubIndex = pixelIndex % scale;
-                                untiledData[dstPosition] = dstSubIndex == 0
-                                    ? (byte) ((untiledData[dstPosition] & 0xF0) | srcData)
-                                    : (byte) ((untiledData[dstPosition] & 0x0F) | (srcData << 4));
+                                else
+                                {
+                                    // Odd linear position: write to the low bits (right nibble).
+                                    untiledData[destByteIndex] = (byte) ((untiledData[destByteIndex] & 0xF0) | pixelValue);
+                                }
+
+                                // Move to the next 4-bit pixel in the source tile stream.
                                 dataIndex++;
                             }
                         }
                     }
                 }
             }
-
             return untiledData;
         }
 
+        /// <summary>
+        /// Tile for Revolution (Wii)
+        /// </summary>
+        /// <param name="pixelData">The source linear pixel data.</param>
+        /// <param name="width">Image width.</param>
+        /// <param name="height">Image height.</param>
+        /// <param name="bitDepth">Image bit depth (e.g., 4 for CI4, 8 for CI8, 32 for RGBA8).</param>
+        /// <returns>The tiled pixel data.</returns>
         public static byte[] TileTextureRvl(byte[] pixelData, int width, int height, int bitDepth = 32)
         {
+            // Determine tile dimensions based on bit depth.
             int xTileSize = 4;
             int yTileSize = 4;
             if (bitDepth <= 8)
             {
-                xTileSize = 8; // 4x8
+                xTileSize = 8; // 8x4 for CI8/I8
             }
-
             if (bitDepth <= 4)
             {
-                yTileSize = 8; // 8x8 
+                yTileSize = 8; // 8x8 for CI4/I4
             }
 
-            bool wide = width > height;
             var byteSizePerPixel = bitDepth / 8.0f;
             var scale = 1;
             bool compactMode = false;
             int bpp = bitDepth / 8;
             byte[] tiledData;
+
+            // Handle compact formats where one byte stores multiple pixels (e.g., 4bpp).
             if (byteSizePerPixel < 1.0f)
             {
                 compactMode = true;
-                scale = (int) (1.0f / byteSizePerPixel);
+                scale = (int) (1.0f / byteSizePerPixel); // For 4bpp, scale is 2.
                 tiledData = new byte[width * height / scale];
-                bpp = 1;
             }
             else
             {
                 tiledData = new byte[width * height * bpp];
             }
 
-            int dataIndex = 0;
+            int dataIndex = 0; // Tracks the current write position in the destination tiled data.
 
+            // Iterate through the image by tile blocks.
             for (int yt = 0; yt < height; yt += yTileSize)
             {
                 for (int xt = 0; xt < width; xt += xTileSize)
                 {
+                    // Iterate through pixels within a tile.
                     for (int y = yt; y < yt + yTileSize; y++)
                     {
                         for (int x = xt; x < xt + xTileSize; x++)
                         {
                             if (x >= width || y >= height) continue;
 
-                            int pixelIndex = ((y * width) + x) * bpp;
-
                             if (!compactMode)
                             {
-                                Buffer.BlockCopy(pixelData, pixelIndex, tiledData, dataIndex, bpp);
+                                // Standard copy for formats with 1 or more bytes per pixel.
+                                int pixelIndex = ((y * width) + x) * bpp;
+                                if (pixelIndex + bpp <= pixelData.Length && dataIndex + bpp <= tiledData.Length)
+                                {
+                                    Buffer.BlockCopy(pixelData, pixelIndex, tiledData, dataIndex, bpp);
+                                }
                                 dataIndex += bpp;
                             }
                             else
                             {
-                                var currentPos = pixelIndex / scale;
-                                if (currentPos >= tiledData.Length)
+                                // Corrected logic for tiling compact formats (e.g., CI4).
+                                // 1. Find and extract the 4-bit pixel from the linear source data (pixelData).
+                                int srcPixelLinearIndex = (y * width) + x;
+                                int srcByteIndex = srcPixelLinearIndex / scale; // Which source byte to read from.
+                                int srcNibblePos = srcPixelLinearIndex % 2;      // Which nibble (0 or 1) to read.
+
+                                if (srcByteIndex >= pixelData.Length) continue;
+
+                                byte sourceByte = pixelData[srcByteIndex];
+
+                                // Extract the correct 4-bit pixelValue.
+                                byte pixelValue = (srcNibblePos == 0)
+                                    ? (byte) (sourceByte >> 4)      // Get the left nibble.
+                                    : (byte) (sourceByte & 0x0F);   // Get the right nibble.
+
+                                // 2. Write this 4-bit pixel to the next available position in the tiled destination.
+                                int destByteIndex = dataIndex / scale; // Which destination byte to write to.
+                                int destNibblePos = dataIndex % 2;     // Which nibble in that byte to write to.
+
+                                if (destByteIndex >= tiledData.Length) continue;
+
+                                // Place the pixelValue into the correct nibble, preserving the other nibble.
+                                if (destNibblePos == 0)
                                 {
-                                    return tiledData;
+                                    // Even dataIndex: write to the high bits (left nibble).
+                                    tiledData[destByteIndex] = (byte) ((tiledData[destByteIndex] & 0x0F) | (pixelValue << 4));
                                 }
-                                var srcData = pixelData[currentPos];
-                                var dstPosition = dataIndex / scale;
-                                var dstSubIndex = dataIndex % scale;
-                                tiledData[dstPosition] = dstSubIndex == 0
-                                    ? (byte) ((tiledData[dstPosition] & 0xF0) | srcData)
-                                    : (byte) ((tiledData[dstPosition] & 0x0F) | (srcData << 4));
+                                else
+                                {
+                                    // Odd dataIndex: write to the low bits (right nibble).
+                                    tiledData[destByteIndex] = (byte) ((tiledData[destByteIndex] & 0xF0) | pixelValue);
+                                }
+
+                                // Move to the next 4-bit pixel position in the destination tile stream.
                                 dataIndex++;
                             }
                         }
                     }
                 }
             }
-
             return tiledData;
         }
 
