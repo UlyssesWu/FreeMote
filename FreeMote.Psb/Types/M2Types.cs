@@ -251,7 +251,7 @@ namespace FreeMote.Psb.Types
 
         public bool IsThisType(PSB psb)
         {
-            return psb.Objects.ContainsKey("mpd") && psb.Objects["mpd"] is PsbResource && psb.Objects.ContainsKey("tex") && psb.Objects.ContainsKey("draw_range_v");
+            return psb.Objects.ContainsKey("mpd") && psb.Objects["mpd"] is PsbResource && psb.Objects.ContainsKey("tex") && psb.Objects.ContainsKey("offset");
         }
 
         public List<T> CollectResources<T>(PSB psb, bool deDuplication = true) where T : class, IResourceMetadata
@@ -275,11 +275,16 @@ namespace FreeMote.Psb.Types
                 return;
             }
 
-            var mpd = psb.Resources.FirstOrDefault();
-            if (mpd == null)
+            var mpdList = psb.CollectResources<BinaryMetadata>();
+            PsbResource mpd;
+            if (mpdList == null || mpdList.Count == 0)
             {
                 mpd = new PsbResource();
                 psb.Objects["mpd"] = mpd;
+            }
+            else
+            {
+                mpd = mpdList[0].Resource;
             }
 
             mpd.Data = File.ReadAllBytes(path);
@@ -298,43 +303,51 @@ namespace FreeMote.Psb.Types
                 return;
             }
 
-            var mpd = psb.Resources.FirstOrDefault();
-            if (mpd == null)
+            var mpdList = psb.CollectResources<BinaryMetadata>();
+            PsbResource mpd;
+            if (mpdList == null || mpdList.Count == 0)
             {
                 mpd = new PsbResource();
                 psb.Objects["mpd"] = mpd;
             }
-
+            else
+            {
+                mpd = mpdList[0].Resource;
+            }
+            
             mpd.Data = File.ReadAllBytes(fullPath);
         }
 
         public void UnlinkToFile(PSB psb, FreeMountContext context, string name, string dirPath, bool outputUnlinkedPsb = true,
             PsbLinkOrderBy order = PsbLinkOrderBy.Name)
         {
-            var mpd = psb.Resources.FirstOrDefault();
-            if (mpd == null)
+            var mpdList = psb.CollectResources<BinaryMetadata>();
+            if (mpdList == null || mpdList.Count == 0)
             {
                 return;
             }
 
+            var mpd = mpdList[0];
             //var pureName = Path.GetFileNameWithoutExtension(name);
             var outPath = Path.Combine(dirPath, $"{name}/0.mpd");
             File.WriteAllBytes(outPath, mpd.Data);
             if (outputUnlinkedPsb)
             {
-                psb.Objects["mpd"] = null;
-                psb.Resources.Remove(mpd);
+                psb.Objects["mpd"] = PsbNull.Null;
+                psb.Resources.Remove(mpd.Resource);
             }
         }
 
         public Dictionary<string, string> OutputResources(PSB psb, FreeMountContext context, string name, string dirPath,
             PsbExtractOption extractOption = PsbExtractOption.Original)
         {
-            var mpd = psb.Resources.FirstOrDefault();
-            if (mpd == null)
+            var mpdList = psb.CollectResources<BinaryMetadata>();
+            if (mpdList == null || mpdList.Count == 0)
             {
                 return [];
             }
+
+            var mpd = mpdList[0];
             //var pureName = Path.GetFileNameWithoutExtension(name);
             var outPath = Path.Combine(dirPath, "0.mpd");
             File.WriteAllBytes(outPath, mpd.Data);
