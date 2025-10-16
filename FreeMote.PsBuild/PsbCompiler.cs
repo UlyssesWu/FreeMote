@@ -454,15 +454,14 @@ namespace FreeMote.PsBuild
         /// <summary>
         /// <inheritdoc cref="InplaceReplace"/>
         /// </summary>
-        public static string InplaceReplaceToFile(string psbPath, string jsonPath)
+        public static void InplaceReplaceToFile(string psbPath, string jsonPath, string outputPath)
         {
             var ms = InplaceReplace(psbPath, jsonPath);
-            var outputPath = Path.ChangeExtension(psbPath, "IR.psb");
+            //var outputPath = Path.ChangeExtension(psbPath, "IR.psb");
             using var fs = File.Create(outputPath);
             ms.WriteTo(fs);
             fs.Close();
             ms.Close();
-            return outputPath;
         }
 
         /// <summary>
@@ -476,10 +475,20 @@ namespace FreeMote.PsBuild
         /// <param name="enableParallel">parallel process</param>
         /// <param name="keyLen">key length</param>
         /// <param name="keepRaw">Do not try to compile json or pack MDF</param>
+        /// <param name="outputFolder">output folder</param>
         public static void PackArchive(string jsonPath, string key, bool intersect, bool preferPacked, Dictionary<string, object> extraContext = null, bool enableParallel = true,
-            int keyLen = 131, bool keepRaw = false)
+            int keyLen = 131, bool keepRaw = false, string outputFolder = null)
         {
-            if (!File.Exists(jsonPath)) return;
+            if (!File.Exists(jsonPath)) 
+            {
+                Logger.LogError($"Input file does not exist: {jsonPath}");
+                return;
+            }
+            if (!string.IsNullOrEmpty(outputFolder) && !Directory.Exists(outputFolder))
+            {
+                Logger.LogError($"Output folder does not exist: {outputFolder}");
+                return;
+            }
             PSB infoPsb = LoadPsbFromJsonFile(jsonPath);
             if (infoPsb.Type != PsbType.ArchiveInfo)
             {
@@ -708,7 +717,8 @@ namespace FreeMote.PsBuild
 
             //using var mmFile =
             //    MemoryMappedFile.CreateFromFile(bodyBinFileName, FileMode.Create, coreName, );
-            using var bodyFs = File.OpenWrite(bodyBinFileName);
+            string bodyBinFilePath = string.IsNullOrEmpty(outputFolder) ? bodyBinFileName : Path.Combine(outputFolder, Path.GetFileName(bodyBinFileName));
+            using var bodyFs = File.OpenWrite(bodyBinFilePath);
             var fileInfoDic = new PsbDictionary(files.Count);
             var fmContext = FreeMount.CreateContext(context);
             //byte[] bodyBin = null;
@@ -926,8 +936,8 @@ namespace FreeMote.PsBuild
             }
 
             using var infoMdf = fmContext.PackToShell(infoPsb.ToStream(), fmContext.HasShell ? fmContext.Shell.ToUpperInvariant() : "MDF");
-            File.WriteAllBytes(packageName, infoMdf.ToArray());
-            infoMdf.Dispose();
+            string infoMdfFilePath = string.IsNullOrEmpty(outputFolder) ? packageName : Path.Combine(outputFolder, Path.GetFileName(packageName));
+            File.WriteAllBytes(infoMdfFilePath, infoMdf.ToArray());
 
             //File.WriteAllBytes(bodyBinFileName, bodyBin);
         }

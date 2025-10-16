@@ -97,6 +97,13 @@ namespace FreeMote.Tools.EmtConvert
 
     class Program
     {
+        private static readonly HashSet<string> _allowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".psb", ".psb.m", ".m", ".mmo", ".pimg", ".scn", ".bin", ".mtn", ".lz4",
+            ".bmpfont", ".tlg", ".tlg5", ".tlg6", ".bytes", ".psz", ".dpak", ".emtbytes", ".emtproj", ".mdf", ".mpd", ".ks.scn", ".psd",
+            ".png", ".bmp", ".json"
+        };
+
         private static uint? Key = null;
         private static uint? NewKey = null;
 
@@ -128,6 +135,7 @@ namespace FreeMote.Tools.EmtConvert
             var optKey = app.Option<uint>("-k|--key <KEY>", "PSB key (uint, dec)", CommandOptionType.SingleValue);
             var optNewKey = app.Option<uint>("-nk|--new-key <KEY>", "New PSB key for transfer (uint, dec)",
                 CommandOptionType.SingleValue);
+            var optOutputPath = app.Option<string>("-o|--output", "Set output file path. May overwrite your original files!", CommandOptionType.SingleValue);
             //args
             var argPath =
                 app.Argument("Files", "File paths", multipleValues: true);
@@ -153,14 +161,18 @@ namespace FreeMote.Tools.EmtConvert
             {
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
                 uint? newKey = optNewKey.HasValue() ? optNewKey.ParsedValue : (uint?) null;
+                var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
+                bool hasSetOutputPath = !string.IsNullOrEmpty(outputPath);
+                bool hasSetOutputFolder = hasSetOutputPath && Directory.Exists(outputPath);
 
-                foreach (var s in argPath.Values)
+                void Process(string s, string outputFilePath = null)
                 {
                     if (!string.IsNullOrEmpty(s) && File.Exists(s))
                     {
                         if (key != null && newKey != null) //Transfer
                         {
-                            File.WriteAllBytes(Path.ChangeExtension(s, ".converted.psb"),
+                            var savePath = GetOutputPath(Path.ChangeExtension(s, ".converted.psb"), outputFilePath);
+                            File.WriteAllBytes(savePath,
                                 PsbFile.Transfer(key.Value, newKey.Value, File.ReadAllBytes(s)));
                         }
                         else
@@ -175,7 +187,8 @@ namespace FreeMote.Tools.EmtConvert
                                     TlgImageConverter converter = new TlgImageConverter();
                                     var br = new BinaryReader(stream);
                                     var img = converter.Read(br);
-                                    img.Save(Path.ChangeExtension(s, ".png"), ImageFormat.Png);
+                                    var savePath = GetOutputPath(Path.ChangeExtension(s, ".png"), outputFilePath);
+                                    img.Save(savePath, ImageFormat.Png);
                                 }
                                 catch (Exception e)
                                 {
@@ -184,13 +197,25 @@ namespace FreeMote.Tools.EmtConvert
                             }
                             else
                             {
-                                Convert(key, s);
+                                Convert(key, s, outputFilePath);
                             }
                         }
                     }
                     else
                     {
                         Console.WriteLine($"Input path not found: {s}");
+                    }
+                }
+
+                if (argPath.Values.Count == 1 && hasSetOutputPath)
+                {
+                    Process(argPath.Value, outputPath);
+                }
+                else
+                {
+                    foreach (var s in argPath.Values)
+                    {
+                        Process(s, hasSetOutputFolder ? outputPath : null);
                     }
                 }
             });
@@ -285,17 +310,19 @@ Example:
 ";
             //options
             var optType = packCmd.Option("-s|--shell <SHELL>", "Set shell type. No need to specify if unpack", CommandOptionType.SingleValue);
+            var optOutputPath = packCmd.Option<string>("-o|--output", "Set output file path. May overwrite your original files!", CommandOptionType.SingleValue);
             //args
             var argPsbPaths = packCmd.Argument("PSB", "MDF/PSB Paths", true);
 
             packCmd.OnExecute(() =>
             {
                 string type = optType.HasValue() ? optType.Value() : null;
+                var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
                 foreach (var s in argPsbPaths.Values)
                 {
                     if (File.Exists(s))
                     {
-                        ShellConvert(s, type);
+                        ShellConvert(s, type, null, outputPath);
                     }
                     else
                     {
@@ -316,12 +343,13 @@ Example:
 ";
             //options
             var optMethod = pixelCmd.Option<PsbImageConvertMethod>("-m|--method <METHOD>", "Set convert method", CommandOptionType.SingleValue);
-
+            var optOutputPath = pixelCmd.Option<string>("-o|--output", "Set output file path. May overwrite your original files!", CommandOptionType.SingleValue);
             //args
             var argPaths = pixelCmd.Argument("Image", "Image Paths", true);
 
             pixelCmd.OnExecute(() =>
             {
+                var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
                 if (!optMethod.HasValue())
                 {
                     Console.WriteLine("Convert Method is not specified!");
@@ -345,7 +373,8 @@ Example:
                                 TlgImageConverter converter = new TlgImageConverter();
                                 var br = new BinaryReader(stream);
                                 var img = converter.Read(br);
-                                img.Save(Path.ChangeExtension(path, ".converted.png"), ImageFormat.Png);
+                                var savePath = GetOutputPath(Path.ChangeExtension(path, ".converted.png"), outputPath);
+                                img.Save(savePath, ImageFormat.Png);
                             }
                             else
                             {
@@ -356,7 +385,8 @@ Example:
                                     var tlgBytes = context.BitmapToResource(PsbCompressType.Tlg.ToExtensionString(), PsbSpec.none, img);
                                     if (tlgBytes is {Length: > 0})
                                     {
-                                        File.WriteAllBytes(Path.ChangeExtension(path, ".converted.tlg"), tlgBytes);
+                                        var savePath = GetOutputPath(Path.ChangeExtension(path, ".converted.tlg"), outputPath);
+                                        File.WriteAllBytes(savePath, tlgBytes);
                                     }
                                     else
                                     {
@@ -443,7 +473,8 @@ Example:
                             continue;
                     }
 
-                    RL.ConvertToImageFile(bts, Path.ChangeExtension(path, ".converted.png"), width, height, PsbImageFormat.png);
+                    var saveImgPath = GetOutputPath(Path.ChangeExtension(path, ".converted.png"), outputPath);
+                    RL.ConvertToImageFile(bts, saveImgPath, width, height, PsbImageFormat.png);
                 }
             });
         }
@@ -459,7 +490,7 @@ Example:
 ";
             //options
             var optMethod = fixCmd.Option<PsbFixMethod>("-m|--method <METHOD>", "Set fix method.", CommandOptionType.SingleValue);
-
+            var optOutputPath = fixCmd.Option<string>("-o|--output", "Set output file path. May overwrite your original files!", CommandOptionType.SingleValue);
             //args
             var argPsbPaths = fixCmd.Argument("PSB", "PSB Paths", true);
 
@@ -470,7 +501,13 @@ Example:
                     Console.WriteLine("Fix Method is not specified!");
                     return;
                 }
-
+                var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
+                bool hasSetOutputPath = !string.IsNullOrEmpty(outputPath);
+                bool hasSetOutputFolder = hasSetOutputPath && Directory.Exists(outputPath);
+                if (!hasSetOutputFolder)
+                {
+                    outputPath = null;
+                }
                 var method = optMethod.ParsedValue;
                 foreach (var s in argPsbPaths.Values)
                 {
@@ -488,8 +525,9 @@ Example:
                             PSB psb = new PSB(s);
                             if (psb.FixMotionMetadata())
                             {
-                                psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
-                                Console.WriteLine("Fixed!");
+                                var savePath = GetOutputPath(Path.ChangeExtension(s, ".fixed.psb"), outputPath);
+                                psb.BuildToFile(savePath);
+                                Console.WriteLine($"Fixed output: {savePath}");
                             }
                             else
                             {
@@ -503,8 +541,9 @@ Example:
                             PSB psb = new PSB(s);
                             if (psb.FixTimelineContentValueType())
                             {
-                                psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
-                                Console.WriteLine("Fixed!");
+                                var savePath = GetOutputPath(Path.ChangeExtension(s, ".fixed.psb"), outputPath);
+                                psb.BuildToFile(savePath);
+                                Console.WriteLine($"Fixed output: {savePath}");
                             }
                             else
                             {
@@ -518,8 +557,9 @@ Example:
                             PSB psb = new PSB(s);
                             if (psb.FixTextureSize())
                             {
-                                psb.BuildToFile(Path.ChangeExtension(s, ".fixed.psb"));
-                                Console.WriteLine("Fixed!");
+                                var savePath = GetOutputPath(Path.ChangeExtension(s, ".fixed.psb"), outputPath);
+                                psb.BuildToFile(savePath);
+                                Console.WriteLine($"Fixed output: {savePath}");
                             }
                             else
                             {
@@ -555,6 +595,7 @@ Example:
             var optMdfKeyLen = mdfCmd.Option<uint>("-l|--length <LEN>", "Set key length. Usually use 131. If not set, it will be the length of the file (usually you don't expect this).", CommandOptionType.SingleValue);
             var optSuffixList = mdfCmd.Option("-x|--suffix <SUFFIX>", "Set expire_suffix_list if the file name is not correctly named.", CommandOptionType.MultipleValue);
             var optRaw = mdfCmd.Option("-r|--raw", "Only perform MT19937 decryption, output pure MDF", CommandOptionType.NoValue);
+            var optOutputPath = mdfCmd.Option<string>("-o|--output", "Set output file path. May overwrite your original files!", CommandOptionType.SingleValue);
             //args
             var argPsbPaths = mdfCmd.Argument("PSB", "PSB Paths", true);
 
@@ -563,23 +604,32 @@ Example:
                 var suffixList = optSuffixList.HasValue() ? optSuffixList.Values : null;
                 string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                 string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
+                var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
+                bool hasSetOutputPath = !string.IsNullOrEmpty(outputPath);
+                bool hasSetOutputFolder = hasSetOutputPath && Directory.Exists(outputPath);
                 if (string.IsNullOrEmpty(key) && string.IsNullOrEmpty(seed))
                 {
                     //throw new ArgumentNullException(nameof(key), "No key or seed specified.");
                     Console.WriteLine("No key or seed specified. Packing to pure MDF.");
 
-                    foreach (var s in argPsbPaths.Values)
+                    if (argPsbPaths.Values.Count == 1 && hasSetOutputPath)
                     {
-                        if (File.Exists(s))
+                        ShellConvert(argPsbPaths.Value, "MDF", null, outputPath);
+                    }
+                    else
+                    {
+                        foreach (var s in argPsbPaths.Values)
                         {
-                            ShellConvert(s, "MDF");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Input path not found: {s}");
+                            if (File.Exists(s))
+                            {
+                                ShellConvert(s, "MDF", null, hasSetOutputFolder ? outputPath : null);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Input path not found: {s}");
+                            }
                         }
                     }
-
                     return;
                 }
 
@@ -590,78 +640,88 @@ Example:
                     context[Context_MdfKeyLength] = keyLen;
                 }
 
-                foreach (var s in argPsbPaths.Values)
+                void Pack(string s, string outputFilePath = null)
                 {
-                    if (File.Exists(s))
+                    if (!File.Exists(s)) return;
+                    var fileName = Path.GetFileName(s);
+
+                    string finalSeed = seed;
+                    if (key != null)
                     {
-                        var fileName = Path.GetFileName(s);
+                        finalSeed = key + fileName;
+                    }
 
-                        string finalSeed = seed;
-                        if (key != null)
-                        {
-                            finalSeed = key + fileName;
-                        }
+                    if (optRaw.HasValue())
+                    {
+                        var ms = PsbExtension.EncodeMdf(File.OpenRead(s), finalSeed, keyLen.HasValue ? (int) keyLen : null, true);
+                        var savePath = GetOutputPath(Path.ChangeExtension(s, ".converted.mdf"), outputFilePath);
+                        File.WriteAllBytes(savePath, ms.ToArray());
+                        return;
+                    }
 
-                        if (optRaw.HasValue())
-                        {
-                            var ms = PsbExtension.EncodeMdf(File.OpenRead(s), finalSeed, keyLen.HasValue ? (int) keyLen : null, true);
-                            File.WriteAllBytes(Path.ChangeExtension(s, ".converted.mdf"), ms.ToArray());
-                            continue;
-                        }
-
-                        context[Context_FileName] = fileName;
-                        context[Context_MdfKey] = finalSeed;
+                    context[Context_FileName] = fileName;
+                    context[Context_MdfKey] = finalSeed;
                         
-                        var success = ShellConvert(s, "", context); //Unpack
+                    var success = ShellConvert(s, "", context); //Unpack
 
-                        if (!success)
+                    if (!success)
+                    {
+                        Regex RealNameRegex = new Regex(@"[A-Za-z0-9_-]+\.[A-Za-z0-9]+\.m");
+                        var realName = fileName;
+                        if (RealNameRegex.IsMatch(fileName))
                         {
-                            Regex RealNameRegex = new Regex(@"[A-Za-z0-9_-]+\.[A-Za-z0-9]+\.m");
-                            var realName = fileName;
-                            if (RealNameRegex.IsMatch(fileName))
+                            realName = RealNameRegex.Match(fileName).Value;
+                        }
+
+                        if (realName != fileName)
+                        {
+                            if (key != null)
                             {
-                                realName = RealNameRegex.Match(fileName).Value;
+                                finalSeed = key + realName;
                             }
 
-                            if (realName != fileName)
+                            context[Context_MdfKey] = finalSeed;
+                            if (ShellConvert(s, "", context, outputFilePath))
                             {
-                                if (key != null)
-                                {
-                                    finalSeed = key + realName;
-                                }
-
-                                context[Context_MdfKey] = finalSeed;
-                                if (ShellConvert(s, "", context))
-                                {
-                                    goto CONVERT_OK;
-                                }
+                                return;
                             }
+                        }
                             
-                            if (suffixList != null)
+                        if (suffixList != null)
+                        {
+                            foreach (var suffix in suffixList)
                             {
-                                foreach (var suffix in suffixList)
+                                var allPossibleNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(fileName, suffix);
+
+                                foreach (var possibleName in allPossibleNames)
                                 {
-                                    var allPossibleNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(fileName, suffix);
-
-                                    foreach (var possibleName in allPossibleNames)
+                                    finalSeed = seed;
+                                    if (key != null)
                                     {
-                                        finalSeed = seed;
-                                        if (key != null)
-                                        {
-                                            finalSeed = key + possibleName;
-                                        }
+                                        finalSeed = key + possibleName;
+                                    }
 
-                                        context[Context_MdfKey] = finalSeed;
-                                        if (ShellConvert(s, "", context))
-                                        {
-                                            goto CONVERT_OK;
-                                        }
+                                    context[Context_MdfKey] = finalSeed;
+                                    if (ShellConvert(s, "", context, outputFilePath))
+                                    {
+                                        return;
                                     }
                                 }
                             }
                         }
                     }
-                    CONVERT_OK: ;
+                }
+
+                if (argPsbPaths.Values.Count == 1 && hasSetOutputPath)
+                {
+                    Pack(argPsbPaths.Value, outputPath);
+                }
+                else
+                {
+                    foreach (var s in argPsbPaths.Values)
+                    {
+                        Pack(s, hasSetOutputFolder ? outputPath : null);
+                    }
                 }
             });
         }
@@ -753,7 +813,7 @@ Example:
             }
         }
         
-        private static bool ShellConvert(string path, string type, Dictionary<string, object> context = null)
+        private static bool ShellConvert(string path, string type, Dictionary<string, object> context = null, string outputPath = null)
         {
             try
             {
@@ -776,14 +836,16 @@ Example:
                     }
 
                     Console.WriteLine($"[{type}] Shell applied for {path}");
-                    File.WriteAllBytes(path + "." + type, mms.ToArray());
+                    var savePath = GetOutputPath(path + "." + type, outputPath);
+                    File.WriteAllBytes(savePath, mms.ToArray());
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(type) || currentType == type)
                     {
                         Console.WriteLine($"Shell Type [{currentType}] detected for {path}");
-                        File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
+                        var savePath = GetOutputPath(Path.ChangeExtension(path, ".decompressed.psb"), outputPath);
+                        File.WriteAllBytes(savePath, ms.ToArray());
                     }
                     else
                     {
@@ -795,7 +857,8 @@ Example:
                         }
 
                         Console.WriteLine($"[{type}] Shell applied for {path}");
-                        File.WriteAllBytes(Path.ChangeExtension(path, $".compressed.{type.ToLowerInvariant()}"), mms.ToArray());
+                        var savePath = GetOutputPath(Path.ChangeExtension(path, $".compressed.{type.ToLowerInvariant()}"), outputPath);
+                        File.WriteAllBytes(savePath, mms.ToArray());
                     }
                 }
             }
@@ -865,7 +928,7 @@ Example:
             }
         }
 
-        static bool Convert(uint? key, string path)
+        static bool Convert(uint? key, string path, string outputPath = null)
         {
             if (!File.Exists(path))
             {
@@ -898,7 +961,8 @@ Example:
                     }
                     else if (hasShell)
                     {
-                        File.WriteAllBytes(Path.ChangeExtension(path, ".decompressed.psb"), ms.ToArray());
+                        var savePath = GetOutputPath(Path.ChangeExtension(path, ".decompressed.psb"), outputPath);
+                        File.WriteAllBytes(savePath, ms.ToArray());
                         return true;
                     }
                     else
@@ -918,13 +982,15 @@ Example:
                         {
                             //psb.EncodeToFile(key.Value, path + ".decrypted", EncodeMode.Decrypt);
                             PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
-                            File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
+                            var savePath = GetOutputPath(Path.ChangeExtension(path, ".pure.psb"), outputPath);
+                            File.WriteAllBytes(savePath, outMs.ToArray());
                         }
                         else
                         {
                             //psb.EncodeToFile(key.Value, path + ".encrypted", EncodeMode.Encrypt);
                             PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
-                            File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
+                            var savePath = GetOutputPath(Path.ChangeExtension(path, ".encrypted.psb"), outputPath);
+                            File.WriteAllBytes(savePath, outMs.ToArray());
                         }
                     }
                     else
@@ -932,12 +998,14 @@ Example:
                         if (PsbFile.TestBodyEncrypted(br, header)) //Decrypt
                         {
                             PsbFile.Encode(key.Value, EncodeMode.Decrypt, EncodePosition.Auto, stream, outMs);
-                            File.WriteAllBytes(Path.ChangeExtension(path, ".pure.psb"), outMs.ToArray());
+                            var savePath = GetOutputPath(Path.ChangeExtension(path, ".pure.psb"), outputPath);
+                            File.WriteAllBytes(savePath, outMs.ToArray());
                         }
                         else
                         {
                             PsbFile.Encode(key.Value, EncodeMode.Encrypt, EncodePosition.Auto, stream, outMs);
-                            File.WriteAllBytes(Path.ChangeExtension(path, ".encrypted.psb"), outMs.ToArray());
+                            var savePath = GetOutputPath(Path.ChangeExtension(path, ".encrypted.psb"), outputPath);
+                            File.WriteAllBytes(savePath, outMs.ToArray());
                         }
                     }
                 }
@@ -950,6 +1018,36 @@ Example:
             }
 
             return true;
+        }
+
+        private static string GetOutputPath(string defaultPath, string outputPath)
+        {
+            string savePath;
+            if (!string.IsNullOrEmpty(outputPath))
+            {
+                if (Directory.Exists(outputPath))
+                {
+                    savePath = Path.Combine(outputPath, Path.GetFileName(defaultPath));
+                }
+                else if (_allowedExtensions.Contains(Path.GetExtension(outputPath)))
+                {
+                    savePath = outputPath;
+                    if (File.Exists(savePath))
+                    {
+                        Logger.LogWarn($"[WARN] Output path already exists and will be overwritten: {savePath}");
+                    }
+                }
+                else
+                {
+                    Logger.LogWarn($"[WARN] Output path is not valid: {outputPath} . Using default path: {defaultPath}");
+                    savePath = defaultPath;
+                }
+            }
+            else
+            {
+                savePath = defaultPath;
+            }
+            return savePath;
         }
     }
 }

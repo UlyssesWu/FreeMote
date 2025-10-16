@@ -75,7 +75,7 @@ namespace FreeMote.Tests
             //var path = Path.Combine(resPath, "dx_ふかみ_駅員服.psb");
             var path = Path.Combine(ResPath, "dx_ふかみ_駅員服.lz4.psb");
             var jsonPath = Path.Combine(ResPath, "dx_ふかみ_駅員服.json");
-            PsbCompiler.InplaceReplaceToFile(path, jsonPath);
+            PsbCompiler.InplaceReplaceToFile(path, jsonPath, path + ".IR.psb");
         }
 
 
