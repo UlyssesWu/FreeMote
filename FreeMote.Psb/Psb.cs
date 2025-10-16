@@ -326,7 +326,7 @@ namespace FreeMote.Psb
                 //don't believe HeaderLength
                 if (Header.HeaderLength >= br.BaseStream.Length)
                 {
-                    Header.HeaderLength = Header.GetHeaderLength();
+                    Header.HeaderLength = (uint)Header.GetHeaderLength();
                 }
                 br.BaseStream.Seek(Header.HeaderLength, SeekOrigin.Begin);
                 NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
@@ -1199,7 +1199,7 @@ namespace FreeMote.Psb
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms, Encoding);
             bw.Pad((int)Header.GetHeaderLength());
-            Header.HeaderLength = Header.GetHeaderLength();
+            Header.HeaderLength = (uint)Header.GetHeaderLength();
 
             #region Compile Names
 
@@ -1233,7 +1233,7 @@ namespace FreeMote.Psb
             else
             {
                 //Compile Names
-                PrefixTree.Build(Names, out var tNames, out var trie, out var tOffsets);
+                PrefixTree.Build(Names, Consts.OptimizeMode, out var tNames, out var trie, out var tOffsets);
                 //Mark Offset Names
                 Header.OffsetNames = (uint) bw.BaseStream.Position;
 
@@ -1537,7 +1537,7 @@ namespace FreeMote.Psb
             }
         }
 
-        private static int GetWritePriority(PsbObjType t)
+        private static int GetWritePriority(PsbObjType? t)
         {
             return t switch
             {
@@ -1552,6 +1552,7 @@ namespace FreeMote.Psb
                 PsbObjType.NumberN2 => 4,
                 PsbObjType.ResourceN1 => 4,
                 PsbObjType.StringN2 => 5,
+                null => 0,
                 _ => 10
             };
         }
@@ -1576,8 +1577,8 @@ namespace FreeMote.Psb
                 var pairs = pDic.ToList();
                 pairs.Sort((p1, p2) =>
                 {
-                    var p1p = GetWritePriority(p1.Value.Type);
-                    var p2p = GetWritePriority(p2.Value.Type);
+                    var p1p = GetWritePriority(p1.Value?.Type);
+                    var p2p = GetWritePriority(p2.Value?.Type);
                     //if (p1p == p2p)
                     //{
                     //    return _nameIndexes[p1.Key] - _nameIndexes[p2.Key];
@@ -2109,7 +2110,7 @@ namespace FreeMote.Psb
             if (!arriveEnd && (Header.Version >= 4 || probe == (int)PsbObjType.ArrayN1 || probe == (int)PsbObjType.ArrayN2))
             {
                 Header.Version = 4;
-                Header.HeaderLength = PsbHeader.GetHeaderLength(Header.Version);
+                Header.HeaderLength = (uint)PsbHeader.GetHeaderLength(Header.Version);
                 Header.OffsetExtraChunkOffsets = pos1;
                 Header.OffsetExtraChunkLengths = pos2;
                 ExtraChunkOffsets = array1;

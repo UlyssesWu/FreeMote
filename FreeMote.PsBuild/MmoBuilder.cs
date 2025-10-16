@@ -290,11 +290,15 @@ namespace FreeMote.PsBuild
                         var width = ((PsbNumber)iconItem["width"]).AsInt;
                         var rl = iconItem["compress"] is PsbString s && s.Value.ToUpperInvariant() == "RL";
                         var res = (PsbResource)iconItem["pixel"];
-                        var texture = rl
-                            ? RL.DecompressToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat())
-                            : RL.ConvertToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat());
+                        if (res != null)
+                        {
+                            var texture = rl
+                                ? RL.DecompressToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat())
+                                : RL.ConvertToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat());
 
-                        iconItem["image"] = BuildSourceImage(texture);
+                            iconItem["image"] = BuildSourceImage(texture);
+                        }
+
                         iconItem.Remove("compress");
                         iconItem.Remove("pixel");
                         iconList.Add(iconItem);
@@ -406,9 +410,9 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["marker"] = PsbNumber.Zero;
                     objectChildrenItem["metadata"] = motionItem["metadata"] is PsbNull ? FillDefaultMetadata() : motionItem["metadata"]; //TODO: should we set all to default?
                     var parameter = (PsbList)motionItem["parameter"];
-                    objectChildrenItem["parameterize"] = motionItem["parameterize"] is PsbNull
-                        ? FillDefaultParameterize()
-                        : parameter[((PsbNumber)motionItem["parameterize"]).IntValue];
+                    objectChildrenItem["parameterize"] = motionItem.ContainsKey("parameterize") && motionItem["parameterize"] is not PsbNull ? 
+                        parameter[((PsbNumber)motionItem["parameterize"]).IntValue]
+                        : FillDefaultParameterize();
                     objectChildrenItem["priorityFrameList"] = BuildPriorityFrameList((PsbList)motionItem["priority"]);
                     objectChildrenItem["referenceModelFileList"] = motionItem["referenceModelFileList"];
                     objectChildrenItem["referenceProjectFileList"] = motionItem["referenceProjectFileList"];
@@ -1055,6 +1059,10 @@ namespace FreeMote.PsBuild
             //};
 
             var metadata = (PsbDictionary)psb.Objects["metadata"];
+            if (metadata == null)
+            {
+                return metaFormat;
+            }
             if (metadata["base"] is PsbDictionary baseDic)
             {
                 var baseChara = baseDic.Children("chara");

@@ -217,24 +217,24 @@ namespace FreeMote
             return Checksum;
         }
 
-        public static uint GetHeaderLength(ushort version)
+        public static int GetHeaderLength(ushort version)
         {
             if (version < 3)
             {
-                return 40u;
+                return 40;
             }
             if (version > 3)
             {
-                return 56u;
+                return 56;
             }
-            return 44u;
+            return 44;
         }
 
         /// <summary>
         /// Get Header Length based on Version
         /// </summary>
         /// <returns></returns>
-        public uint GetHeaderLength()
+        public int GetHeaderLength()
         {
             return GetHeaderLength(Version);
         }
@@ -288,7 +288,7 @@ namespace FreeMote
                 bw.Write(Signature);
                 bw.Write(Version);
                 bw.Write(HeaderEncrypt);
-                bw.Write(Version == 1? HeaderLength : GetHeaderLength());
+                bw.Write(Version == 1 ? HeaderLength : (uint) GetHeaderLength()); //FIXED: may write long!
                 bw.Write(OffsetNames);
                 bw.Write(OffsetStrings);
                 bw.Write(OffsetStringsData);

@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.IO.MemoryMappedFiles;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
 using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
-using static FreeMote.Psb.PsbExtension;
 
 namespace FreeMote.Tools.PsBuild
 {
@@ -61,7 +54,9 @@ namespace FreeMote.Tools.PsBuild
                 CommandOptionType.NoValue, true);
             var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
                 CommandOptionType.SingleValue, inherited: true);
-            var optFastMode = app.Option<bool>("-o0|--fast", "Disable compile optimization, good for speed but bad for output size.", CommandOptionType.NoValue, true);
+            var optFastMode = app.Option<bool>("-O0|--fast", "Disable compile optimization, good for speed but bad for output size.", CommandOptionType.NoValue, true);
+            optFastMode.ShowInHelpText = false;
+            var optOptSizeMode = app.Option<bool>("-Os|--opt-size", "Enable compile optimization, bad for speed but good for output size.", CommandOptionType.NoValue, true);
             //var optOutputPath =
             //  app.Option<string>("-o|--output", "(TODO:)Set output directory or file name.", CommandOptionType.SingleValue);
             //TODO: If set dir, ok; if set filename, only works for the first
@@ -220,6 +215,11 @@ Example:
                         keepRaw = true;
                     }
 
+                    if (optOptSizeMode.HasValue())
+                    {
+                        OptimizeMode = true;
+                    }
+
                     if (optFastMode.HasValue())
                     {
                         OptimizeMode = false;
@@ -308,6 +308,11 @@ Example:
                 if (optDouble.HasValue())
                 {
                     JsonUseDoubleOnly = true;
+                }
+
+                if (optOptSizeMode.HasValue())
+                {
+                    OptimizeMode = true;
                 }
 
                 if (optFastMode.HasValue())

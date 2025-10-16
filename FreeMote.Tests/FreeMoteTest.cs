@@ -57,10 +57,54 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestBTree()
         {
-            var list = new List<string> {"aabc", "deff", "acebdf"};
+            var list = new List<string> {"aabc", "deff", "acebdff"};
             PrefixTree prefixTree = new PrefixTree(list);
-            PrefixTree.Build(list, out var names, out var tree, out var offsets);
+            //PrefixTree.Build(list, false, out var names, out var tree, out var offsets);
 
+            PrefixTree.Build(list, true, out var names2, out var tree2, out var offsets2);
+            Console.WriteLine();
+        }
+
+        [TestMethod]
+        public void TestPrefixTreeOptimization()
+        {
+            // Test data with sparse character distribution to demonstrate optimization
+            var testStrings = new List<string>
+            {
+                "apple", "application", "apply", "banana", "band", "zebra", "zero", "test", "testing", "tensor", "苹果", "苹方", "水果", "こんにちは"
+            };
+
+            Console.WriteLine($"Testing PrefixTree optimization with {testStrings.Count} strings");
+            
+            // Test without optimization
+            var tree1 = PrefixTree.Build(testStrings, false, out var names1, out var tree1Data, out var offsets1);
+            Console.WriteLine($"Without optimization - Tree: {tree1Data.Count}, Offsets: {offsets1.Count}, Tree zeros: {tree1Data.Count(x => x == 0)}");
+            
+            // Test with optimization
+            var tree2 = PrefixTree.Build(testStrings, true, out var names2, out var tree2Data, out var offsets2);
+            Console.WriteLine($"With optimization - Tree: {tree2Data.Count}, Offsets: {offsets2.Count}, Tree zeros: {tree2Data.Count(x => x == 0)}");
+            
+            // Verify compatibility - both should produce the same results
+            var result1 = PrefixTree.Load(names1, tree1Data, offsets1);
+            var result2 = PrefixTree.Load(names2, tree2Data, offsets2);
+            
+            Assert.AreEqual(result1.Count, result2.Count, "Result counts should match");
+            
+            for (int i = 0; i < result1.Count; i++)
+            {
+                Assert.AreEqual(result1[i], result2[i], $"Results should match at index {i}");
+            }
+            
+            // Calculate and verify optimization benefit
+            var originalSize = tree1Data.Count + offsets1.Count;
+            var optimizedSize = tree2Data.Count + offsets2.Count;
+            
+            Console.WriteLine($"Original size: {originalSize}, Optimized size: {optimizedSize}");
+            Console.WriteLine($"Size reduction: {originalSize - optimizedSize} ({(double)(originalSize - optimizedSize) / originalSize * 100:F1}%)");
+            
+            // The optimization should reduce storage in most cases with sparse character distributions
+            // Allow for cases where optimization might not help much with very small datasets
+            Assert.IsTrue(optimizedSize <= originalSize, "Optimized version should not use more storage");
         }
 
         [TestMethod]
