@@ -627,7 +627,7 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = new MemoryStream(bodyBytes, 0, len, true);
+                        var ms = new MemoryStream(bodyBytes, 0, len, false);
                         MemoryStream mms = null;
                         byte[] mdfDecompressed = null;
                         int mdfDecompressedLength = 0;
@@ -653,7 +653,7 @@ namespace FreeMote.PsBuild
                                     if (mdfOptimizedMode)
                                     {
                                         MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
-                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, true);
+                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, false);
                                     }
                                     else
                                     {
@@ -663,7 +663,7 @@ namespace FreeMote.PsBuild
                                 catch (InvalidDataException e)
                                 {
                                     ms.Dispose();
-                                    ms = new MemoryStream(bodyBytes, 0, len, true);
+                                    ms = new MemoryStream(bodyBytes, 0, len, false);
                                     mms = null;
                                 }
 
@@ -787,7 +787,7 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = new MemoryStream(bodyBytes, 0, len, true);
+                        var ms = new MemoryStream(bodyBytes, 0, len, false);
                         MemoryStream mms = null;
                         byte[] mdfDecompressed = null;
                         int mdfDecompressedLength = 0;
@@ -813,7 +813,7 @@ namespace FreeMote.PsBuild
                                     if (mdfOptimizedMode)
                                     {
                                         MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
-                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, true);
+                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, false);
                                     }
                                     else
                                     {
@@ -823,13 +823,13 @@ namespace FreeMote.PsBuild
                                     {
                                         Logger.Log($"  bad decompression detected for key name: {possibleFileName}, size {len} -> {mms.Length}");
                                         ms.Dispose();
-                                        ms = new MemoryStream(bodyBytes, 0, len, true);
+                                        ms = new MemoryStream(bodyBytes, 0, len, false);
                                         mms = null;
                                     }
                                 }
                                 catch (InvalidDataException)
                                 {
-                                    ms = new MemoryStream(bodyBytes, 0, len, true);
+                                    ms = new MemoryStream(bodyBytes, 0, len, false);
                                     mms = null;
                                 }
 
