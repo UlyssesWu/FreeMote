@@ -627,13 +627,15 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = new MemoryStream(bodyBytes);
+                        var ms = new MemoryStream(bodyBytes, 0, len, true);
                         MemoryStream mms = null;
                         byte[] mdfDecompressed = null;
+                        int mdfDecompressedLength = 0;
                         var mdfOptimizedMode = shellType == MdfShell.ShellName && Consts.FastMode;
                         if (mdfOptimizedMode) //optimized for decompressed size known shell
                         {
-                            mdfDecompressed = ArrayPool<byte>.Shared.Rent(ms.MdfGetOriginalLength());
+                            mdfDecompressedLength = ms.MdfGetOriginalLength();
+                            mdfDecompressed = ArrayPool<byte>.Shared.Rent(mdfDecompressedLength);
                         }
 
                         if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
@@ -651,7 +653,7 @@ namespace FreeMote.PsBuild
                                     if (mdfOptimizedMode)
                                     {
                                         MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
-                                        mms = new MemoryStream(mdfDecompressed);
+                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, true);
                                     }
                                     else
                                     {
@@ -661,7 +663,7 @@ namespace FreeMote.PsBuild
                                 catch (InvalidDataException e)
                                 {
                                     ms.Dispose();
-                                    ms = new MemoryStream(bodyBytes);
+                                    ms = new MemoryStream(bodyBytes, 0, len, true);
                                     mms = null;
                                 }
 
@@ -785,13 +787,15 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = new MemoryStream(bodyBytes);
+                        var ms = new MemoryStream(bodyBytes, 0, len, true);
                         MemoryStream mms = null;
                         byte[] mdfDecompressed = null;
+                        int mdfDecompressedLength = 0;
                         var mdfOptimizedMode = shellType == MdfShell.ShellName && Consts.FastMode;
                         if (mdfOptimizedMode) //optimized for decompressed size known shell
                         {
-                            mdfDecompressed = ArrayPool<byte>.Shared.Rent(ms.MdfGetOriginalLength());
+                            mdfDecompressedLength = ms.MdfGetOriginalLength();
+                            mdfDecompressed = ArrayPool<byte>.Shared.Rent(mdfDecompressedLength);
                         }
 
                         if (!string.IsNullOrEmpty(shellType) && possibleFileNames.Count > 0)
@@ -809,7 +813,7 @@ namespace FreeMote.PsBuild
                                     if (mdfOptimizedMode)
                                     {
                                         MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
-                                        mms = new MemoryStream(mdfDecompressed);
+                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, true);
                                     }
                                     else
                                     {
@@ -819,13 +823,13 @@ namespace FreeMote.PsBuild
                                     {
                                         Logger.Log($"  bad decompression detected for key name: {possibleFileName}, size {len} -> {mms.Length}");
                                         ms.Dispose();
-                                        ms = new MemoryStream(bodyBytes);
+                                        ms = new MemoryStream(bodyBytes, 0, len, true);
                                         mms = null;
                                     }
                                 }
                                 catch (InvalidDataException)
                                 {
-                                    ms = new MemoryStream(bodyBytes);
+                                    ms = new MemoryStream(bodyBytes, 0, len, true);
                                     mms = null;
                                 }
 
