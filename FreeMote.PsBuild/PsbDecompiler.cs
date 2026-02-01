@@ -627,14 +627,14 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = new MemoryStream(bodyBytes, 0, len, false);
-                        MemoryStream mms = null;
+                        var bodyStream = new MemoryStream(bodyBytes, 0, len, false);
+                        MemoryStream mdfStream = null;
                         byte[] mdfDecompressed = null;
                         int mdfDecompressedLength = 0;
                         var mdfOptimizedMode = shellType == MdfShell.ShellName && Consts.FastMode;
                         if (mdfOptimizedMode) //optimized for decompressed size known shell
                         {
-                            mdfDecompressedLength = ms.MdfGetOriginalLength();
+                            mdfDecompressedLength = bodyStream.MdfGetOriginalLength();
                             mdfDecompressed = ArrayPool<byte>.Shared.Rent(mdfDecompressedLength);
                         }
 
@@ -652,22 +652,22 @@ namespace FreeMote.PsBuild
                                 {
                                     if (mdfOptimizedMode)
                                     {
-                                        MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
-                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, false);
+                                        MdfShell.ToPsb(bodyStream, mdfDecompressed, bodyContext);
+                                        mdfStream = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, false);
                                     }
                                     else
                                     {
-                                        mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                                        mdfStream = PsbExtension.MdfConvert(bodyStream, shellType, bodyContext);
                                     }
                                 }
                                 catch (InvalidDataException e)
                                 {
-                                    ms.Dispose();
-                                    ms = new MemoryStream(bodyBytes, 0, len, false);
-                                    mms = null;
+                                    bodyStream.Dispose();
+                                    bodyStream = new MemoryStream(bodyBytes, 0, len, false);
+                                    mdfStream = null;
                                 }
 
-                                if (mms != null)
+                                if (mdfStream != null)
                                 {
                                     //should not change file name, in order to keep repack correct :(
                                     //↑ reverted. If I recalled the reason, I should keep a more detailed note.
@@ -687,22 +687,22 @@ namespace FreeMote.PsBuild
 
                         bool returnedToPool = false;
                         var finalPath = Path.Combine(extractDir, relativePath);
-                        if (mms == null) //no shell
+                        if (mdfStream == null) //no shell
                         {
-                            mms = ms;
+                            mdfStream = bodyStream;
                         }
                         else
                         {
-                            ms?.Dispose();
+                            bodyStream?.Dispose();
                             ArrayPool<byte>.Shared.Return(bodyBytes);
                             returnedToPool = true;
                         }
 
-                        if (extractAll && PsbFile.IsSignaturePsb(mms))
+                        if (extractAll && PsbFile.IsSignaturePsb(mdfStream))
                         {
                             try
                             {
-                                PSB bodyPsb = new PSB(mms);
+                                PSB bodyPsb = new PSB(mdfStream);
                                 DecompileToFile(bodyPsb,
                                     Path.Combine(extractDir, relativePath + ".json"), //important, must keep suffix for rebuild
                                     finalContext, PsbExtractOption.Extract);
@@ -713,19 +713,19 @@ namespace FreeMote.PsBuild
                                 Debug.WriteLine(e);
 #endif
                                 Logger.LogError($"Decompile failed: {pair.Key}");
-                                WriteAllBytes(finalPath, mms);
+                                WriteAllBytes(finalPath, mdfStream);
                                 //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                             }
                         }
                         else
                         {
-                            WriteAllBytes(finalPath, mms);
+                            WriteAllBytes(finalPath, mdfStream);
                             //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                         }
 
                         try
                         {
-                            mms?.Dispose();
+                            mdfStream?.Dispose();
                             if (!returnedToPool)
                             {
                                 ArrayPool<byte>.Shared.Return(bodyBytes);
@@ -787,14 +787,14 @@ namespace FreeMote.PsBuild
                         var finalContext = new Dictionary<string, object>(context);
                         finalContext.Remove(Context_ArchiveSource);
 
-                        var ms = new MemoryStream(bodyBytes, 0, len, false);
-                        MemoryStream mms = null;
+                        var bodyStream = new MemoryStream(bodyBytes, 0, len, false);
+                        MemoryStream mdfStream = null;
                         byte[] mdfDecompressed = null;
                         int mdfDecompressedLength = 0;
                         var mdfOptimizedMode = shellType == MdfShell.ShellName && Consts.FastMode;
                         if (mdfOptimizedMode) //optimized for decompressed size known shell
                         {
-                            mdfDecompressedLength = ms.MdfGetOriginalLength();
+                            mdfDecompressedLength = bodyStream.MdfGetOriginalLength();
                             mdfDecompressed = ArrayPool<byte>.Shared.Rent(mdfDecompressedLength);
                         }
 
@@ -812,28 +812,28 @@ namespace FreeMote.PsBuild
                                 {
                                     if (mdfOptimizedMode)
                                     {
-                                        MdfShell.ToPsb(ms, mdfDecompressed, bodyContext);
-                                        mms = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, false);
+                                        MdfShell.ToPsb(bodyStream, mdfDecompressed, bodyContext);
+                                        mdfStream = new MemoryStream(mdfDecompressed, 0, mdfDecompressedLength, false);
                                     }
                                     else
                                     {
-                                        mms = PsbExtension.MdfConvert(ms, shellType, bodyContext);
+                                        mdfStream = PsbExtension.MdfConvert(bodyStream, shellType, bodyContext);
                                     }
-                                    if (mms.Length < len)
+                                    if (mdfStream.Length < len)
                                     {
-                                        Logger.Log($"  bad decompression detected for key name: {possibleFileName}, size {len} -> {mms.Length}");
-                                        ms.Dispose();
-                                        ms = new MemoryStream(bodyBytes, 0, len, false);
-                                        mms = null;
+                                        Logger.Log($"  bad decompression detected for key name: {possibleFileName}, size {len} -> {mdfStream.Length}");
+                                        bodyStream.Dispose();
+                                        bodyStream = new MemoryStream(bodyBytes, 0, len, false);
+                                        mdfStream = null;
                                     }
                                 }
                                 catch (InvalidDataException)
                                 {
-                                    ms = new MemoryStream(bodyBytes, 0, len, false);
-                                    mms = null;
+                                    bodyStream = new MemoryStream(bodyBytes, 0, len, false);
+                                    mdfStream = null;
                                 }
 
-                                if (mms != null)
+                                if (mdfStream != null)
                                 {
                                     relativePath = possibleFileName.Contains("/") ? possibleFileName :
                                         pair.Key.Contains("/") ? Path.Combine(Path.GetDirectoryName(pair.Key), possibleFileName) :
@@ -851,13 +851,13 @@ namespace FreeMote.PsBuild
                         }
 
                         var finalPath = Path.Combine(extractDir, relativePath);
-                        mms ??= ms;
+                        mdfStream ??= bodyStream;
 
-                        if (extractAll && PsbFile.IsSignaturePsb(mms))
+                        if (extractAll && PsbFile.IsSignaturePsb(mdfStream))
                         {
                             try
                             {
-                                PSB bodyPsb = new PSB(mms);
+                                PSB bodyPsb = new PSB(mdfStream);
                                 DecompileToFile(bodyPsb,
                                     Path.Combine(extractDir, relativePath + ".json"), //important, must keep suffix for rebuild
                                     finalContext, PsbExtractOption.Extract);
@@ -868,17 +868,17 @@ namespace FreeMote.PsBuild
                                 Debug.WriteLine(e);
 #endif
                                 Logger.LogError($"Decompile failed: {pair.Key}");
-                                WriteAllBytes(finalPath, mms);
+                                WriteAllBytes(finalPath, mdfStream);
                                 //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                             }
                         }
                         else
                         {
-                            WriteAllBytes(finalPath, mms);
+                            WriteAllBytes(finalPath, mdfStream);
                             //File.WriteAllBytes(Path.Combine(extractDir, pair.Key + suffix), mms.ToArray());
                         }
 
-                        mms?.Dispose();
+                        mdfStream?.Dispose();
                         ArrayPool<byte>.Shared.Return(bodyBytes);
                         if (mdfOptimizedMode)
                         {
