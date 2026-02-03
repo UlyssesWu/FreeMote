@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -63,6 +63,8 @@ namespace FreeMote.Tools.PsbDecompile
             var optType = app.Option<PsbType>("-t|--type <TYPE>", "Set PSB type manually", CommandOptionType.SingleValue, inherited: true);
             var optDisableCombinedImage = app.Option("-dci|--disable-combined-image",
                 "Output chunk images (pieces) for image (Tachie) PSB (try this if you have problem on image type PSB)", CommandOptionType.NoValue);
+            var optOutputPath = app.Option<string>("-o|--output <PATH>", "Set output folder path.",
+                CommandOptionType.SingleValue, inherited: false);
 
             //args
             var argPath =
@@ -79,6 +81,10 @@ Example:
   PsbDecompile image tachie.psb
   PsbDecompile image sample-resource-folder
 ";
+                //options
+                var optOutputFolder = imageCmd.Option<string>("-o|--output <PATH>",
+                    "Set output folder path. Default=Input file directory",
+                    CommandOptionType.SingleValue);
                 //args
                 var argPsbPath = imageCmd.Argument("Path", "PSB paths or PSB directory paths").IsRequired();
 
@@ -86,6 +92,11 @@ Example:
                 {
                     var enableParallel = !optNoParallel.HasValue();
                     var psbPaths = argPsbPath.Values;
+                    string outputFolder = null;
+                    if (optOutputFolder.HasValue())
+                    {
+                        outputFolder = ResolveOutputFolder(optOutputFolder.Value());
+                    }
 
                     foreach (var psbPath in psbPaths)
                     {
@@ -93,7 +104,7 @@ Example:
                         {
                             try
                             {
-                                PsbDecompiler.ExtractImageFiles(psbPath);
+                                PsbDecompiler.ExtractImageFiles(psbPath, outputFolder: outputFolder);
                             }
                             catch (Exception e)
                             {
@@ -110,7 +121,7 @@ Example:
                                 {
                                     try
                                     {
-                                        PsbDecompiler.ExtractImageFiles(s);
+                                        PsbDecompiler.ExtractImageFiles(s, outputFolder: outputFolder);
                                     }
                                     catch (Exception e)
                                     {
@@ -124,7 +135,7 @@ Example:
                                 {
                                     try
                                     {
-                                        PsbDecompiler.ExtractImageFiles(s);
+                                        PsbDecompiler.ExtractImageFiles(s, outputFolder: outputFolder);
                                     }
                                     catch (Exception e)
                                     {
@@ -222,6 +233,9 @@ Example:
                 var optBody = archiveCmd.Option<string>("-b|--body <PATH>",
                     "Set body.bin path. Default={xxx}_body.bin",
                     CommandOptionType.SingleValue);
+                var optOutputFolder = archiveCmd.Option<string>("-o|--output <PATH>",
+                    "Set output folder path. Default=Input file directory",
+                    CommandOptionType.SingleValue);
                 //var optNoFolder = archiveCmd.Option("-nf|--no-folder",
                 //    "extract all files into source folder root, ignore the folder structure described in info.psb. May overwrite files; Won't be able to repack.",
                 //    CommandOptionType.NoValue);
@@ -294,10 +308,16 @@ Example:
                         context[Context_MdfKeyLength] = (uint) keyLen;
                     }
 
+                    string outputFolder = null;
+                    if (optOutputFolder.HasValue())
+                    {
+                        outputFolder = ResolveOutputFolder(optOutputFolder.Value());
+                    }
+
                     Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
-                        PsbDecompiler.ExtractArchive(s, key, context, bodyPath, outputRaw, extractAll, enableParallel);
+                        PsbDecompiler.ExtractArchive(s, key, context, bodyPath, outputRaw, extractAll, enableParallel, outputFolder);
                     }
 
                     sw.Stop();
@@ -366,18 +386,24 @@ Example:
                     type = optType.ParsedValue;
                 }
 
+                string outputFolder = null;
+                if (optOutputPath.HasValue())
+                {
+                    outputFolder = ResolveOutputFolder(optOutputPath.Value());
+                }
+
                 foreach (var s in argPath.Values)
                 {
                     if (File.Exists(s))
                     {
-                        Decompile(s, useRaw, PsbImageFormat.png, key, type, context);
+                        Decompile(s, useRaw, PsbImageFormat.png, key, type, context, outputFolder);
                     }
                     else if (Directory.Exists(s))
                     {
                         foreach (var file in FreeMoteExtension.GetFiles(s,
                                      new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
-                            Decompile(s, useRaw, PsbImageFormat.png, key, type, context);
+                            Decompile(file, useRaw, PsbImageFormat.png, key, type, context, outputFolder);
                         }
                     }
                 }
@@ -404,8 +430,56 @@ Example:
             return sb.ToString();
         }
 
+        private static bool IsOutputOptionAllowed()
+        {
+            var licensePath = Path.Combine(AppContext.BaseDirectory, "FreeMote.LICENSE.txt");
+            return File.Exists(licensePath);
+        }
+
+        private static string ResolveOutputFolder(string outputPath)
+        {
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                return null;
+            }
+
+            if (!IsOutputOptionAllowed())
+            {               
+                return null;
+            }
+
+            if (File.Exists(outputPath))
+            {
+                Logger.LogWarn($"[WARN] Output path is a file: {outputPath}. Use a folder path instead.");
+                return null;
+            }
+
+            if (!Directory.Exists(outputPath))
+            {
+                Directory.CreateDirectory(outputPath);
+            }
+
+            return Path.GetFullPath(outputPath);
+        }
+
+        private static string GetOutputJsonPath(string inputPath, string outputFolder)
+        {
+            var fileName = Path.GetFileName(inputPath);
+            string outputFileName;
+            if (fileName.EndsWith(".m", StringComparison.OrdinalIgnoreCase))
+            {
+                outputFileName = fileName + ".json";
+            }
+            else
+            {
+                outputFileName = Path.ChangeExtension(fileName, ".json");
+            }
+
+            return Path.Combine(outputFolder, outputFileName);
+        }
+
         static void Decompile(string path, bool keepRaw = false, PsbImageFormat format = PsbImageFormat.png,
-            uint? key = null, PsbType type = PsbType.PSB, Dictionary<string, object> context = null)
+            uint? key = null, PsbType type = PsbType.PSB, Dictionary<string, object> context = null, string outputFolder = null)
         {
             if (path.ToLowerInvariant().EndsWith("_body.bin"))
             {
@@ -425,9 +499,34 @@ Example:
             try
 #endif
             {
-                var (outputPath, psb) = keepRaw
-                    ? PsbDecompiler.DecompileToFile(path, key: key, type: type)
-                    : PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type, contextDic: context);
+                PSB psb;
+                if (string.IsNullOrEmpty(outputFolder))
+                {
+                    var result = keepRaw
+                        ? PsbDecompiler.DecompileToFile(path, key: key, type: type)
+                        : PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type,
+                            contextDic: context);
+                    psb = result.Psb;
+                }
+                else
+                {
+                    var outputPath = GetOutputJsonPath(path, outputFolder);
+                    var decompileContext = context;
+                    if (key != null)
+                    {
+                        decompileContext ??= new Dictionary<string, object>();
+                        decompileContext[Context_CryptKey] = key;
+                    }
+
+                    PsbDecompiler.Decompile(path, out psb, decompileContext, type);
+                    if (type != PsbType.PSB)
+                    {
+                        psb.Type = type;
+                    }
+
+                    var extractOption = keepRaw ? PsbExtractOption.Original : PsbExtractOption.Extract;
+                    PsbDecompiler.DecompileToFile(psb, outputPath, decompileContext, extractOption, format, true, key);
+                }
                 if (psb.Type == PsbType.ArchiveInfo)
                 {
                     Logger.LogWarn(

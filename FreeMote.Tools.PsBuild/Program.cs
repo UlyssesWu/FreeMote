@@ -103,7 +103,7 @@ Example:
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPath = argPsbPath.Value;
                     var texPaths = argTexPaths.Values;
-                    var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
+                    var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
                     Link(psbPath, texPaths, order, outputPath);
                 });
             });
@@ -145,7 +145,7 @@ Example:
                     var portSpec = optPortSpec.ParsedValue;
                     var psbPaths = argPsbPath.Values;
                     var enableResolution = optEnableResolution.HasValue();
-                    var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
+                    var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
                     foreach (var s in psbPaths)
                     {
                         if (File.Exists(s))
@@ -244,7 +244,7 @@ Example:
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
                     int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 131;
-                    string outputFolder = optOutputPath.HasValue() ? optOutputPath.Value() : null;
+                    string outputFolder = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
                     bool hasSetOutputFolder = !string.IsNullOrEmpty(outputFolder) && Directory.Exists(outputFolder);
 
                     Stopwatch sw = Stopwatch.StartNew();
@@ -280,7 +280,7 @@ Example:
                         return;
                     }
                     var outputPath = Path.ChangeExtension(argPsbPath.Value, "IR.psb");
-                    var savePath = GetOutputPath(outputPath, optOutputPath.HasValue() ? optOutputPath.Value() : null);
+                    var savePath = GetOutputPath(outputPath, optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null);
                     PsbCompiler.InplaceReplaceToFile(argPsbPath.Value, argJsonPath.Value, savePath);
                     Console.WriteLine($"In-place Replace output: {savePath}");
                 });
@@ -311,7 +311,7 @@ Example:
                 PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : null;
                 var canRename = !optNoRename.HasValue();
                 var canPack = !optNoShell.HasValue();
-                var outputPath = optOutputPath.HasValue() ? optOutputPath.Value() : null;
+                var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
                 bool hasSetOutputPath = !string.IsNullOrEmpty(outputPath);
                 bool hasSetOutputFolder = hasSetOutputPath && Directory.Exists(outputPath);
 
@@ -367,6 +367,27 @@ Example:
                 savePath = defaultPath;
             }
             return savePath;
+        }
+
+        private static bool IsOutputOptionAllowed()
+        {
+            var licensePath = Path.Combine(AppContext.BaseDirectory, "FreeMote.LICENSE.txt");
+            return File.Exists(licensePath);
+        }
+
+        private static string ResolveOutputPath(string outputPath)
+        {
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                return null;
+            }
+
+            if (!IsOutputOptionAllowed())
+            {
+                return null;
+            }
+
+            return outputPath;
         }
 
         private static void Port(string s, PsbSpec portSpec, bool resolution = false, string outputPath = null)

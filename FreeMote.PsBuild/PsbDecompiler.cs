@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
@@ -328,7 +328,8 @@ namespace FreeMote.PsBuild
         /// </summary>
         /// <param name="inputPath"></param>
         /// <param name="format"></param>
-        public static void ExtractImageFiles(string inputPath, PsbImageFormat format = PsbImageFormat.png)
+        /// <param name="outputFolder"></param>
+        public static void ExtractImageFiles(string inputPath, PsbImageFormat format = PsbImageFormat.png, string outputFolder = null)
         {
             if (!File.Exists(inputPath))
             {
@@ -336,7 +337,18 @@ namespace FreeMote.PsBuild
             }
 
             var name = Path.GetFileNameWithoutExtension(inputPath);
-            var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
+            var outputDir = Path.GetDirectoryName(inputPath);
+            if (!string.IsNullOrEmpty(outputFolder))
+            {
+                outputDir = Path.GetFullPath(outputFolder);
+                if (!Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+            }
+
+            var outputBasePath = Path.Combine(outputDir ?? "", Path.GetFileName(inputPath));
+            var dirPath = Path.Combine(outputDir ?? "", name);
 
             if (File.Exists(dirPath))
             {
@@ -365,7 +377,7 @@ namespace FreeMote.PsBuild
             }
             else if (psb.Type == PsbType.Pimg)
             {
-                OutputResources(psb, FreeMount.CreateContext(), inputPath, PsbExtractOption.Extract);
+                OutputResources(psb, FreeMount.CreateContext(), outputBasePath, PsbExtractOption.Extract);
                 return;
             }
 
@@ -387,8 +399,9 @@ namespace FreeMote.PsBuild
         /// <param name="outputRaw">no mdf unzip, no decompile</param>
         /// <param name="extractAll">mdf unzip + decompile</param>
         /// <param name="enableParallel"></param>
+        /// <param name="outputFolder"></param>
         public static void ExtractArchive(string filePath, string key, Dictionary<string, object> context, string bodyPath = null,
-            bool outputRaw = true, bool extractAll = false, bool enableParallel = true)
+            bool outputRaw = true, bool extractAll = false, bool enableParallel = true, string outputFolder = null)
         {
             if (filePath.ToLowerInvariant().EndsWith(".bin"))
             {
@@ -413,6 +426,17 @@ namespace FreeMote.PsBuild
             context[Context_MdfKey] = archiveMdfKey;
 
             var dir = Path.GetDirectoryName(Path.GetFullPath(filePath));
+            var outputDir = dir;
+            if (!string.IsNullOrEmpty(outputFolder))
+            {
+                outputDir = Path.GetFullPath(outputFolder);
+                if (!Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+            }
+
+            var outputBasePath = Path.Combine(outputDir ?? "", fileName);
             var name = PsbExtension.ArchiveInfo_GetPackageNameFromInfoPsb(fileName);
             if (string.IsNullOrEmpty(name))
             {
@@ -528,7 +552,7 @@ namespace FreeMote.PsBuild
                     }
                 }
 
-                File.WriteAllText(Path.GetFullPath(filePath) + ".json", Decompile(psb));
+                File.WriteAllText(outputBasePath + ".json", Decompile(psb));
                 PsbResourceJson resx = new PsbResourceJson(psb, context);
                 if (!hasBody)
                 {
@@ -536,7 +560,7 @@ namespace FreeMote.PsBuild
                     //resx.Context[Context_ArchiveSource] = new List<string> {name};
                     //File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
                     context[Context_ArchiveSource] = new List<string> {name};
-                    OutputResources(psb, FreeMount.CreateContext(context), Path.GetFullPath(filePath), PsbExtractOption.Extract);
+                    OutputResources(psb, FreeMount.CreateContext(context), outputBasePath, PsbExtractOption.Extract);
                     return;
                 }
 
@@ -567,7 +591,7 @@ namespace FreeMote.PsBuild
 
                 Logger.Log($"Extracting {dic.Count} files from {fileName} ...");
 
-                var extractDir = Path.Combine(dir, name);
+                var extractDir = Path.Combine(outputDir, name);
                 if (File.Exists(extractDir)) //conflict with File, not Directory
                 {
                     name += "-resources";
