@@ -55,8 +55,7 @@ namespace FreeMote.Tools.PsBuild
             var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
                 CommandOptionType.SingleValue, inherited: true);
             var optFastMode = app.Option<bool>("-O0|--fast", "Disable compile optimization, good for speed but bad for output size.", CommandOptionType.NoValue, true);
-            optFastMode.ShowInHelpText = false;
-            var optOptSizeMode = app.Option<bool>("-Os|--opt-size", "Enable compile optimization, bad for speed but good for output size.", CommandOptionType.NoValue, true);
+            var optOptSizeMode = app.Option<bool>("-Os|--opt-size", "Enable compile optimization (enabled by default), bad for speed but good for output size.", CommandOptionType.NoValue, true);
             //var optOutputPath =
             //  app.Option<string>("-o|--output", "(TODO:)Set output directory or file name.", CommandOptionType.SingleValue);
             //TODO: If set dir, ok; if set filename, only works for the first
