@@ -304,6 +304,10 @@ namespace FreeMote
         /// </summary>
         TileA8_SW,
         /// <summary>
+        /// GA8_SW (Swizzle) for PS3
+        /// </summary>
+        GA8_SW,
+        /// <summary>
         /// CI8 (without swizzle)
         /// </summary>
         CI8,

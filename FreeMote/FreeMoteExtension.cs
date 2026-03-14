@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
@@ -169,6 +169,7 @@ namespace FreeMote
                 case PsbPixelFormat.A8L8:
                 case PsbPixelFormat.A8L8_SW:
                 case PsbPixelFormat.TileA8L8_SW:
+                case PsbPixelFormat.GA8_SW:
                 case PsbPixelFormat.RGB5A3:
                     return 16;
                 case PsbPixelFormat.L8:
