@@ -2,6 +2,7 @@
 using System.ComponentModel.Composition;
 using FreeMote.Psb;
 
+// ReSharper disable once CheckNamespace
 namespace FreeMote.Plugins
 {
     [Export(typeof(IPsbAudioFormatter))]

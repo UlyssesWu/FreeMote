@@ -6,7 +6,7 @@ namespace FreeMote.PsBuild
     public static class PsbSpecConverter
     {
         /// <summary>
-        /// Enable resolution support (may scaling images, quality is not guaranteed)
+        /// Enable resolution support (may scale images, quality is not guaranteed)
         /// </summary>
         public static bool EnableResolution = false;
 

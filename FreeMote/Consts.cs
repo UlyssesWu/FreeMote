@@ -13,7 +13,7 @@ namespace FreeMote
     public static class Consts
     {
         /// <summary>
-        /// Recyclable MemoryStream Manager
+        /// Recyclable MemoryStream Manager, only use it for small streams, otherwise it holds too many memory
         /// </summary>
         public static readonly RecyclableMemoryStreamManager MsManager = new RecyclableMemoryStreamManager();
 

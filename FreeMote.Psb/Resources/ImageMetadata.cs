@@ -316,6 +316,7 @@ namespace FreeMote.Psb
             {
                 case PsbPixelFormat.ASTC_8BPP:
                 case PsbPixelFormat.BC7:
+                case PsbPixelFormat.BC7_SW:
                     Data = FreeMount.CreateContext().BitmapToResource(PixelFormat.ToExtensionString(), Spec, bmp);
                     break;
             }
@@ -475,9 +476,11 @@ namespace FreeMote.Psb
                 {
                     //it's not a combined image, do nothing
                 }
-                else if ((image.Width >= Width || image.Height >= Height) &&
-                         (image.Width >= Left || image.Height >= Height)) //there could be some redundant area in pieces in order to fit 2^n
+                else 
+                //if ((image.Width >= Width || image.Height >= Height) &&
+                //         (image.Width >= Left || image.Height >= Height))
                 {
+                    //there could be some redundant area in pieces in order to fit 2^n
                     Bitmap chunk = new Bitmap(Width, Height, image.PixelFormat);
                     //it should be a combined image
                     using (FastBitmap f = chunk.FastLock())
@@ -495,9 +498,15 @@ namespace FreeMote.Psb
             {
                 case PsbPixelFormat.ASTC_8BPP:
                 case PsbPixelFormat.BC7:
+                case PsbPixelFormat.BC7_SW:
                     data = context.BitmapToResource(PixelFormat.ToExtensionString(), Spec, image);
                     if (data != null)
                     {
+                        if (PixelFormat == PsbPixelFormat.BC7_SW)
+                        {
+                            //Swizzle
+                            data = PostProcessing.TileTextureV2(data, Width / 4, Height / 4, 16);
+                        }
                         return data;
                     }
 
@@ -513,7 +522,6 @@ namespace FreeMote.Psb
                         Logger.LogWarn($"[WARN] Can not convert image to ASTC: {path}");
                         //data = File.ReadAllBytes(path);
                     }
-
                     break;
             }
 

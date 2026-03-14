@@ -63,6 +63,7 @@ namespace FreeMote.Plugins
         /// <param name="catalog"></param>
         private void AddDefaultCatalogs(AggregateCatalog catalog)
         {
+            catalog.Catalogs.Add(new TypeCatalog(typeof(MdfShell))); //MDF
             catalog.Catalogs.Add(new TypeCatalog(typeof(WavFormatter))); //Wav
             catalog.Catalogs.Add(new TypeCatalog(typeof(AudioFileFormatter))); //Audio file
         }

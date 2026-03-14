@@ -39,6 +39,10 @@ namespace FreeMote.Psb.Types
                 }
 
                 var md = PsbResHelper.GenerateImageMetadata(image, null);
+                if (obj.ContainsKey("label") && (string.IsNullOrEmpty(md.Name) || md.Name == "image"))
+                {
+                    md.Name = obj["label"].ToString();
+                }
                 md.PsbType = PsbType.Map;
                 md.Spec = psb.Platform;
                 resList.Add(md);

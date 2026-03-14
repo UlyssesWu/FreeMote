@@ -48,11 +48,6 @@ namespace FreeMote.Psb
         RL,
 
         /// <summary>
-        /// Raw Bitmap
-        /// </summary>
-        Bmp,
-
-        /// <summary>
         /// KRKR TLG
         /// </summary>
         Tlg,

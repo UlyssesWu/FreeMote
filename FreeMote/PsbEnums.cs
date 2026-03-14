@@ -86,7 +86,11 @@ namespace FreeMote
         /// <summary>
         /// Chip
         /// </summary>
-        Chip = 13
+        Chip = 13,
+        /// <summary>
+        /// Map Data - Legend of Mana
+        /// </summary>
+        Mpd = 14
     }
 
     /// <summary>
@@ -300,6 +304,10 @@ namespace FreeMote
         /// </summary>
         TileA8_SW,
         /// <summary>
+        /// GA8_SW (Swizzle) for PS3
+        /// </summary>
+        GA8_SW,
+        /// <summary>
         /// CI8 (without swizzle)
         /// </summary>
         CI8,
@@ -347,6 +355,10 @@ namespace FreeMote
         /// Big Endian BC7 compressed RGBA8 for nx
         /// </summary>
         BC7,
+        /// <summary>
+        /// BC7 compressed RGBA8 with Tile for PS4
+        /// </summary>
+        BC7_SW,
         /// <summary>
         /// DXT1
         /// </summary>

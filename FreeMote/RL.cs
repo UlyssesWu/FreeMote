@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -69,6 +69,10 @@ namespace FreeMote
                 case PsbPixelFormat.TileA8L8_SW:
                     data = ReadA8L8(data, width, height);
                     data = PostProcessing.UntileTexture(data, width, height);
+                    break;
+                case PsbPixelFormat.GA8_SW:
+                    data = ReadGA8(data, width, height);
+                    data = PostProcessing.UnswizzleTexture(data, width, height);
                     break;
                 case PsbPixelFormat.BeRGBA8_SW:
                     data = PostProcessing.UnswizzleTexture(data, bmp.Width, bmp.Height);
@@ -151,6 +155,11 @@ namespace FreeMote
                 case PsbPixelFormat.BC7:
                     data = new Bc7Decoder(data, width, height).Unpack();
                     break;
+                case PsbPixelFormat.BC7_SW:
+                    //  BC7 图像是 4x4 像素的块压缩，所以 width 和 height 参数应该是图像的块数，而不是像素数。因此需要将实际像素宽高除以 4
+                    data = PostProcessing.UntileTextureV2(data, width / 4, height / 4, 16);
+                    data = new Bc7Decoder(data, width, height).Unpack();
+                    break;
             }
 
             int stride = bmpData.Stride; // 扫描线的宽度
@@ -219,6 +228,10 @@ namespace FreeMote
                 case PsbPixelFormat.TileA8L8_SW:
                     result = PostProcessing.TileTexture(result, bmp.Width, bmp.Height, bitDepth);
                     result = Argb2A8L8(result);
+                    break;
+                case PsbPixelFormat.GA8_SW:
+                    result = PostProcessing.SwizzleTexture(result, bmp.Width, bmp.Height, bitDepth);
+                    result = Argb2GA8(result);
                     break;
                 case PsbPixelFormat.DXT1:
                     //Switch_0_2(ref result);
@@ -857,6 +870,12 @@ namespace FreeMote
             return output;
         }
 
+        private static byte[] ReadGA8(byte[] data, int width, int height)
+        {
+            // GA8 is treated as Gray + Alpha (8-bit each), matching A8L8 layout.
+            return ReadA8L8(data, width, height);
+        }
+
         private static byte[] Argb2A8L8(byte[] data)
         {
             byte[] output = new byte[data.Length / 2];
@@ -871,6 +890,12 @@ namespace FreeMote
             }
 
             return output;
+        }
+
+        private static byte[] Argb2GA8(byte[] data)
+        {
+            // GA8 is treated as Gray + Alpha (8-bit each), matching A8L8 layout.
+            return Argb2A8L8(data);
         }
 
         private static byte[] ReadA8(byte[] data, int width, int height)

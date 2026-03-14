@@ -15,6 +15,11 @@ namespace FreeMote.Tools.PsBuild
     {
         private static Encoding _encoding = Encoding.UTF8;
         //private static PsbPixelFormat _pixelFormat = PsbPixelFormat.None;
+        private static readonly HashSet<string> _allowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".psb", ".psb.m", ".m", ".mmo", ".pimg", ".scn", ".bin", ".mtn", ".lz4",
+            ".bmpfont", ".tlg", ".tlg5", ".tlg6", ".bytes", ".psz", ".dpak", ".emtbytes", ".emtproj", ".mdf", ".mpd", ".map", ".ks.scn", ".psd"
+        };
 
         static void Main(string[] args)
         {
@@ -48,7 +53,7 @@ namespace FreeMote.Tools.PsBuild
             var optSpec = app.Option<PsbSpec>("-p|--spec <SPEC>", "Set PSB platform (krkr/common/win/ems)",
                 CommandOptionType.SingleValue);
             var optNoRename = app.Option("-nr|--no-rename",
-                "Prevent output file renaming, may overwrite your original PSB files", CommandOptionType.NoValue);
+                "Prevent output file renaming, may overwrite your original PSB files!", CommandOptionType.NoValue);
             var optNoShell = app.Option("-ns|--no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
             var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)",
                 CommandOptionType.NoValue, true);
@@ -56,8 +61,8 @@ namespace FreeMote.Tools.PsBuild
                 CommandOptionType.SingleValue, inherited: true);
             var optFastMode = app.Option<bool>("-O0|--fast", "Disable compile optimization, good for speed but bad for output size.", CommandOptionType.NoValue, true);
             var optOptSizeMode = app.Option<bool>("-Os|--opt-size", "Enable compile optimization (enabled by default), bad for speed but good for output size.", CommandOptionType.NoValue, true);
-            //var optOutputPath =
-            //  app.Option<string>("-o|--output", "(TODO:)Set output directory or file name.", CommandOptionType.SingleValue);
+            var optOutputPath =
+             app.Option<string>("-o|--output", "Set output file path. May overwrite your original PSB files!", CommandOptionType.SingleValue);
             //TODO: If set dir, ok; if set filename, only works for the first
 
             //args
@@ -100,7 +105,8 @@ Example:
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
                     var psbPath = argPsbPath.Value;
                     var texPaths = argTexPaths.Values;
-                    Link(psbPath, texPaths, order);
+                    var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
+                    Link(psbPath, texPaths, order, outputPath);
                 });
             });
 
@@ -141,11 +147,12 @@ Example:
                     var portSpec = optPortSpec.ParsedValue;
                     var psbPaths = argPsbPath.Values;
                     var enableResolution = optEnableResolution.HasValue();
+                    var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
                     foreach (var s in psbPaths)
                     {
                         if (File.Exists(s))
                         {
-                            Port(s, portSpec, enableResolution);
+                            Port(s, portSpec, enableResolution, outputPath);
                         }
                         else
                         {
@@ -248,13 +255,14 @@ Example:
 
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
-
                     int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 131;
+                    string outputFolder = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
+                    bool hasSetOutputFolder = !string.IsNullOrEmpty(outputFolder) && Directory.Exists(outputFolder);
 
                     Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
-                        PsbCompiler.PackArchive(s, key, intersect, preferPacked, context, enableParallel, keyLen, keepRaw);
+                        PsbCompiler.PackArchive(s, key, intersect, preferPacked, context, enableParallel, keyLen, keepRaw, hasSetOutputFolder ? outputFolder : null);
                     }
 
                     sw.Stop();
@@ -283,9 +291,10 @@ Example:
                         Console.WriteLine("File not exists.");
                         return;
                     }
-
-                    var output = PsbCompiler.InplaceReplaceToFile(argPsbPath.Value, argJsonPath.Value);
-                    Console.WriteLine($"In-place Replace Output: {output}");
+                    var outputPath = Path.ChangeExtension(argPsbPath.Value, "IR.psb");
+                    var savePath = GetOutputPath(outputPath, optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null);
+                    PsbCompiler.InplaceReplaceToFile(argPsbPath.Value, argJsonPath.Value, savePath);
+                    Console.WriteLine($"In-place Replace output: {savePath}");
                 });
             });
 
@@ -324,10 +333,20 @@ Example:
                 PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : null;
                 var canRename = !optNoRename.HasValue();
                 var canPack = !optNoShell.HasValue();
+                var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
+                bool hasSetOutputPath = !string.IsNullOrEmpty(outputPath);
+                bool hasSetOutputFolder = hasSetOutputPath && Directory.Exists(outputPath);
 
-                foreach (var file in argPath.Values)
+                if (argPath.Values.Count == 1 && hasSetOutputPath)
                 {
-                    Compile(file, ver, key, spec, canRename, canPack);
+                    Compile(argPath.Value, ver, key, spec, canRename, canPack, outputPath);
+                }
+                else
+                {
+                    foreach (var file in argPath.Values)
+                    {
+                        Compile(file, ver, key, spec, canRename, canPack, hasSetOutputFolder ? outputPath : null);
+                    }
                 }
             });
 
@@ -342,7 +361,58 @@ Example:
             Console.WriteLine("Done.");
         }
 
-        private static void Port(string s, PsbSpec portSpec, bool resolution = false)
+        private static string GetOutputPath(string defaultPath, string outputPath)
+        {
+            string savePath;
+            if (!string.IsNullOrEmpty(outputPath))
+            {
+                if (Directory.Exists(outputPath))
+                {
+                    savePath = Path.Combine(outputPath, Path.GetFileName(defaultPath));
+                }
+                else if (_allowedExtensions.Contains(Path.GetExtension(outputPath)))
+                {
+                    savePath = outputPath;
+                    if (File.Exists(savePath))
+                    {
+                        Logger.LogWarn($"[WARN] Output path already exists and will be overwritten: {savePath}");
+                    }
+                }
+                else
+                {
+                    Logger.LogWarn($"[WARN] Output path is not valid: {outputPath} . Using default path: {defaultPath}");
+                    savePath = defaultPath;
+                }
+            }
+            else
+            {
+                savePath = defaultPath;
+            }
+            return savePath;
+        }
+
+        private static bool IsOutputOptionAllowed()
+        {
+            var licensePath = Path.Combine(AppContext.BaseDirectory, "FreeMote.LICENSE.txt");
+            return File.Exists(licensePath);
+        }
+
+        private static string ResolveOutputPath(string outputPath)
+        {
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                return null;
+            }
+
+            if (!IsOutputOptionAllowed())
+            {
+                return null;
+            }
+
+            return outputPath;
+        }
+
+        private static void Port(string s, PsbSpec portSpec, bool resolution = false, string outputPath = null)
         {
             var name = Path.GetFileNameWithoutExtension(s);
             var ext = Path.GetExtension(s);
@@ -360,12 +430,13 @@ Example:
                 psb.SwitchSpec(portSpec);
                 psb.Merge();
                 var savePath = Path.ChangeExtension(s, $".{portSpec}{psb.Type.DefaultExtension()}");
+                savePath = GetOutputPath(savePath, outputPath);
                 File.WriteAllBytes(savePath, psb.Build());
                 Console.WriteLine($"Convert output: {savePath}");
             }
         }
 
-        private static void Link(string psbPath, List<string> texPaths, PsbLinkOrderBy order)
+        private static void Link(string psbPath, List<string> texPaths, PsbLinkOrderBy order, string outputPath = null)
         {
             if (!File.Exists(psbPath))
             {
@@ -374,7 +445,7 @@ Example:
 
             var name = Path.GetFileNameWithoutExtension(psbPath);
             var ext = Path.GetExtension(psbPath);
-
+            string savePath = string.Empty;
             try
             {
                 List<string> texs = new List<string>();
@@ -399,18 +470,21 @@ Example:
                 {
                     ext = psb.Type.DefaultExtension();
                 }
-                File.WriteAllBytes(Path.ChangeExtension(psbPath, "linked" + ext), psb.Build());
+                savePath = Path.ChangeExtension(psbPath, "linked" + ext);
+                savePath = GetOutputPath(savePath, outputPath);
+                File.WriteAllBytes(savePath, psb.Build());
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                return;
             }
 
-            Console.WriteLine($"Link {name} done.");
+            Console.WriteLine($"Link output: {savePath}");
         }
 
         private static void Compile(string s, ushort? version, uint? key, PsbSpec? spec, bool canRename,
-            bool canPackShell)
+            bool canPackShell, string outputPath = null)
         {
             if (!File.Exists(s))
             {
@@ -427,19 +501,24 @@ Example:
                     "[WARN] It seems that you are going to compile a info.psb.m directly.\r\nIf you want to pack the folder generated by `PsbDecompile info-psb`, you should use `PsBuild info-psb` command instead.");
             }
 
+            //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
+            var filename = name + ".psb"; //rename later
+            var savePath = GetOutputPath(filename, outputPath);
+            if (!string.IsNullOrEmpty(outputPath))
+            {
+                canRename = false;
+            }
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                //var filename = name + (_key == null ? _noRename ? ".psb" : "-pure.psb" : "-impure.psb");
-                var filename = name + ".psb"; //rename later //TODO: support set output path
-                PsbCompiler.CompileToFile(s, filename, null, version, key, spec, canRename, canPackShell);
+                PsbCompiler.CompileToFile(s, savePath, null, version, key, spec, canRename, canPackShell);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Compile {name} failed.\r\n{e}");
             }
 
-            Console.WriteLine($"Compile {name} done.");
+            Console.WriteLine(!string.IsNullOrEmpty(outputPath)? $"Compile output: {savePath}" : $"Compile {name} done.");
         }
 
         private static string PrintHelp()

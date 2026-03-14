@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Ulysses")]
 [assembly: AssemblyProduct("FreeMote")]
-[assembly: AssemblyCopyright("Copyright © Ulysses 2017-2025")]
+[assembly: AssemblyCopyright("Copyright © Ulysses 2017-2026")]
 [assembly: AssemblyTrademark("wdwxy12345@gmail.com")]
 [assembly: AssemblyCulture("")]
 
@@ -25,5 +25,5 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("EmtMake")]
 
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("4.0.0.0")]
-[assembly: AssemblyFileVersion("4.0.0.0")]
+[assembly: AssemblyVersion("4.3.0.0")]
+[assembly: AssemblyFileVersion("4.3.0.0")]

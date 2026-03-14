@@ -455,6 +455,15 @@ namespace FreeMote.Psb
                         friendlyName = i.ToString();
                     }
 
+                    if (resource.Compress == PsbCompressType.None)
+                    {
+                        var (valid, checkResult) = resource.Validate();
+                        if (!valid)
+                        {
+                            Logger.LogWarn($"[WARN] Resource validation failed for [{friendlyName}]. {checkResult}");
+                        }
+                    }
+
                     var currentExtractOption = extractOption;
                     if (resource.Compress != PsbCompressType.Tlg && resource.Compress != PsbCompressType.ByName && (resource.Width <= 0 || resource.Height <= 0)) //impossible to extract, just keep raw
                     {

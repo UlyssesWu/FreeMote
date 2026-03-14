@@ -88,6 +88,7 @@ namespace FreeMote.Psb
             {PsbType.SprBlock, new SprBlockType()},
             {PsbType.SprData, new SprDataType()},
             {PsbType.Chip, new ChipType()},
+            {PsbType.Mpd, new MpdType()},
             {PsbType.PSB, new MotionType()}, //assume as motion type by default, must put this after Motion
         };
         

@@ -1384,7 +1384,7 @@ namespace FreeMote.Psb
                     offsets.Add((uint)resBw.BaseStream.Position);
                     if (psbResource.Data == null)
                     {
-                        lengths.Add((uint)0);
+                        lengths.Add(0);
                     }
                     else
                     {
@@ -1423,7 +1423,7 @@ namespace FreeMote.Psb
                     offsets.Add((uint)resBw.BaseStream.Position);
                     if (psbResource.Data == null)
                     {
-                        lengths.Add((uint)0);
+                        lengths.Add(0);
                     }
                     else
                     {
