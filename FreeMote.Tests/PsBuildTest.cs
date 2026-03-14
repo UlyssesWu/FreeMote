@@ -82,10 +82,11 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestDirectCompile()
         {
-            var path = Path.Combine(ResPath, "emote_test2-pure.psb");
+            Consts.OptimizeMode = false;
+            var path = Path.Combine(ResPath, "00_pro02.txt.scn");
+            //var path = Path.Combine(ResPath, "ca01_l_body_1.psz.psb");
             PSB psb = new PSB(path);
-            psb.Header.Version = 3;
-            psb.UpdateIndexes();
+            //psb.Header.Version = 3;
             File.WriteAllBytes(path + ".build.psb", psb.Build());
         }
 
@@ -140,9 +141,19 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestBTree()
         {
-            var path = Path.Combine(ResPath, "澄怜a_裸.psb-pure.psb");
+            var path = Path.Combine(ResPath, "c01c.txt.scn");
             PSB psb = new PSB(path);
-            var tree = PrefixTree.Build(psb.Names, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
+
+            using var fs = File.OpenRead(path);
+            using var br = new BinaryReader(fs);
+            br.BaseStream.Seek(psb.Header.OffsetNames, SeekOrigin.Begin);
+            var Charset = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            var NamesData = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            var NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+
+            var (n, r) = PrefixTree.LoadNodes(NameIndexes.Value, NamesData.Value, Charset.Value);
+            
+            var tree = PrefixTree.Build(psb.Names, true, out List<uint> oNames, out List<uint> oTrees, out List<uint> oOffsets);
             var list = PrefixTree.Load(oNames, oTrees, oOffsets);
             Assert.IsTrue(psb.Names.SequenceEqual(list));
         }

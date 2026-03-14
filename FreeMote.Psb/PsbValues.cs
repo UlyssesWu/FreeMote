@@ -228,6 +228,11 @@ namespace FreeMote.Psb
         /// </summary>
         public static PsbNumber Zero => new PsbNumber(0); //always create a new PsbNumber to prevent value modified!
 
+        public override int GetHashCode()
+        {
+            return IsNumber32? IntValue : LongValue.GetHashCode();
+        }
+
         internal PsbNumber(PsbObjType objType, BinaryReader br)
         {
             switch (objType)
@@ -609,6 +614,31 @@ namespace FreeMote.Psb
         public static implicit operator PsbNumber(long n)
         {
             return new PsbNumber(n);
+        }
+
+        public static bool operator ==(PsbNumber a, PsbNumber b)
+        {
+            if (a is null)
+            {
+                return b is null;
+            }
+
+            if (b == null)
+            {
+                return false;
+            }
+
+            if (a.NumberType != b.NumberType)
+            {
+                return false;
+            }
+
+            return a.Data.AsSpan().SequenceEqual(b.Data);
+        }
+
+        public static bool operator !=(PsbNumber a, PsbNumber b)
+        {
+            return !(a == b);
         }
 
         public PsbObjType Type

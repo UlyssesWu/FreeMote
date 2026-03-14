@@ -536,10 +536,10 @@ namespace FreeMote
         /// <param name="num"></param>
         public static void WriteBE(this BinaryWriter bw, uint num)
         {
-            bw.Write((byte)(num >> 24));
-            bw.Write((byte)(num >> 16));
-            bw.Write((byte)(num >> 8));
-            bw.Write((byte)num);
+            bw.Write((byte) (num >> 24));
+            bw.Write((byte) (num >> 16));
+            bw.Write((byte) (num >> 8));
+            bw.Write((byte) num);
         }
 
         public static void WriteUTF8(this BinaryWriter bw, string value)

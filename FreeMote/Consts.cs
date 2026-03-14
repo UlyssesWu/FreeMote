@@ -160,6 +160,11 @@ namespace FreeMote
         public static bool StrictMode { get; set; } = false;
 
         /// <summary>
+        /// Optimize the output to minimum size, may take more time
+        /// </summary>
+        public static bool OptimizeMode { get; set; } = true;
+
+        /// <summary>
         /// Use hex numbers in json to keep all float numbers correct
         /// </summary>
         public static bool JsonUseHexNumber { get; set; } = false;
@@ -175,7 +180,8 @@ namespace FreeMote
         public static bool JsonUseDoubleOnly { get; set; } = false;
 
         /// <summary>
-        /// Whether to sort the object order by key when build PSB
+        /// Whether to sort the object order by key when build/decompile PSB;
+        /// However, when <see cref="OptimizeMode"/> is set, this will be ignored for smaller size
         /// </summary>
         public static bool PsbObjectOrderByKey { get; set; } = true;
 

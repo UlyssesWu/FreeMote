@@ -59,6 +59,8 @@ namespace FreeMote.Tools.PsBuild
                 CommandOptionType.NoValue, true);
             var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
                 CommandOptionType.SingleValue, inherited: true);
+            var optFastMode = app.Option<bool>("-O0|--fast", "Disable compile optimization, good for speed but bad for output size.", CommandOptionType.NoValue, true);
+            var optOptSizeMode = app.Option<bool>("-Os|--opt-size", "Enable compile optimization (enabled by default), bad for speed but good for output size.", CommandOptionType.NoValue, true);
             var optOutputPath =
              app.Option<string>("-o|--output", "Set output file path. May overwrite your original PSB files!", CommandOptionType.SingleValue);
             //TODO: If set dir, ok; if set filename, only works for the first
@@ -219,6 +221,16 @@ Example:
                         keepRaw = true;
                     }
 
+                    if (optOptSizeMode.HasValue())
+                    {
+                        OptimizeMode = true;
+                    }
+
+                    if (optFastMode.HasValue())
+                    {
+                        OptimizeMode = false;
+                    }
+
                     if (optEncoding.HasValue())
                     {
                         try
@@ -304,6 +316,16 @@ Example:
                 if (optDouble.HasValue())
                 {
                     JsonUseDoubleOnly = true;
+                }
+
+                if (optOptSizeMode.HasValue())
+                {
+                    OptimizeMode = true;
+                }
+
+                if (optFastMode.HasValue())
+                {
+                    OptimizeMode = false;
                 }
 
                 ushort? ver = optVer.HasValue() ? optVer.ParsedValue : null;

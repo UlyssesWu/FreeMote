@@ -35,6 +35,7 @@ namespace FreeMote.PsBuild
         public static string Decompile(string path)
         {
             PSB psb = new PSB(path, Encoding);
+            psb.Merge();
             return Decompile(psb);
         }
 
@@ -113,19 +114,20 @@ namespace FreeMote.PsBuild
                 psb.Type = psbType;
             }
 
+            psb.Merge();
             return Decompile(psb);
         }
 
         public static string Decompile(PSB psb)
         {
-            if (Consts.JsonArrayCollapse)
+            if (JsonArrayCollapse)
             {
                 return ArrayCollapseJsonTextWriter.SerializeObject(psb.Root,
-                    new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
+                    new PsbJsonConverter(JsonUseDoubleOnly, JsonUseHexNumber, PsbObjectOrderByKey));
             }
 
             return JsonConvert.SerializeObject(psb.Root, Formatting.Indented,
-                new PsbJsonConverter(Consts.JsonUseDoubleOnly, Consts.JsonUseHexNumber));
+                new PsbJsonConverter(JsonUseDoubleOnly, JsonUseHexNumber, PsbObjectOrderByKey));
         }
 
         public static void OutputResources(PSB psb, FreeMountContext context, string filePath,

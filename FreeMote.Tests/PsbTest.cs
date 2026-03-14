@@ -9,6 +9,7 @@ using System.Text;
 using FreeMote.Plugins;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
+using System.Runtime.Remoting.Messaging;
 
 
 namespace FreeMote.Tests
@@ -362,6 +363,237 @@ namespace FreeMote.Tests
             {
                 Console.WriteLine(result);
             }
+        }
+
+        [TestMethod]
+        public void ObjectStat()
+        {
+            var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\..\Res");
+            var path = Path.Combine(resPath, "test_kazuma.txt.scn.m");
+
+            PsbFile f = new PsbFile(path);
+            using var fs = File.OpenRead(path);
+            using var br = new BinaryReader(fs);
+            br.BaseStream.Seek(f.Header.OffsetEntries, SeekOrigin.Begin);
+
+            Dictionary<PsbObjType, List<IPsbValue>> objects = new Dictionary<PsbObjType, List<IPsbValue>>();
+            Unpack(br, false);
+        }
+
+        private IPsbValue Unpack(BinaryReader br, bool lazyLoad = false)
+        {
+#if DEBUG_OBJECT_WRITE
+            var pos = br.BaseStream.Position;
+            _tw.WriteLine($"{(_last == 0 ? 0 : pos - _last)}");
+#endif
+
+            var typeByte = br.ReadByte();
+            //There is no need to check this, and it's slow
+            //if (!Enum.IsDefined(typeof(PsbObjType), typeByte))
+            //{
+            //    return null;
+            //    //throw new ArgumentOutOfRangeException($"0x{type:X2} is not a known type.");
+            //}
+
+            var type = (PsbObjType) typeByte;
+
+#if DEBUG_OBJECT_WRITE
+            _tw.Write($"{type}\t{pos}\t");
+            _tw.Flush();
+            _last = pos;
+#endif
+
+            switch (type)
+            {
+                case PsbObjType.None:
+                    return null;
+                case PsbObjType.Null:
+                    return PsbNull.Null;
+                case PsbObjType.False:
+                case PsbObjType.True:
+                    return new PsbBool(type == PsbObjType.True);
+                case PsbObjType.NumberN0:
+                    return PsbNumber.Zero; //PsbNumber is not comparable!
+                case PsbObjType.NumberN1:
+                case PsbObjType.NumberN2:
+                case PsbObjType.NumberN3:
+                case PsbObjType.NumberN4:
+                case PsbObjType.NumberN5:
+                case PsbObjType.NumberN6:
+                case PsbObjType.NumberN7:
+                case PsbObjType.NumberN8:
+                case PsbObjType.Float0:
+                case PsbObjType.Float:
+                case PsbObjType.Double:
+                    return new PsbNumber(type, br);
+                case PsbObjType.ArrayN1:
+                case PsbObjType.ArrayN2:
+                case PsbObjType.ArrayN3:
+                case PsbObjType.ArrayN4:
+                case PsbObjType.ArrayN5:
+                case PsbObjType.ArrayN6:
+                case PsbObjType.ArrayN7:
+                case PsbObjType.ArrayN8:
+                    return new PsbArray(typeByte - (byte) PsbObjType.ArrayN1 + 1, br);
+                case PsbObjType.StringN1:
+                case PsbObjType.StringN2:
+                case PsbObjType.StringN3:
+                case PsbObjType.StringN4:
+                    var str = new PsbString(typeByte - (byte) PsbObjType.StringN1 + 1, br);
+                    return str;
+                case PsbObjType.ResourceN1:
+                case PsbObjType.ResourceN2:
+                case PsbObjType.ResourceN3:
+                case PsbObjType.ResourceN4:
+                case PsbObjType.ExtraChunkN1:
+                case PsbObjType.ExtraChunkN2:
+                case PsbObjType.ExtraChunkN3:
+                case PsbObjType.ExtraChunkN4:
+                    bool isExtra = type >= PsbObjType.ExtraChunkN1;
+                    var res =
+                        new PsbResource(typeByte - (byte) (isExtra ? PsbObjType.ExtraChunkN1 : PsbObjType.ResourceN1) + 1, br)
+                        { IsExtra = isExtra };
+                   return res;
+                case PsbObjType.List:
+                    return LoadList(br, lazyLoad);
+                case PsbObjType.Objects:
+                    return LoadObjects(br, lazyLoad);
+                //Compiler used
+                case PsbObjType.Integer:
+                case PsbObjType.String:
+                case PsbObjType.Resource:
+                case PsbObjType.Decimal:
+                case PsbObjType.Array:
+                case PsbObjType.Boolean:
+                case PsbObjType.BTree:
+                    Debug.WriteLine("FreeMote won't need these for compile.");
+                    break;
+                default:
+                    Debug.WriteLine($"Found unknown type {type}. Please provide the PSB for research.");
+                    return null;
+            }
+
+            return null;
+        }
+
+        private PsbList LoadList(BinaryReader br, bool lazyLoad = false)
+        {
+            var offsets = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            var duplicates = offsets.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
+
+            var pos = br.BaseStream.Position;
+            PsbList list = new PsbList(offsets.Count);
+            uint? maxOffset = null;
+            var endPos = pos;
+            if (lazyLoad && offsets.Count > 0)
+            {
+                maxOffset = offsets.Max();
+            }
+
+            for (int i = 0; i < offsets.Count; i++)
+            {
+                var offset = offsets[i];
+                br.BaseStream.Seek(pos + offset, SeekOrigin.Begin);
+                var obj = Unpack(br, lazyLoad);
+                if (obj != null)
+                {
+                    if (duplicates.Contains(offset))
+                    {
+                        Console.WriteLine($"Reuse {obj.Type} ({offset}) in PsbList");
+                    }
+                    if (obj is IPsbChild c)
+                    {
+                        c.Parent = list;
+                    }
+
+                    if (obj is IPsbSingleton s)
+                    {
+                        s.Parents.Add(list);
+                    }
+
+                    list.Add(obj);
+                }
+
+                if (lazyLoad && offset == maxOffset)
+                {
+                    endPos = br.BaseStream.Position;
+                }
+            }
+
+            if (lazyLoad)
+            {
+                br.BaseStream.Position = endPos;
+            }
+
+            return list;
+        }
+
+        private PsbDictionary LoadObjects(BinaryReader br, bool lazyLoad = false)
+        {
+            var names = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            var offsets = PsbArray.LoadIntoList(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
+            //find elements which appears more than once in offsets
+            var duplicates = offsets.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
+
+            var pos = br.BaseStream.Position;
+            PsbDictionary dictionary = new PsbDictionary(names.Count);
+            uint? maxOffset = null;
+            var endPos = pos;
+            if (lazyLoad && offsets.Count > 0)
+            {
+                maxOffset = offsets.Max();
+            }
+
+            for (int i = 0; i < names.Count; i++)
+            {
+                //br.BaseStream.Seek(pos, SeekOrigin.Begin);
+                var nameIdx = (int) names[i];
+                var name = nameIdx.ToString();
+                IPsbValue obj = null;
+                uint offset = 0;
+                if (i < offsets.Count)
+                {
+                    offset = offsets[i];
+                    br.BaseStream.Seek(pos + offset, SeekOrigin.Begin);
+                    //br.BaseStream.Seek(offset, SeekOrigin.Current);
+                    obj = Unpack(br, lazyLoad);
+                    if (duplicates.Contains(offset))
+                    {
+                        Console.WriteLine($"Reuse {obj.Type} ({offset}) in PsbDic");
+                    }
+                }
+                else
+                {
+                    Logger.LogWarn($"[WARN] Bad PSB format: at position:{pos}, offset index {i} >= offsets count ({offsets.Count}), skipping.");
+                }
+
+                if (obj != null)
+                {
+                    if (obj is IPsbChild c)
+                    {
+                        c.Parent = dictionary;
+                    }
+
+                    if (obj is IPsbSingleton s)
+                    {
+                        s.Parents.Add(dictionary);
+                    }
+
+                    dictionary.Add(name, obj);
+                }
+
+                if (lazyLoad && offset == maxOffset)
+                {
+                    endPos = br.BaseStream.Position;
+                }
+            }
+
+            if (lazyLoad)
+            {
+                br.BaseStream.Position = endPos;
+            }
+
+            return dictionary;
         }
     }
 }
