@@ -1566,10 +1566,14 @@ namespace FreeMote.Psb
             BinaryWriter mbw = new BinaryWriter(ms, Encoding);
 
             int nullOffset = -1;
+            int trueOffset = -1;
+            int falseOffset = -1;
             int objEmptyOffset = -1;
             int listEmptyOffset = -1;
             Lazy<List<(PsbNumber Number, uint Offset)>> numberSet = new();
             Lazy<Dictionary<string, uint>> stringSet = new();
+            Lazy<Dictionary<(uint, bool), uint>> resourceSet = new();
+            Lazy<Dictionary<int, List<(byte[] Bytes, uint Offset)>>> objectBytesMap = new();
 
             if (Consts.OptimizeMode)
             {
@@ -1676,6 +1680,64 @@ namespace FreeMote.Psb
                                 stringSet.Value.Add(ps.Value, strPos);
                             }
                             break;
+                        case PsbBool pb:
+                            if (pb.Value)
+                            {
+                                if (trueOffset < 0)
+                                {
+                                    trueOffset = (int) mbw.BaseStream.Position;
+                                    indexList.Add((uint) trueOffset);
+                                    Pack(mbw, value);
+                                }
+                                else
+                                {
+                                    indexList.Add((uint) trueOffset);
+                                }
+                            }
+                            else
+                            {
+                                if (falseOffset < 0)
+                                {
+                                    falseOffset = (int) mbw.BaseStream.Position;
+                                    indexList.Add((uint) falseOffset);
+                                    Pack(mbw, value);
+                                }
+                                else
+                                {
+                                    indexList.Add((uint) falseOffset);
+                                }
+                            }
+                            break;
+                        case PsbResource pr:
+                            if (pr.Data == null)
+                            {
+                                if (nullOffset < 0)
+                                {
+                                    nullOffset = (int) mbw.BaseStream.Position;
+                                    indexList.Add((uint) nullOffset);
+                                    Pack(mbw, value);
+                                }
+                                else
+                                {
+                                    indexList.Add((uint) nullOffset);
+                                }
+                            }
+                            else
+                            {
+                                var resKey = (pr.Index ?? 0, pr.IsExtra);
+                                if (resourceSet.Value.TryGetValue(resKey, out var resOffset))
+                                {
+                                    indexList.Add(resOffset);
+                                }
+                                else
+                                {
+                                    var resPos = (uint) mbw.BaseStream.Position;
+                                    indexList.Add(resPos);
+                                    Pack(mbw, value);
+                                    resourceSet.Value.Add(resKey, resPos);
+                                }
+                            }
+                            break;
                         case PsbDictionary {Count: 0}:
                             if (objEmptyOffset < 0)
                             {
@@ -1701,8 +1763,50 @@ namespace FreeMote.Psb
                             }
                             break;
                         default:
-                            indexList.Add((uint) mbw.BaseStream.Position);
+                            var startPos = (long) mbw.BaseStream.Position;
                             Pack(mbw, value);
+                            mbw.Flush();
+                            var endPos = (long) mbw.BaseStream.Position;
+                            var len = (int) (endPos - startPos);
+
+                            var bytes = new byte[len];
+                            mbw.BaseStream.Position = startPos;
+                            mbw.BaseStream.Read(bytes, 0, len);
+                            mbw.BaseStream.Position = endPos;
+
+                            uint reuseOffset = 0;
+                            bool foundObj = false;
+                            if (objectBytesMap.Value.TryGetValue(len, out var candidates))
+                            {
+                                foreach (var (prevBytes, prevOffset) in candidates)
+                                {
+                                    if (prevBytes.AsSpan().SequenceEqual(bytes))
+                                    {
+                                        reuseOffset = prevOffset;
+                                        foundObj = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (foundObj)
+                            {
+                                mbw.BaseStream.SetLength(startPos);
+                                mbw.BaseStream.Position = startPos;
+                                indexList.Add(reuseOffset);
+                            }
+                            else
+                            {
+                                indexList.Add((uint) startPos);
+                                if (candidates == null)
+                                {
+                                    objectBytesMap.Value[len] = new List<(byte[], uint)> {(bytes, (uint) startPos)};
+                                }
+                                else
+                                {
+                                    candidates.Add((bytes, (uint) startPos));
+                                }
+                            }
                             break;
                     }
                 }
@@ -1769,7 +1873,11 @@ namespace FreeMote.Psb
                 BinaryWriter mbw = new BinaryWriter(ms, Encoding);
                 Lazy<List<(PsbNumber Number, uint Offset)>> numberSet = new();
                 Lazy<Dictionary<string, uint>> stringSet = new();
+                Lazy<Dictionary<(uint, bool), uint>> resourceSet = new();
+                Lazy<Dictionary<int, List<(byte[] Bytes, uint Offset)>>> objectBytesMap = new();
                 int nullOffset = -1;
+                int trueOffset = -1;
+                int falseOffset = -1;
 
                 foreach (var obj in pCol)
                 {
@@ -1787,6 +1895,34 @@ namespace FreeMote.Psb
                                 else
                                 {
                                     indexList.Add((uint) nullOffset);
+                                }
+                                continue;
+                            case PsbBool pb:
+                                if (pb.Value)
+                                {
+                                    if (trueOffset < 0)
+                                    {
+                                        trueOffset = (int) mbw.BaseStream.Position;
+                                        indexList.Add((uint) trueOffset);
+                                        Pack(mbw, obj);
+                                    }
+                                    else
+                                    {
+                                        indexList.Add((uint) trueOffset);
+                                    }
+                                }
+                                else
+                                {
+                                    if (falseOffset < 0)
+                                    {
+                                        falseOffset = (int) mbw.BaseStream.Position;
+                                        indexList.Add((uint) falseOffset);
+                                        Pack(mbw, obj);
+                                    }
+                                    else
+                                    {
+                                        indexList.Add((uint) falseOffset);
+                                    }
                                 }
                                 continue;
                             case PsbNumber n:
@@ -1821,6 +1957,82 @@ namespace FreeMote.Psb
                                     indexList.Add(strPos);
                                     Pack(mbw, s);
                                     stringSet.Value.Add(s.Value, strPos);
+                                }
+                                continue;
+                            case PsbResource pr:
+                                if (pr.Data == null)
+                                {
+                                    if (nullOffset < 0)
+                                    {
+                                        nullOffset = (int) mbw.BaseStream.Position;
+                                        indexList.Add((uint) nullOffset);
+                                        Pack(mbw, obj);
+                                    }
+                                    else
+                                    {
+                                        indexList.Add((uint) nullOffset);
+                                    }
+                                }
+                                else
+                                {
+                                    var resKey = (pr.Index ?? 0, pr.IsExtra);
+                                    if (resourceSet.Value.TryGetValue(resKey, out var resOffset))
+                                    {
+                                        indexList.Add(resOffset);
+                                    }
+                                    else
+                                    {
+                                        var resPos = (uint) mbw.BaseStream.Position;
+                                        indexList.Add(resPos);
+                                        Pack(mbw, obj);
+                                        resourceSet.Value.Add(resKey, resPos);
+                                    }
+                                }
+                                continue;
+                            default:
+                                var defStartPos = (long) mbw.BaseStream.Position;
+                                Pack(mbw, obj);
+                                mbw.Flush();
+                                var defEndPos = (long) mbw.BaseStream.Position;
+                                var defLen = (int) (defEndPos - defStartPos);
+
+                                var defBytes = new byte[defLen];
+                                mbw.BaseStream.Position = defStartPos;
+                                mbw.BaseStream.Read(defBytes, 0, defLen);
+                                mbw.BaseStream.Position = defEndPos;
+
+                                uint defReuseOffset = 0;
+                                bool foundObj = false;
+                                if (objectBytesMap.Value.TryGetValue(defLen, out var defCandidates))
+                                {
+                                    foreach (var (prevBytes, prevOffset) in defCandidates)
+                                    {
+                                        if (prevBytes.AsSpan().SequenceEqual(defBytes))
+                                        {
+                                            defReuseOffset = prevOffset;
+                                            foundObj = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (foundObj)
+                                {
+                                    mbw.BaseStream.SetLength(defStartPos);
+                                    mbw.BaseStream.Position = defStartPos;
+                                    indexList.Add(defReuseOffset);
+                                }
+                                else
+                                {
+                                    indexList.Add((uint) defStartPos);
+                                    if (defCandidates == null)
+                                    {
+                                        objectBytesMap.Value[defLen] = new List<(byte[], uint)> {(defBytes, (uint) defStartPos)};
+                                    }
+                                    else
+                                    {
+                                        defCandidates.Add((defBytes, (uint) defStartPos));
+                                    }
                                 }
                                 continue;
                         }

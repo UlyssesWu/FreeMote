@@ -82,9 +82,11 @@ namespace FreeMote.Tests
         [TestMethod]
         public void TestDirectCompile()
         {
-            var path = Path.Combine(ResPath, "emote_test2-pure.psb");
+            Consts.OptimizeMode = false;
+            var path = Path.Combine(ResPath, "00_pro02.txt.scn");
+            //var path = Path.Combine(ResPath, "ca01_l_body_1.psz.psb");
             PSB psb = new PSB(path);
-            psb.Header.Version = 3;
+            //psb.Header.Version = 3;
             File.WriteAllBytes(path + ".build.psb", psb.Build());
         }
 
