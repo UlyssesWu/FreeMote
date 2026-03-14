@@ -412,7 +412,7 @@ namespace FreeMote.PsBuild
                     var parameter = (PsbList)motionItem["parameter"];
                     objectChildrenItem["parameterize"] = motionItem.ContainsKey("parameterize") && motionItem["parameterize"] is not PsbNull ? 
                         parameter[((PsbNumber)motionItem["parameterize"]).IntValue]
-                        : FillDefaultParameterize();
+                        : FillDefaultParameterize(dic);
                     objectChildrenItem["priorityFrameList"] = BuildPriorityFrameList((PsbList)motionItem["priority"]);
                     objectChildrenItem["referenceModelFileList"] = motionItem["referenceModelFileList"];
                     objectChildrenItem["referenceProjectFileList"] = motionItem["referenceProjectFileList"];
