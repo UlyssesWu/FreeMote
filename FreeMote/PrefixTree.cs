@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -124,11 +124,54 @@ namespace FreeMote
         public static PrefixTree Build(List<string> namesList, bool optimize, out List<uint> names, out List<uint> tree, out List<uint> offsets)
         {
             //namesList.Sort((s1, s2) => s1.Length - s2.Length);
-            var trie = new PrefixTree(namesList, optimize);
-            names = trie._names;
-            tree = trie._tree;
-            offsets = trie._offsets;
-            return trie;
+            if (!optimize)
+            {
+                var trie = new PrefixTree(namesList, false);
+                names = trie._names;
+                tree = trie._tree;
+                offsets = trie._offsets;
+                return trie;
+            }
+
+            // Some datasets are much denser with the legacy allocator.
+            // Keep OptimizeMode stable by choosing whichever layout serializes smaller.
+            var optimizedTrie = new PrefixTree(namesList, true);
+            var legacyTrie = new PrefixTree(namesList, false);
+            var optimizedSize = EstimateSerializedSize(optimizedTrie._names, optimizedTrie._tree, optimizedTrie._offsets);
+            var legacySize = EstimateSerializedSize(legacyTrie._names, legacyTrie._tree, legacyTrie._offsets);
+
+            var result = optimizedSize <= legacySize ? optimizedTrie : legacyTrie;
+            names = result._names;
+            tree = result._tree;
+            offsets = result._offsets;
+            return result;
+        }
+
+        private static int EstimateSerializedSize(List<uint> names, List<uint> tree, List<uint> offsets)
+            => EstimateArraySize(offsets) + EstimateArraySize(tree) + EstimateArraySize(names);
+
+        private static int EstimateArraySize(List<uint> values)
+        {
+            var countSize = GetUIntByteSize((uint)values.Count);
+            uint maxValue = 0;
+            for (var i = 0; i < values.Count; i++)
+            {
+                if (values[i] > maxValue)
+                {
+                    maxValue = values[i];
+                }
+            }
+
+            var entrySize = values.Count == 0 ? 1 : GetUIntByteSize(maxValue);
+            return 1 + countSize + 1 + values.Count * entrySize;
+        }
+
+        private static int GetUIntByteSize(uint value)
+        {
+            if (value <= 0xFF) return 1;
+            if (value <= 0xFFFF) return 2;
+            if (value <= 0xFFFFFF) return 3;
+            return 4;
         }
 
         private TrieNode GetNode(TrieNode node, char c, bool isEnd = false)

@@ -1,5 +1,7 @@
-﻿using System.IO;
+using System.IO;
 using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip.Compression;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace FreeMote
 {
@@ -53,11 +55,23 @@ namespace FreeMote
             using var ms = new MemoryStream();
             ms.WriteByte(0x78);
             ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
-            using (DeflateStream deflateStream =
-                   new DeflateStream(ms, Consts.ForceCompressionLevel != null ? Consts.ForceCompressionLevel.Value :
-                       fast ? CompressionLevel.Fastest : CompressionLevel.Optimal))
+            if (UseSharpZipLib(fast))
             {
-                input.CopyTo(deflateStream);
+                var deflaterLevel = GetDeflaterLevel(fast);
+                var deflater = new Deflater(deflaterLevel, true);
+                using (var deflateStream = new DeflaterOutputStream(ms, deflater))
+                {
+                    deflateStream.IsStreamOwner = false;
+                    input.CopyTo(deflateStream);
+                    deflateStream.Finish();
+                }
+            }
+            else
+            {
+                using (DeflateStream deflateStream = new DeflateStream(ms, GetSystemCompressionLevel(fast), true))
+                {
+                    input.CopyTo(deflateStream);
+                }
             }
 
             //input.Dispose();
@@ -81,17 +95,70 @@ namespace FreeMote
             MemoryStream ms = new MemoryStream();
             ms.WriteByte(0x78);
             ms.WriteByte((byte) (fast ? 0x9C : 0xDA));
-            using (DeflateStream deflateStream =
-                   new DeflateStream(ms,
-                       Consts.ForceCompressionLevel != null ? Consts.ForceCompressionLevel.Value :
-                       fast ? CompressionLevel.Fastest : CompressionLevel.Optimal, true))
+            if (UseSharpZipLib(fast))
             {
-                input.CopyTo(deflateStream);
+                var deflaterLevel = GetDeflaterLevel(fast);
+                var deflater = new Deflater(deflaterLevel, true);
+                using (var deflateStream = new DeflaterOutputStream(ms, deflater))
+                {
+                    deflateStream.IsStreamOwner = false;
+                    input.CopyTo(deflateStream);
+                    deflateStream.Finish();
+                }
+            }
+            else
+            {
+                using (DeflateStream deflateStream = new DeflateStream(ms, GetSystemCompressionLevel(fast), true))
+                {
+                    input.CopyTo(deflateStream);
+                }
             }
 
             //input.Dispose(); //DO NOT dispose
             ms.Position = 0;
             return ms;
+        }
+
+        private static int GetDeflaterLevel(bool fast)
+        {
+            if (Consts.ForceCompressionLevel != null)
+            {
+                switch (Consts.ForceCompressionLevel.Value)
+                {
+                    case CompressionLevel.NoCompression:
+                        return Deflater.NO_COMPRESSION;
+                    case CompressionLevel.Fastest:
+                        return Deflater.BEST_SPEED;
+                    case CompressionLevel.Optimal:
+                        return Deflater.BEST_COMPRESSION;
+                    default:
+                        return fast ? Deflater.BEST_SPEED : Deflater.BEST_COMPRESSION;
+                }
+            }
+
+            // MDF body in real games usually uses max deflate level (0xDA).
+            return fast ? Deflater.BEST_SPEED : Deflater.BEST_COMPRESSION;
+        }
+
+        private static CompressionLevel GetSystemCompressionLevel(bool fast)
+        {
+            if (Consts.ForceCompressionLevel != null)
+            {
+                return Consts.ForceCompressionLevel.Value;
+            }
+
+            return fast ? CompressionLevel.Fastest : CompressionLevel.Optimal;
+        }
+
+        private static bool UseSharpZipLib(bool fast)
+        {
+            if (fast)
+            {
+                return false;
+            }
+
+            // Only use SharpZipLib in optimize mode, so normal mode keeps .NET Deflate speed.
+            return Consts.OptimizeMode;
         }
     }
 }

@@ -61,7 +61,7 @@ namespace FreeMote
 
         /// <summary>
         /// (bool)
-        /// <para>Fast: 0x9C BestCompression: 0xDA NoCompression/Low: 0x01</para>
+        /// <para>Fast: 0x9C; BestCompression: 0xDA; NoCompression/Low: 0x01</para>
         /// </summary>
         public const string Context_PsbZlibFastCompress = "PsbZlibFastCompress";
 
