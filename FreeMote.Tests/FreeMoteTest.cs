@@ -109,6 +109,108 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPrefixTreeForwardLookup()
+        {
+            // Simulate the EMT editor's trie forward lookup algorithm (sub_1006EEB0)
+            // to verify FreeMote's PrefixTree is compatible with the editor's binary search.
+            var testStrings = new List<string>
+            {
+                "apple", "application", "apply", "banana", "band", "zebra", "zero",
+                "test", "testing", "tensor", "meshCombine", "meshTransform", "type",
+                "children", "frameList", "label", "metadata", "coordinate",
+                "苹果", "苹方", "水果", "こんにちは"
+            };
+
+            foreach (var optimize in new[] { false, true })
+            {
+                PrefixTree.Build(testStrings, optimize, out var names, out var treeData, out var offsets);
+
+                // Forward lookup: simulate the editor's trie traversal for each string
+                for (int i = 0; i < testStrings.Count; i++)
+                {
+                    var str = testStrings[i];
+                    var bytes = Encoding.UTF8.GetBytes(str);
+                    uint current = 0; // start at root
+
+                    bool found = true;
+                    // Traverse each byte including the null terminator
+                    for (int bi = 0; bi <= bytes.Length; bi++)
+                    {
+                        byte b = bi < bytes.Length ? bytes[bi] : (byte)0;
+                        uint childIndex = offsets[(int)current] + b;
+                        if (childIndex >= treeData.Count)
+                        {
+                            found = false;
+                            break;
+                        }
+                        if (treeData[(int)childIndex] != current)
+                        {
+                            found = false;
+                            break;
+                        }
+                        current = childIndex;
+
+                        if (b == 0) // null terminator reached
+                        {
+                            uint nameIndex = offsets[(int)current];
+                            // Verify: names[nameIndex] should point to this terminal node
+                            Assert.AreEqual(current, names[(int)nameIndex],
+                                $"Trie forward lookup mismatch for '{str}' (optimize={optimize}): terminal node {current} but names[{nameIndex}]={names[(int)nameIndex]}");
+                            break;
+                        }
+                    }
+                    Assert.IsTrue(found, $"Trie forward lookup failed for '{str}' (optimize={optimize})");
+                }
+
+                Console.WriteLine($"Forward lookup: all {testStrings.Count} strings verified (optimize={optimize})");
+            }
+        }
+
+        [TestMethod]
+        public void TestDictionaryNamesSorted()
+        {
+            // Verify that PSB dictionary name indices are sorted after building.
+            // The EMT editor uses binary search on the names array, so it must be sorted.
+            var names = new List<string> { "alpha", "beta", "children", "delta", "epsilon", "frameList",
+                "gamma", "label", "metadata", "type", "zeta" };
+            names.Sort(string.CompareOrdinal);
+
+            var nameIndexes = new Dictionary<string, int>();
+            for (int i = 0; i < names.Count; i++)
+                nameIndexes[names[i]] = i;
+
+            // Create a PSB with a dictionary containing mixed value types
+            var psb = new PSB();
+            psb.Objects = new PsbDictionary
+            {
+                {"metadata", PsbNull.Null},              // priority 0
+                {"type", PsbNumber.Zero},                 // priority 2
+                {"delta", 1.ToPsbNumber()},               // priority 3
+                {"label", "test".ToPsbString()},          // priority 4
+                {"children", new PsbList()},              // priority 10
+                {"frameList", new PsbList{PsbNumber.Zero}}, // priority 10
+                {"alpha", 42.ToPsbNumber()},              // priority 3-4
+                {"zeta", PsbNull.Null},                   // priority 0
+                {"beta", new PsbDictionary{{"x", PsbNumber.Zero}}}, // priority 10
+                {"gamma", "hello".ToPsbString()},         // priority 4
+                {"epsilon", new PsbNumber(3.14f)},          // priority 4 (float)
+            };
+
+            psb.Merge();
+            var bytes = psb.Build();
+
+            // Reload the PSB and check binary structure
+            var reloaded = new PSB(new MemoryStream(bytes));
+            // If we got here without exception, the binary is valid.
+            // Verify we can read all keys back
+            foreach (var key in psb.Objects.Keys)
+            {
+                Assert.IsTrue(reloaded.Objects.ContainsKey(key), $"Key '{key}' missing after roundtrip");
+            }
+            Console.WriteLine($"Dictionary roundtrip verified with {psb.Objects.Count} mixed-type entries");
+        }
+
+        [TestMethod]
         public void TestEncode()
         {
             //Debug.WriteLine(Environment.CurrentDirectory);

@@ -1615,6 +1615,25 @@ namespace FreeMote.Psb
             }
 
             mbw.Flush();
+
+            // Sort namesList and indexList together by name index (ascending).
+            // PSB format requires dictionary keys to be sorted by name index
+            // for the binary search used by the runtime (e.g., EMT editor).
+            if (namesList.Count > 1)
+            {
+                var indices = Enumerable.Range(0, namesList.Count).ToArray();
+                Array.Sort(indices, (a, b) => namesList[a].CompareTo(namesList[b]));
+                var sortedNames = new List<uint>(namesList.Count);
+                var sortedOffsets = new List<uint>(indexList.Count);
+                for (int si = 0; si < indices.Length; si++)
+                {
+                    sortedNames.Add(namesList[indices[si]]);
+                    sortedOffsets.Add(indexList[indices[si]]);
+                }
+                namesList = sortedNames;
+                indexList = sortedOffsets;
+            }
+
             new PsbArray(namesList).WriteTo(bw);
             new PsbArray(indexList).WriteTo(bw);
             ms.WriteTo(bw.BaseStream);
