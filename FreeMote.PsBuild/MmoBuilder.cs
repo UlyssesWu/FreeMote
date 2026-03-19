@@ -138,7 +138,7 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         public PSB Build(PSB psb)
         {
-            Mmo = new PSB {Type = PsbType.Mmo};
+            Mmo = new PSB(psb.Header.Version) {Type = PsbType.Mmo};
             //Type initializer is tempting but we can't use it since the later object is using the former one
             Mmo.Objects = new PsbDictionary();
             Mmo.Objects["bgChildren"] = BuildBackground();
@@ -458,6 +458,12 @@ namespace FreeMote.PsBuild
                     dic["className"] = classType.ToString().ToPsbString();
                     dic["comment"] = PsbString.Empty;
 
+                    //Restore meshCombinator BEFORE BuildFrameList so new frames get processed
+                    if (dic.ContainsKey("meshCombinator") && dic["meshCombinator"] is PsbDictionary meshCombinator)
+                    {
+                        RestoreMeshCombinator(dic, meshCombinator, parameter, lastTime);
+                    }
+
                     //Build frameList
                     MmoFrameMask frameMask = 0;
                     MmoFrameMaskEx frameMaskEx = 0;
@@ -467,22 +473,18 @@ namespace FreeMote.PsBuild
                         BuildFrameList(frameList, classType, out frameMask, out frameMaskEx, out motionRefs);
                     }
 
-                    //restore meshCombinator to child layers (must be before parameterize processing)
-                    if (dic["meshCombinator"] is PsbDictionary meshCombinatorDic)
-                    {
-                        RestoreMeshCombinator(dic, meshCombinatorDic, parameter, lastTime);
-                    }
-
                     //parameterize: find from psb table and expand
                     string param = null;
                     if (dic["parameterize"] is PsbNumber parameterizeId && parameterizeId.IntValue >= 0)
                     {
                         dic["parameterize"] = parameter[parameterizeId.IntValue];
-                        param = dic["parameterize"].Children("id").ToString();
+                        param = dic["parameterize"].Children("id")?.ToString();
                     }
                     else
                     {
                         dic["parameterize"] = FillDefaultParameterize(dic);
+                        param = dic["parameterize"].Children("id")?.ToString();
+                        if (param == "param") param = null; //default placeholder, not a real parameter
                     }
 
                     //Disable features
@@ -720,9 +722,11 @@ namespace FreeMote.PsBuild
         }
 
         /// <summary>
-        /// Restore meshCombinator to individual child layers with mesh data.
-        /// <para>During MMO→PSB compilation, stripMeshCombineLayer extracts mesh data from child layers
-        /// and packs it into meshCombinator on a parent layer. This method reverses that process.</para>
+        /// Restore meshCombinator to individual layers with mesh frame data.
+        /// <para>During MMO→PSB compilation, stripMeshCombineLayer extracts mesh data from layers
+        /// and packs it into meshCombinator on a parent layer. This method reverses that process:</para>
+        /// <para>ci=0 (first combinator): restores into parent layer's frameList (absolute values)</para>
+        /// <para>ci>0 (subsequent combinators): creates child layers with meshCombine=1 (delta + BezierPatchDefault)</para>
         /// </summary>
         private void RestoreMeshCombinator(PsbDictionary parent, PsbDictionary meshCombinator, PsbList parameter, int lastTime)
         {
@@ -733,140 +737,164 @@ namespace FreeMote.PsBuild
                 return;
             }
 
-            var childrenList = parent["children"] as PsbList;
-            if (childrenList == null)
+            // Extract template content from parent's existing first frame
+            PsbDictionary templateContent = null;
+            if (parent["frameList"] is PsbList existingFrameList)
             {
-                childrenList = new PsbList();
-                parent["children"] = childrenList;
-            }
-
-            int lastTimeUsed = lastTime - 1; // matches TJS: getMotionLastTime(arg0) - 1
-
-            for (int ci = 0; ci < combinatorList.Count; ci++)
-            {
-                if (!(combinatorList[ci] is PsbDictionary combinator))
-                    continue;
-
-                var variable = combinator["variable"] as PsbDictionary;
-                if (variable == null) continue;
-
-                var key = variable["key"]?.ToString();
-                var meshCount = (variable["meshCount"] as PsbNumber)?.IntValue ?? 0;
-                var rangeBegin = variable["rangeBegin"] ?? PsbNumber.Zero;
-                var rangeEnd = variable["rangeEnd"] ?? 1.ToPsbNumber();
-                var meshType = (combinator["meshType"] as PsbNumber)?.IntValue ?? 1;
-                var rawMeshList = combinator["rawMeshList"] as PsbResource;
-
-                if (string.IsNullOrEmpty(key) || meshCount <= 0 || rawMeshList?.Data == null || rawMeshList.Data.Length == 0)
-                    continue;
-
-                // Each bezier patch has 4x4 control points × 2 coords = 32 doubles
-                const int valuesPerMesh = 32;
-                int expectedBytes = meshCount * valuesPerMesh * sizeof(double);
-                if (rawMeshList.Data.Length < expectedBytes) continue;
-
-                var allValues = new double[meshCount * valuesPerMesh];
-                Buffer.BlockCopy(rawMeshList.Data, 0, allValues, 0, expectedBytes);
-
-                // Non-first combinators are delta-encoded: add back BEZIER_PATCH_DEFAULT
-                if (ci > 0)
+                foreach (var frame in existingFrameList)
                 {
-                    for (int mi = 0; mi < meshCount; mi++)
+                    if (frame is PsbDictionary fd && fd["content"] is PsbDictionary ec)
                     {
-                        for (int vi = 0; vi < valuesPerMesh; vi++)
-                        {
-                            allValues[mi * valuesPerMesh + vi] += BezierPatchDefault[vi];
-                        }
-                    }
-                }
-
-                // Calculate time step: meshCount frames evenly distributed over [0, lastTimeUsed]
-                int step = meshCount > 1 ? lastTimeUsed / (meshCount - 1) : lastTimeUsed;
-
-                // Build frameList with mesh data
-                var frameList = new PsbList(meshCount + 1);
-                for (int mi = 0; mi < meshCount; mi++)
-                {
-                    var mbp = new PsbList(valuesPerMesh);
-                    for (int vi = 0; vi < valuesPerMesh; vi++)
-                    {
-                        mbp.Add(new PsbNumber(allValues[mi * valuesPerMesh + vi]));
-                    }
-
-                    var content = new PsbDictionary
-                    {
-                        {"mask", ((int) MmoFrameMask.Mesh).ToPsbNumber()},
-                        {"mesh", new PsbDictionary {{"bp", mbp}, {"cc", PsbNull.Null}}},
-                        {"src", "blank".ToPsbString()},
-                    };
-
-                    frameList.Add(new PsbDictionary
-                    {
-                        {"content", content},
-                        {"time", (mi * step).ToPsbNumber()},
-                        {"type", 3.ToPsbNumber()}, // TWEEN
-                    });
-                }
-
-                // Null terminator frame
-                frameList.Add(new PsbDictionary
-                {
-                    {"time", lastTime.ToPsbNumber()},
-                    {"type", PsbNumber.Zero}, // NULL
-                });
-
-                // Find or add parameterize entry in parameter table
-                int paramIndex = -1;
-                for (int pi = 0; pi < parameter.Count; pi++)
-                {
-                    if (parameter[pi] is PsbDictionary pd && pd.Children("id")?.ToString() == key)
-                    {
-                        paramIndex = pi;
+                        templateContent = ec;
                         break;
                     }
                 }
-
-                if (paramIndex < 0)
-                {
-                    parameter.Add(new PsbDictionary
-                    {
-                        {"discretization", PsbNumber.Zero},
-                        {"enabled", 1.ToPsbNumber()},
-                        {"id", key.ToPsbString()},
-                        {"rangeBegin", rangeBegin},
-                        {"rangeEnd", rangeEnd},
-                    });
-                    paramIndex = parameter.Count - 1;
-                }
-
-                // Create restored child layer in PSB format
-                var childLayer = new PsbDictionary
-                {
-                    {"children", new PsbList()},
-                    {"coordinate", PsbNumber.Zero},
-                    {"exportSelf", 1.ToPsbNumber()},
-                    {"frameList", frameList},
-                    {"groundCorrection", PsbNumber.Zero},
-                    {"inheritMask", 33556476.ToPsbNumber()},
-                    {"joinTarget", 1.ToPsbNumber()},
-                    {"label", key.ToPsbString()},
-                    {"meshCombine", 1.ToPsbNumber()},
-                    {"meshDivision", 20.ToPsbNumber()},
-                    {"meshSyncChildMask", PsbNumber.Zero},
-                    {"meshTransform", meshType.ToPsbNumber()},
-                    {"metadata", PsbNull.Null},
-                    {"objTriPriority", 2.ToPsbNumber()},
-                    {"parameterize", paramIndex.ToPsbNumber()},
-                    {"stencilType", PsbNumber.Zero},
-                    {"transformOrder", new PsbList {PsbNumber.Zero, 3.ToPsbNumber(), 2.ToPsbNumber(), 1.ToPsbNumber()}},
-                    {"type", PsbNumber.Zero}, // ObjLayerItem
-                };
-
-                childLayer.Parent = childrenList;
-                childrenList.Add(childLayer);
             }
 
-            parent.Remove("meshCombinator");
+            const int valuesPerMesh = 32; // 4x4 control points × 2 coords
+
+            // Phase 1: ci=0 - restore parent's own mesh keyframes
+            if (combinatorList[0] is PsbDictionary firstCombinator)
+            {
+                var variable = firstCombinator["variable"] as PsbDictionary;
+                if (variable != null)
+                {
+                    var key = variable["key"]?.ToString();
+                    var meshCount = (variable["meshCount"] as PsbNumber)?.IntValue ?? 0;
+                    var rangeBegin = variable["rangeBegin"] ?? PsbNumber.Zero;
+                    var rangeEnd = variable["rangeEnd"] ?? 1.ToPsbNumber();
+                    var neutralIndex = (firstCombinator["neutralIndex"] as PsbNumber)?.IntValue ?? -1;
+                    var rawMeshList = firstCombinator["rawMeshList"] as PsbResource;
+
+                    if (!string.IsNullOrEmpty(key) && meshCount > 0 && rawMeshList?.Data != null && rawMeshList.Data.Length > 0)
+                    {
+                        var allValues = DecodeMeshValues(rawMeshList, meshCount, valuesPerMesh, isDelta: false);
+                        if (allValues != null)
+                        {
+                            int step = meshCount > 1 ? lastTime / (meshCount - 1) : lastTime;
+                            int paramIndex = FindOrAddParameter(parameter, key, rangeBegin, rangeEnd);
+
+                            var newFrameList = new PsbList(meshCount + 1);
+                            for (int mi = 0; mi < meshCount; mi++)
+                            {
+                                var content = new PsbDictionary();
+                                if (templateContent != null)
+                                {
+                                    foreach (var kv in templateContent)
+                                    {
+                                        if (kv.Key != "mesh")
+                                            content[kv.Key] = kv.Value;
+                                    }
+                                }
+                                else
+                                {
+                                    content["mask"] = ((int) MmoFrameMask.Mesh).ToPsbNumber();
+                                    content["src"] = "blank".ToPsbString();
+                                }
+
+                                content["mesh"] = BuildMeshDict(allValues, mi, neutralIndex, valuesPerMesh);
+
+                                newFrameList.Add(new PsbDictionary
+                                {
+                                    {"content", content},
+                                    {"time", (mi * step).ToPsbNumber()},
+                                    {"type", 3.ToPsbNumber()},
+                                });
+                            }
+
+                            newFrameList.Add(new PsbDictionary
+                            {
+                                {"time", (lastTime + 1).ToPsbNumber()},
+                                {"type", PsbNumber.Zero},
+                            });
+
+                            parent["frameList"] = newFrameList;
+                            parent["parameterize"] = paramIndex.ToPsbNumber();
+                        }
+                    }
+                }
+            }
+
+            // ci>0 data stays in meshCombinator.combinatorList — the runtime engine
+            // (emotedriver.dll) reads it directly. Creating physical child layers would
+            // break layer paths referenced by the metadata's partsList, crashing the editor.
+            // Keep meshCombinator on the parent so the runtime engine can use it.
+        }
+
+        private double[] DecodeMeshValues(PsbResource rawMeshList, int meshCount, int valuesPerMesh, bool isDelta)
+        {
+            int totalValues = meshCount * valuesPerMesh;
+            int expectedBytesDouble = totalValues * sizeof(double);
+            int expectedBytesFloat = totalValues * sizeof(float);
+
+            var allValues = new double[totalValues];
+
+            if (rawMeshList.Data.Length >= expectedBytesDouble)
+            {
+                Buffer.BlockCopy(rawMeshList.Data, 0, allValues, 0, expectedBytesDouble);
+            }
+            else if (rawMeshList.Data.Length >= expectedBytesFloat)
+            {
+                var floatValues = new float[totalValues];
+                Buffer.BlockCopy(rawMeshList.Data, 0, floatValues, 0, expectedBytesFloat);
+                for (int i = 0; i < totalValues; i++)
+                {
+                    allValues[i] = floatValues[i];
+                }
+            }
+            else
+            {
+                return null;
+            }
+
+            if (isDelta)
+            {
+                for (int mi = 0; mi < meshCount; mi++)
+                {
+                    for (int vi = 0; vi < valuesPerMesh; vi++)
+                    {
+                        allValues[mi * valuesPerMesh + vi] += BezierPatchDefault[vi];
+                    }
+                }
+            }
+
+            return allValues;
+        }
+
+        private int FindOrAddParameter(PsbList parameter, string key, IPsbValue rangeBegin, IPsbValue rangeEnd)
+        {
+            for (int pi = 0; pi < parameter.Count; pi++)
+            {
+                if (parameter[pi] is PsbDictionary pd && pd.Children("id")?.ToString() == key)
+                {
+                    return pi;
+                }
+            }
+
+            parameter.Add(new PsbDictionary
+            {
+                {"discretization", PsbNumber.Zero},
+                {"enabled", 1.ToPsbNumber()},
+                {"id", key.ToPsbString()},
+                {"rangeBegin", rangeBegin},
+                {"rangeEnd", rangeEnd},
+            });
+            return parameter.Count - 1;
+        }
+
+        private static PsbDictionary BuildMeshDict(double[] allValues, int meshIndex, int neutralIndex, int valuesPerMesh)
+        {
+            if (meshIndex == neutralIndex)
+            {
+                return new PsbDictionary {{"bp", PsbNull.Null}, {"cc", PsbNull.Null}};
+            }
+
+            var bp = new PsbList(valuesPerMesh);
+            for (int vi = 0; vi < valuesPerMesh; vi++)
+            {
+                bp.Add(new PsbNumber(allValues[meshIndex * valuesPerMesh + vi]));
+            }
+            return new PsbDictionary {{"bp", bp}, {"cc", PsbNull.Null}};
         }
 
         private HashSet<string> InferFeatures(MmoFrameMask frameMask, MmoFrameMaskEx frameMaskEx, MmoItemClass classType)
@@ -1166,6 +1194,15 @@ namespace FreeMote.PsBuild
                         {
                             content["mbp"] = content["mesh"].Children("bp");
                             content["mcc"] = content["mesh"].Children("cc");
+                            content.Remove("mesh"); //PSB v4 field, not needed in MMO
+                        }
+
+                        //Merge src with icon: "blank" + icon "x:y:w:h" → "blank/x:y:w:h" (krkr format)
+                        //Required for meshCombine layers to resolve image dimensions for mesh grid
+                        if (content["src"] is PsbString srcStr && srcStr.Value == "blank"
+                            && content["icon"] is PsbString iconStr)
+                        {
+                            content["src"] = new PsbString($"blank/{iconStr.Value}");
                         }
 
                         var hasStencil = classType == MmoItemClass.StencilLayerItem;

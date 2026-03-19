@@ -265,6 +265,12 @@ namespace FreeMote.PsBuild
                         psb.Header.Version = resx.PsbVersion.Value;
                     }
 
+                    if (resx.HasExtraResources)
+                    {
+                        var extraContext = FreeMount.CreateContext(resx.Context);
+                        PsbResHelper.LinkExtraResources(psb, extraContext, resx.ExtraResources, resx.ExtraFlattenArrays, baseDir);
+                    }
+
                     if (resx.ExternalTextures)
                     {
 #if DEBUG
