@@ -159,8 +159,11 @@ Example:
   PsbDecompile unlink sample.psb
 ";
                 //options
-                var optOrder = linkCmd.Option<PsbLinkOrderBy>("-o|--order <ORDER>",
+                var optOrder = linkCmd.Option<PsbLinkOrderBy>("-od|--order <ORDER>",
                     "Set texture unlink order (ByName/ByOrder/Convention). Default=ByName",
+                    CommandOptionType.SingleValue);
+                var optOutputFolder = linkCmd.Option<string>("-o|--output <PATH>",
+                    "Set output folder path. Default=Input file directory",
                     CommandOptionType.SingleValue);
                 //args
                 var argPsbPath = linkCmd.Argument("PSB", "PSB Path").IsRequired();
@@ -183,6 +186,11 @@ Example:
 
                     //PsbImageFormat format = optFormat.HasValue() ? optFormat.ParsedValue : PsbImageFormat.png;
                     var order = optOrder.HasValue() ? optOrder.ParsedValue : PsbLinkOrderBy.Name;
+                    string outputFolder = null;
+                    if (optOutputFolder.HasValue())
+                    {
+                        outputFolder = ResolveOutputFolder(optOutputFolder.Value());
+                    }
                     var psbPaths = argPsbPath.Values;
                     foreach (var psbPath in psbPaths)
                     {
@@ -190,7 +198,7 @@ Example:
                         {
                             try
                             {
-                                PsbDecompiler.UnlinkToFile(psbPath, order: order);
+                                PsbDecompiler.UnlinkToFile(psbPath, order: order, outputFolder: outputFolder);
                             }
                             catch (Exception e)
                             {
