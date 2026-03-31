@@ -8,7 +8,7 @@ using FreeMote.Psb;
 
 namespace FreeMote.PsBuild
 {
-    internal static class MmoExtensions
+    public static class MmoExtensions
     {
         /// <summary>
         /// Convert number to shape

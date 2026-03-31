@@ -701,7 +701,7 @@ namespace FreeMote.Psb
         /// <param name="r">Resource</param>
         /// <param name="duplicatePalette">When set to true, Pal.Data may not be set!</param>
         /// <returns></returns>
-        internal static ImageMetadata GenerateImageMetadata(PsbDictionary d, PsbResource r = null,
+        public static ImageMetadata GenerateImageMetadata(PsbDictionary d, PsbResource r = null,
             bool duplicatePalette = false)
         {
             if (r == null)
