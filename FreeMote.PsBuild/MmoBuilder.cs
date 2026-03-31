@@ -28,6 +28,11 @@ namespace FreeMote.PsBuild
         public Dictionary<string, MmoPsdMetadata> MmoPsdMetadatas { get; set; }
 
         /// <summary>
+        /// 控制是否启用变量绑定推断（InferVariableBind），默认为 true
+        /// </summary>
+        public bool EnableVariableBindInference { get; set; } = true;
+
+        /// <summary>
         /// Key: keyword in object path; Value: if find that keyword in path, set a custom menu path (for Editor)
         /// </summary>
         public Dictionary<string, string> CustomPartMenuPaths { get; set; } = new Dictionary<string, string>();
@@ -413,6 +418,8 @@ namespace FreeMote.PsBuild
                     objectChildrenItem["parameterize"] = motionItem.ContainsKey("parameterize") && motionItem["parameterize"] is not PsbNull ? 
                         parameter[((PsbNumber)motionItem["parameterize"]).IntValue]
                         : FillDefaultParameterize(dic);
+                    // priorityFrameList is a draw-order list of flattened layer indices, not a layer id list.
+                    // After mc=1 helper layers are inserted, these indices must be remapped.
                     objectChildrenItem["priorityFrameList"] = BuildPriorityFrameList((PsbList)motionItem["priority"]);
                     objectChildrenItem["referenceModelFileList"] = motionItem["referenceModelFileList"];
                     objectChildrenItem["referenceProjectFileList"] = motionItem["referenceProjectFileList"];
@@ -424,7 +431,22 @@ namespace FreeMote.PsBuild
                     int lastTime = lastTimeVal?.IntValue ?? 61;
                     var layer = (PsbList)motionItem["layer"];
                     layer.Parent = objectChildrenItem;
+
+                    // Capture flat layer order before topology changes.
+                    // Note: mc=1 means meshCombine-enabled helper layer.
+                    // Once meshCombinator is materialized into physical helper layers, flatten indices shift.
+                    var oldFlatList = FlattenLayerTree(layer);
+
                     BuildLayerChildren(layer, parameter, lastTime);
+
+                    // priorityFrameList stores indices into flattened layer order.
+                    // If we inserted helpers (count changed), remap old indices to new positions.
+                    var newFlatList = FlattenLayerTree(layer);
+                    if (oldFlatList.Count != newFlatList.Count)
+                    {
+                        RemapPriorityFrameList(objectChildrenItem["priorityFrameList"] as PsbList, oldFlatList, newFlatList);
+                    }
+
                     objectChildrenItem["layerChildren"] = motionItem["layer"];
 
                     objectChildren_children.Add(objectChildrenItem);
@@ -458,7 +480,8 @@ namespace FreeMote.PsBuild
                     dic["className"] = classType.ToString().ToPsbString();
                     dic["comment"] = PsbString.Empty;
 
-                    //Restore meshCombinator BEFORE BuildFrameList so new frames get processed
+                    // Restore meshCombinator before BuildFrameList so packed mesh data is expanded into real helper layers.
+                    // meshCombinator is the packed container that stores ci=0 / ci>0 meshCombine tracks.
                     if (dic.ContainsKey("meshCombinator") && dic["meshCombinator"] is PsbDictionary meshCombinator)
                     {
                         RestoreMeshCombinator(dic, meshCombinator, parameter, lastTime);
@@ -522,7 +545,8 @@ namespace FreeMote.PsBuild
                         };
                     }
 
-                    //Expand meshSyncChildMask
+                    // meshSyncChildMask controls which child meshCombine layers inherit or sync to this layer.
+                    // Expand the packed bitmask into explicit MMO fields.
                     if (dic["meshSyncChildMask"] is PsbNumber number)
                     {
                         dic["meshSyncChildShape"] = (number.IntValue & 8) == 8 ? 1.ToPsbNumber() : PsbNumber.Zero;
@@ -644,6 +668,11 @@ namespace FreeMote.PsBuild
                         var path = dic.GetMmoPath();
                         path = path.Substring(path.IndexOf('/') + 1);
                         var paths = path.Split('/');
+                        if (paths.Length < 2)
+                        {
+                            //malformed parent chain, skip parts entry to avoid index out of range
+                            goto BuildChildren;
+                        }
                         var menuPath = InferDefaultPart(paths[0], path);
                         //Infer Feature
                         var features = InferFeatures(frameMask, frameMaskEx, classType);
@@ -690,6 +719,7 @@ namespace FreeMote.PsBuild
                         }
                     }
 
+                    BuildChildren:
                     //build children
                     if (dic["children"] is PsbList children)
                     {
@@ -702,6 +732,10 @@ namespace FreeMote.PsBuild
             PsbDictionary BuildCharaProfileItem(string id, string label, string path)
             {
                 var paths = path.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+                if (paths.Length < 4)
+                {
+                    return null;
+                }
                 var l = new PsbDictionary(3)
                 {
                     {"chara", paths[1].ToPsbString()},
@@ -725,8 +759,12 @@ namespace FreeMote.PsBuild
         /// Restore meshCombinator to individual layers with mesh frame data.
         /// <para>During MMO→PSB compilation, stripMeshCombineLayer extracts mesh data from layers
         /// and packs it into meshCombinator on a parent layer. This method reverses that process:</para>
-        /// <para>ci=0 (first combinator): restores into parent layer's frameList (absolute values)</para>
-        /// <para>ci>0 (subsequent combinators): creates child layers with meshCombine=1 (delta + BezierPatchDefault)</para>
+        /// <para>Terminology: in combinatorList, ci means combinator index.
+        /// Typically ci=0 is the parent/self mesh track, ci&gt;0 are helper-layer tracks.</para>
+        /// <para>If the parent already has its own explicit parameter, keep it and materialize
+        /// combinator entries as nested meshCombine child layers.</para>
+        /// <para>Otherwise ci=0 restores into the parent layer's frameList and the remaining
+        /// combinators are materialized as nested child layers.</para>
         /// </summary>
         private void RestoreMeshCombinator(PsbDictionary parent, PsbDictionary meshCombinator, PsbList parameter, int lastTime)
         {
@@ -752,9 +790,16 @@ namespace FreeMote.PsBuild
             }
 
             const int valuesPerMesh = 32; // 4x4 control points × 2 coords
+            var firstKey = GetCombinatorKey(combinatorList[0] as PsbDictionary);
+            var parentParameterKey = ResolveParameterId(parent.TryGetValue("parameterize", out var parameterizeObj) ? parameterizeObj : null, parameter);
+            var parentHasExplicitParameter = !string.IsNullOrEmpty(parentParameterKey) && parentParameterKey != "param";
+            var restoreFirstToParent = !parentHasExplicitParameter || string.Equals(parentParameterKey, firstKey, StringComparison.Ordinal);
+            var startIndex = 0;
 
-            // Phase 1: ci=0 - restore parent's own mesh keyframes
-            if (combinatorList[0] is PsbDictionary firstCombinator)
+            // If the parent does not already expose a different parameter, restore the first
+            // combinator directly onto the parent and materialize the remaining ones as child layers.
+            // In most assets this first entry corresponds to ci=0.
+            if (restoreFirstToParent && combinatorList[0] is PsbDictionary firstCombinator)
             {
                 var variable = firstCombinator["variable"] as PsbDictionary;
                 if (variable != null)
@@ -810,15 +855,240 @@ namespace FreeMote.PsBuild
 
                             parent["frameList"] = newFrameList;
                             parent["parameterize"] = paramIndex.ToPsbNumber();
+                            startIndex = 1;
                         }
                     }
                 }
             }
 
-            // ci>0 data stays in meshCombinator.combinatorList — the runtime engine
-            // (emotedriver.dll) reads it directly. Creating physical child layers would
-            // break layer paths referenced by the metadata's partsList, crashing the editor.
-            // Keep meshCombinator on the parent so the runtime engine can use it.
+            MaterializeMeshCombinatorChildren(parent, combinatorList, startIndex, parameter, lastTime, valuesPerMesh, templateContent);
+            parent.Remove("meshCombinator");
+        }
+
+        private void MaterializeMeshCombinatorChildren(PsbDictionary parent, PsbList combinatorList, int startIndex,
+            PsbList parameter, int lastTime, int valuesPerMesh, PsbDictionary templateContent)
+        {
+            if (startIndex >= combinatorList.Count)
+            {
+                return;
+            }
+
+            var originalChildren = parent["children"] as PsbList ?? new PsbList();
+            var topChildren = new PsbList { Parent = parent };
+            PsbList currentChildren = topChildren;
+            PsbDictionary deepestHelper = null;
+
+            // Build helper layers as nested chain, not flat siblings:
+            // helper(startIndex) -> helper(startIndex+1) -> ... -> originalChildren
+            for (var index = startIndex; index < combinatorList.Count; index++)
+            {
+                if (!(combinatorList[index] is PsbDictionary combinator) ||
+                    !(combinator["variable"] is PsbDictionary variable))
+                {
+                    continue;
+                }
+
+                var key = variable["key"]?.ToString();
+                var meshCount = (variable["meshCount"] as PsbNumber)?.IntValue ?? 0;
+                var rangeBegin = variable["rangeBegin"] ?? PsbNumber.Zero;
+                var rangeEnd = variable["rangeEnd"] ?? 1.ToPsbNumber();
+                var neutralIndex = (combinator["neutralIndex"] as PsbNumber)?.IntValue ?? -1;
+                var rawMeshList = combinator["rawMeshList"] as PsbResource;
+
+                if (string.IsNullOrEmpty(key) || meshCount <= 0 || rawMeshList?.Data == null || rawMeshList.Data.Length == 0)
+                {
+                    continue;
+                }
+
+                var allValues = DecodeMeshValues(rawMeshList, meshCount, valuesPerMesh, isDelta: true);
+                if (allValues == null)
+                {
+                    continue;
+                }
+
+                var helper = CloneMeshCombineLayerTemplate(parent);
+                var paramIndex = FindOrAddParameter(parameter, key, rangeBegin, rangeEnd);
+
+                helper["label"] = GetMeshCombinatorLayerLabel(key).ToPsbString();
+                helper["frameList"] = BuildMeshFrameList(allValues, meshCount, neutralIndex, valuesPerMesh, lastTime, templateContent);
+                helper["parameterize"] = paramIndex.ToPsbNumber();
+                // mc means meshCombine. 1 means this node is a meshCombine helper layer.
+                helper["meshCombine"] = 1.ToPsbNumber();
+                helper.Remove("meshCombinator");
+                helper.Parent = currentChildren;
+                currentChildren.Add(helper);
+                deepestHelper = helper;
+
+                var nestedChildren = new PsbList { Parent = helper };
+                helper["children"] = nestedChildren;
+                currentChildren = nestedChildren;
+            }
+
+            if (deepestHelper == null)
+            {
+                return;
+            }
+
+            originalChildren.Parent = deepestHelper;
+            deepestHelper["children"] = originalChildren;
+            parent["children"] = topChildren;
+        }
+
+        private PsbDictionary CloneMeshCombineLayerTemplate(PsbDictionary source)
+        {
+            var clone = new PsbDictionary(source.Count);
+            foreach (var kv in source)
+            {
+                if (kv.Key == "children" || kv.Key == "frameList" || kv.Key == "parameterize" || kv.Key == "meshCombinator")
+                {
+                    continue;
+                }
+
+                clone[kv.Key] = ClonePsbValue(kv.Value);
+            }
+
+            return clone;
+        }
+
+        private PsbList BuildMeshFrameList(double[] allValues, int meshCount, int neutralIndex, int valuesPerMesh, int lastTime,
+            PsbDictionary templateContent)
+        {
+            int step = meshCount > 1 ? lastTime / (meshCount - 1) : lastTime;
+            var frameList = new PsbList(meshCount + 1);
+
+            for (int meshIndex = 0; meshIndex < meshCount; meshIndex++)
+            {
+                var content = new PsbDictionary();
+                if (templateContent != null)
+                {
+                    foreach (var kv in templateContent)
+                    {
+                        if (kv.Key != "mesh")
+                        {
+                            content[kv.Key] = ClonePsbValue(kv.Value);
+                        }
+                    }
+                }
+                else
+                {
+                    content["mask"] = ((int)MmoFrameMask.Mesh).ToPsbNumber();
+                    content["src"] = "blank".ToPsbString();
+                }
+
+                // mesh is the PSB-side mesh payload; it contains bp (BezierPatch) and cc (ColorControl).
+                content["mesh"] = BuildMeshDict(allValues, meshIndex, neutralIndex, valuesPerMesh);
+                frameList.Add(new PsbDictionary
+                {
+                    {"content", content},
+                    {"time", (meshIndex * step).ToPsbNumber()},
+                    {"type", 3.ToPsbNumber()},
+                });
+            }
+
+            frameList.Add(new PsbDictionary
+            {
+                {"time", (lastTime + 1).ToPsbNumber()},
+                {"type", PsbNumber.Zero},
+            });
+
+            return frameList;
+        }
+
+        private static string ResolveParameterId(IPsbValue parameterize, PsbList parameter)
+        {
+            if (parameterize is PsbDictionary parameterDic)
+            {
+                return parameterDic.Children("id")?.ToString();
+            }
+
+            if (parameterize is PsbNumber parameterIndex && parameterIndex.IntValue >= 0 && parameterIndex.IntValue < parameter.Count &&
+                parameter[parameterIndex.IntValue] is PsbDictionary param)
+            {
+                return param.Children("id")?.ToString();
+            }
+
+            return null;
+        }
+
+        private static string GetCombinatorKey(PsbDictionary combinator)
+        {
+            return (combinator?["variable"] as PsbDictionary)?["key"]?.ToString();
+        }
+
+        private static string GetMeshCombinatorLayerLabel(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return "param";
+            }
+
+            if (key.StartsWith("hair_LR_M", StringComparison.Ordinal) || key == "quake_LR_M")
+            {
+                return "QLR_M";
+            }
+
+            if (key.StartsWith("hair_LR", StringComparison.Ordinal) || key == "quake_LR")
+            {
+                return "QLR";
+            }
+
+            if (key.StartsWith("hair_UD", StringComparison.Ordinal) || key == "quake_UD")
+            {
+                return "QUD";
+            }
+
+            switch (key)
+            {
+                case "act_sp2":
+                    return "act_sp2";
+                case "act_sp3":
+                    return "act_sp3";
+                case "head_slant":
+                    return "SL";
+                case "body_slant":
+                    return "BSL";
+                case "head_UD":
+                case "face_eye_UD":
+                    return "UD";
+                case "head_LR":
+                case "face_eye_LR":
+                    return "LR";
+                case "body_UD":
+                    return "BUD";
+                case "body_LR":
+                    return "BLR";
+                case "bust_UD":
+                    return "BQUD";
+                case "bust_LR":
+                    return "BQLR";
+                default:
+                    return key;
+            }
+        }
+
+        private static IPsbValue ClonePsbValue(IPsbValue value)
+        {
+            switch (value)
+            {
+                case null:
+                    return null;
+                case PsbDictionary dictionary:
+                    var newDictionary = new PsbDictionary(dictionary.Count);
+                    foreach (var kv in dictionary)
+                    {
+                        newDictionary[kv.Key] = ClonePsbValue(kv.Value);
+                    }
+                    return newDictionary;
+                case PsbList list:
+                    var newList = new PsbList(list.Count);
+                    foreach (var item in list)
+                    {
+                        newList.Add(ClonePsbValue(item));
+                    }
+                    return newList;
+                default:
+                    return value;
+            }
         }
 
         private double[] DecodeMeshValues(PsbResource rawMeshList, int meshCount, int valuesPerMesh, bool isDelta)
@@ -886,6 +1156,7 @@ namespace FreeMote.PsBuild
         {
             if (meshIndex == neutralIndex)
             {
+                // bp = BezierPatch, cc = ColorControl.
                 return new PsbDictionary {{"bp", PsbNull.Null}, {"cc", PsbNull.Null}};
             }
 
@@ -894,6 +1165,7 @@ namespace FreeMote.PsBuild
             {
                 bp.Add(new PsbNumber(allValues[meshIndex * valuesPerMesh + vi]));
             }
+            // BuildFrameList later maps them to MMO keys mbp/mcc.
             return new PsbDictionary {{"bp", bp}, {"cc", PsbNull.Null}};
         }
 
@@ -1192,6 +1464,7 @@ namespace FreeMote.PsBuild
 
                         if (content.ContainsKey("mesh")) //25
                         {
+                            // mbp/mcc are MMO-side mesh keys corresponding to PSB mesh.bp / mesh.cc.
                             content["mbp"] = content["mesh"].Children("bp");
                             content["mcc"] = content["mesh"].Children("cc");
                             content.Remove("mesh"); //PSB v4 field, not needed in MMO
@@ -1547,22 +1820,148 @@ namespace FreeMote.PsBuild
             foreach (var val in variableList)
             {
                 var item = (PsbDictionary)val;
+                var variableId = item["label"].ToString();
+                var bindLabel = EnableVariableBindInference ? InferVariableBind(variableId) : variableId;
+                var displayLabel = InferVariableDisplayLabel(variableId);
 
                 variableAlias.Add(new PsbDictionary
                 {
-                    {"bind", item["label"] }, //TODO: bind default name Dictionary
+                    {"bind", bindLabel.ToPsbString() },
                     {"comment", PsbString.Empty },
                     {"id", item["label"] },
-                    {"label", item["label"] },
+                    {"label", displayLabel.ToPsbString() },
                 });
 
                 variableFrameAlias.Add(new PsbDictionary
                 {
                     {"comment", PsbString.Empty },
                     {"frames", item["frameList"] },
-                    {"id", item["label"] },
+                    {"id", bindLabel.ToPsbString() },
                 });
             }
+        }
+
+        private static string InferVariableBind(string variableId)
+        {
+            switch (variableId)
+            {
+                case "move_UD":
+                    return "位置・上下";
+                case "move_LR":
+                    return "位置・左右";
+                case "head_LR":
+                    return "頭向き・左右";
+                case "head_UD":
+                case "body_UD":
+                case "face_eye_UD":
+                    return "向き・上下";
+                case "body_LR":
+                case "face_eye_LR":
+                case "body_slant":
+                case "head_slant":
+                    return "向き・左右";
+                case "act_sp":
+                case "act_sp2":
+                case "act_sp3":
+                    return "特殊変形";
+                case "face_eye_open":
+                    return "目・表情";
+                case "face_eyebrow":
+                    return "眉・表情";
+                case "face_mouth":
+                    return "口・表情";
+                case "face_eye_sp":
+                case "face_hitomi_sp":
+                case "face_mouth_sp":
+                case "face_eyebrow_sp":
+                    return "表情特殊変形";
+                case "face_eye_hi":
+                    return "ハイライト・表情";
+                case "face_talk":
+                    return "口パク";
+                case "face_tears":
+                    return "涙・表情";
+                case "face_cheek":
+                    return "頬・表情";
+                case "arm_type":
+                    return "腕タイプ";
+                case "vr_LR":
+                    return "VR左右";
+                case "vr_UD":
+                    return "VR上下";
+            }
+
+            if (variableId.StartsWith("hair_UD", StringComparison.Ordinal))
+            {
+                return "髪揺れ・上下";
+            }
+
+            if (variableId.StartsWith("hair_LR_M", StringComparison.Ordinal))
+            {
+                return "髪揺れ弛み・左右";
+            }
+
+            if (variableId.StartsWith("hair_LR", StringComparison.Ordinal))
+            {
+                return "髪揺れ・左右";
+            }
+
+            if (variableId.StartsWith("quake_UD", StringComparison.Ordinal))
+            {
+                return "パーツ揺れ・上下";
+            }
+
+            if (variableId.StartsWith("quake_LR_M", StringComparison.Ordinal))
+            {
+                return "パーツ揺れ弛み・左右";
+            }
+
+            if (variableId.StartsWith("quake_LR", StringComparison.Ordinal))
+            {
+                return "パーツ揺れ・左右";
+            }
+
+            if (variableId.StartsWith("fade_", StringComparison.Ordinal))
+            {
+                return "fade表示";
+            }
+
+            return variableId;
+        }
+
+        private static string InferVariableDisplayLabel(string variableId)
+        {
+            switch (variableId)
+            {
+                case "head_UD":
+                    return "頭向き・上下";
+                case "head_LR":
+                    return "頭向き・左右";
+                case "head_slant":
+                    return "頭傾き";
+                case "body_UD":
+                    return "身体向き・上下";
+                case "body_LR":
+                    return "身体向き・左右";
+                case "body_slant":
+                    return "身体傾き";
+                case "face_eye_UD":
+                    return "瞳上下";
+                case "face_eye_LR":
+                    return "瞳左右";
+                case "face_eye_sp":
+                    return "マブタ特殊変形";
+                case "face_eye_hi":
+                    return "ハイライト・表情";
+                case "act_sp":
+                    return "特殊変形1";
+                case "act_sp2":
+                    return "特殊変形2";
+                case "act_sp3":
+                    return "特殊変形3";
+            }
+
+            return variableId;
         }
 
         private IPsbValue BuildControlDefinition(PsbList control)
@@ -1827,7 +2226,7 @@ namespace FreeMote.PsBuild
 
         /// <summary>
         /// Default identity 4×4 bezier patch control points (32 doubles).
-        /// Layout: (x,y) pairs, row by row. x ∈ {-0.1, 7/30, 17/30, 0.9}, y ∈ {0, 1/3, 2/3, 1}
+        /// Layout: (x,y) pairs, row by row. x ∈ {0, 1/3, 2/3, 1}, y ∈ {0, 1/3, 2/3, 1}
         /// </summary>
         private static readonly double[] BezierPatchDefault = GenerateBezierPatchDefault();
 
@@ -1838,7 +2237,7 @@ namespace FreeMote.PsBuild
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    values[(row * 4 + col) * 2] = -0.1 + col / 3.0;
+                    values[(row * 4 + col) * 2] = col / 3.0;
                     values[(row * 4 + col) * 2 + 1] = row / 3.0;
                 }
             }
@@ -1878,6 +2277,103 @@ namespace FreeMote.PsBuild
                     {"directColorFormat", "5553".ToPsbString() }
                 } }
             };
+        }
+
+        /// <summary>
+        /// Flatten a layer tree into a pre-order list (same order as EMT editor's flattenLayerList).
+        /// </summary>
+        private static List<PsbDictionary> FlattenLayerTree(PsbList layers)
+        {
+            var result = new List<PsbDictionary>();
+            foreach (var item in layers)
+            {
+                if (item is PsbDictionary dic)
+                {
+                    result.Add(dic);
+                    if (dic["children"] is PsbList children)
+                    {
+                        result.AddRange(FlattenLayerTree(children));
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// After mc=1 layers are inserted by RestoreMeshCombinator, the flat layer order changes
+        /// but priorityFrameList still contains indices from the old (pre-insertion) order.
+        /// This method remaps those indices and adds new layers to the priority list.
+        /// mc = meshCombine helper flag; ci = combinator index during restoration.
+        /// </summary>
+        private static void RemapPriorityFrameList(PsbList priorityFrameList, List<PsbDictionary> oldFlatList, List<PsbDictionary> newFlatList)
+        {
+            if (priorityFrameList == null || priorityFrameList.Count == 0)
+                return;
+
+            // Build lookup: layer reference → new index
+            var newIndexMap = new Dictionary<PsbDictionary, int>(newFlatList.Count);
+            for (int i = 0; i < newFlatList.Count; i++)
+            {
+                newIndexMap[newFlatList[i]] = i;
+            }
+
+            foreach (var frame in priorityFrameList)
+            {
+                if (!(frame is PsbDictionary fd) || !(fd["content"] is PsbList content))
+                    continue;
+
+                var remappedIndices = new List<int>(newFlatList.Count);
+                var usedNewIndices = new HashSet<int>();
+
+                // Remap existing entries: old index → same layer object → new index
+                foreach (var idx in content)
+                {
+                    if (idx is PsbNumber num && num.IntValue >= 0 && num.IntValue < oldFlatList.Count)
+                    {
+                        var layer = oldFlatList[num.IntValue];
+                        if (newIndexMap.TryGetValue(layer, out int newIdx))
+                        {
+                            remappedIndices.Add(newIdx);
+                            usedNewIndices.Add(newIdx);
+                        }
+                    }
+                }
+
+                // Insert new layers (mc=1 etc.) that weren't in old list.
+                // Place each at its natural position relative to its first mapped neighbour.
+                for (int ni = 0; ni < newFlatList.Count; ni++)
+                {
+                    if (usedNewIndices.Contains(ni))
+                        continue;
+
+                    // Find the first already-mapped index that comes after this new layer
+                    // in the flat list, and insert the new layer just before it in the priority.
+                    int insertPos = -1;
+                    for (int search = ni + 1; search < newFlatList.Count; search++)
+                    {
+                        if (usedNewIndices.Contains(search))
+                        {
+                            insertPos = remappedIndices.IndexOf(search);
+                            break;
+                        }
+                    }
+
+                    if (insertPos >= 0)
+                        remappedIndices.Insert(insertPos, ni);
+                    else
+                        remappedIndices.Add(ni);
+
+                    usedNewIndices.Add(ni);
+                }
+
+                // Replace content with remapped indices
+                var newContent = new PsbList(remappedIndices.Count);
+                foreach (var ri in remappedIndices)
+                {
+                    newContent.Add(ri.ToPsbNumber());
+                }
+                fd["content"] = newContent;
+            }
         }
 
         #endregion

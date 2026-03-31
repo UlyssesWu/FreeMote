@@ -281,9 +281,10 @@ namespace FreeMote.PsBuild
         /// <param name="outputUnlinkedPsb">output unlinked PSB; otherwise only output textures</param>
         /// <param name="order"></param>
         /// <param name="format"></param>
+        /// <param name="outputFolder"></param>
         /// <returns>The unlinked PSB path</returns>
         public static string UnlinkToFile(string inputPath, bool outputUnlinkedPsb = true, PsbLinkOrderBy order = PsbLinkOrderBy.Name,
-            PsbImageFormat format = PsbImageFormat.png)
+            PsbImageFormat format = PsbImageFormat.png, string outputFolder = null)
         {
             if (!File.Exists(inputPath))
             {
@@ -291,7 +292,17 @@ namespace FreeMote.PsBuild
             }
 
             var name = Path.GetFileNameWithoutExtension(inputPath);
-            var dirPath = Path.Combine(Path.GetDirectoryName(inputPath), name);
+            var outputDir = Path.GetDirectoryName(inputPath);
+            if (!string.IsNullOrEmpty(outputFolder))
+            {
+                outputDir = Path.GetFullPath(outputFolder);
+                if (!Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+            }
+
+            var dirPath = Path.Combine(outputDir ?? "", name);
             var psbSavePath = inputPath;
             if (File.Exists(dirPath))
             {
@@ -317,8 +328,9 @@ namespace FreeMote.PsBuild
             if (outputUnlinkedPsb)
             {
                 psb.Merge();
-                psbSavePath = Path.ChangeExtension(inputPath,
-                    ".unlinked.psb"); //unlink only works with motion.psb so no need for ext rename
+                var outputName = Path.GetFileName(Path.ChangeExtension(inputPath,
+                    ".unlinked.psb")); //unlink only works with motion.psb so no need for ext rename
+                psbSavePath = Path.Combine(outputDir ?? "", outputName);
                 File.WriteAllBytes(psbSavePath, psb.Build());
             }
 
