@@ -17,7 +17,9 @@ namespace FreeMote.Tools.EmtMake
             Console.WriteLine();
             Console.WriteLine("This is a preview version. If it crashes, send the PSB to me.");
             Console.WriteLine("All output files from this tool should follow [CC BY-NC-SA 4.0] license. Agree this license by pressing Enter:");
+#if !DEBUG
             Console.ReadLine();
+#endif
             if (args.Length < 1 || !File.Exists(args[0]))
             {
                 PrintHelp();
@@ -68,9 +70,11 @@ namespace FreeMote.Tools.EmtMake
 #endif
             }
 
-            END:
+        END:
             Console.WriteLine("Done.");
-            Console.ReadLine();
+#if !DEBUG
+            //Console.ReadLine();
+#endif
         }
 
         private static void PrintHelp()

@@ -877,7 +877,8 @@ namespace FreeMote.Psb
         /// <param name="mergeString"></param>
         /// <param name="mergeResources">Whether to merge resources with exact same data. Be careful!</param>
         /// <param name="sortString">Whether to sort string (for json view)</param>
-        internal void Collect(bool mergeString = false, bool mergeResources = false, bool sortString = true)
+        /// <param name="reIndexResources">Whether to re-index resources after collection. Don't re-index when loading from json.</param>
+        internal void Collect(bool mergeString = false, bool mergeResources = false, bool sortString = true, bool reIndexResources = true)
         {
             //https://stackoverflow.com/questions/1427147/sortedlist-sorteddictionary-and-dictionary
             Resources = new List<PsbResource>();
@@ -919,15 +920,21 @@ namespace FreeMote.Psb
             }
 
             Resources.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
-            for (int i = 0; i < Resources.Count; i++)
+            if (reIndexResources)
             {
-                Resources[i].Index = (uint) i;
+                for (int i = 0; i < Resources.Count; i++)
+                {
+                    Resources[i].Index = (uint) i;
+                }
             }
-
+            
             ExtraResources.Sort((s1, s2) => (int) ((s1.Index ?? int.MaxValue) - (s2.Index ?? int.MaxValue)));
-            for (int i = 0; i < ExtraResources.Count; i++)
+            if (reIndexResources)
             {
-                ExtraResources[i].Index = (uint) i;
+                for (int i = 0; i < ExtraResources.Count; i++)
+                {
+                    ExtraResources[i].Index = (uint) i;
+                }
             }
 
             uint NextIndex(Dictionary<uint, PsbString> dic, ref uint idx)
