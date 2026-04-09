@@ -73,7 +73,7 @@ namespace FreeMote.Tools.EmtMake
         END:
             Console.WriteLine("Done.");
 #if !DEBUG
-            //Console.ReadLine();
+            Console.ReadLine();
 #endif
         }
 
