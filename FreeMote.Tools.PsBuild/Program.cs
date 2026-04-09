@@ -77,10 +77,10 @@ namespace FreeMote.Tools.PsBuild
                 linkCmd.HelpOption();
                 linkCmd.ExtendedHelpText = @"
 Example:
-  PsBuild link -o Order sample.psb tex000.png tex001.bmp 
+  PsBuild link --order Order sample.psb tex000.png tex001.bmp 
 ";
                 //options
-                var optOrder = linkCmd.Option<PsbLinkOrderBy>("-o|--order <ORDER>",
+                var optOrder = linkCmd.Option<PsbLinkOrderBy>("-od|--order <ORDER>",
                     "Set texture link order (Name/Order/Convention). Default=Name",
                     CommandOptionType.SingleValue);
                 //args
