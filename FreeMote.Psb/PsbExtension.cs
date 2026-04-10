@@ -807,7 +807,11 @@ namespace FreeMote.Psb
         /// <returns></returns>
         public static MemoryStream EncodeMdf(Stream stream, string key, int? keyLength, bool keepHeader)
         {
-            Logger.LogHint($"[MDF] key: {key} len: {keyLength}");
+            if (Consts.Verbose)
+            {
+                Logger.LogHint($"[MDF] key: {key} len: {keyLength}");
+            }
+            
             var ms = new MemoryStream((int) stream.Length); //MsManager.GetStream("EncodeMdf", (int)stream.Length);
             EncodeMdf(stream, ms, key, keyLength, keepHeader);
             return ms;
