@@ -797,7 +797,7 @@ namespace FreeMote.Psb
             PsbString palTypeString = null;
             if (d["pal"] is PsbResource palRes)
             {
-                if (duplicatePalette)
+                if (duplicatePalette || (palRes != null && palRes == r)) //prevent pal overwrite resource
                 {
                     palResource = new PsbResource(palRes.Index);
                     d["pal"] = palResource;

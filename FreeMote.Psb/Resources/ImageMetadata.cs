@@ -144,6 +144,14 @@ namespace FreeMote.Psb
 
             internal set
             {
+                if (Palette != null && ReferenceEquals(Palette, Resource))
+                {
+                    // Palette and image data must not share the same backing resource when writing.
+                    // Otherwise assigning PalData would overwrite Data.
+                    Logger.LogWarn("[WARN] Palette and image data must not share the same backing resource when writing.");
+                    Palette = new PsbResource();
+                }
+
                 Palette ??= new PsbResource();
 
                 Palette.Data = value;
