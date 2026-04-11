@@ -244,20 +244,34 @@ namespace FreeMote.Psb
         {
             foreach (var handler in TypeHandlers)
             {
-                if (handler.Value.IsThisType(this))
+                try
                 {
-                    Type = handler.Key;
-                    return Type;
+                    if (handler.Value.IsThisType(this))
+                    {
+                        Type = handler.Key;
+                        return Type;
+                    }
+                }
+                catch (Exception)
+                {
+                    continue;
                 }
             }
 
             foreach (var handler in FreeMount._.SpecialTypes)
             {
-                if (handler.Value.IsThisType(this))
+                try
                 {
-                    TypeId = handler.Key;
-                    Type = PsbType.PSB;
-                    return PsbType.PSB;
+                    if (handler.Value.IsThisType(this))
+                    {
+                        TypeId = handler.Key;
+                        Type = PsbType.PSB;
+                        return PsbType.PSB;
+                    }
+                }
+                catch (Exception)
+                {
+                    continue;
                 }
             }
 

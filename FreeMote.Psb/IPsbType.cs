@@ -17,6 +17,7 @@ namespace FreeMote.Psb
         /// Check if <paramref name="psb"/> is this type
         /// </summary>
         /// <param name="psb"></param>
+        /// <remarks>When implementing this, keep in mind that PSB.Objects can be null</remarks>
         /// <returns></returns>
         bool IsThisType(PSB psb);
 

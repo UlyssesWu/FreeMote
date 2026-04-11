@@ -112,8 +112,6 @@ namespace FreeMote.PsBuild
 
                     writer.WriteEndObject();
                     break;
-                default:
-                    break;
             }
         }
 
@@ -255,13 +253,37 @@ namespace FreeMote.PsBuild
     {
         public bool AddIndentSpace { get; set; } = false;
 
+        private readonly Stack<bool> _arrayScopes = new Stack<bool>();
+
         public ArrayCollapseJsonTextWriter(TextWriter writer) : base(writer)
         {
         }
 
+        public override void WriteStartArray()
+        {
+            var isRootArray = Top == 0;
+            base.WriteStartArray();
+            _arrayScopes.Push(isRootArray);
+        }
+
+        public override void WriteEndArray()
+        {
+            try
+            {
+                base.WriteEndArray();
+            }
+            finally
+            {
+                if (_arrayScopes.Count > 0)
+                {
+                    _arrayScopes.Pop();
+                }
+            }
+        }
+
         protected override void WriteIndent()
         {
-            if (WriteState != WriteState.Array)
+            if (WriteState != WriteState.Array || _arrayScopes.Count > 0 && _arrayScopes.Peek())
             {
                 base.WriteIndent();
             }
@@ -277,7 +299,8 @@ namespace FreeMote.PsBuild
         public static string SerializeObject(object obj, JsonConverter converter = null)
         { 
             using StringWriter sw = new StringWriter();
-            using JsonWriter jw = new ArrayCollapseJsonTextWriter(sw) {Formatting = Formatting.Indented};
+            using var jw = new ArrayCollapseJsonTextWriter(sw);
+            jw.Formatting = Formatting.Indented;
             var ser = new JsonSerializer
             {
                 MaxDepth = 256

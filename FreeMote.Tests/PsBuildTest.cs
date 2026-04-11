@@ -69,6 +69,45 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestDecompileTopLevelListKeepsIndent()
+        {
+            var previousJsonArrayCollapse = Consts.JsonArrayCollapse;
+            try
+            {
+                Consts.JsonArrayCollapse = true;
+                var root = new PsbList
+                {
+                    new PsbNumber(1),
+                    new PsbList
+                    {
+                        new PsbNumber(2),
+                        new PsbNumber(3)
+                    },
+                    new PsbDictionary
+                    {
+                        ["nested"] = new PsbList
+                        {
+                            new PsbNumber(4),
+                            new PsbNumber(5)
+                        }
+                    }
+                };
+                var psb = new PSB { Root = root };
+
+                var json = PsbDecompiler.Decompile(psb);
+
+                StringAssert.StartsWith(json, "[\r\n");
+                StringAssert.Contains(json, "\r\n  [2,3],");
+                StringAssert.Contains(json, "\"nested\": [4,5]");
+                StringAssert.EndsWith(json, "\r\n]");
+            }
+            finally
+            {
+                Consts.JsonArrayCollapse = previousJsonArrayCollapse;
+            }
+        }
+
+        [TestMethod]
         public void TestInplaceReplace()
         {
             FreeMount.Init();

@@ -251,6 +251,10 @@ namespace FreeMote.Psb.Types
 
         public bool IsThisType(PSB psb)
         {
+            if (psb.Objects == null)
+            {
+                return false;
+            }
             return psb.Objects.ContainsKey("mpd") && psb.Objects["mpd"] is PsbResource && psb.Objects.ContainsKey("tex") && psb.Objects.ContainsKey("offset");
         }
 
