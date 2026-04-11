@@ -216,10 +216,12 @@ namespace FreeMote.PsBuild
         /// <param name="inputPath">Json file path</param>
         /// <param name="inputResPath">Resource Json file</param>
         /// <param name="version">PSB version</param>
+        /// <param name="merge">If true, collect indexes after linking. Disable this when the caller will run its own compile merge later.</param>
         /// <returns></returns>
         public static (PSB Psb, Dictionary<string, object> Context) LoadPsbAndContextFromJsonFile(string inputPath,
             string inputResPath = null,
-            ushort? version = null)
+            ushort? version = null,
+            bool merge = false)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -299,7 +301,11 @@ namespace FreeMote.PsBuild
                 psb.Header.Version = version.Value;
             }
 
-            psb.Merge();
+            if (merge)
+            {
+                psb.Merge();
+            }
+
             return (psb, context);
         }
 
@@ -780,7 +786,7 @@ namespace FreeMote.PsBuild
                     }
                     else
                     {
-                        var content = LoadPsbAndContextFromJsonFile(kv.Value.Path);
+                        var content = LoadPsbAndContextFromJsonFile(kv.Value.Path, merge: false);
                         content.Psb.Merge(true);
                         var stream = content.Psb.ToStream();
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
@@ -894,7 +900,7 @@ namespace FreeMote.PsBuild
                     }
                     else
                     {
-                        var content = LoadPsbAndContextFromJsonFile(kv.Value.Path);
+                        var content = LoadPsbAndContextFromJsonFile(kv.Value.Path, merge: false);
                         if (!string.IsNullOrEmpty(key))
                         {
                             fmContext.Context[Context_MdfKey] = key + fileNameWithSuffix;

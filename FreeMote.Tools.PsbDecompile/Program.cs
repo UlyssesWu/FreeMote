@@ -373,8 +373,13 @@ Example:
                 if (optMdfSeed.HasValue())
                 {
                     context[Context_MdfKey] = optMdfSeed.ParsedValue;
+                    if (!optMdfKeyLen.HasValue())
+                    {
+                        Logger.LogWarn(
+                            "MDF key length not specified. You may get wrong results. Try `-l 131`.");
+                    }
                 }
-
+                
                 if (optMdfKeyLen.HasValue())
                 {
                     context[Context_MdfKeyLength] = optMdfKeyLen.ParsedValue;
