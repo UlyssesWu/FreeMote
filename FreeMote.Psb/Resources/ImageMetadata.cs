@@ -266,7 +266,17 @@ namespace FreeMote.Psb
             }
 
             Data = LoadImageBytes(fullPath, context, out var palette);
-            PalData = palette;
+            // Only update pal resource when current pixel format actually uses palette.
+            // Some motion PSBs keep "pal" references on RGBA textures; writing null here
+            // would clear shared resources and can drop valid texture pixels on rebuild.
+            if (PixelFormat.UsePalette())
+            {
+                PalData = palette;
+            }
+            else if (Palette != null)
+            {
+                Logger.LogWarn($"[WARN] Palette (pal) is not used for {ToString()} ({PixelFormat}): {fullPath}");
+            }
             var (valid, checkResult) = Validate();
             if (!valid)
             {
