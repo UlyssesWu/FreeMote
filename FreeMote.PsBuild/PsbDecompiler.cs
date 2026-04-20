@@ -1,17 +1,19 @@
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using FreeMote.Psb;
 using FreeMote.Plugins;
+using FreeMote.Psb;
 using FreeMote.Psb.Textures;
 using FreeMote.Psb.Types;
 using Newtonsoft.Json;
+using System;
+using System.Buffers;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static FreeMote.Consts;
@@ -575,10 +577,10 @@ namespace FreeMote.PsBuild
                     //File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
                     context[Context_ArchiveSource] = new List<string> {name};
                     OutputResources(psb, FreeMount.CreateContext(context), outputBasePath, PsbExtractOption.Extract);
-                    return;
+                    return; //comment this if you need to debug without body
                 }
 
-                PsbArchiveInfoType archiveInfoType = psb.GetArchiveInfoType();
+                var archiveInfoType = psb.GetArchiveInfoType();
                 if (archiveInfoType == PsbArchiveInfoType.None)
                 {
                     Logger.LogWarn("Unknown ArchiveInfo type. Body won't be extracted.");
@@ -617,7 +619,7 @@ namespace FreeMote.PsBuild
                     Directory.CreateDirectory(extractDir);
                 }
 
-                List<string> specialItemFileNames = new List<string>();
+                var specialItemFileNames = new List<string>();
                 if (enableParallel) //parallel!
                 {
                     var archiveItemFileNames = new ConcurrentDictionary<string, string>();
@@ -789,6 +791,17 @@ namespace FreeMote.PsBuild
                 {
                     //var maxLen = dic?.Values.Max(item => item.Children(1).GetInt()) ?? 0;
                     var archiveItemFileNames = new Dictionary<string, string>();
+
+                    //foreach (var v in dic)
+                    //{
+                    //    var range = (PsbList) v.Value;
+                    //    var(start, len) = PsbExtension.ArchiveInfo_GetItemPositionFromRangeList(range, archiveInfoType);
+                    //    if (start > uint.MaxValue)
+                    //    {
+                    //        Console.WriteLine($"{v.Key}: {start}, {len}");
+                    //    }
+                    //}
+
                     using var mmFile =
                         MemoryMappedFile.CreateFromFile(body, FileMode.Open, name, 0, MemoryMappedFileAccess.Read);
 

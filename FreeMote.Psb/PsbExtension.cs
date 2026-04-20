@@ -1402,14 +1402,18 @@ namespace FreeMote.Psb
         /// <param name="range"></param>
         /// <param name="archiveInfoType"></param>
         /// <returns></returns>
-        public static (uint Start, int Length) ArchiveInfo_GetItemPositionFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
+        public static (long Start, int Length) ArchiveInfo_GetItemPositionFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
         {
             if (archiveInfoType == PsbArchiveInfoType.UmdRoot)
             {
-                return (((PsbNumber)range[range.Count - 1]).UIntValue, ((PsbNumber)range[range.Count - 2]).IntValue);
+                var start = (PsbNumber) range[range.Count - 1];
+                return (start.NumberType == PsbNumberType.Long ? start.LongValue : start.UIntValue,
+                    ((PsbNumber) range[range.Count - 2]).IntValue);
             }
 
-            return (((PsbNumber) range[0]).UIntValue, ((PsbNumber) range[1]).IntValue);
+            var fileStart = (PsbNumber) range[0];
+            return (fileStart.NumberType == PsbNumberType.Long ? fileStart.LongValue : fileStart.UIntValue,
+                ((PsbNumber) range[1]).IntValue);
         }
 
         public static int ArchiveInfo_GetLengthFromRangeList(PsbList range, PsbArchiveInfoType archiveInfoType = PsbArchiveInfoType.FileInfo)
