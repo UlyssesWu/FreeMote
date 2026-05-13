@@ -575,7 +575,7 @@ namespace FreeMote.PsBuild
                     //Write resx.json
                     //resx.Context[Context_ArchiveSource] = new List<string> {name};
                     //File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
-                    context[Context_ArchiveSource] = new List<string> {name};
+                    context[Context_ArchiveSource] = new List<string> { name };
                     OutputResources(psb, FreeMount.CreateContext(context), outputBasePath, PsbExtractOption.Extract);
                     return; //comment this if you need to debug without body
                 }
@@ -831,7 +831,7 @@ namespace FreeMote.PsBuild
                             File.WriteAllBytes(rawPath, bodyBytes);
                             continue;
                         }
-                        
+
                         MPack.IsSignatureMPack(bodyBytes, out var shellType);
                         var possibleFileNames = PsbExtension.ArchiveInfo_GetAllPossibleFileNames(pair.Key, suffix);
                         var relativePath = pair.Key;
@@ -936,12 +936,12 @@ namespace FreeMote.PsBuild
                             ArrayPool<byte>.Shared.Return(mdfDecompressed);
                         }
                     }
-                    
+
                     specialItemFileNames.AddRange(archiveItemFileNames.Values);
                 }
 
                 //Write resx.json
-                resx.Context[Context_ArchiveSource] = new List<string> {name};
+                resx.Context[Context_ArchiveSource] = new List<string> { name };
                 resx.Context[Context_MdfMtKey] = key;
                 resx.Context[Context_MdfKey] = archiveMdfKey;
                 resx.Context[Context_ArchiveItemFileNames] = specialItemFileNames;
@@ -951,7 +951,7 @@ namespace FreeMote.PsBuild
                     resx.Context[Context_BodyBinName] = bodyBinName;
                 }
 
-                File.WriteAllText(Path.GetFullPath(filePath) + ".resx.json", resx.SerializeToJson());
+                File.WriteAllText(outputBasePath + ".resx.json", resx.SerializeToJson());
             }
             catch (Exception e)
             {

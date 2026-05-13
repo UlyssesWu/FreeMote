@@ -200,6 +200,8 @@ Example:
                     "Keep all sources raw (don't compile jsons or pack MDF shell)", CommandOptionType.NoValue);
                 var optBodyBinName = archiveCmd.Option<string>("-b|--body <NAME>",
                     "Set body.bin file name (cannot be path). Default={xxx}_body.bin", CommandOptionType.SingleValue);
+                var optOutputPath =
+                 archiveCmd.Option<string>("-o|--output", "Set output file path. May overwrite your original PSB files!", CommandOptionType.SingleValue);
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB .json paths", true);
 
@@ -518,7 +520,7 @@ Example:
                 Console.WriteLine($"Compile {name} failed.\r\n{e}");
             }
 
-            Console.WriteLine(!string.IsNullOrEmpty(outputPath)? $"Compile output: {savePath}" : $"Compile {name} done.");
+            Console.WriteLine(!string.IsNullOrEmpty(outputPath) ? $"Compile output: {savePath}" : $"Compile {name} done.");
         }
 
         private static string PrintHelp()
