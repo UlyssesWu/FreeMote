@@ -62,7 +62,8 @@ namespace FreeMote.Tools.PsBuild
             var optFastMode = app.Option<bool>("-O0|--fast", "Disable compile optimization, good for speed but bad for output size.", CommandOptionType.NoValue, true);
             var optOptSizeMode = app.Option<bool>("-Os|--opt-size", "Enable compile optimization (enabled by default), bad for speed but good for output size.", CommandOptionType.NoValue, true);
             var optOutputPath =
-             app.Option<string>("-o|--output", "Set output file path. May overwrite your original PSB files!", CommandOptionType.SingleValue);
+                app.Option<string>("-o|--output", "Set output file path. May overwrite your original PSB files!",
+                    CommandOptionType.SingleValue, inherited: true);
             //TODO: If set dir, ok; if set filename, only works for the first
 
             //args
@@ -200,8 +201,7 @@ Example:
                     "Keep all sources raw (don't compile jsons or pack MDF shell)", CommandOptionType.NoValue);
                 var optBodyBinName = archiveCmd.Option<string>("-b|--body <NAME>",
                     "Set body.bin file name (cannot be path). Default={xxx}_body.bin", CommandOptionType.SingleValue);
-                var optOutputPath =
-                 archiveCmd.Option<string>("-o|--output", "Set output file path. May overwrite your original PSB files!", CommandOptionType.SingleValue);
+                
                 //args
                 var argPsbPaths = archiveCmd.Argument("PSB", "Archive Info PSB .json paths", true);
 
