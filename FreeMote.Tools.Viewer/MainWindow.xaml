@@ -22,14 +22,16 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="420"/>
                 <ColumnDefinition Width="25"/>
             </Grid.ColumnDefinitions>
             <TextBlock Margin="2,2,0,0" Foreground="Silver" Opacity="0.5" FontSize="11" Tag="You are not allowed to remove this line according to License (BY)">Powered by FreeMote</TextBlock>
             <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Margin="5,0,0,0">
                 <Button x:Name="BtnPlayPause" Width="30" HorizontalAlignment="Right" Content="⏯" ToolTip="Play/Pause" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="PlayOrPause"></Button>
+                <Button Width="30" HorizontalAlignment="Right" Content="📷" ToolTip="Quick ScreenShot" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="RenderImage"></Button>
+                <Button Width="30" HorizontalAlignment="Right" Content="🖼" ToolTip="Advanced ScreenShot" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="RenderAdvancedImage"></Button>
+                <Button Width="30" HorizontalAlignment="Right" Content="⚙" ToolTip="Settings" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="OpenSettings"></Button>
                 <Button Width="30" HorizontalAlignment="Right" Content="🔍" ToolTip="Reset Scale" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="ResetScale"></Button>
-                <Button Width="30" HorizontalAlignment="Right" Content="📷" ToolTip="ScreenShot" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="RenderImage"></Button>
                 <Button Width="60" HorizontalAlignment="Right" Content="Motion" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="GetTimelines"></Button>
                 <Button Width="60" HorizontalAlignment="Right" Content="Stop" Margin="0,5,5,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="Stop"></Button>
                 <Button Width="60" HorizontalAlignment="Right" Content="Clear" Margin="0,5,0,5" Background="Transparent" Foreground="Aquamarine" BorderThickness="3" BorderBrush="Aquamarine" Click="Clear"></Button>
@@ -39,6 +41,9 @@
                 </StackPanel>
             </ScrollViewer>
         </Grid>
+        <Border x:Name="StatusToast" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="12,0,12,10" Padding="12,6" Background="#CC202020" BorderBrush="Aquamarine" BorderThickness="1" Visibility="Collapsed">
+            <TextBlock x:Name="StatusText" Foreground="Aquamarine" FontSize="12" TextTrimming="CharacterEllipsis"/>
+        </Border>
     </Grid>
 
 </Window>

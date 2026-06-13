@@ -22,7 +22,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FreeMote.NET.x64" Version="3.9.7" />
+    <PackageReference Include="FreeMote.NET.x64" Version="3.9.8" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils">
       <Version>3.0.0</Version>
     </PackageReference>
@@ -38,5 +38,18 @@
     <ProjectReference Include="..\FreeMote.PsBuild\FreeMote.PsBuild.csproj" />
     <ProjectReference Include="..\FreeMote.Psb\FreeMote.Psb.csproj" />
     <ProjectReference Include="..\FreeMote\FreeMote.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 </Project>
