@@ -147,15 +147,15 @@ namespace FreeMote.Tools.EmtConvert
             app.Command("pack", PackCommand);
 
             //command: print
-            app.Command("print", PrintCommand);
-            app.Command("paint", PrintCommand);
+            var printCmd = app.Command("print", PrintCommand);
+            printCmd.AddName("paint");
 
             //command: fix
             app.Command("fix", FixCommand);
 
             //mdf
-            app.Command("mdf", MPackCommand);
-            app.Command("mpack", MPackCommand);
+            var mdfCmd = app.Command("mpack", MPackCommand);
+            mdfCmd.AddName("mdf");
 
             app.OnExecute(() =>
             {
