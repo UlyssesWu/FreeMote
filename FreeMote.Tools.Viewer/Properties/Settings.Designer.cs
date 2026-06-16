@@ -58,5 +58,29 @@ namespace FreeMote.Tools.Viewer.Properties {
                 this["ScreenshotHeight"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool KeepScreenshotScale100 {
+            get {
+                return ((bool)(this["KeepScreenshotScale100"]));
+            }
+            set {
+                this["KeepScreenshotScale100"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("default")]
+        public string ScreenshotCenterPointMode {
+            get {
+                return ((string)(this["ScreenshotCenterPointMode"]));
+            }
+            set {
+                this["ScreenshotCenterPointMode"] = value;
+            }
+        }
     }
 }

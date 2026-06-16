@@ -33,6 +33,7 @@ namespace FreeMote.Tools.Viewer
         const float RefreshRate = 1000.0f / 65.0f; // 1/n秒カウントをmsへ変換。
         //const float RefreshRate = 1000.0f / 120f; // 1/n秒カウントをmsへ変換。
         private const int Movement = 10;
+        private const float KeyboardScaleStep = 1.05f;
         private const int MinScreenshotSize = 100;
         private const int MaxScreenshotSize = 10240;
 
@@ -50,6 +51,10 @@ namespace FreeMote.Tools.Viewer
         private PreciseTimer _timer;
 
         private double _deltaX, _deltaY;
+        private bool _isDragging;
+        private bool _hasDragFrame;
+        private bool _hasPendingMouseTrack;
+        private bool _hasPendingPositionUpdate;
         private double _elapsedTime;
         private bool _measureMode = false;
 
@@ -58,6 +63,8 @@ namespace FreeMote.Tools.Viewer
         private double _playbackSpeed = 1.0;
         private int _advancedScreenshotWidth = 1280;
         private int _advancedScreenshotHeight = 720;
+        private bool _keepScreenshotScale100;
+        private string _centerPointMode = "default";
         private bool _renderingScene;
         private DispatcherTimer _statusTimer;
 
@@ -81,7 +88,7 @@ namespace FreeMote.Tools.Viewer
             //MouseWheel += MainWindow_MouseWheel;
             MouseDoubleClick += MainWindow_MouseDoubleClick;
 
-            KeyDown += OnKeyDown;
+            AddHandler(Keyboard.PreviewKeyDownEvent, new KeyEventHandler(OnKeyDown), true);
 
             // make a brush of the scene available as a resource on the window
             Resources["NekoHacksScene"] = new ImageBrush(_di);
@@ -142,21 +149,7 @@ namespace FreeMote.Tools.Viewer
             }
             else
             {
-                var profileAvailable = _player.IsCharaProfileAvailable();
-                if (profileAvailable)
-                {
-                    var boundsTop = _player.GetCharaProfile("boundsTop");
-                    var boundsBottom = _player.GetCharaProfile("boundsBottom");
-                    var boundsLeft = _player.GetCharaProfile("boundsLeft");
-                    var boundsRight = _player.GetCharaProfile("boundsRight");
-                    if (boundsTop != 0 && boundsBottom != 0 && boundsLeft != 0 && boundsRight != 0)
-                    {
-                        centerX = -(boundsLeft + boundsRight) / 2;
-                        centerY = -(boundsTop + boundsBottom) / 2;
-                        height = boundsBottom - boundsTop;
-                        width = boundsRight - boundsLeft;
-                    }
-                }
+                (centerX, centerY) = GetDefaultCoord(_player);
             }
 
             _player.SetScale(scale, 0, 0);
@@ -169,6 +162,27 @@ namespace FreeMote.Tools.Viewer
             // begin rendering the custom D3D scene into the D3DImage
             BeginRenderingScene();
             UpdateScene(0);
+        }
+
+        private (float centerX, float centerY) GetDefaultCoord(EmotePlayer player)
+        {
+            var centerX = 0f;
+            var centerY = 0f;
+            var profileAvailable = player.IsCharaProfileAvailable();
+            if (profileAvailable)
+            {
+                var boundsTop = player.GetCharaProfile("boundsTop");
+                var boundsBottom = player.GetCharaProfile("boundsBottom");
+                var boundsLeft = player.GetCharaProfile("boundsLeft");
+                var boundsRight = player.GetCharaProfile("boundsRight");
+                if (boundsTop != 0 && boundsBottom != 0 && boundsLeft != 0 && boundsRight != 0)
+                {
+                    centerX = -(boundsLeft + boundsRight) / 2;
+                    centerY = -(boundsTop + boundsBottom) / 2;
+                }
+            }
+
+            return (centerX, centerY);
         }
 
         private void LoadModel()
@@ -186,28 +200,74 @@ namespace FreeMote.Tools.Viewer
 
         private async void OnKeyDown(object sender, KeyEventArgs keyEventArgs)
         {
-            if (keyEventArgs.Key == Key.Up)
+            var key = keyEventArgs.Key == Key.System ? keyEventArgs.SystemKey : keyEventArgs.Key;
+
+            if (key == Key.F12)
             {
+                keyEventArgs.Handled = true;
+                RenderAdvancedImage(this, new RoutedEventArgs());
+                return;
+            }
+
+            if (key == Key.F11)
+            {
+                keyEventArgs.Handled = true;
+                RenderImage(this, new RoutedEventArgs());
+                return;
+            }
+
+            if (key == Key.F10)
+            {
+                keyEventArgs.Handled = true;
+                PlayOrPause(this, new RoutedEventArgs());
+                return;
+            }
+
+            if (key == Key.Back)
+            {
+                keyEventArgs.Handled = true;
+                ResetView();
+            }
+
+            if (key == Key.W)
+            {
+                keyEventArgs.Handled = true;
                 _player.OffsetCoord(0, Movement);
             }
 
-            if (keyEventArgs.Key == Key.Down)
+            if (key == Key.S)
             {
+                keyEventArgs.Handled = true;
                 _player.OffsetCoord(0, -Movement);
             }
 
-            if (keyEventArgs.Key == Key.Left)
+            if (key == Key.A)
             {
+                keyEventArgs.Handled = true;
                 _player.OffsetCoord(Movement, 0);
             }
 
-            if (keyEventArgs.Key == Key.Right)
+            if (key == Key.D)
             {
+                keyEventArgs.Handled = true;
                 _player.OffsetCoord(-Movement, 0);
             }
 
-            if (keyEventArgs.Key == Key.LeftCtrl)
+            if (key == Key.OemPlus || key == Key.Add)
             {
+                keyEventArgs.Handled = true;
+                _player.OffsetScale(KeyboardScaleStep);
+            }
+
+            if (key == Key.OemMinus || key == Key.Subtract)
+            {
+                keyEventArgs.Handled = true;
+                _player.OffsetScale(1f / KeyboardScaleStep);
+            }
+
+            if (key == Key.LeftCtrl)
+            {
+                keyEventArgs.Handled = true;
                 if (keyEventArgs.IsDown)
                 {
                     _measureMode = !_measureMode;
@@ -231,6 +291,13 @@ namespace FreeMote.Tools.Viewer
             UpdatePosition();
         }
 
+        private void ResetView()
+        {
+            var (centerX, centerY) = GetDefaultCoord(_player);
+            _player.SetScale(1f, 0, 0);
+            _player.SetCoord(centerX, centerY, 0, 0);
+        }
+
         void MainWindow_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (_measureMode)
@@ -247,13 +314,28 @@ namespace FreeMote.Tools.Viewer
         {
             if (e.LeftButton == MouseButtonState.Pressed || e.MiddleButton == MouseButtonState.Pressed) //&& e.GetPosition(MotionPanel).X < 0
             {
-                var ex = e.GetPosition(this);
-                _player.OffsetCoord((int) (ex.X - _lastX), (int) (ex.Y - _lastY));
-                _lastX = ex.X;
-                _lastY = ex.Y;
+                if (!_isDragging)
+                {
+                    var ex = e.GetPosition(this);
+                    _lastX = ex.X;
+                    _lastY = ex.Y;
+                    _isDragging = true;
+                    _hasDragFrame = true;
+                    if (Mouse.Captured == null && sender is IInputElement input)
+                    {
+                        Mouse.Capture(input);
+                    }
+                }
+
+                return;
             }
             else
             {
+                if (_isDragging)
+                {
+                    EndDrag();
+                }
+
                 var ex2 = e.GetPosition(this);
                 _lastX = ex2.X;
                 _lastY = ex2.Y;
@@ -261,24 +343,14 @@ namespace FreeMote.Tools.Viewer
                 {
                     if (_mouseTrack)
                     {
-                        var ex = e.GetPosition(this);
-                        _deltaX = (ex.X - _midX) / _midX * 64;
-                        _deltaY = (ex.Y - _midY) / _midY * 64;
-
-                        float frameCount = 0f;
-                        //float frameCount = 50f;
-                        float easing = 0f;
-                        _player.SetVariable("head_UD", (float) _deltaY, frameCount, easing);
-                        _player.SetVariable("head_LR", (float) _deltaX, frameCount, easing);
-                        _player.SetVariable("body_UD", (float) _deltaY, frameCount, easing);
-                        _player.SetVariable("body_LR", (float) _deltaX, frameCount, easing);
-                        _player.SetVariable("face_eye_UD", (float) _deltaY, frameCount, easing);
-                        _player.SetVariable("face_eye_LR", (float) _deltaX, frameCount, easing);
+                        _deltaX = (ex2.X - _midX) / _midX * 64;
+                        _deltaY = (ex2.Y - _midY) / _midY * 64;
+                        _hasPendingMouseTrack = true;
                     }
                 }
             }
 
-            UpdatePosition();
+            _hasPendingPositionUpdate = true;
         }
 
         private void UpdatePosition()
@@ -355,14 +427,15 @@ namespace FreeMote.Tools.Viewer
             RenderTargetBitmap rtb = new RenderTargetBitmap(d3dImage.PixelWidth, d3dImage.PixelHeight, 96, 96, PixelFormats.Pbgra32);
             rtb.Render(drawingVisual);
 
-            // Convert the RenderTargetBitmap into a PNG
-            PngBitmapEncoder png = new PngBitmapEncoder();
-            png.Frames.Add(BitmapFrame.Create(rtb));
-
-            // Save the PNG to a file
-            using (FileStream stream = new FileStream("image.png", FileMode.Create))
+            try
             {
-                png.Save(stream);
+                var path = CreateScreenshotPath("FreeMote_screenshot_");
+                SavePng(rtb, path);
+                ShowStatus($"Screenshot saved: {path}");
+            }
+            catch (Exception ex)
+            {
+                ShowStatus($"Screenshot failed: {ex.Message}", true);
             }
         }
 
@@ -371,8 +444,7 @@ namespace FreeMote.Tools.Viewer
             try
             {
                 var rtb = RenderAdvancedFrame(_advancedScreenshotWidth, _advancedScreenshotHeight);
-                var fileName = $"FreeMote_image_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-                var path = Path.Combine(Environment.CurrentDirectory, fileName);
+                var path = CreateScreenshotPath("FreeMote_image_");
                 SavePng(rtb, path);
                 ShowStatus($"Screenshot saved: {path}");
             }
@@ -380,6 +452,27 @@ namespace FreeMote.Tools.Viewer
             {
                 ShowStatus($"Screenshot failed: {ex.Message}", true);
             }
+        }
+
+        private string CreateScreenshotPath(string prefix)
+        {
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var path = Path.Combine(Environment.CurrentDirectory, $"{prefix}{timestamp}.png");
+            if (!File.Exists(path))
+            {
+                return path;
+            }
+
+            for (var i = 1; i < 1000; i++)
+            {
+                path = Path.Combine(Environment.CurrentDirectory, $"{prefix}{timestamp}_{i:000}.png");
+                if (!File.Exists(path))
+                {
+                    return path;
+                }
+            }
+
+            return Path.Combine(Environment.CurrentDirectory, $"{prefix}{timestamp}_{Guid.NewGuid():N}.png");
         }
 
         private BitmapSource RenderAdvancedFrame(int width, int height)
@@ -396,7 +489,8 @@ namespace FreeMote.Tools.Viewer
             {
                 var (centerX, centerY) = GetCenteredCoord(_player);
                 _player.SetCoord(centerX, centerY, 0, 0);
-                _player.SetScale(originalScale, 0, 0);
+                _player.SetScale(_keepScreenshotScale100 ? 1f : originalScale, 0, 0);
+                _emote.Update(0);
 
                 var pixels = _emote.RenderToBuffer(width, height);
                 var bitmap = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgra32, null, pixels, width * 4);
@@ -407,6 +501,7 @@ namespace FreeMote.Tools.Viewer
             {
                 _player.SetCoord(originalX, originalY, 0, 0);
                 _player.SetScale(originalScale, 0, 0);
+                _emote.Update(0);
 
                 if (wasRendering)
                 {
@@ -440,10 +535,14 @@ namespace FreeMote.Tools.Viewer
         {
             var centerX = 0f;
             var centerY = 0f;
+            if (_centerPointMode == "0")
+            {
+                return (centerX, centerY);
+            }
+
             var profileAvailable = player.IsCharaProfileAvailable();
             if (profileAvailable)
             {
-                var bust = player.GetCharaProfile("bust");
                 var boundsTop = player.GetCharaProfile("boundsTop");
                 var boundsBottom = player.GetCharaProfile("boundsBottom");
                 var boundsLeft = player.GetCharaProfile("boundsLeft");
@@ -454,10 +553,10 @@ namespace FreeMote.Tools.Viewer
                     centerY = -(boundsTop + boundsBottom) / 2;
                 }
 
-                //if (bust != 0) //use bust as chara center
-                //{
-                //    centerY = bust;
-                //}
+                if (_centerPointMode == "bust" || _centerPointMode == "eye" || _centerPointMode == "mouth")
+                {
+                    centerY = -player.GetCharaProfile(_centerPointMode); //FIXED: should inverse
+                }
             }
 
             return (centerX, centerY);
@@ -560,6 +659,8 @@ namespace FreeMote.Tools.Viewer
         {
             if (_di.IsFrontBufferAvailable && _scene != IntPtr.Zero)
             {
+                ApplyPendingDrag();
+                ApplyPendingMouseTrack();
                 _emote.Update(_playing ? (float) (elasped * _playbackSpeed) : 0);
                 // lock the D3DImage
                 _di.Lock();
@@ -571,7 +672,83 @@ namespace FreeMote.Tools.Viewer
                 _di.AddDirtyRect(new Int32Rect(0, 0, _di.PixelWidth, _di.PixelHeight));
                 // unlock the D3DImage
                 _di.Unlock();
+                ApplyPendingPositionUpdate();
             }
+        }
+
+        private void ApplyPendingDrag()
+        {
+            if (!_isDragging)
+            {
+                return;
+            }
+
+            if (Mouse.LeftButton != MouseButtonState.Pressed && Mouse.MiddleButton != MouseButtonState.Pressed)
+            {
+                EndDrag();
+                return;
+            }
+
+            var p = Mouse.GetPosition(this);
+            if (!_hasDragFrame)
+            {
+                _lastX = p.X;
+                _lastY = p.Y;
+                _hasDragFrame = true;
+                return;
+            }
+
+            var offsetX = p.X - _lastX;
+            var offsetY = p.Y - _lastY;
+            if (offsetX == 0 && offsetY == 0)
+            {
+                return;
+            }
+
+            _lastX = p.X;
+            _lastY = p.Y;
+            _player.GetCoord(out var x, out var y);
+            _player.SetCoord(x + (float)offsetX, y + (float)offsetY, 0, 0);
+            _hasPendingPositionUpdate = true;
+        }
+
+        private void EndDrag()
+        {
+            _isDragging = false;
+            _hasDragFrame = false;
+            if (Mouse.Captured != null)
+            {
+                Mouse.Capture(null);
+            }
+        }
+
+        private void ApplyPendingMouseTrack()
+        {
+            if (!_hasPendingMouseTrack)
+            {
+                return;
+            }
+
+            _hasPendingMouseTrack = false;
+            float frameCount = 0f;
+            float easing = 0f;
+            _player.SetVariable("head_UD", (float)_deltaY, frameCount, easing);
+            _player.SetVariable("head_LR", (float)_deltaX, frameCount, easing);
+            _player.SetVariable("body_UD", (float)_deltaY, frameCount, easing);
+            _player.SetVariable("body_LR", (float)_deltaX, frameCount, easing);
+            _player.SetVariable("face_eye_UD", (float)_deltaY, frameCount, easing);
+            _player.SetVariable("face_eye_LR", (float)_deltaX, frameCount, easing);
+        }
+
+        private void ApplyPendingPositionUpdate()
+        {
+            if (!_hasPendingPositionUpdate)
+            {
+                return;
+            }
+
+            _hasPendingPositionUpdate = false;
+            UpdatePosition();
         }
 
         protected override void OnDrop(DragEventArgs e)
@@ -759,7 +936,7 @@ namespace FreeMote.Tools.Viewer
         private void OpenSettings(object sender, RoutedEventArgs e)
         {
             var originalPlaybackSpeed = _playbackSpeed;
-            var settingsWindow = new SettingsWindow(_playbackSpeed, _advancedScreenshotWidth, _advancedScreenshotHeight)
+            var settingsWindow = new SettingsWindow(_playbackSpeed, _advancedScreenshotWidth, _advancedScreenshotHeight, _keepScreenshotScale100, _centerPointMode)
             {
                 Owner = this
             };
@@ -770,6 +947,8 @@ namespace FreeMote.Tools.Viewer
                 _playbackSpeed = settingsWindow.PlaybackSpeed;
                 _advancedScreenshotWidth = settingsWindow.ScreenshotWidth;
                 _advancedScreenshotHeight = settingsWindow.ScreenshotHeight;
+                _keepScreenshotScale100 = settingsWindow.KeepScreenshotScale100;
+                _centerPointMode = settingsWindow.CenterPointMode;
                 SaveViewerSettings();
             }
             else
@@ -784,6 +963,8 @@ namespace FreeMote.Tools.Viewer
             _playbackSpeed = Clamp(settings.PlaybackSpeed, 0.05, 3.0);
             _advancedScreenshotWidth = Clamp(settings.ScreenshotWidth, MinScreenshotSize, MaxScreenshotSize);
             _advancedScreenshotHeight = Clamp(settings.ScreenshotHeight, MinScreenshotSize, MaxScreenshotSize);
+            _keepScreenshotScale100 = settings.KeepScreenshotScale100;
+            _centerPointMode = NormalizeCenterPointMode(settings.ScreenshotCenterPointMode);
         }
 
         private void SaveViewerSettings()
@@ -792,6 +973,8 @@ namespace FreeMote.Tools.Viewer
             settings.PlaybackSpeed = _playbackSpeed;
             settings.ScreenshotWidth = _advancedScreenshotWidth;
             settings.ScreenshotHeight = _advancedScreenshotHeight;
+            settings.KeepScreenshotScale100 = _keepScreenshotScale100;
+            settings.ScreenshotCenterPointMode = _centerPointMode;
             settings.Save();
             ShowStatus("Settings saved.");
         }
@@ -848,6 +1031,20 @@ namespace FreeMote.Tools.Viewer
             }
 
             return value;
+        }
+
+        private static string NormalizeCenterPointMode(string mode)
+        {
+            switch ((mode ?? string.Empty).Trim().ToLowerInvariant())
+            {
+                case "bust":
+                case "eye":
+                case "mouth":
+                case "0":
+                    return mode.Trim().ToLowerInvariant();
+                default:
+                    return "default";
+            }
         }
     }
 }

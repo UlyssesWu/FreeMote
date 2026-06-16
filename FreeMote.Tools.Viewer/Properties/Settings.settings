@@ -11,5 +11,11 @@
     <Setting Name="ScreenshotHeight" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1080</Value>
     </Setting>
+    <Setting Name="KeepScreenshotScale100" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScreenshotCenterPointMode" Type="System.String" Scope="User">
+      <Value Profile="(Default)">default</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

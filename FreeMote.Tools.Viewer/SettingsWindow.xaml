@@ -3,12 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Viewer Settings"
         Width="360"
-        Height="230"
+        Height="300"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#202020">
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -32,7 +34,18 @@
             <TextBox x:Name="HeightBox" Width="72" VerticalContentAlignment="Center"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+        <CheckBox x:Name="KeepScaleBox" Grid.Row="2" Grid.Column="1" Margin="0,14,0,0" Foreground="Gainsboro" Content="Keep 100% scale"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,14,0,0" VerticalAlignment="Top" Foreground="Gainsboro" Text="Center point"/>
+        <WrapPanel Grid.Row="3" Grid.Column="1" Margin="0,14,0,0">
+            <RadioButton x:Name="CenterDefaultButton" Margin="0,0,12,6" Foreground="Gainsboro" Content="default" GroupName="CenterPoint"/>
+            <RadioButton x:Name="CenterBustButton" Margin="0,0,12,6" Foreground="Gainsboro" Content="bust" GroupName="CenterPoint"/>
+            <RadioButton x:Name="CenterEyeButton" Margin="0,0,12,6" Foreground="Gainsboro" Content="eye" GroupName="CenterPoint"/>
+            <RadioButton x:Name="CenterMouthButton" Margin="0,0,12,6" Foreground="Gainsboro" Content="mouth" GroupName="CenterPoint"/>
+            <RadioButton x:Name="CenterZeroButton" Margin="0,0,12,6" Foreground="Gainsboro" Content="0" GroupName="CenterPoint"/>
+        </WrapPanel>
+
+        <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Width="72" Margin="0,0,8,0" Content="Reset" Click="Reset_Click"/>
             <Button Width="72" Margin="0,0,8,0" Content="OK" IsDefault="True" Click="Ok_Click"/>
             <Button Width="72" Content="Cancel" IsCancel="True"/>
