@@ -255,9 +255,13 @@ namespace FreeMote.PsBuild
                         iconList.Add(iconItem);
                     }
                     var packer = new TexturePacker();
-                    var texture = packer.CellProcess(texs, texsOrigin, widthPadding, heightPadding, out var cellWidth,
-                        out var cellHeight);
-                    motionItem["image"] = BuildSourceImage(texture);
+                    using (var texture = packer.CellProcess(texs, texsOrigin, widthPadding, heightPadding, out var cellWidth,
+                               out var cellHeight))
+                    {
+                        motionItem["image"] = BuildSourceImage(texture);
+                        motionItem["cellWidth"] = cellWidth.ToPsbNumber();
+                        motionItem["cellHeight"] = cellHeight.ToPsbNumber();
+                    }
                     foreach (var iconKv in icon)
                     {
                         var iconItem = (PsbDictionary)iconKv.Value;
@@ -271,8 +275,6 @@ namespace FreeMote.PsBuild
                         iconItem.Remove("pixel");
                     }
 
-                    motionItem["cellWidth"] = cellWidth.ToPsbNumber();
-                    motionItem["cellHeight"] = cellHeight.ToPsbNumber();
                 }
                 else //Scrapbook
                 {
@@ -297,11 +299,12 @@ namespace FreeMote.PsBuild
                         var res = (PsbResource)iconItem["pixel"];
                         if (res != null)
                         {
-                            var texture = rl
-                                ? RL.DecompressToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat())
-                                : RL.ConvertToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat());
-
-                            iconItem["image"] = BuildSourceImage(texture);
+                            using (var texture = rl
+                                       ? RL.DecompressToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat())
+                                       : RL.ConvertToImage(res.Data, width, height, psb.Platform.DefaultPixelFormat()))
+                            {
+                                iconItem["image"] = BuildSourceImage(texture);
+                            }
                         }
 
                         iconItem.Remove("compress");
@@ -1587,7 +1590,11 @@ namespace FreeMote.PsBuild
             metaFormatContent["physicsMotionList"] = new PsbList();
             metaFormatContent["physicsVariableList"] = new PsbList();
             metaFormatContent["scrapbookDefinitionList"] = BuildScrapbookDefinition(mmo); //Have to build for change scrapbook
-            metaFormatContent["selectorControlDefinitionList"] = metadata["selectorControl"];
+            // The editor iterates this field unconditionally while upgrading old
+            // metaformat projects. A missing/null selectorControl becomes TJS void
+            // and aborts project loading before the rest of the model is attached.
+            metaFormatContent["selectorControlDefinitionList"] =
+                metadata["selectorControl"] is PsbList selectorControl ? selectorControl : new PsbList();
             metaFormatContent["sourceDefinitionOrderList"] = new PsbList(); //can be null?
             metaFormatContent["stereovisionDefinition"] = metadata["stereovisionControl"];
             metaFormatContent["subtype"] = "E-mote Meta Format".ToPsbString();

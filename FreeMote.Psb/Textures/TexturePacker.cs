@@ -356,6 +356,13 @@ namespace FreeMote.Psb.Textures
             Dictionary<string, (int oriX, int oriY, int width, int height)> origins, int paddingWidth, int paddingHeight,
             out int cellWidth, out int cellHeight, int mode = 0, bool debugMode = false)
         {
+            if (images == null)
+                throw new ArgumentNullException(nameof(images));
+            if (origins == null)
+                throw new ArgumentNullException(nameof(origins));
+            if (images.Count == 0)
+                throw new ArgumentException("At least one image is required.", nameof(images));
+
             AtlasSize = 8192;
             LoadTexturesFromImages(images);
 
@@ -378,14 +385,36 @@ namespace FreeMote.Psb.Textures
             cellWidth += paddingWidth;
             cellHeight += paddingHeight;
 
-            //TODO: best arrange method?
-            //Firstly implement a straight packer
-            int texWidth = 3 * cellWidth;
-            int texHeight = cellHeight * (1 + images.Count * 2);
+            // Keep the cells compact. The old layout put every icon in one column,
+            // surrounded it with a full empty cell on every side and produced images
+            // such as 4671x17561 from eight 1406x931 inputs. The EMT editor is a
+            // 32-bit process and can run out of address space while unserializing such
+            // an image. A compact grid retains the same per-icon cell coordinates and
+            // padding without allocating unused cells between icons.
+            int columns = 1;
+            int rows = images.Count;
+            long shortestLongSide = Math.Max((long)cellWidth, (long)cellHeight * rows);
+            long smallestArea = (long)cellWidth * cellHeight * rows;
+            for (int candidateColumns = 2; candidateColumns <= images.Count; candidateColumns++)
+            {
+                int candidateRows = (images.Count + candidateColumns - 1) / candidateColumns;
+                long width = (long)cellWidth * candidateColumns;
+                long height = (long)cellHeight * candidateRows;
+                long longSide = Math.Max(width, height);
+                long area = width * height;
+                if (longSide < shortestLongSide || longSide == shortestLongSide && area < smallestArea)
+                {
+                    columns = candidateColumns;
+                    rows = candidateRows;
+                    shortestLongSide = longSide;
+                    smallestArea = area;
+                }
+            }
+
+            int texWidth = checked(columns * cellWidth);
+            int texHeight = checked(rows * cellHeight);
             Bitmap img = new Bitmap(texWidth, texHeight, PixelFormat.Format32bppArgb);
             //avoid using Graphics
-            int posX = cellWidth;
-            int posY = cellHeight;
             Atlasses = new List<Atlas>(1);
             Atlas atlas = new Atlas(texWidth, texHeight)
             {
@@ -399,8 +428,11 @@ namespace FreeMote.Psb.Textures
             using (var f = img.FastLock())
             {
                 f.Clear(Color.FromArgb(255, 0, 255, 0));
+                int imageIndex = 0;
                 foreach (var image in images)
                 {
+                    int posX = imageIndex % columns * cellWidth;
+                    int posY = imageIndex / columns * cellHeight;
                     Node n = new Node();
                     n.Texture = new TextureInfo
                     {
@@ -418,7 +450,7 @@ namespace FreeMote.Psb.Textures
                     int leftTopY = centerY - origins[image.Key].oriY;
                     f.CopyRegion(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height),
                         new Rectangle(leftTopX, leftTopY, bmp.Width, bmp.Height));
-                    posY += 2 * cellHeight;
+                    imageIndex++;
                 }
             }
 

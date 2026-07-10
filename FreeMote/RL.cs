@@ -496,24 +496,26 @@ namespace FreeMote
             PsbPixelFormat colorFormat = PsbPixelFormat.None, byte[] palette = null,
             PsbPixelFormat paletteColorFormat = PsbPixelFormat.None)
         {
-            Bitmap bmp = ConvertToImage(data, palette, width, height, colorFormat, paletteColorFormat);
-            
-            switch (format)
+            using (Bitmap bmp = ConvertToImage(data, palette, width, height, colorFormat, paletteColorFormat))
             {
-                case PsbImageFormat.bmp:
-                    bmp.Save(path, ImageFormat.Bmp);
-                    break;
-                case PsbImageFormat.png:
-                    bmp.Save(path, ImageFormat.Png);
-                    break;
+                switch (format)
+                {
+                    case PsbImageFormat.bmp:
+                        bmp.Save(path, ImageFormat.Bmp);
+                        break;
+                    case PsbImageFormat.png:
+                        bmp.Save(path, ImageFormat.Png);
+                        break;
+                }
             }
         }
 
         public static void ConvertToImageFileWithPalette(byte[] data, byte[] palette,string path, int width, int height, PsbPixelFormat colorFormat, PsbPixelFormat paletteColorFormat)
         {
-            Bitmap bmp = ConvertToImageWithPalette(data, palette, width, height, colorFormat, paletteColorFormat);
-            
-            bmp.Save(path, ImageFormat.Png);
+            using (Bitmap bmp = ConvertToImageWithPalette(data, palette, width, height, colorFormat, paletteColorFormat))
+            {
+                bmp.Save(path, ImageFormat.Png);
+            }
         }
 
         private static byte[] Decompress(Stream stream, int width, int height, int align = 4)

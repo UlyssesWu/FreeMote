@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using FreeMote.Psb;
+using FreeMote.Psb.Textures;
 using FreeMote.PsBuild;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -46,6 +49,76 @@ namespace FreeMote.Tests
             {
                 var k = kv.Key;
                 var v = kv.Value;
+            }
+        }
+
+        [TestMethod]
+        public void TestCellProcessUsesCompactGrid()
+        {
+            var images = new Dictionary<string, Image>();
+            var origins = new Dictionary<string, (int oriX, int oriY, int width, int height)>();
+            try
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    images.Add(i.ToString(), new Bitmap(100, 50));
+                    origins.Add(i.ToString(), (50, 25, 100, 50));
+                }
+
+                var packer = new TexturePacker();
+                using (var atlas = packer.CellProcess(images, origins, 10, 10, out int cellWidth,
+                           out int cellHeight))
+                {
+                    Assert.AreEqual(110, cellWidth);
+                    Assert.AreEqual(60, cellHeight);
+                    Assert.AreEqual(220, atlas.Width);
+                    Assert.AreEqual(240, atlas.Height);
+                    Assert.AreEqual(8, packer.Atlasses[0].Nodes.Count);
+                    Assert.AreEqual(new Rectangle(0, 0, 110, 60), packer.Atlasses[0].Nodes[0].Bounds);
+                    Assert.AreEqual(new Rectangle(110, 180, 110, 60), packer.Atlasses[0].Nodes[7].Bounds);
+                }
+            }
+            finally
+            {
+                foreach (var image in images.Values)
+                {
+                    image.Dispose();
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestCellProcessAvoidsGdiDimensionLimit()
+        {
+            const int imageCount = 29;
+            const int recoveredHeight = 1200;
+            var images = new Dictionary<string, Image>();
+            var origins = new Dictionary<string, (int oriX, int oriY, int width, int height)>();
+            try
+            {
+                for (int i = 0; i < imageCount; i++)
+                {
+                    images.Add(i.ToString(), new Bitmap(1, 1));
+                    origins.Add(i.ToString(), (0, 0, 1, recoveredHeight));
+                }
+
+                var packer = new TexturePacker();
+                using (var atlas = packer.CellProcess(images, origins, 10, 10, out int cellWidth,
+                           out int cellHeight))
+                {
+                    long oldSingleColumnHeight = (long)cellHeight * (1 + imageCount * 2);
+                    Assert.IsTrue(oldSingleColumnHeight > ushort.MaxValue);
+                    Assert.IsTrue(atlas.Width <= ushort.MaxValue);
+                    Assert.IsTrue(atlas.Height <= ushort.MaxValue);
+                    Assert.AreEqual(imageCount, packer.Atlasses[0].Nodes.Count);
+                }
+            }
+            finally
+            {
+                foreach (var image in images.Values)
+                {
+                    image.Dispose();
+                }
             }
         }
 
