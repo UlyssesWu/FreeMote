@@ -162,6 +162,14 @@ namespace FreeMote.PsBuild
 
                     context = FreeMount.CreateContext(resx.Context);
 
+                    // Convert the metadata before linking image files. Otherwise a source texture format
+                    // such as BC7 is encoded first and only then converted to the requested platform,
+                    // causing an unnecessary lossy round trip (and requiring the converter to decode it).
+                    if (spec != null && spec != psb.Platform)
+                    {
+                        psb.SwitchSpec(spec.Value, spec.Value.DefaultPixelFormat());
+                    }
+
                     if (resx.HasExtraResources)
                     {
                         PsbResHelper.LinkExtraResources(psb, context, resx.ExtraResources, resx.ExtraFlattenArrays, baseDir);
@@ -181,6 +189,10 @@ namespace FreeMote.PsBuild
                 else
                 {
                     List<string> resources = JsonConvert.DeserializeObject<List<string>>(inputResJson);
+                    if (spec != null && spec != psb.Platform)
+                    {
+                        psb.SwitchSpec(spec.Value, spec.Value.DefaultPixelFormat());
+                    }
                     psb.Link(resources, baseDir);
                 }
             }
@@ -273,6 +285,11 @@ namespace FreeMote.PsBuild
                         PsbResHelper.LinkExtraResources(psb, extraContext, resx.ExtraResources, resx.ExtraFlattenArrays, baseDir);
                     }
 
+                    if (resx.Platform != null && resx.Platform != PsbSpec.none && resx.Platform != psb.Platform)
+                    {
+                        psb.SwitchSpec(resx.Platform.Value, resx.Platform.Value.DefaultPixelFormat());
+                    }
+
                     if (resx.ExternalTextures)
                     {
 #if DEBUG
@@ -284,10 +301,6 @@ namespace FreeMote.PsBuild
                         psb.Link(resx, baseDir);
                     }
 
-                    if (resx.Platform != null && resx.Platform != PsbSpec.none)
-                    {
-                        psb.SwitchSpec(resx.Platform.Value, resx.Platform.Value.DefaultPixelFormat());
-                    }
                 }
                 else
                 {

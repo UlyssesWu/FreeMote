@@ -36,37 +36,49 @@ namespace FreeMote.PsBuild.Converters
             var toSpec = psb.Platform == PsbSpec.win ? asSpec : PsbSpec.win;
             var toPixelFormat = toSpec == asSpec ? PsbPixelFormat.BeRGBA8 : PsbPixelFormat.LeRGBA8;
             var resList = psb.CollectResources<ImageMetadata>(false);
-            foreach (var resMd in resList)
+            // Type strings and resources can be shared by multiple texture entries. Capture every source
+            // format before changing any shared PsbString, and convert each backing resource only once.
+            var conversions = resList.Select(resMd => (Metadata: resMd, SourcePixelFormat: resMd.PixelFormat)).ToList();
+            var convertedResources = new HashSet<PsbResource>();
+            foreach (var conversion in conversions)
             {
+                var resMd = conversion.Metadata;
+                var sourcePixelFormat = conversion.SourcePixelFormat;
                 var resourceData = resMd.Resource.Data;
-                if (resourceData == null)
+                if (resMd.TypeString != null)
+                {
+                    // This must also happen when resources have not been linked yet. It lets a PNG be
+                    // encoded directly in the target format instead of source-format -> target-format.
+                    resMd.TypeString.Value = toPixelFormat.ToStringForPsb();
+                }
+
+                if (!convertedResources.Add(resMd.Resource) || resourceData == null || resourceData.Length == 0)
                 {
                     continue;
                 }
+
+                var useRl = resMd.Compress == PsbCompressType.RL;
                 if (resMd.Compress == PsbCompressType.RL)
                 {
                     resourceData = RL.Decompress(resourceData);
                 }
-                else if (resMd.PixelFormat == PsbPixelFormat.DXT5)
+
+                if (sourcePixelFormat is PsbPixelFormat.LeRGBA8 or PsbPixelFormat.BeRGBA8)
                 {
-                    resourceData = RL.GetPixelBytesFromImage(
-                        DxtUtil.Dxt5Decode(resourceData, resMd.Width, resMd.Height), toPixelFormat);
-                    resMd.TypeString.Value = toPixelFormat.ToStringForPsb();
-                }
-                else if (resMd.PixelFormat == PsbPixelFormat.DXT1)
-                {
-                    resourceData = RL.GetPixelBytesFromImage(
-                        DxtUtil.Dxt1Decode(resourceData, resMd.Width, resMd.Height), toPixelFormat);
-                    resMd.TypeString.Value = toPixelFormat.ToStringForPsb();
+                    RL.Switch_0_2(ref resourceData);
                 }
                 else
                 {
-                    RL.Switch_0_2(ref resourceData);
-                    if (UseRL)
-                    {
-                        resourceData = RL.Compress(resourceData);
-                    }
+                    using var image = RL.ConvertToImage(resourceData, resMd.PalData, resMd.Width, resMd.Height,
+                        sourcePixelFormat, resMd.PalettePixelFormat);
+                    resourceData = RL.GetPixelBytesFromImage(image, toPixelFormat);
                 }
+
+                if (useRl)
+                {
+                    resourceData = RL.Compress(resourceData);
+                }
+
                 resMd.Resource.Data = resourceData;
             }
             psb.Platform = toSpec;
