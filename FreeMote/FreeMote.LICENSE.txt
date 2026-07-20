@@ -407,3 +407,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ------------------------------
+LightCodec is licensed under LGPL-2.1. AUTHOR: unknowall (sgfree@hotmail.com)
+
+------------------------------

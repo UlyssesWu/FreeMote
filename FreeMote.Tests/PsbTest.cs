@@ -245,6 +245,50 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestPs3Atrac3SoundArchive()
+        {
+            var atrac3 = new byte[60]
+            {
+                (byte)'R', (byte)'I', (byte)'F', (byte)'F', 52, 0, 0, 0,
+                (byte)'W', (byte)'A', (byte)'V', (byte)'E',
+                (byte)'f', (byte)'m', (byte)'t', (byte)' ', 40, 0, 0, 0,
+                0xFE, 0xFF, 2, 0, 0x80, 0xBB, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0,
+                0xBF, 0xAA, 0x23, 0xE9, 0x58, 0xCB, 0x71, 0x44,
+                0xA1, 0x19, 0xFF, 0xFA, 0x01, 0xE4, 0xCE, 0x62
+            };
+            var resource = new PsbResource {Data = atrac3};
+            var channel = new PsbDictionary { {"archData", resource} };
+            var metadata = new AudioMetadata
+            {
+                Name = "bgm_01",
+                FileString = "./data/bgm/BGM_01.wav",
+                Spec = PsbSpec.ps3
+            };
+            var formatter = new FreeMote.Plugins.Audio.At3Formatter
+            {
+                ToolPath = Path.Combine(Path.GetTempPath(), "missing-at3tool.exe")
+            };
+            var atrac3Wave = (byte[])atrac3.Clone();
+            atrac3Wave[20] = 0x70;
+            atrac3Wave[21] = 0x02;
+
+            Assert.IsTrue(FreeMote.Plugins.Audio.At3Formatter.IsAtrac3Wave(atrac3Wave));
+            Assert.IsTrue(formatter.TryGetArchData(metadata, channel, out var archData));
+            Assert.IsInstanceOfType(archData, typeof(PsArchData));
+            Assert.AreEqual(PsbAudioFormat.Atrac3Plus, archData.Format);
+            CollectionAssert.AreEqual(atrac3, formatter.ToWave(metadata, archData));
+            Assert.AreEqual(".wav", archData.WaveExtension);
+
+            var emptyResource = new PsbResource();
+            channel["archData"] = emptyResource;
+            Assert.IsTrue(formatter.TryGetArchData(metadata, channel, out archData));
+            Assert.AreEqual(PsbAudioFormat.Atrac3Plus, archData.Format);
+            Assert.IsTrue(formatter.ToArchData(metadata, archData, atrac3, "bgm_01", ".wav"));
+            CollectionAssert.AreEqual(atrac3, emptyResource.Data);
+        }
+
+        [TestMethod]
         public void TestDrawKrkr()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

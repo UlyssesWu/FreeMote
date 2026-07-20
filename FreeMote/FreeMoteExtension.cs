@@ -272,6 +272,8 @@ namespace FreeMote
         {
             switch (audioFormat)
             {
+                case PsbAudioFormat.Atrac3Plus:
+                    return ".at3";
                 case PsbAudioFormat.Atrac9:
                     return ".at9";
                 case PsbAudioFormat.WAV:

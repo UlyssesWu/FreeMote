@@ -369,6 +369,7 @@ namespace FreeMote
     {
         Unknown = 0,
         WAV,
+        Atrac3Plus,
         Atrac9,
         OPUS,
         XWMA,

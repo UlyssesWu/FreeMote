@@ -363,9 +363,9 @@ namespace FreeMote.Plugins
         {
             foreach (var (_, formatter) in AudioFormatters.Where(tuple => tuple.Extension == ext))
             {
-                if (formatter.CanToArchData(wave, context))
+                if (formatter.CanToArchData(wave, context) &&
+                    formatter.ToArchData(md, archData, wave, fileName, waveExt, context))
                 {
-                    formatter.ToArchData(md, archData, wave, fileName, waveExt, context);
                     return true;
                 }
             }
