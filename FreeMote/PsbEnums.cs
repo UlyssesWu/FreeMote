@@ -362,7 +362,11 @@ namespace FreeMote
         /// <summary>
         /// DXT1
         /// </summary>
-        DXT1
+        DXT1,
+        /// <summary>
+        /// DXT1 with PS4 block tiling
+        /// </summary>
+        DXT1_SW
     }
 
     public enum PsbAudioFormat

@@ -55,6 +55,12 @@ namespace FreeMote
                     data = DxtUtil.DecompressDxt1(data, width, height);
                     Switch_0_2(ref data); //DXT1(for win) need conversion
                     break;
+                case PsbPixelFormat.DXT1_SW:
+                    // PS4 stores DXT1 as 8-byte 4x4 blocks in 8x8 tiled order.
+                    data = PostProcessing.UntileTextureV2(data, width / 4, height / 4, 8);
+                    data = DxtUtil.DecompressDxt1(data, width, height);
+                    Switch_0_2(ref data);
+                    break;
                 case PsbPixelFormat.DXT5:
                     data = DxtUtil.DecompressDxt5(data, width, height);
                     Switch_0_2(ref data); //DXT5(for win) need conversion
@@ -236,6 +242,10 @@ namespace FreeMote
                 case PsbPixelFormat.DXT1:
                     //Switch_0_2(ref result);
                     result = DxtUtil.Dxt1Encode(result, bmp.Width, bmp.Height);
+                    break;
+                case PsbPixelFormat.DXT1_SW:
+                    result = DxtUtil.Dxt1Encode(result, bmp.Width, bmp.Height);
+                    result = PostProcessing.TileTextureV2(result, bmp.Width / 4, bmp.Height / 4, 8);
                     break;
                 case PsbPixelFormat.DXT5:
                     //Switch_0_2(ref result);

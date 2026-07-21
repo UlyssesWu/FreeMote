@@ -191,6 +191,7 @@ namespace FreeMote
                 case PsbPixelFormat.ASTC_8BPP:
                 case PsbPixelFormat.DXT5:
                 case PsbPixelFormat.DXT1:
+                case PsbPixelFormat.DXT1_SW:
                 case PsbPixelFormat.BC7:
                 case PsbPixelFormat.BC7_SW:
                 default:
@@ -351,6 +352,8 @@ namespace FreeMote
                     return PsbPixelFormat.CI8_SW;
                 case "DXT1":
                     return PsbPixelFormat.DXT1;
+                case "DXT1_SW":
+                    return PsbPixelFormat.DXT1_SW;
                 case "DXT5":
                     return PsbPixelFormat.DXT5;
                 case "RGBA4444":

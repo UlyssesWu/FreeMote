@@ -205,6 +205,9 @@ namespace FreeMote
                 for (int tileX = 0; tileX < width / 4; tileX++)
                 {
                     byte[] block = new byte[8];
+                    bool isDxt1 = dxtAlpha == DxtAlphaMode.None;
+                    bool hasTransparentPixel = false;
+                    bool hasOpaquePixel = false;
 
                     //Calculo de Luminância mín/máx
                     byte minLuma = 0xff;
@@ -219,6 +222,14 @@ namespace FreeMote
                         for (int x = 0; x < 4; x++)
                         {
                             int offset = ((tileX * 4) + x + (((tileY * 4) + y) * width)) * bpp;
+
+                            if (isDxt1 && bpp == 4 && data[offset + 3] < 128)
+                            {
+                                hasTransparentPixel = true;
+                                continue;
+                            }
+
+                            hasOpaquePixel = true;
 
                             byte r = data[offset + 2];
                             byte g = data[offset + 1];
@@ -249,9 +260,21 @@ namespace FreeMote
                     block[0] = (byte) ((maxB >> 3) | ((maxG & 0x1C) << 3));
                     block[1] = (byte) (((maxG & 0xE0) >> 5) | (maxR & 0xF8));
 
-                    Color[] pixelColor = new Color[4];
                     ushort c0 = Read16(block, 0);
                     ushort c1 = Read16(block, 2);
+                    if (isDxt1 && hasOpaquePixel &&
+                        (hasTransparentPixel ? c0 > c1 : c0 < c1))
+                    {
+                        block[0] = (byte) c1;
+                        block[1] = (byte) (c1 >> 8);
+                        block[2] = (byte) c0;
+                        block[3] = (byte) (c0 >> 8);
+                        var temp = c0;
+                        c0 = c1;
+                        c1 = temp;
+                    }
+
+                    Color[] pixelColor = new Color[4];
                     pixelColor[0] = GetColorFromBgr565(c0);
                     pixelColor[1] = GetColorFromBgr565(c1);
                     pixelColor[2] = ProcessDxt1ColorChannel(2, c0, c1, true);
@@ -267,11 +290,18 @@ namespace FreeMote
                             byte g = data[imageOffset + 1];
                             byte b = data[imageOffset];
 
+                            if (isDxt1 && hasTransparentPixel && bpp == 4 && data[imageOffset + 3] < 128)
+                            {
+                                block[4 + y] |= (byte) (3 << (x * 2));
+                                continue;
+                            }
+
                             int luma = (int) (0.257f * r + 0.504f * g + 0.098f * b + 16);
 
                             int minDiff = 0xff;
                             int index = 0;
-                            for (int i = 0; i < 4; i++)
+                            int colorCount = isDxt1 && hasTransparentPixel ? 3 : 4;
+                            for (int i = 0; i < colorCount; i++)
                             {
                                 int testLuma = (int) (0.257f * pixelColor[i].R + 0.504f * pixelColor[i].G +
                                                       0.098f * pixelColor[i].B + 16);
