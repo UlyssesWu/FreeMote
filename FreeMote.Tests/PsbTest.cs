@@ -289,6 +289,64 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestXboxXma2SoundArchive()
+        {
+            var fmt = new byte[52]
+            {
+                0x66, 0x01, 0x02, 0x00, 0x7F, 0xBB, 0x00, 0x00,
+                0xF8, 0x61, 0x00, 0x00, 0x04, 0x00, 0x10, 0x00,
+                0x22, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0xFA, 0xA9, 0x00, 0x00, 0x00, 0x01, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x62, 0xF6, 0xA9, 0x00,
+                0x00, 0xD7, 0x08, 0x00, 0x00, 0x21, 0xA1, 0x00,
+                0xFF, 0x04, 0x59, 0x00
+            };
+            var packets = new byte[] {1, 2, 3, 4, 5};
+            var channel = new PsbDictionary
+            {
+                {"archData", new PsbDictionary
+                {
+                    {"data", new PsbResource {Data = packets}},
+                    {"fmt", new PsbResource {Data = fmt}}
+                }}
+            };
+            var metadata = new AudioMetadata {Name = "bgm01b", Spec = PsbSpec.xone};
+            var formatter = new FreeMote.Plugins.Audio.XmaFormatter
+            {
+                ToolPath = Path.Combine(Path.GetTempPath(), "missing-xma2encode.exe")
+            };
+
+            Assert.IsTrue(formatter.TryGetArchData(metadata, channel, out var archData));
+            Assert.IsInstanceOfType(archData, typeof(XmaArchData));
+            Assert.AreEqual(PsbAudioFormat.XMA, archData.Format);
+            Assert.AreEqual(PsbAudioPan.Stereo, archData.ChannelPan);
+
+            var wave = formatter.ToWave(metadata, archData);
+            Assert.IsTrue(FreeMote.Plugins.Audio.XmaFormatter.IsXma2Wave(wave));
+            Assert.AreEqual(wave.Length - 8, BitConverter.ToInt32(wave, 4));
+
+            var roundTrip = new XmaArchData
+            {
+                Data = new PsbResource(),
+                Fmt = new PsbResource()
+            };
+            Assert.IsTrue(formatter.ToArchData(metadata, roundTrip, wave, "bgm01b", ".wav"));
+            CollectionAssert.AreEqual(fmt, roundTrip.Fmt.Data);
+            CollectionAssert.AreEqual(packets, roundTrip.Data.Data);
+
+            var unresolvedChannel = new PsbDictionary
+            {
+                {"archData", new PsbDictionary
+                {
+                    {"data", new PsbResource()},
+                    {"fmt", new PsbResource()}
+                }}
+            };
+            Assert.IsTrue(formatter.TryGetArchData(metadata, unresolvedChannel, out _),
+                "JSON compilation must recognize XMA2 before its resources are linked.");
+        }
+
+        [TestMethod]
         public void TestDrawKrkr()
         {
             var resPath = Path.Combine(Environment.CurrentDirectory, @"..\..\Res");

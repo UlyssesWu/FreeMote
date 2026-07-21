@@ -157,6 +157,13 @@ namespace FreeMote.Psb
                     var xwmaArch = (XwmaArchData)targetChannel;
                     xwmaArch.ReadFromXwma(File.OpenRead(fullPath));
                     break;
+                case ".xma":
+                    var xmaArch = (XmaArchData)targetChannel;
+                    using (var xmaStream = File.OpenRead(fullPath))
+                    {
+                        xmaArch.ReadFromXmaWave(xmaStream);
+                    }
+                    break;
                 case ".adpcm":
                     var adpcmArch = (OpusArchData)targetChannel;
                     adpcmArch.Data.Data = File.ReadAllBytes(fullPath);

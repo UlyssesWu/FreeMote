@@ -4,6 +4,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using FreeMote.Psb;
 
 //REF: https://wiki.multimedia.cx/index.php/Microsoft_xWMA
@@ -19,6 +20,8 @@ namespace FreeMote.Plugins.Audio
         public List<string> Extensions { get; } = new List<string> {".xwma", ".xwm"};
 
         private const string EncoderTool = "xWMAEncode.exe";
+        private static int _useToolNotice;
+        private static int _missingToolNotice;
 
         public string ToolPath { get; set; } = null;
 
@@ -40,7 +43,7 @@ namespace FreeMote.Plugins.Audio
         {
             if (!File.Exists(ToolPath))
             {
-                Logger.LogWarn($"[WARN] External tool missing: {EncoderTool}");
+                LogMissingToolNotice();
                 return false;
             }
 
@@ -49,12 +52,14 @@ namespace FreeMote.Plugins.Audio
 
         public byte[] ToWave(AudioMetadata md, IArchData archData, string fileName = null, Dictionary<string, object> context = null)
         {
-            if (string.IsNullOrEmpty(ToolPath))
+            if (!File.Exists(ToolPath))
             {
+                LogMissingToolNotice();
                 archData.WaveExtension = Extensions[0];
                 return ((XwmaArchData)archData).ToXwma();
             }
 
+            LogUseToolNotice();
             archData.WaveExtension = ".wav";
             var xwmaBytes = ((XwmaArchData) archData).ToXwma();
             var tempFile = Path.GetTempFileName();
@@ -88,6 +93,7 @@ namespace FreeMote.Plugins.Audio
         {
             if (!File.Exists(ToolPath))
             {
+                LogMissingToolNotice();
                 return false;
             }
 
@@ -96,6 +102,7 @@ namespace FreeMote.Plugins.Audio
                 return false;
             }
 
+            LogUseToolNotice();
             var tempFile = Path.GetTempFileName();
             File.WriteAllBytes(tempFile, wave);
             var tempOutFile = Path.GetTempFileName();
@@ -132,6 +139,22 @@ namespace FreeMote.Plugins.Audio
             oms.Dispose();
             
             return true;
+        }
+
+        private static void LogUseToolNotice()
+        {
+            if (Interlocked.Exchange(ref _useToolNotice, 1) == 0)
+            {
+                Logger.LogHint("[XWMA] Try using xWMAEncode to encode/decode...");
+            }
+        }
+
+        private static void LogMissingToolNotice()
+        {
+            if (Interlocked.Exchange(ref _missingToolNotice, 1) == 0)
+            {
+                Logger.LogWarn("[XWMA] xWMAEncode was not found. Decoding will export xWMA data, which may not be directly playable and may require manual conversion; PCM WAV cannot be encoded automatically.");
+            }
         }
 
         public bool TryGetArchData(AudioMetadata md, PsbDictionary channel, out IArchData data, Dictionary<string, object> context = null)

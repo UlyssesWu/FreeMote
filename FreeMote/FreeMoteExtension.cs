@@ -283,6 +283,8 @@ namespace FreeMote
                     return ".opus";
                 case PsbAudioFormat.XWMA:
                     return ".xwma";
+                case PsbAudioFormat.XMA:
+                    return ".xma";
                 case PsbAudioFormat.VAG:
                     return ".vag";
                 case PsbAudioFormat.ADPCM:

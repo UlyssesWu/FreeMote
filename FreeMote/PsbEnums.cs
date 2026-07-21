@@ -154,6 +154,10 @@ namespace FreeMote
         /// N Wii (Revolution)
         /// </summary>
         revo,
+        /// <summary>
+        /// Xbox One
+        /// </summary>
+        xone,
 
         other = Byte.MaxValue,
     }
@@ -377,6 +381,7 @@ namespace FreeMote
         Atrac9,
         OPUS,
         XWMA,
+        XMA,
         VAG,
         ADPCM,
         OGG,

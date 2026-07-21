@@ -463,6 +463,153 @@ namespace FreeMote.Psb
     }
 
     /// <summary>
+    /// Xbox Media Audio 2. The PSB stores the XMA2WAVEFORMATEX and packet data
+    /// in separate resources; <see cref="ToXmaWave"/> restores a standard RIFF/WAVE container.
+    /// </summary>
+    public class XmaArchData : IArchData
+    {
+        private PsbResource _fmt;
+        private PsbResource _data;
+
+        public uint Index => Data?.Index ?? uint.MaxValue;
+        public string Extension => Format.DefaultExtension();
+        public string WaveExtension { get; set; } = ".wav";
+        public PsbAudioFormat Format => PsbAudioFormat.XMA;
+        public PsbAudioPan ChannelPan => Fmt?.Data is {Length: >= 4} && BitConverter.ToUInt16(Fmt.Data, 2) > 1
+            ? PsbAudioPan.Stereo
+            : PsbAudioPan.Mono;
+
+        public PsbResource Data
+        {
+            get => _data;
+            set => _data = value;
+        }
+
+        public PsbResource Fmt
+        {
+            get => _fmt;
+            set => _fmt = value;
+        }
+
+        public IList<PsbResource> DataList => new List<PsbResource> {Data};
+        public PsbDictionary PsbArchData { get; set; }
+
+        public IPsbValue ToPsbArchData()
+        {
+            return new PsbDictionary
+            {
+                {"data", Data},
+                {"fmt", Fmt}
+            };
+        }
+
+        public byte[] ToXmaWave()
+        {
+            if (Fmt?.Data == null || Data?.Data == null)
+            {
+                return null;
+            }
+
+            using var ms = new MemoryStream(28 + Fmt.Data.Length + Data.Data.Length);
+            using var writer = new BinaryWriter(ms, Encoding.ASCII, true);
+            writer.WriteUTF8("RIFF");
+            writer.Write(0);
+            writer.WriteUTF8("WAVE");
+            WriteChunk(writer, "fmt ", Fmt.Data);
+            WriteChunk(writer, "data", Data.Data);
+
+            writer.Seek(4, SeekOrigin.Begin);
+            writer.Write(checked((int)ms.Length - 8));
+            return ms.ToArray();
+        }
+
+        public bool ReadFromXmaWave(Stream stream)
+        {
+            if (stream == null || !stream.CanRead || stream.Length - stream.Position < 12)
+            {
+                return false;
+            }
+
+            using var reader = new BinaryReader(stream, Encoding.ASCII, true);
+            if (new string(reader.ReadChars(4)) != "RIFF")
+            {
+                return false;
+            }
+
+            reader.ReadUInt32();
+            if (new string(reader.ReadChars(4)) != "WAVE")
+            {
+                return false;
+            }
+
+            byte[] fmt = null;
+            byte[] data = null;
+            while (stream.Position + 8 <= stream.Length)
+            {
+                var id = new string(reader.ReadChars(4));
+                var size = reader.ReadUInt32();
+                if (size > int.MaxValue || stream.Position + size > stream.Length)
+                {
+                    return false;
+                }
+
+                var chunk = reader.ReadBytes((int)size);
+                if ((size & 1) != 0 && stream.Position < stream.Length)
+                {
+                    reader.ReadByte();
+                }
+
+                if (id == "fmt ")
+                {
+                    fmt = chunk;
+                }
+                else if (id == "data")
+                {
+                    data = chunk;
+                }
+            }
+
+            if (!IsXma2Format(fmt) || data == null)
+            {
+                return false;
+            }
+
+            Apply(ref _fmt, fmt);
+            Apply(ref _data, data);
+            return true;
+        }
+
+        public static bool IsXma2Format(byte[] fmt)
+        {
+            return fmt is {Length: >= 52} && BitConverter.ToUInt16(fmt, 0) == 0x0166 &&
+                   BitConverter.ToUInt16(fmt, 16) >= 34;
+        }
+
+        private static void WriteChunk(BinaryWriter writer, string id, byte[] data)
+        {
+            writer.WriteUTF8(id);
+            writer.Write(data.Length);
+            writer.Write(data);
+            if ((data.Length & 1) != 0)
+            {
+                writer.Write((byte)0);
+            }
+        }
+
+        private static void Apply(ref PsbResource resource, byte[] data)
+        {
+            if (resource == null)
+            {
+                resource = new PsbResource {Data = data};
+            }
+            else
+            {
+                resource.Data = data;
+            }
+        }
+    }
+
+    /// <summary>
     /// Clip (parts of a channel) used in NX OPUS
     /// </summary>
     internal class ChannelClip
