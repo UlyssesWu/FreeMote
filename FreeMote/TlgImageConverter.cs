@@ -135,7 +135,7 @@ namespace FreeMote
         public Bitmap ReadAndGetMetaData(BinaryReader file, out TlgMetaData md, bool copy = true)
         {
             TlgMetaData meta = ReadMetaData(file);
-            md = meta;
+            md = meta ?? throw new FormatException("Invalid TLG format");
             var image = ReadTlg(file, meta);
 
             int tailSize = (int)Math.Min(file.BaseStream.Length - file.BaseStream.Position, 512);

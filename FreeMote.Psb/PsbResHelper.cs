@@ -15,6 +15,47 @@ namespace FreeMote.Psb
     public static class PsbResHelper
     {
         /// <summary>
+        /// Detect image containers
+        /// </summary>
+        internal static string DetectImageExtension(Span<byte> data)
+        {
+            if (data == null || data.Length < 4)
+            {
+                return null;
+            }
+
+            if (data[0] == 0x89 && data[1] == (byte)'P' && data[2] == (byte)'N' && data[3] == (byte)'G')
+            {
+                return ".png";
+            }
+
+            if (data[0] == (byte)'B' && data[1] == (byte)'M')
+            {
+                return ".bmp";
+            }
+
+            if (data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF)
+            {
+                return ".jpg";
+            }
+
+            if (data[0] == (byte)'T' && data[1] == (byte)'L' && data[2] == (byte)'G')
+            {
+                return ".tlg";
+            }
+
+            if (data.Length >= 16 &&
+                data[0] == (byte)'R' && data[1] == (byte)'I' && data[2] == (byte)'F' && data[3] == (byte)'F' &&
+                data[8] == (byte)'W' && data[9] == (byte)'E' && data[10] == (byte)'B' && data[11] == (byte)'P' &&
+                data[12] == (byte)'V' && data[13] == (byte)'P' && data[14] == (byte)'8')
+            {
+                return ".webp";
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Parse loopstr like "range:0,123456" to a <see cref="PsbList"/>
         /// </summary>
         /// <param name="loopStr"></param>
@@ -415,6 +456,7 @@ namespace FreeMote.Psb
             PsbImageFormat extractFormat = PsbImageFormat.png)
         {
             var resources = psb.CollectResources<ImageMetadata>();
+            context.TryGet(Consts.Context_UseWebP, out bool useWebP);
 
             Dictionary<string, string> resDictionary = new Dictionary<string, string>();
 
@@ -476,6 +518,18 @@ namespace FreeMote.Psb
                     switch (currentExtractOption)
                     {
                         case PsbExtractOption.Extract:
+                            if (useWebP && resource.Compress == PsbCompressType.Tlg)
+                            {
+                                var actualExtension = DetectImageExtension(resource.Data);
+                                if (actualExtension != null && actualExtension != ".tlg")
+                                {
+                                    relativePath += actualExtension;
+                                    relativePath = CheckPath(relativePath, i);
+                                    File.WriteAllBytes(Path.Combine(dirPath, relativePath), resource.Data);
+                                    break;
+                                }
+                            }
+
                             switch (extractFormat)
                             {
                                 case PsbImageFormat.png:
@@ -501,11 +555,18 @@ namespace FreeMote.Psb
                                 {
                                     if (resource.Compress == PsbCompressType.Tlg) //Fallback to managed TLG decoder
                                     {
-                                        using var ms = new MemoryStream(resource.Data);
-                                        using var br = new BinaryReader(ms);
-                                        bmp = new TlgImageConverter().Read(br);
-                                        bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
-                                        bmp.Dispose();
+                                        try
+                                        {
+                                            using var ms = new MemoryStream(resource.Data);
+                                            using var br = new BinaryReader(ms);
+                                            bmp = new TlgImageConverter().Read(br);
+                                            bmp.Save(Path.Combine(dirPath, relativePath), pixelFormat);
+                                            bmp.Dispose();
+                                        }
+                                        catch (FormatException)
+                                        {
+                                            Logger.LogError($"[ERROR] {resource.Name} is not a valid TLG. (maybe try `--webp`)");
+                                        }
                                     }
 
                                     relativePath = Path.ChangeExtension(relativePath, Path.GetExtension(resource.Name));

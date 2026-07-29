@@ -36,7 +36,7 @@ namespace FreeMote.PsBuild
         /// <returns>The actual output path</returns>
         public static string CompileToFile(string inputPath, string outputPath, string inputResPath = null,
             ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true,
-            bool keepShell = true)
+            bool keepShell = true, bool useWebP = false)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -103,7 +103,7 @@ namespace FreeMote.PsBuild
             }
 
             COMPILE: ;
-            var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform, keepShell);
+            var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform, keepShell, useWebP);
 
             // ReSharper disable once AssignNullToNotNullAttribute
             File.WriteAllBytes(outputPath, result);
@@ -124,7 +124,7 @@ namespace FreeMote.PsBuild
         /// <returns></returns>
         public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null,
             ushort? version = null, uint? cryptKey = null,
-            PsbSpec? spec = null, bool keepShell = true)
+            PsbSpec? spec = null, bool keepShell = true, bool useWebP = false)
         {
             var context = FreeMount.CreateContext();
             //Parse
@@ -161,6 +161,14 @@ namespace FreeMote.PsBuild
                     }
 
                     context = FreeMount.CreateContext(resx.Context);
+                    if (resx.UseWebP || useWebP)
+                    {
+                        context.Context[Consts.Context_UseWebP] = true;
+                    }
+                    if (useWebP)
+                    {
+                        context.Context[Consts.Context_ForceWebP] = true;
+                    }
 
                     // Convert the metadata before linking image files. Otherwise a source texture format
                     // such as BC7 is encoded first and only then converted to the requested platform,
@@ -268,7 +276,11 @@ namespace FreeMote.PsBuild
                 if (inputResJson.Trim().StartsWith("{")) //resx.json
                 {
                     PsbResourceJson resx = JsonConvert.DeserializeObject<PsbResourceJson>(inputResJson);
-                    context = resx.Context;
+                    context = resx.Context ?? new Dictionary<string, object>();
+                    if (resx.UseWebP)
+                    {
+                        context[Consts.Context_UseWebP] = true;
+                    }
                     if (resx.PsbType != null)
                     {
                         psb.Type = resx.PsbType.Value;

@@ -139,6 +139,10 @@ namespace FreeMote.PsBuild
             var name = Path.GetFileNameWithoutExtension(filePath);
             var dirPath = Path.Combine(Path.GetDirectoryName(filePath), name);
             PsbResourceJson resx = new PsbResourceJson(psb, context.Context);
+            if (context.TryGet(Consts.Context_UseWebP, out bool useWebP))
+            {
+                resx.UseWebP = useWebP;
+            }
 
             if (Encoding != null && !Equals(Encoding, Encoding.UTF8))
             {
@@ -177,7 +181,9 @@ namespace FreeMote.PsBuild
             if (useResx)
             {
                 resx.Resources = resDictionary;
-                resx.Context = context.Context;
+                resx.Context = context.Context
+                    .Where(kv => kv.Key != Consts.Context_UseWebP && kv.Key != Consts.Context_ForceWebP)
+                    .ToDictionary(kv => kv.Key, kv => kv.Value);
                 string json;
                 if (Consts.JsonArrayCollapse)
                 {

@@ -65,6 +65,9 @@ namespace FreeMote.Tools.PsbDecompile
                 "Output chunk images (pieces) for image (Tachie) PSB (try this if you have problem on image type PSB)", CommandOptionType.NoValue);
             var optOutputPath = app.Option<string>("-o|--output <PATH>", "Set output folder path.",
                 CommandOptionType.SingleValue, inherited: false);
+            var optWebP = app.Option("--webp",
+                "Detect header-routed WebP/PNG resources even when PSB names imply TLG", CommandOptionType.NoValue,
+                inherited: false);
 
             //args
             var argPath =
@@ -390,6 +393,11 @@ Example:
                     context[Context_DisableCombinedImage] = true;
                 }
 
+                if (optWebP.HasValue())
+                {
+                    context[Context_UseWebP] = true;
+                }
+
                 bool useRaw = optRaw.HasValue();
                 uint? key = optKey.HasValue() ? optKey.ParsedValue : (uint?) null;
 
@@ -516,7 +524,7 @@ Example:
                 if (string.IsNullOrEmpty(outputFolder))
                 {
                     var result = keepRaw
-                        ? PsbDecompiler.DecompileToFile(path, key: key, type: type)
+                        ? PsbDecompiler.DecompileToFile(path, key: key, type: type, contextDic: context)
                         : PsbDecompiler.DecompileToFile(path, PsbExtractOption.Extract, format, key: key, type: type,
                             contextDic: context);
                     psb = result.Psb;

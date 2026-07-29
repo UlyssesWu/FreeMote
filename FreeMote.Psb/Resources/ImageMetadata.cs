@@ -408,6 +408,19 @@ namespace FreeMote.Psb
             byte[] data;
             Bitmap image = null;
             var ext = Path.GetExtension(path)?.ToLowerInvariant();
+            context.TryGet(Consts.Context_UseWebP, out bool useWebP);
+            context.TryGet(Consts.Context_ForceWebP, out bool forceWebP);
+
+            if (useWebP && Compress == PsbCompressType.Tlg)
+            {
+                var sourceData = File.ReadAllBytes(path);
+                var actualExtension = PsbResHelper.DetectImageExtension(sourceData);
+                if (actualExtension == ".webp" || (!forceWebP && actualExtension != null && actualExtension != ".tlg"))
+                {
+                    // Kirikiroid2 routes these containers by their headers even though the PSB key still ends in .tlg.
+                    return sourceData;
+                }
+            }
 
             if (Compress == PsbCompressType.ByName && ext != null && Name != null &&
                 Name.EndsWith(ext, true, null))
@@ -549,18 +562,19 @@ namespace FreeMote.Psb
                     data = RL.CompressImage(image, PixelFormat);
                     break;
                 case PsbCompressType.Tlg:
-                    data = context.BitmapToResource(Compress.ToExtensionString(), Spec, image);
+                    var targetExtension = useWebP ? ".webp" : Compress.ToExtensionString();
+                    data = context.BitmapToResource(targetExtension, Spec, image);
                     if (data == null)
                     {
-                        var tlgPath = Path.ChangeExtension(path, ".tlg");
-                        if (File.Exists(tlgPath))
+                        var encodedPath = Path.ChangeExtension(path, targetExtension);
+                        if (File.Exists(encodedPath))
                         {
-                            Logger.LogWarn($"[WARN] Can not encode TLG, using {tlgPath}");
-                            data = File.ReadAllBytes(tlgPath);
+                            Logger.LogWarn($"[WARN] Can not encode {targetExtension}, using {encodedPath}");
+                            data = File.ReadAllBytes(encodedPath);
                         }
                         else
                         {
-                            Logger.LogWarn($"[WARN] Can not convert image to TLG: {path}");
+                            Logger.LogWarn($"[WARN] Can not convert image to {targetExtension}: {path}");
                             //data = File.ReadAllBytes(path);
                         }
                     }

@@ -41,6 +41,12 @@ namespace FreeMote.PsBuild
         /// Whether to use external textures
         /// </summary>
         public bool ExternalTextures { get; set; } = false;
+
+        /// <summary>
+        /// Whether resource contents use Kirikiroid2-style WebP images even when their PSB names imply TLG.
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool UseWebP { get; set; } = false;
         
         /// <summary>
         /// Setting Context (mainly for plugins)

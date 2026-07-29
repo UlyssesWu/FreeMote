@@ -69,6 +69,29 @@ namespace FreeMote.Tests
         }
 
         [TestMethod]
+        public void TestHeaderRoutedImageDetection()
+        {
+            Assert.AreEqual(".webp", PsbResHelper.DetectImageExtension(new byte[]
+            {
+                (byte)'R', (byte)'I', (byte)'F', (byte)'F', 0, 0, 0, 0,
+                (byte)'W', (byte)'E', (byte)'B', (byte)'P', (byte)'V', (byte)'P', (byte)'8', (byte)'X'
+            }));
+            Assert.AreEqual(".png", PsbResHelper.DetectImageExtension(new byte[] {0x89, (byte)'P', (byte)'N', (byte)'G'}));
+            Assert.AreEqual(".tlg", PsbResHelper.DetectImageExtension(new byte[] {(byte)'T', (byte)'L', (byte)'G', (byte)'0'}));
+            Assert.IsNull(PsbResHelper.DetectImageExtension(new byte[] {0, 1, 2, 3}));
+        }
+
+        [TestMethod]
+        public void TestUseWebPResourceJsonMetadata()
+        {
+            var normalJson = new PsbResourceJson().SerializeToJson();
+            Assert.IsFalse(normalJson.Contains("UseWebP"));
+
+            var webPJson = new PsbResourceJson {UseWebP = true}.SerializeToJson();
+            Assert.IsTrue(webPJson.Contains("\"UseWebP\": true"));
+        }
+
+        [TestMethod]
         public void TestDecompileTopLevelListKeepsIndent()
         {
             var previousJsonArrayCollapse = Consts.JsonArrayCollapse;

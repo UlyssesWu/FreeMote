@@ -115,6 +115,16 @@ namespace FreeMote
         public const string Context_DisableCombinedImage = "DisableCombinedImage";
 
         /// <summary>
+        /// (bool) Treat image resources whose PSB names imply TLG as header-routed WebP-compatible images.
+        /// </summary>
+        public const string Context_UseWebP = "UseWebP";
+
+        /// <summary>
+        /// (bool) Force bitmap sources to be encoded as WebP instead of preserving an already supported container.
+        /// </summary>
+        public const string Context_ForceWebP = "ForceWebP";
+
+        /// <summary>
         /// (string?) body.bin file name
         /// </summary>
         public const string Context_BodyBinName = "BodyBinName";

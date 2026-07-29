@@ -64,6 +64,9 @@ namespace FreeMote.Tools.PsBuild
             var optOutputPath =
                 app.Option<string>("-o|--output", "Set output file path. May overwrite your original PSB files!",
                     CommandOptionType.SingleValue, inherited: true);
+            var optWebP = app.Option("--webp",
+                "Encode TLG-named image resources as WebP", CommandOptionType.NoValue,
+                inherited: false);
             //TODO: If set dir, ok; if set filename, only works for the first
 
             //args
@@ -335,19 +338,20 @@ Example:
                 PsbSpec? spec = optSpec.HasValue() ? optSpec.ParsedValue : null;
                 var canRename = !optNoRename.HasValue();
                 var canPack = !optNoShell.HasValue();
+                var useWebP = optWebP.HasValue();
                 var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
                 bool hasSetOutputPath = !string.IsNullOrEmpty(outputPath);
                 bool hasSetOutputFolder = hasSetOutputPath && Directory.Exists(outputPath);
 
                 if (argPath.Values.Count == 1 && hasSetOutputPath)
                 {
-                    Compile(argPath.Value, ver, key, spec, canRename, canPack, outputPath);
+                    Compile(argPath.Value, ver, key, spec, canRename, canPack, useWebP, outputPath);
                 }
                 else
                 {
                     foreach (var file in argPath.Values)
                     {
-                        Compile(file, ver, key, spec, canRename, canPack, hasSetOutputFolder ? outputPath : null);
+                        Compile(file, ver, key, spec, canRename, canPack, useWebP, hasSetOutputFolder ? outputPath : null);
                     }
                 }
             });
@@ -486,7 +490,7 @@ Example:
         }
 
         private static void Compile(string s, ushort? version, uint? key, PsbSpec? spec, bool canRename,
-            bool canPackShell, string outputPath = null)
+            bool canPackShell, bool useWebP = false, string outputPath = null)
         {
             if (!File.Exists(s))
             {
@@ -513,7 +517,7 @@ Example:
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                PsbCompiler.CompileToFile(s, savePath, null, version, key, spec, canRename, canPackShell);
+                PsbCompiler.CompileToFile(s, savePath, null, version, key, spec, canRename, canPackShell, useWebP);
             }
             catch (Exception e)
             {
