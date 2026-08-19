@@ -6,6 +6,7 @@ using System.Text;
 using FreeMote.Plugins;
 using FreeMote.Psb;
 using FreeMote.PsBuild;
+using FreeMote.PsBuild.Fonts;
 using McMaster.Extensions.CommandLineUtils;
 using static FreeMote.Consts;
 
@@ -272,6 +273,118 @@ Example:
 
                     sw.Stop();
                     Console.WriteLine($"Process time: {sw.Elapsed:g}");
+                });
+            });
+
+            //command: font
+            app.Command("font", fontCmd =>
+            {
+                fontCmd.Description = "Build a bitmap-font PSB from a font file and a character text file";
+                fontCmd.HelpOption();
+                fontCmd.ExtendedHelpText = @"
+Example:
+  PsBuild font -i used_characters.txt -s 48 -f MicrosoftYaHei.ttf --pixel-type RGBA8 -p win -o yahei48.psb
+  PsBuild font -i used_characters.txt -s 48 -f msyh.ttc --font-index 0 -o yahei48.psb
+";
+
+                var optFontInput = fontCmd.Option<string>("-i|--input <PATH>",
+                    "Text file containing the characters to include", CommandOptionType.SingleValue).IsRequired();
+                var optFontSize = fontCmd.Option<int>("-s|--size <PX>",
+                    "Logical font cell height in pixels", CommandOptionType.SingleValue).IsRequired();
+                var optFontPath = fontCmd.Option<string>("-f|--font <PATH>",
+                    "TTF/OTF/TTC/OTC/WOFF2 font path", CommandOptionType.SingleValue).IsRequired();
+                var optFontIndex = fontCmd.Option<int>("--font-index <INDEX>",
+                    "Zero-based face index for TTC/OTC collections. Default=0", CommandOptionType.SingleValue);
+                var optFontStyle = fontCmd.Option<string>("--font-style <STYLE>",
+                    "Synthetic style: Regular/Bold/Italic/BoldItalic/Underline/Strikeout. Default=Regular",
+                    CommandOptionType.SingleValue);
+                var optFontPixelType = fontCmd.Option<string>("--pixel-type <TYPE>",
+                    "Atlas pixel type. Default follows platform samples (win=A8L8, and=A8, psp=CI4, vita=CI4_SW)",
+                    CommandOptionType.SingleValue);
+                var optFontSpec = fontCmd.Option<PsbSpec>("-p|--spec <SPEC>",
+                    "Target PSB platform. Default=win", CommandOptionType.SingleValue);
+                var optFontAtlasSize = fontCmd.Option<int>("--atlas-size <PX>",
+                    "Maximum atlas page size (power of two). Default=2048", CommandOptionType.SingleValue);
+                var optFontLabel = fontCmd.Option<string>("--label <LABEL>",
+                    "Font label stored in the PSB. Default=normal", CommandOptionType.SingleValue);
+                var optFontPsbVersion = fontCmd.Option<ushort>("-v|--ver <VER>",
+                    "PSB binary version [2,4]. Default=2", CommandOptionType.SingleValue);
+
+                fontCmd.OnExecute(() =>
+                {
+                    if (optEncoding.HasValue())
+                    {
+                        try
+                        {
+                            _encoding = Encoding.GetEncoding(optEncoding.ParsedValue);
+                        }
+                        catch (ArgumentException)
+                        {
+                            Console.WriteLine($"[WARN] Encoding {optEncoding.Value()} is not valid. Using UTF-8.");
+                            _encoding = Encoding.UTF8;
+                        }
+                    }
+
+                    var inputPath = Path.GetFullPath(optFontInput.Value());
+                    if (!File.Exists(inputPath))
+                    {
+                        throw new FileNotFoundException("Character input file was not found.", inputPath);
+                    }
+
+                    var fontStyle = System.Drawing.FontStyle.Regular;
+                    if (optFontStyle.HasValue())
+                    {
+                        var styleText = optFontStyle.Value().Replace("+", ",");
+                        if (styleText.Equals("BoldItalic", StringComparison.OrdinalIgnoreCase))
+                        {
+                            styleText = "Bold,Italic";
+                        }
+
+                        if (!Enum.TryParse(styleText, true, out fontStyle))
+                        {
+                            throw new ArgumentException(
+                                $"Unknown font style '{optFontStyle.Value()}'. Use Regular, Bold, Italic, " +
+                                "BoldItalic, Underline, Strikeout, or a comma-separated combination.");
+                        }
+                    }
+
+                    var options = new FontBuildOptions
+                    {
+                        FontPath = optFontPath.Value(),
+                        FontIndex = optFontIndex.HasValue() ? optFontIndex.ParsedValue : 0,
+                        FontSize = optFontSize.ParsedValue,
+                        FontStyle = fontStyle,
+                        PixelType = optFontPixelType.HasValue() ? optFontPixelType.Value() : null,
+                        Platform = optFontSpec.HasValue() ? optFontSpec.ParsedValue : PsbSpec.win,
+                        AtlasSize = optFontAtlasSize.HasValue() ? optFontAtlasSize.ParsedValue : 2048,
+                        Label = optFontLabel.HasValue() ? optFontLabel.Value() : "normal",
+                        PsbVersion = optFontPsbVersion.HasValue() ? optFontPsbVersion.ParsedValue : (ushort)2
+                    };
+
+                    var defaultName = $"{Path.GetFileNameWithoutExtension(options.FontPath)}{options.FontSize}.psb";
+                    var defaultPath = Path.Combine(Path.GetDirectoryName(inputPath) ?? Environment.CurrentDirectory,
+                        defaultName);
+                    var requestedOutput = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
+                    var savePath = Path.GetFullPath(GetOutputPath(defaultPath, requestedOutput));
+
+                    var outputDirectory = Path.GetDirectoryName(savePath);
+                    if (!string.IsNullOrEmpty(outputDirectory))
+                    {
+                        Directory.CreateDirectory(outputDirectory);
+                    }
+
+                    var sw = Stopwatch.StartNew();
+                    var psb = new FontBuilder(options).Build(File.ReadAllText(inputPath, _encoding));
+                    psb.BuildToFile(savePath);
+                    sw.Stop();
+
+                    var characterCount = (psb.Objects["code"] as PsbDictionary)?.Count ?? 0;
+                    var pageCount = (psb.Objects["source"] as PsbList)?.Count ?? 0;
+                    Console.WriteLine($"Font PSB output: {savePath}");
+                    Console.WriteLine(
+                        $"Characters: {characterCount}, atlas pages: {pageCount}, style: {options.FontStyle}, " +
+                        $"pixel type: {options.PixelType ?? FontBuilder.GetDefaultPixelType(options.Platform)}, " +
+                        $"time: {sw.Elapsed:g}");
                 });
             });
 

@@ -30,6 +30,14 @@
     <PackageReference Include="System.ValueTuple">
       <Version>4.5.0</Version>
     </PackageReference>
+    <!-- 1.2.2 only updates dependencies and requires System.ValueTuple >= 4.6.1;
+         keep 1.2.1 compatible with this net48 project's existing 4.5.0 baseline. -->
+    <PackageReference Include="WaterTrans.GlyphLoader">
+      <Version>1.2.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
