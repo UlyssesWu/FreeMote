@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Text;
@@ -53,7 +54,21 @@ namespace FreeMote.Plugins.Shells
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             bool fast = false;
-            if (context != null && context.TryGetValue(Consts.Context_PsbZlibFastCompress, out var fastCompress))
+            if (context != null && context.TryGetValue(Consts.Context_PsbShellCompression, out var compression))
+            {
+                if (compression is string value)
+                {
+                    if (value.Equals("fast", StringComparison.OrdinalIgnoreCase))
+                    {
+                        fast = true;
+                    }
+                    else if (value.Equals("best", StringComparison.OrdinalIgnoreCase))
+                    {
+                        fast = false;
+                    }
+                }
+            }
+            else if (context != null && context.TryGetValue(Consts.Context_PsbZlibFastCompress, out var fastCompress))
             {
                 fast = (bool)fastCompress;
             }

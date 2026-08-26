@@ -33,10 +33,11 @@ namespace FreeMote.PsBuild
         /// <param name="platform">PSB Platform</param>
         /// <param name="renameOutput">If true, the output file extension is renamed by type</param>
         /// <param name="keepShell">If true, the output can be compressed PSB shell type (if specified)</param>
+        /// <param name="shellCompression">Raw shell-specific compression option. The selected shell validates the value.</param>
         /// <returns>The actual output path</returns>
         public static string CompileToFile(string inputPath, string outputPath, string inputResPath = null,
             ushort? version = null, uint? cryptKey = null, PsbSpec? platform = null, bool renameOutput = true,
-            bool keepShell = true, bool useWebP = false)
+            bool keepShell = true, bool useWebP = false, string shellCompression = null)
         {
             if (string.IsNullOrEmpty(inputPath))
             {
@@ -103,7 +104,7 @@ namespace FreeMote.PsBuild
             }
 
             COMPILE: ;
-            var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform, keepShell, useWebP);
+            var result = Compile(File.ReadAllText(inputPath), resJson, baseDir, version, cryptKey, platform, keepShell, useWebP, shellCompression);
 
             // ReSharper disable once AssignNullToNotNullAttribute
             File.WriteAllBytes(outputPath, result);
@@ -121,10 +122,11 @@ namespace FreeMote.PsBuild
         /// <param name="cryptKey">CryptKey, use null for pure PSB</param>
         /// <param name="spec">PSB Platform</param>
         /// <param name="keepShell">If true, try to compress PSB to shell type (MDF/LZ4 etc.) specified in resx.json; otherwise just output PSB</param>
+        /// <param name="shellCompression">Raw shell-specific compression option. The selected shell validates the value.</param>
         /// <returns></returns>
         public static byte[] Compile(string inputJson, string inputResJson, string baseDir = null,
             ushort? version = null, uint? cryptKey = null,
-            PsbSpec? spec = null, bool keepShell = true, bool useWebP = false)
+            PsbSpec? spec = null, bool keepShell = true, bool useWebP = false, string shellCompression = null)
         {
             var context = FreeMount.CreateContext();
             //Parse
@@ -203,6 +205,11 @@ namespace FreeMote.PsBuild
                     }
                     psb.Link(resources, baseDir);
                 }
+            }
+
+            if (shellCompression != null)
+            {
+                context.Context[Context_PsbShellCompression] = shellCompression;
             }
 
             //Build
@@ -935,9 +942,19 @@ namespace FreeMote.PsBuild
                             fmContext.Context = content.Context;
                         }
 
+                        if (context.TryGetValue(Context_PsbShellCompression, out var shellCompression))
+                        {
+                            fmContext.Context ??= new Dictionary<string, object>();
+                            fmContext.Context[Context_PsbShellCompression] = shellCompression;
+                        }
+
                         content.Psb.Merge(true);
                         var stream = content.Psb.ToStream();
                         var shellType = kv.Key.DefaultShellType(); //MARK: use shellType in filename, or use suffix in info?
+                        if (content.Context != null && content.Context.TryGetValue(Context_PsbShellType, out var contextShellType))
+                        {
+                            shellType = contextShellType as string;
+                        }
                         if (!string.IsNullOrEmpty(shellType))
                         {
                             var packedStream = fmContext.PackToShell(stream, shellType); //disposed later

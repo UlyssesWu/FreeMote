@@ -119,7 +119,21 @@ namespace FreeMote.Plugins
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             bool fast = true; //mdf use fast mode by default
-            if (context != null && context.TryGetValue(Context_PsbZlibFastCompress, out var fastCompress))
+            if (context != null && context.TryGetValue(Context_PsbShellCompression, out var compression))
+            {
+                if (compression is string value)
+                {
+                    if (value.Equals("fast", StringComparison.OrdinalIgnoreCase))
+                    {
+                        fast = true;
+                    }
+                    else if (value.Equals("best", StringComparison.OrdinalIgnoreCase))
+                    {
+                        fast = false;
+                    }
+                }
+            }
+            else if (context != null && context.TryGetValue(Context_PsbZlibFastCompress, out var fastCompress))
             {
                 fast = (bool) fastCompress;
             }

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using FreeMote.Psb;
@@ -74,9 +75,19 @@ namespace FreeMote.Plugins.Shells
         {
             var unzipLength = (int) stream.Length;
             int? compressLevel = null;
-            if (context != null && context.TryGetValue(Context_PsbZStdCompressLevel, out var cl))
+            if (context != null && context.TryGetValue(Context_PsbShellCompression, out var compression))
             {
-                compressLevel = (int) cl;
+                if (compression is string value && int.TryParse(value, NumberStyles.Integer,
+                        CultureInfo.InvariantCulture, out var parsedLevel) &&
+                    parsedLevel >= CompressionOptions.MinCompressionLevel &&
+                    parsedLevel <= CompressionOptions.MaxCompressionLevel)
+                {
+                    compressLevel = parsedLevel;
+                }
+            }
+            else if (context != null && context.TryGetValue(Context_PsbZStdCompressLevel, out var cl))
+            {
+                compressLevel = (int)cl;
                 if (compressLevel > CompressionOptions.MaxCompressionLevel)
                 {
                     compressLevel = CompressionOptions.MaxCompressionLevel;
@@ -119,6 +130,9 @@ namespace FreeMote.Plugins.Shells
                 ms = mms;
             }
 
+            // EncodeMdf writes to a new stream and leaves its position at the end.
+            // The MZS payload must be copied from the beginning after optional encryption.
+            ms.Position = 0;
             var shellMs = new MemoryStream((int) (ms.Length + 8));
             shellMs.Write(Signature, 0, 4);
             shellMs.Write(BitConverter.GetBytes(unzipLength), 0, 4);

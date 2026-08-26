@@ -1,5 +1,6 @@
 //Some PSB format code is based on psbfile by number201724. LICENSE: MIT
 //#define DEBUG_OBJECT_WRITE //Enable if you want to check how much bytes each object costs.
+//#define DEBUG_STR_SUFFIX
 
 using System;
 using System.Collections.Generic;
@@ -327,12 +328,12 @@ namespace FreeMote.Psb
             StringOffsets = new PsbArray(br.ReadByte() - (byte)PsbObjType.ArrayN1 + 1, br);
             Strings = new List<PsbString>();
 
-#if DEBUG
-            var stringSize = Header.OffsetChunkOffsets - Header.OffsetStrings;
-            Debug.WriteLine($"Strings: {stringSize}");
-            var objectSize = Header.OffsetStrings - Header.OffsetEntries;
-            Debug.WriteLine($"Objects: {objectSize}");
-#endif
+//#if DEBUG
+//            var stringSize = Header.OffsetChunkOffsets - Header.OffsetStrings;
+//            Debug.WriteLine($"Strings: {stringSize}");
+//            var objectSize = Header.OffsetStrings - Header.OffsetEntries;
+//            Debug.WriteLine($"Objects: {objectSize}");
+//#endif
 
             //Load Names
             if (Header.Version == 1)
@@ -353,10 +354,10 @@ namespace FreeMote.Psb
                 NamesData = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
                 NameIndexes = new PsbArray(br.ReadByte() - (byte) PsbObjType.ArrayN1 + 1, br);
                 LoadNames();
-#if DEBUG
-                var nameSectionSize = br.BaseStream.Position - Header.OffsetNames;
-                Debug.WriteLine($"Names: {nameSectionSize}");
-#endif
+//#if DEBUG
+//                var nameSectionSize = br.BaseStream.Position - Header.OffsetNames;
+//                Debug.WriteLine($"Names: {nameSectionSize}");
+//#endif
             }
             
             //Pre Load Resources (Chunks)
@@ -1265,9 +1266,9 @@ namespace FreeMote.Psb
                 var nameArray = new PsbArray(tNames);
                 nameArray.WriteTo(bw);
 
-#if DEBUG
-                Debug.WriteLine($"Names: {bw.BaseStream.Position - Header.OffsetNames}");
-#endif
+//#if DEBUG
+//                Debug.WriteLine($"Names: {bw.BaseStream.Position - Header.OffsetNames}");
+//#endif
             }
 
             #endregion
@@ -1285,9 +1286,9 @@ namespace FreeMote.Psb
             //}
             Header.OffsetEntries = (uint)bw.BaseStream.Position;
             Pack(bw, Root);
-#if DEBUG
-            Debug.WriteLine($"Objects: {bw.BaseStream.Position - Header.OffsetEntries}");
-#endif
+//#if DEBUG
+//            Debug.WriteLine($"Objects: {bw.BaseStream.Position - Header.OffsetEntries}");
+//#endif
             #endregion
 
             #region Compile Strings
@@ -1302,41 +1303,43 @@ namespace FreeMote.Psb
                 using var strMs = new MemoryStream();
                 uint[] offsets = new uint[Strings.Count];
                 BinaryWriter strBw = new BinaryWriter(strMs, Encoding);
-                Dictionary<string, (uint Offset, byte[] Bytes)> writtenStrings = new();
 
-                List<PsbString> orderedStrings = Strings.OrderByDescending(s => s.Value.Length).ToList();
+                // Longest first: a shorter string can only reuse a strictly longer one.
+                var orderedStrings = new List<PsbString>(Strings);
+                orderedStrings.Sort((a, b) => (b.Value?.Length ?? 0).CompareTo(a.Value?.Length ?? 0));
 
-                // collect strings
+                // Two strings with different last chars cannot be suffixes of each other.
+                var writtenByLastChar = new Dictionary<char, List<(uint Offset, byte[] Bytes)>>();
+                uint? sharedNulOffset = null;
+
                 for (var i = 0; i < orderedStrings.Count; i++)
                 {
                     var psbString = orderedStrings[i];
+                    var value = psbString.Value ?? string.Empty;
+                    byte[] stringBytes = Encoding.GetBytes(value);
                     bool foundMatch = false;
                     uint offset = 0;
-                    byte[] stringBytes = Encoding.GetBytes(psbString + '\0');
 
-                    foreach (var kv in writtenStrings)
+                    if (stringBytes.Length == 0)
                     {
-                        var prevBytes = kv.Value.Bytes;
-                        if (prevBytes.Length >= stringBytes.Length)
+                        if (sharedNulOffset != null)
                         {
-                            int index = prevBytes.Length - stringBytes.Length;
-                            bool isSuffix = true;
-                            for (int j = 0; j < stringBytes.Length; j++)
+                            offset = sharedNulOffset.Value;
+                            foundMatch = true;
+                        }
+                    }
+                    else if (writtenByLastChar.TryGetValue(value[value.Length - 1], out var bucket))
+                    {
+                        foreach (var (prevOffset, prevBytes) in bucket)
+                        {
+                            if (prevBytes.Length > stringBytes.Length &&
+                                prevBytes.AsSpan(prevBytes.Length - stringBytes.Length).SequenceEqual(stringBytes))
                             {
-                                if (prevBytes[index + j] != stringBytes[j])
-                                {
-                                    isSuffix = false;
-                                    break;
-                                }
-                            }
-                            if (isSuffix)
-                            {
-                                // found suffix, set offset
-                                var prevOffset = kv.Value.Offset;
-                                offset = prevOffset + (uint) index;
-                                offsets[Strings.IndexOf(psbString)] = offset;
+                                offset = prevOffset + (uint) (prevBytes.Length - stringBytes.Length);
                                 foundMatch = true;
-                                Debug.WriteLine($"Found suffix: {psbString} is suffix of {kv.Key} at {offset}");
+#if DEBUG_STR_SUFFIX
+                                Debug.WriteLine($"Found suffix: {psbString} is suffix of {Encoding.GetString(prevBytes)} at {offset}");
+#endif
                                 break;
                             }
                         }
@@ -1344,12 +1347,25 @@ namespace FreeMote.Psb
 
                     if (!foundMatch)
                     {
-                        // not found, write new string
                         offset = (uint) strBw.BaseStream.Position;
-                        offsets[Strings.IndexOf(psbString)] = offset;
                         strBw.Write(stringBytes);
-                        writtenStrings.Add(psbString, (offset, stringBytes));
+                        strBw.Write((byte) 0);
+                        if (stringBytes.Length > 0)
+                        {
+                            var lastChar = value[value.Length - 1];
+                            if (!writtenByLastChar.TryGetValue(lastChar, out var newBucket))
+                            {
+                                newBucket = new List<(uint Offset, byte[] Bytes)>();
+                                writtenByLastChar[lastChar] = newBucket;
+                            }
+
+                            newBucket.Add((offset, stringBytes));
+                        }
+
+                        sharedNulOffset = offset + (uint) stringBytes.Length;
                     }
+
+                    offsets[(int) psbString.Index.Value] = offset;
                 }
 
                 strBw.Flush();
@@ -1358,9 +1374,9 @@ namespace FreeMote.Psb
                 StringOffsets.WriteTo(bw);
                 Header.OffsetStringsData = (uint) bw.BaseStream.Position;
                 strMs.WriteTo(bw.BaseStream);
-#if DEBUG
-                Debug.WriteLine($"Strings: {strMs.Length}");
-#endif
+//#if DEBUG
+//                Debug.WriteLine($"Strings: {strMs.Length}");
+//#endif
             }
             else
             {
@@ -1383,11 +1399,11 @@ namespace FreeMote.Psb
                 Header.OffsetStringsData = (uint) bw.BaseStream.Position;
                 strMs.WriteTo(bw.BaseStream);
                 //bw.Write(strMs.ToArray());
-#if DEBUG
-                Debug.WriteLine($"Strings: {strMs.Length}");
-#endif
+//#if DEBUG
+//                Debug.WriteLine($"Strings: {strMs.Length}");
+//#endif
             }
-            #endregion
+#endregion
 
             #region Compile Resources
 

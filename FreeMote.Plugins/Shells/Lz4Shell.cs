@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using K4os.Compression.LZ4;
 using K4os.Compression.LZ4.Streams;
 
 namespace FreeMote.Plugins.Shells
@@ -51,7 +52,17 @@ namespace FreeMote.Plugins.Shells
         public MemoryStream ToShell(Stream stream, Dictionary<string, object> context = null)
         {
             var ms = new MemoryStream();
-            using (var encode = LZ4Stream.Encode(ms, leaveOpen:true))
+            LZ4Level? compressionLevel = null;
+            if (context != null && context.TryGetValue(Consts.Context_PsbShellCompression, out var compression) &&
+                compression is string value && Enum.TryParse(value, true, out LZ4Level parsedLevel) &&
+                Enum.IsDefined(typeof(LZ4Level), parsedLevel))
+            {
+                compressionLevel = parsedLevel;
+            }
+
+            using (var encode = compressionLevel == null
+                       ? LZ4Stream.Encode(ms, leaveOpen: true)
+                       : LZ4Stream.Encode(ms, compressionLevel.Value, extraMemory: 0, leaveOpen: true))
             {
                 stream.CopyTo(encode);
             }

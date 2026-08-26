@@ -55,6 +55,9 @@ namespace FreeMote.Tools.PsBuild
             var optNoRename = app.Option("-nr|--no-rename",
                 "Prevent output file renaming, may overwrite your original PSB files!", CommandOptionType.NoValue);
             var optNoShell = app.Option("-ns|--no-shell", "Prevent shell packing (compression)", CommandOptionType.NoValue);
+            var optCompression = app.Option<string>("-c|--compression <VALUE>",
+                "Set shell-specific compression option (MZS: integer level; LZ4: LZ4Level name; MDF/PSZ: fast or best). Invalid values fallback to default.",
+                CommandOptionType.SingleValue, inherited: true);
             var optDouble = app.Option("-double|--json-double", "(Json) Use double numbers only (no float)",
                 CommandOptionType.NoValue, true);
             var optEncoding = app.Option<string>("-e|--encoding <ENCODING>", "Set encoding (e.g. SHIFT-JIS). Default=UTF-8",
@@ -258,6 +261,12 @@ Example:
                         };
                     }
 
+                    if (optCompression.HasValue())
+                    {
+                        context ??= new Dictionary<string, object>();
+                        context[Context_PsbShellCompression] = optCompression.ParsedValue;
+                    }
+
                     string key = optMdfKey.HasValue() ? optMdfKey.Value() : null;
                     //string seed = optMdfSeed.HasValue() ? optMdfSeed.Value() : null;
                     int keyLen = optMdfKeyLen.HasValue() ? optMdfKeyLen.ParsedValue : 131;
@@ -339,19 +348,20 @@ Example:
                 var canRename = !optNoRename.HasValue();
                 var canPack = !optNoShell.HasValue();
                 var useWebP = optWebP.HasValue();
+                var compression = optCompression.HasValue() ? optCompression.ParsedValue : null;
                 var outputPath = optOutputPath.HasValue() ? ResolveOutputPath(optOutputPath.Value()) : null;
                 bool hasSetOutputPath = !string.IsNullOrEmpty(outputPath);
                 bool hasSetOutputFolder = hasSetOutputPath && Directory.Exists(outputPath);
 
                 if (argPath.Values.Count == 1 && hasSetOutputPath)
                 {
-                    Compile(argPath.Value, ver, key, spec, canRename, canPack, useWebP, outputPath);
+                    Compile(argPath.Value, ver, key, spec, canRename, canPack, useWebP, outputPath, compression);
                 }
                 else
                 {
                     foreach (var file in argPath.Values)
                     {
-                        Compile(file, ver, key, spec, canRename, canPack, useWebP, hasSetOutputFolder ? outputPath : null);
+                        Compile(file, ver, key, spec, canRename, canPack, useWebP, hasSetOutputFolder ? outputPath : null, compression);
                     }
                 }
             });
@@ -490,7 +500,7 @@ Example:
         }
 
         private static void Compile(string s, ushort? version, uint? key, PsbSpec? spec, bool canRename,
-            bool canPackShell, bool useWebP = false, string outputPath = null)
+            bool canPackShell, bool useWebP = false, string outputPath = null, string shellCompression = null)
         {
             if (!File.Exists(s))
             {
@@ -517,7 +527,7 @@ Example:
             Console.WriteLine($"Compiling {name} ...");
             try
             {
-                PsbCompiler.CompileToFile(s, savePath, null, version, key, spec, canRename, canPackShell, useWebP);
+                PsbCompiler.CompileToFile(s, savePath, null, version, key, spec, canRename, canPackShell, useWebP, shellCompression);
             }
             catch (Exception e)
             {

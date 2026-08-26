@@ -50,6 +50,11 @@ namespace FreeMote
         public const string Context_PsbShellType = "PsbShellType";
 
         /// <summary>
+        /// (string) Shell-specific compression option. Each shell validates and interprets the value independently.
+        /// </summary>
+        public const string Context_PsbShellCompression = "PsbShellCompression";
+
+        /// <summary>
         /// (string)
         /// </summary>
         public const string Context_FileName = "FileName";
