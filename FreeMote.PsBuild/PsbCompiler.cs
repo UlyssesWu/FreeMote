@@ -762,7 +762,7 @@ namespace FreeMote.PsBuild
             //using var mmFile =
             //    MemoryMappedFile.CreateFromFile(bodyBinFileName, FileMode.Create, coreName, );
             string bodyBinFilePath = string.IsNullOrEmpty(outputFolder) ? bodyBinFileName : Path.Combine(outputFolder, Path.GetFileName(bodyBinFileName));
-            using var bodyFs = File.OpenWrite(bodyBinFilePath);
+            using var bodyFs = new FileStream(bodyBinFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
             var fileInfoDic = new PsbDictionary(files.Count);
             var fmContext = FreeMount.CreateContext(context);
             //byte[] bodyBin = null;
