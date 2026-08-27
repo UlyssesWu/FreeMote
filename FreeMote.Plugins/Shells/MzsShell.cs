@@ -109,7 +109,7 @@ namespace FreeMote.Plugins.Shells
                 stream.Read(input, 0, input.Length);
             }
 
-            using var compress = compressLevel == null ? new Compressor() : new Compressor(new CompressionOptions(compressLevel.Value));
+            using var compress = new Compressor(new CompressionOptions(compressLevel ?? 7));
             var output = compress.Wrap(input);
             var ms = new MemoryStream(output);
 
