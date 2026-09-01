@@ -9,7 +9,7 @@ using System.Text;
 using FreeMote.Plugins;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FreeMote.Psb;
-using System.Runtime.Remoting.Messaging;
+using ZstdNet;
 
 
 namespace FreeMote.Tests
@@ -204,6 +204,92 @@ namespace FreeMote.Tests
             //You have been warned for (times): 3
             var ms = PsbExtension.EncodeMdf(File.OpenRead(path), "38757621acf82scenario_info.psb.m", 131, true);
             File.WriteAllBytes(path + ".raw", ms.ToArray());
+        }
+
+        [TestMethod]
+        public void TestInferMdfKeyLength()
+        {
+            FreeMount.Init();
+            var randomData = new byte[32 * 1024];
+            new Random(20260829).NextBytes(randomData);
+            var psb = new PSB
+            {
+                Objects = new PsbDictionary
+                {
+                    {"payload", Convert.ToBase64String(randomData).ToPsbString()}
+                }
+            };
+            psb.Merge();
+            var plain = psb.Build();
+
+            const string seed = "25G/xpvTbsb+6alldata.psb.m";
+            foreach (var expectedKeyLength in new[] {64, 131})
+            {
+                using var input = new MemoryStream(plain, false);
+                using var mdf = MPack.CompressPsbToMdfStream(input, false);
+                using var encrypted = PsbExtension.EncodeMdf(mdf, seed, expectedKeyLength, true);
+                encrypted.Position = 0;
+
+                var context = new Dictionary<string, object>
+                {
+                    {Consts.Context_MdfKey, seed},
+                    {Consts.Context_InferMdfKeyLength, true}
+                };
+                var shellType = "MDF";
+                using var decoded = FreeMount.CreateContext(context).OpenFromShell(encrypted, ref shellType);
+
+                Assert.AreEqual(expectedKeyLength, Convert.ToInt32(context[Consts.Context_MdfKeyLength]));
+                Assert.IsFalse((bool) context[Consts.Context_PsbZlibFastCompress]);
+                Assert.IsFalse(context.ContainsKey(Consts.Context_InferMdfKeyLength));
+                CollectionAssert.AreEqual(plain, decoded.ToArray());
+            }
+        }
+
+        [TestMethod]
+        public void TestInferMzsKeyLength()
+        {
+            FreeMount.Init();
+            var randomData = new byte[32 * 1024];
+            new Random(20260830).NextBytes(randomData);
+            var psb = new PSB
+            {
+                Objects = new PsbDictionary
+                {
+                    {"payload", Convert.ToBase64String(randomData).ToPsbString()}
+                }
+            };
+            psb.Merge();
+            var plain = psb.Build();
+
+            byte[] compressed;
+            using (var compressor = new Compressor(new CompressionOptions(7)))
+            {
+                compressed = compressor.Wrap(plain);
+            }
+
+            const string seed = "Rk3nwA8ZYV0yVsample.psb.m";
+            foreach (var expectedKeyLength in new[] {64, 131})
+            {
+                using var mzs = new MemoryStream(compressed.Length + 8);
+                mzs.Write(new[] {(byte) 'm', (byte) 'z', (byte) 's', (byte) 0}, 0, 4);
+                mzs.Write(BitConverter.GetBytes(plain.Length), 0, 4);
+                mzs.Write(compressed, 0, compressed.Length);
+                mzs.Position = 0;
+
+                using var encrypted = PsbExtension.EncodeMdf(mzs, seed, expectedKeyLength, true);
+                encrypted.Position = 0;
+                var context = new Dictionary<string, object>
+                {
+                    {Consts.Context_MdfKey, seed},
+                    {Consts.Context_InferMdfKeyLength, true}
+                };
+                var shellType = "MZS";
+                using var decoded = FreeMount.CreateContext(context).OpenFromShell(encrypted, ref shellType);
+
+                Assert.AreEqual(expectedKeyLength, Convert.ToInt32(context[Consts.Context_MdfKeyLength]));
+                Assert.IsFalse(context.ContainsKey(Consts.Context_InferMdfKeyLength));
+                CollectionAssert.AreEqual(plain, decoded.ToArray());
+            }
         }
 
         [TestMethod]

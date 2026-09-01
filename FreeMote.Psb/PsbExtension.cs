@@ -5,15 +5,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using FreeMote.Plugins;
-using MersenneTwister;
-using MersenneTwister.MT;
 
 namespace FreeMote.Psb
 {
-    public static class PsbExtension
+    public static partial class PsbExtension
     {
         /// <summary>
         /// If this spec uses RL
@@ -832,16 +829,7 @@ namespace FreeMote.Psb
                 throw new ArgumentOutOfRangeException(nameof(keyLength));
             }
 
-            //var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("1232ab23478cdconfig_info.psb.m"));
-            var bts = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
-            uint[] seeds =
-            [
-                BitConverter.ToUInt32(bts, 0),
-                BitConverter.ToUInt32(bts, 1 * 4),
-                BitConverter.ToUInt32(bts, 2 * 4),
-                BitConverter.ToUInt32(bts, 3 * 4),
-            ];
-            var gen = new MTRandom<mt19937ar_t>(seeds);
+            var gen = CreateMdfRandom(key);
 
             using BinaryReader br = new BinaryReader(stream, Encoding.UTF8, true);
             using BinaryWriter bw = new BinaryWriter(output, Encoding.UTF8, true);
@@ -859,7 +847,8 @@ namespace FreeMote.Psb
 
             if (keyLength != null)
             {
-                Span<byte> keySpan = stackalloc byte[genCount * 4];
+                var keyBytes = new byte[genCount * 4];
+                Span<byte> keySpan = keyBytes;
 
                 for (int i = 0; i < genCount; i++)
                 {

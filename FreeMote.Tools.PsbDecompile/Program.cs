@@ -46,6 +46,9 @@ namespace FreeMote.Tools.PsbDecompile
                 inherited: false);
             var optMdfKeyLen = app.Option<int>("-l|--length <LEN>", "Set MT19937 MDF key length. Default=131",
                 CommandOptionType.SingleValue, inherited: false);
+            var optInferMdfKeyLength = app.Option("--infer-key-length",
+                "Infer the MT19937 MDF/MZS key length. Overrides -l/--length",
+                CommandOptionType.NoValue, inherited: false);
             var optKey = app.Option<uint>("-k|--key", "Set PSB key (uint, dec)", CommandOptionType.SingleValue);
             //var optFormat = app.Option<PsbImageFormat>("-e|--extract <FORMAT>",
             //    "Convert textures to png/bmp. Default=png", CommandOptionType.SingleValue, true);
@@ -226,6 +229,7 @@ Example:
 Example:
   PsbDecompile info-psb -k 1234567890ab sample_info.psb.m
   PsbDecompile info-psb -k 1234567890ab -l 131 -a sample_info.psb.m
+  PsbDecompile info-psb -k 1234567890ab --infer-key-length -a sample_info.psb.m
   Hint: The body.bin should exist in the same folder and keep both file names correct.
 ";
                 //options
@@ -241,6 +245,9 @@ Example:
                 var optMdfKeyLen2 = archiveCmd.Option<int>("-l|--length <LEN>",
                     "Set key length. Default=131",
                     CommandOptionType.SingleValue);
+                var optInferMdfKeyLength2 = archiveCmd.Option("--infer-key-length",
+                    "Infer the repeating MDF/MZS key length. Overrides -l/--length",
+                    CommandOptionType.NoValue);
                 var optBody = archiveCmd.Option<string>("-b|--body <PATH>",
                     "Set body.bin path. Default={xxx}_body.bin",
                     CommandOptionType.SingleValue);
@@ -311,12 +318,23 @@ Example:
                         throw new ArgumentNullException(nameof(key), "No key or seed specified.");
                     }
 
-                    int keyLen = optMdfKeyLen2.HasValue() ? optMdfKeyLen2.ParsedValue : 0x83;
-                    Dictionary<string, object> context = new Dictionary<string, object>();
-
-                    if (keyLen >= 0)
+                    var inferKeyLength = optInferMdfKeyLength2.HasValue();
+                    Dictionary<string, object> contextTemplate = new Dictionary<string, object>();
+                    if (inferKeyLength)
                     {
-                        context[Context_MdfKeyLength] = (uint) keyLen;
+                        contextTemplate[Context_InferMdfKeyLength] = true;
+                        if (optMdfKeyLen2.HasValue())
+                        {
+                            Logger.LogWarn("--infer-key-length is enabled; ignoring -l/--length.");
+                        }
+                    }
+                    else
+                    {
+                        int keyLen = optMdfKeyLen2.HasValue() ? optMdfKeyLen2.ParsedValue : 0x83;
+                        if (keyLen >= 0)
+                        {
+                            contextTemplate[Context_MdfKeyLength] = (uint) keyLen;
+                        }
                     }
 
                     string outputFolder = null;
@@ -328,6 +346,7 @@ Example:
                     Stopwatch sw = Stopwatch.StartNew();
                     foreach (var s in argPsbPaths.Values)
                     {
+                        var context = new Dictionary<string, object>(contextTemplate);
                         PsbDecompiler.ExtractArchive(s, key, context, bodyPath, outputRaw, extractAll, enableParallel, outputFolder);
                     }
 
@@ -372,18 +391,34 @@ Example:
                 }
 
                 Dictionary<string, object> context = new();
+                var inferKeyLength = optInferMdfKeyLength.HasValue();
 
                 if (optMdfSeed.HasValue())
                 {
                     context[Context_MdfKey] = optMdfSeed.ParsedValue;
-                    if (!optMdfKeyLen.HasValue())
+                    if (!optMdfKeyLen.HasValue() && !inferKeyLength)
                     {
                         Logger.LogWarn(
                             "MDF key length not specified. You may get wrong results. Try `-l 131`.");
                     }
                 }
+
+                if (inferKeyLength)
+                {
+                    if (!optMdfSeed.HasValue())
+                    {
+                        throw new ArgumentNullException(nameof(optMdfSeed),
+                            "--infer-key-length requires an MDF seed specified with -s/--seed.");
+                    }
+
+                    context[Context_InferMdfKeyLength] = true;
+                    if (optMdfKeyLen.HasValue())
+                    {
+                        Logger.LogWarn("--infer-key-length is enabled; ignoring -l/--length.");
+                    }
+                }
                 
-                if (optMdfKeyLen.HasValue())
+                if (optMdfKeyLen.HasValue() && !inferKeyLength)
                 {
                     context[Context_MdfKeyLength] = optMdfKeyLen.ParsedValue;
                 }
@@ -417,14 +452,16 @@ Example:
                 {
                     if (File.Exists(s))
                     {
-                        Decompile(s, useRaw, PsbImageFormat.png, key, type, context, outputFolder);
+                        Decompile(s, useRaw, PsbImageFormat.png, key, type,
+                            new Dictionary<string, object>(context), outputFolder);
                     }
                     else if (Directory.Exists(s))
                     {
                         foreach (var file in FreeMoteExtension.GetFiles(s,
                                      new[] {"*.psb", "*.mmo", "*.pimg", "*.scn", "*.dpak", "*.psz", "*.psp", "*.bytes", "*.m"}))
                         {
-                            Decompile(file, useRaw, PsbImageFormat.png, key, type, context, outputFolder);
+                            Decompile(file, useRaw, PsbImageFormat.png, key, type,
+                                new Dictionary<string, object>(context), outputFolder);
                         }
                     }
                 }

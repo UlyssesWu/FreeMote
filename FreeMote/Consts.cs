@@ -110,6 +110,11 @@ namespace FreeMote
         public const string Context_MdfKeyLength = "MdfKeyLength";
 
         /// <summary>
+        /// (bool) Infer the repeating MPack (MDF/MZS) key length from the known seed
+        /// </summary>
+        public const string Context_InferMdfKeyLength = "InferMdfKeyLength";
+
+        /// <summary>
         /// (bool) Whether to decode and encode FlattenArray in extra resources (false by default)
         /// </summary>
         public const string Context_UseFlattenArray = "UseFlattenArray";

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using static FreeMote.Consts;
@@ -16,7 +17,7 @@ namespace FreeMote.Plugins
     [ExportMetadata("Name", "FreeMote.Mdf")]
     [ExportMetadata("Author", "Ulysses")]
     [ExportMetadata("Comment", "MDF (ZLIB) support.")]
-    class MdfShell : IPsbShell
+    class MdfShell : IPsbShell, IPsbShellKeyLengthInferer
     {
         public const string ShellName = "MDF";
         public string Name => ShellName;
@@ -113,6 +114,100 @@ namespace FreeMote.Plugins
             if (encoded)
             {
                 toBeDecompressedStream.Dispose();
+            }
+        }
+
+        public MemoryStream ToPsbWithInferredKeyLength(Stream stream, string key, out int keyLength,
+            Dictionary<string, object> context = null)
+        {
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            var originalPosition = stream.CanSeek ? stream.Position : 0;
+            try
+            {
+                var header = new byte[8];
+                if (stream.Read(header, 0, header.Length) != header.Length ||
+                    !header.Take(4).SequenceEqual(Signature))
+                {
+                    throw new InvalidDataException("Invalid MDF header.");
+                }
+
+                var expectedLength = BitConverter.ToInt32(header, 4);
+                if (expectedLength < 4)
+                {
+                    throw new InvalidDataException("Invalid MDF decompressed length.");
+                }
+
+                var output = new MPackOutputBuffer(expectedLength);
+                var fastCompression = false;
+                var result = PsbExtension.DecodeMPackWithInferredKeyLength(stream, key, candidate =>
+                {
+                    if (candidate.PayloadLength < 7)
+                    {
+                        return null;
+                    }
+
+                    var cmf = candidate.GetDecryptedByte(0);
+                    var flg = candidate.GetDecryptedByte(1);
+                    if ((cmf & 0x0F) != 8 || (cmf >> 4) > 7 || (flg & 0x20) != 0 ||
+                        ((cmf << 8) + flg) % 31 != 0)
+                    {
+                        return null;
+                    }
+
+                    output.Reset();
+                    try
+                    {
+                        using var decrypted = candidate.OpenDecryptedStream(2, candidate.PayloadLength - 6);
+                        using var deflate = new DeflateStream(decrypted, CompressionMode.Decompress, true);
+                        deflate.CopyTo(output);
+                    }
+                    catch (Exception e) when (e is InvalidDataException || e is IOException)
+                    {
+                        return null;
+                    }
+
+                    if (output.Written != expectedLength || !output.HasPsbSignature)
+                    {
+                        return null;
+                    }
+
+                    var checksumOffset = candidate.PayloadLength - 4;
+                    var expectedAdler = ((uint) candidate.GetDecryptedByte(checksumOffset) << 24) |
+                                        ((uint) candidate.GetDecryptedByte(checksumOffset + 1) << 16) |
+                                        ((uint) candidate.GetDecryptedByte(checksumOffset + 2) << 8) |
+                                        candidate.GetDecryptedByte(checksumOffset + 3);
+                    var adler = new Adler32();
+                    using (var decoded = output.AsMemoryStream())
+                    {
+                        adler.Update(decoded);
+                    }
+
+                    if ((uint) adler.Checksum != expectedAdler)
+                    {
+                        return null;
+                    }
+
+                    fastCompression = flg == 0x9C;
+                    return output.AsMemoryStream();
+                }, out keyLength);
+
+                if (context != null)
+                {
+                    context[Context_PsbZlibFastCompress] = fastCompression;
+                }
+
+                return result;
+            }
+            finally
+            {
+                if (stream.CanSeek)
+                {
+                    stream.Position = originalPosition;
+                }
             }
         }
         

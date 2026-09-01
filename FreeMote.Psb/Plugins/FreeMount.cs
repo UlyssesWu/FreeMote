@@ -411,9 +411,9 @@ namespace FreeMote.Plugins
                     return mms;
                 }
 
-                if (Shells.ContainsKey(type))
+                if (Shells.TryGetValue(type, out var shell))
                 {
-                    return Shells[type]?.ToPsb(stream, context);
+                    return OpenFromShell(shell, stream, context);
                 }
 
                 if (_container == null)
@@ -440,7 +440,7 @@ namespace FreeMote.Plugins
                 if (header.Take(psbShell.Signature.Length).SequenceEqual(psbShell.Signature))
                 {
                     type = psbShell.Name;
-                    return psbShell.ToPsb(stream, context);
+                    return OpenFromShell(psbShell, stream, context);
                 }
             }
 
@@ -455,12 +455,44 @@ namespace FreeMote.Plugins
                 if (psbShell.IsInShell(stream))
                 {
                     type = psbShell.Name;
-                    return psbShell.ToPsb(stream, context);
+                    return OpenFromShell(psbShell, stream, context);
                 }
             }
 
             type = null;
             return null;
+        }
+
+        private static MemoryStream OpenFromShell(IPsbShell shell, Stream stream,
+            Dictionary<string, object> context)
+        {
+            if (context == null ||
+                !context.TryGetValue(Consts.Context_InferMdfKeyLength, out var inferValue) ||
+                !Convert.ToBoolean(inferValue))
+            {
+                return shell?.ToPsb(stream, context);
+            }
+
+            if (shell == null)
+            {
+                return null;
+            }
+
+            if (!context.TryGetValue(Consts.Context_MdfKey, out var keyValue) || keyValue is not string key)
+            {
+                throw new InvalidOperationException("A key is required to infer the MPack key length.");
+            }
+
+            if (shell is not IPsbShellKeyLengthInferer inferer)
+            {
+                throw new NotSupportedException($"Shell {shell.Name} does not support key length inference.");
+            }
+
+            var result = inferer.ToPsbWithInferredKeyLength(stream, key, out var keyLength, context);
+            context[Consts.Context_MdfKeyLength] = keyLength;
+            context.Remove(Consts.Context_InferMdfKeyLength);
+            Logger.Log($"Inferred {shell.Name} key length: {keyLength}");
+            return result;
         }
 
         public MemoryStream PackToShell(Stream stream, string type, Dictionary<string, object> context = null)

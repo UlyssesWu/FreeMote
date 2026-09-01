@@ -16,7 +16,7 @@ namespace FreeMote.Plugins.Shells
     [ExportMetadata("Name", "FreeMote.Mzs")]
     [ExportMetadata("Author", "Ulysses")]
     [ExportMetadata("Comment", "MZS (ZStandard) support.")]
-    class MzsShell : IPsbShell
+    class MzsShell : IPsbShell, IPsbShellKeyLengthInferer
     {
         public string Name => "MZS";
 
@@ -68,6 +68,68 @@ namespace FreeMote.Plugins.Shells
             var output = decompress.Unwrap(input, unzippedSize);
 
             return new MemoryStream(output);
+        }
+
+        public MemoryStream ToPsbWithInferredKeyLength(Stream stream, string key, out int keyLength,
+            Dictionary<string, object> context = null)
+        {
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            var originalPosition = stream.CanSeek ? stream.Position : 0;
+            try
+            {
+                var header = new byte[8];
+                if (stream.Read(header, 0, header.Length) != header.Length ||
+                    !header.Take(4).SequenceEqual(Signature))
+                {
+                    throw new InvalidDataException("Invalid MZS header.");
+                }
+
+                var expectedLength = BitConverter.ToInt32(header, 4);
+                if (expectedLength < 4)
+                {
+                    throw new InvalidDataException("Invalid MZS decompressed length.");
+                }
+
+                var output = new MPackOutputBuffer(expectedLength);
+                return PsbExtension.DecodeMPackWithInferredKeyLength(stream, key, candidate =>
+                {
+                    if (candidate.PayloadLength < 4 ||
+                        candidate.GetDecryptedByte(0) != 0x28 ||
+                        candidate.GetDecryptedByte(1) != 0xB5 ||
+                        candidate.GetDecryptedByte(2) != 0x2F ||
+                        candidate.GetDecryptedByte(3) != 0xFD)
+                    {
+                        return null;
+                    }
+
+                    output.Reset();
+                    try
+                    {
+                        using var decrypted = candidate.OpenDecryptedStream();
+                        using var zstd = new DecompressionStream(decrypted);
+                        zstd.CopyTo(output);
+                    }
+                    catch (Exception e) when (e is ZstdException || e is InvalidDataException || e is IOException)
+                    {
+                        return null;
+                    }
+
+                    return output.Written == expectedLength && output.HasPsbSignature
+                        ? output.AsMemoryStream()
+                        : null;
+                }, out keyLength);
+            }
+            finally
+            {
+                if (stream.CanSeek)
+                {
+                    stream.Position = originalPosition;
+                }
+            }
         }
 
 
