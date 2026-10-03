@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Windows;
 using FreeMote.Plugins;
 using FreeMote.Psb;
@@ -177,9 +179,7 @@ namespace FreeMote.Tools.Viewer
                 {
                     ConsoleExtension.Hide();
                 }
-                App wpf = new App();
-                MainWindow main = new MainWindow();
-                wpf.Run(main);
+                RunViewer();
             });
 
             try
@@ -199,6 +199,45 @@ namespace FreeMote.Tools.Viewer
             }
 
             return 0;
+        }
+
+        // Native access violations bypass ordinary catch blocks on .NET Framework 4.
+        // Keep this opt-in local to the player; never resume a faulted native driver.
+        [HandleProcessCorruptedStateExceptions]
+        [SecurityCritical]
+        private static void RunViewer()
+        {
+            try
+            {
+                App wpf = new App();
+                MainWindow main = new MainWindow();
+                wpf.Run(main);
+            }
+            catch (AccessViolationException ex)
+            {
+                try
+                {
+                    MessageBox.Show(
+                        "The native render driver encountered an access violation while loading or playing the model.\r\n" +
+                        "The model may contain unsupported or invalid data.\r\n" +
+                        "FreeMote Viewer will exit after you close this message.\r\n\r\n" + ex,
+                        "FreeMote Viewer - Native driver error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    try
+                    {
+                        CleanTempFiles();
+                    }
+                    catch (Exception cleanupError)
+                    {
+                        Debug.WriteLine(cleanupError);
+                    }
+
+                    // Skip WPF shutdown callbacks and native disposal after memory corruption.
+                    Environment.Exit(1);
+                }
+            }
         }
 
         private static void CleanTempFiles()
