@@ -132,6 +132,61 @@ namespace FreeMote.Psb
             return false;
         }
 
+        /// <summary>
+        /// Prevent DX9 driver from using non-block-aligned cropped dimensions for DXT textures.
+        /// <para> <remarks>There is a bug in the DX9 driver using "truncated_" size to alloc space, but it's not allowed by DX9.
+        /// The DX11 driver works correctly.</remarks> </para>
+        /// </summary>
+        /// <returns>Whether any texture metadata was changed.</returns>
+        public static bool FixDxtTextureDimensions(this PSB psb)
+        {
+            if (!(psb.Objects?["source"] is PsbDictionary sources))
+            {
+                return false;
+            }
+
+            bool fix = false;
+            foreach (var source in sources.Values)
+            {
+                if (!(source is PsbDictionary entry) || !(entry["texture"] is PsbDictionary texture)
+                    || !(texture["type"] is PsbString type)
+                    || !(texture["width"] is PsbNumber width) || !(texture["height"] is PsbNumber height)
+                    || !(texture["pixel"] is PsbResource pixel) || pixel.Data == null)
+                {
+                    continue;
+                }
+
+                int blockSize;
+                switch (type.Value)
+                {
+                    case "DXT1": blockSize = 8; break;
+                    case "DXT3":
+                    case "DXT5": blockSize = 16; break;
+                    default: continue;
+                }
+
+                var w = width.AsInt;
+                var h = height.AsInt;
+                // Only discard crop metadata when the resource contains the complete aligned texture.
+                // Do not round dimensions or re-encode the compressed pixel data.
+                if (w <= 0 || h <= 0 || w % 4 != 0 || h % 4 != 0
+                    || (long)(w / 4) * (h / 4) * blockSize != pixel.Data.LongLength)
+                {
+                    continue;
+                }
+
+                if ((texture["truncated_width"] is PsbNumber tw && tw.AsInt % 4 != 0)
+                    || (texture["truncated_height"] is PsbNumber th && th.AsInt % 4 != 0))
+                {
+                    texture.Remove("truncated_width");
+                    texture.Remove("truncated_height");
+                    fix = true;
+                }
+            }
+
+            return fix;
+        }
+
         public static bool FixTimelineContentValueType(this PSB psb)
         {
             bool fix = false;

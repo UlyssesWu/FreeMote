@@ -48,6 +48,7 @@ namespace FreeMote.Tools.Viewer
         private EmotePlayer _player;
         private IntPtr _scene;
         private List<string> _psbPaths;
+        private readonly string _titlePrefix;
         private PreciseTimer _timer;
 
         private double _deltaX, _deltaY;
@@ -72,6 +73,12 @@ namespace FreeMote.Tools.Viewer
         public MainWindow()
         {
             _psbPaths = Core.PsbPaths;
+            var fileName = Core.PsbFileName ?? Path.GetFileNameWithoutExtension(_psbPaths.FirstOrDefault());
+            if (fileName?.Length > 20)
+            {
+                fileName = fileName.Substring(0, 20) + "...";
+            }
+            _titlePrefix = string.IsNullOrEmpty(fileName) ? "" : $"[{fileName}] ";
             if (_psbPaths.Count == 0)
             {
                 Application.Current.Shutdown(-1);
@@ -104,6 +111,7 @@ namespace FreeMote.Tools.Viewer
             //Top = y1 - 600;
             // parse the XAML
             InitializeComponent();
+            Title = _titlePrefix + "FreeMote Viewer by Ulysses";
             //Topmost = true;
             LoadViewerSettings();
             CreatePlayer(Core.Width, Core.Height);
@@ -362,7 +370,7 @@ namespace FreeMote.Tools.Viewer
             _player.GetCoord(out float cx, out float cy);
             var (wx, wy) = CharacterWorldToWindowWorld(cx, cy);
             UpdateCharaMark(wx, wy);
-            Title = $"FreeMote Viewer by Ulysses - Center: {-cx:F2},{-cy:F2} Mouse: {mx:F2},{my:F2}";
+            Title = $"{_titlePrefix}FreeMote Viewer by Ulysses - Center: {-cx:F2},{-cy:F2} Mouse: {mx:F2},{my:F2}";
         }
 
         private void UpdateCharaMark(double wx, double wy)

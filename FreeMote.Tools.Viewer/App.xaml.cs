@@ -21,6 +21,7 @@ namespace FreeMote.Tools.Viewer
         public static uint Height { get; set; } = 720;
         public static bool DirectLoad { get; set; } = false;
         public static List<string> PsbPaths { get; set; }
+        public static string PsbFileName { get; set; }
         public static List<string> TempFilePaths { get; set; } = new List<string>();
         internal static bool NeedRemoveTempFile { get; set; } = false;
     }
@@ -46,7 +47,7 @@ namespace FreeMote.Tools.Viewer
             var optWidth = app.Option<uint>("-w|--width", "Set Window width", CommandOptionType.SingleValue);
             var optHeight = app.Option<uint>("-h|--height", "Set Window height", CommandOptionType.SingleValue);
             var optDirectLoad = app.Option("-d|--direct", "Just load with EMT driver, don't try parsing with FreeMote first", CommandOptionType.NoValue);
-            var optNoFixMetadata = app.Option("-nf|--no-fix", "Don't try to apply metadata fix (for partial exported or krkr PSBs). Can't work together with `-d`", CommandOptionType.NoValue);
+            var optNoFixMetadata = app.Option("-nf|--no-fix", "Don't apply motion metadata or DXT texture dimension fixes. Can't work together with `-d`", CommandOptionType.NoValue);
             var optFixAll = app.Option("-f|--fix", "Try to apply all known fixes. Can't work together with `-d`", CommandOptionType.NoValue);
 
             //args
@@ -70,6 +71,9 @@ namespace FreeMote.Tools.Viewer
                     Console.WriteLine("No file specified.");
                     return;
                 }
+
+                // Preserve the original name before parsed models are replaced with temporary files.
+                Core.PsbFileName = Path.GetFileNameWithoutExtension(Core.PsbPaths[0]);
                 
                 if (optWidth.HasValue())
                 {
@@ -110,7 +114,18 @@ namespace FreeMote.Tools.Viewer
                                     {
                                         Debug.WriteLine("Apply FixMotionMetadata");
                                     }
-                                    //psb.FixTimelineContentValueType();
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
+                                }
+
+                                try
+                                {
+                                    if (psb.FixDxtTextureDimensions())
+                                    {
+                                        Debug.WriteLine("Apply FixDxtTextureDimensions");
+                                    }
                                 }
                                 catch (Exception e)
                                 {
