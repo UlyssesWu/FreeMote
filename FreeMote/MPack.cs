@@ -120,16 +120,42 @@ namespace FreeMote
 
         public static void MdfDecompressToFile(string inputPath, string outputPath)
         {
-            Stream mfs = File.OpenRead(inputPath);
-            mfs.Seek(10, SeekOrigin.Begin);
-            File.WriteAllBytes(outputPath, ZlibCompress.Decompress(mfs));
-            mfs.Dispose();
+            using var mfs = File.OpenRead(inputPath);
+            using var decoded = MdfDecompressToStream(mfs);
+            using var output = File.Create(outputPath);
+            decoded.CopyTo(output);
         }
 
         public static Stream MdfDecompressToStream(Stream input, int size = 0)
         {
-            input.Seek(10, SeekOrigin.Begin);
-            return ZlibCompress.DecompressToStream(input, size);
+            var expectedLength = ReadMdfHeader(input);
+            var output = new byte[expectedLength];
+            var written = ZlibCompress.DecompressZlib(input, output, expectedLength);
+            return new MemoryStream(output, 0, written, false, true);
+        }
+
+        public static int MdfDecompress(Stream input, byte[] output)
+        {
+            var expectedLength = ReadMdfHeader(input);
+            return ZlibCompress.DecompressZlib(input, output, expectedLength);
+        }
+
+        private static int ReadMdfHeader(Stream input)
+        {
+            input.Position = 0;
+            using var reader = new BinaryReader(input, Encoding.UTF8, true);
+            var header = reader.ReadBytes(8);
+            if (header.Length != 8 || header[0] != 'm' || header[1] != 'd' ||
+                header[2] != 'f' || header[3] != 0)
+            {
+                throw new InvalidDataException("Invalid MDF header.");
+            }
+            var size = BitConverter.ToInt32(header, 4);
+            if (size < 0)
+            {
+                throw new InvalidDataException("Invalid MDF decompressed length.");
+            }
+            return size;
         }
 
         /// <summary>

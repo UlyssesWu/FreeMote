@@ -85,6 +85,11 @@ namespace FreeMote
         /// </summary>
         public const string Context_ArchiveItemFileNames = "ArchiveItemFileNames";
 
+        /// <summary>
+        /// (int) Runtime result of archive extraction; not persisted in resource metadata.
+        /// </summary>
+        public const string Context_ArchiveExtractionErrorCount = "ArchiveExtractionErrorCount";
+
         //public const string Context_Encoding = "Encoding";
         //For netcore: var enc = CodePagesEncodingProvider.Instance.GetEncoding(932);
         //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

@@ -348,6 +348,11 @@ Example:
                     {
                         var context = new Dictionary<string, object>(contextTemplate);
                         PsbDecompiler.ExtractArchive(s, key, context, bodyPath, outputRaw, extractAll, enableParallel, outputFolder);
+                        if (context.TryGetValue(Context_ArchiveExtractionErrorCount, out var failureCount) &&
+                            Convert.ToInt32(failureCount) > 0)
+                        {
+                            Environment.ExitCode = 1;
+                        }
                     }
 
                     sw.Stop();

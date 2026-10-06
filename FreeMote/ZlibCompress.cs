@@ -1,5 +1,8 @@
+using System;
+using System.Buffers;
 using System.IO;
 using System.IO.Compression;
+using ICSharpCode.SharpZipLib;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
@@ -7,6 +10,73 @@ namespace FreeMote
 {
     public static class ZlibCompress
     {
+        /// <summary>
+        /// Decode one complete zlib stream, including its header and Adler32 trailer.
+        /// The caller's buffer may be rented; only the declared output length is writable.
+        /// </summary>
+        public static int DecompressZlib(Stream input, byte[] output, int expectedLength)
+        {
+            if (expectedLength < 0 || expectedLength > output.Length)
+            {
+                throw new InvalidDataException("Invalid decompressed length.");
+            }
+
+            var inflater = new Inflater(false);
+            var compressed = ArrayPool<byte>.Shared.Rent(32 * 1024);
+            var overflow = new byte[1];
+            var written = 0;
+            try
+            {
+                while (!inflater.IsFinished)
+                {
+                    if (inflater.IsNeedingInput)
+                    {
+                        var read = input.Read(compressed, 0, compressed.Length);
+                        if (read == 0)
+                        {
+                            throw new InvalidDataException("Truncated zlib stream.");
+                        }
+                        inflater.SetInput(compressed, 0, read);
+                    }
+
+                    // Even when the output is full, consume and verify the end marker and checksum.
+                    var full = written == expectedLength;
+                    var count = full
+                        ? inflater.Inflate(overflow, 0, 1)
+                        : inflater.Inflate(output, written, expectedLength - written);
+                    if (full && count != 0)
+                    {
+                        throw new InvalidDataException("Decompressed data exceeds the declared length.");
+                    }
+                    written += count;
+                    if (count == 0 && !inflater.IsFinished && !inflater.IsNeedingInput)
+                    {
+                        throw new InvalidDataException("Invalid zlib stream or unsupported preset dictionary.");
+                    }
+                }
+
+                if (written != expectedLength)
+                {
+                    throw new InvalidDataException($"Decompressed length mismatch: expected {expectedLength}, got {written}.");
+                }
+                if (inflater.RemainingInput != 0 || input.ReadByte() != -1)
+                {
+                    throw new InvalidDataException("Unexpected data after the zlib stream.");
+                }
+                return written;
+            }
+            // SharpZipLib can also throw IndexOutOfRangeException for an invalid
+            // Huffman alphabet in a wrong-key candidate, before rejecting the stream.
+            catch (Exception e) when (e is SharpZipBaseException || e is IndexOutOfRangeException || e is FormatException)
+            {
+                throw new InvalidDataException("Invalid zlib stream: " + e.Message, e);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(compressed);
+            }
+        }
+
         public static byte[] Decompress(Stream input)
         {
             using var ms = new MemoryStream();

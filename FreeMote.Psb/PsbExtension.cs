@@ -1241,7 +1241,14 @@ namespace FreeMote.Psb
 
         }
 
-        /* the "amazing" design of archive psb:
+        /* Archive indices can lose the original request suffix.
+         * The engine seeds MDF with baseKey + byte-lowercased basename(full request name).
+         * The caller supplies extensions; compressed reads append .m. Expiry suffixes
+         * are stripped for index lookup only, without changing the name used for XOR.
+         * Consequently an index name + expiry list cannot always uniquely recover a
+         * seed filename. These are bounded compatibility candidates, not guaranteed
+         * rules: every decoded MDF must pass complete zlib and declared-length checks.
+         
         "expire_suffix_list": [".psb.m"]
         "image/man003" -> packed with key man003.psb.m
         "scenario/ca01_06.txt.scn.m" -> packed with key ca01_06.txt.scn.m (?)
@@ -1269,12 +1276,21 @@ namespace FreeMote.Psb
                 return results;
             }
 
+            name = name.Replace('\\', '/');
+
             if (name.Contains("/") && !keepDirectory) //There is path, OMG
             {
                 results.AddRange(ArchiveInfo_GetAllPossibleFileNames(name.Substring(name.LastIndexOf('/') + 1), suffix, keepDirectory));
             }
 
-            //check if name is fully lower case
+            // Native byte-wise lowercasing preserves non-ASCII filename bytes.
+            var nativeLower = new string(name.Select(c => c >= 'A' && c <= 'Z' ? (char) (c + 32) : c).ToArray());
+            if (nativeLower != name)
+            {
+                results.AddRange(ArchiveInfo_GetAllPossibleFileNames(nativeLower, suffix, keepDirectory));
+            }
+
+            // Keep Unicode case-folding as a compatibility fallback for other producers.
             if (name.ToLowerInvariant() != name)
             {
                 results.AddRange(ArchiveInfo_GetAllPossibleFileNames(name.ToLowerInvariant(), suffix, keepDirectory));
