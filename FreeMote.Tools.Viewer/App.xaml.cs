@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -47,12 +48,14 @@ namespace FreeMote.Tools.Viewer
             var optWidth = app.Option<uint>("-w|--width", "Set Window width", CommandOptionType.SingleValue);
             var optHeight = app.Option<uint>("-h|--height", "Set Window height", CommandOptionType.SingleValue);
             var optDirectLoad = app.Option("-d|--direct", "Just load with EMT driver, don't try parsing with FreeMote first", CommandOptionType.NoValue);
+            var optSkipDx9Check = app.Option("--skip-dx9-check", "Skip the DirectX 9 runtime check", CommandOptionType.NoValue);
             var optNoFixMetadata = app.Option("-nf|--no-fix", "Don't apply motion metadata or DXT texture dimension fixes. Can't work together with `-d`", CommandOptionType.NoValue);
             var optFixAll = app.Option("-f|--fix", "Try to apply all known fixes. Can't work together with `-d`", CommandOptionType.NoValue);
 
             //args
             var argPath = app.Argument("Files", "File paths", multipleValues: true);
 
+            var exitCode = 0;
             app.OnExecute(() =>
             {
                 if (argPath.Values.Count == 0 || optHelp.HasValue())
@@ -69,6 +72,14 @@ namespace FreeMote.Tools.Viewer
                 if (Core.PsbPaths.Count == 0)
                 {
                     Console.WriteLine("No file specified.");
+                    return;
+                }
+
+                if (!optSkipDx9Check.HasValue() && !DirectXRuntime.TryLoad(out var runtimeError))
+                {
+                    MessageBox.Show(runtimeError, "FreeMote Viewer - DirectX runtime error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    exitCode = 1;
                     return;
                 }
 
@@ -199,7 +210,8 @@ namespace FreeMote.Tools.Viewer
 
             try
             {
-                return app.Execute(args);
+                var result = app.Execute(args);
+                return result == 0 ? exitCode : result;
             }
             catch (CommandParsingException)
             {
@@ -220,6 +232,7 @@ namespace FreeMote.Tools.Viewer
         // Keep this opt-in local to the player; never resume a faulted native driver.
         [HandleProcessCorruptedStateExceptions]
         [SecurityCritical]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void RunViewer()
         {
             try
